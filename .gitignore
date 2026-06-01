@@ -1,0 +1,8 @@
+.DS_Store
+assets_cache/
+*.mov
+*.mp4
+node_modules/
+.claude/skills/
+.agents/
+skills-lock.json

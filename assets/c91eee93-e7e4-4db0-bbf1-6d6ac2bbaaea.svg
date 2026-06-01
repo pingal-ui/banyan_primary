@@ -1,0 +1,10 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Flag Container">
+<path id="Vector" d="M16 0H0V16H16V0Z" fill="var(--fill-0, white)"/>
+<path id="Vector_2" d="M16 0H0V5.33322H16V0Z" fill="var(--fill-0, #FF9811)"/>
+<path id="Vector_3" d="M16 10.6668H0V16H16V10.6668Z" fill="var(--fill-0, #6DA544)"/>
+<path id="Vector_4" d="M8 10C9.10457 10 10 9.10457 10 8C10 6.89543 9.10457 6 8 6C6.89543 6 6 6.89543 6 8C6 9.10457 6.89543 10 8 10Z" fill="var(--fill-0, #0052B4)"/>
+<path id="Vector_5" d="M8.00003 9.25003C8.6904 9.25003 9.25006 8.69037 9.25006 8C9.25006 7.30963 8.6904 6.74997 8.00003 6.74997C7.30966 6.74997 6.75 7.30963 6.75 8C6.75 8.69037 7.30966 9.25003 8.00003 9.25003Z" fill="var(--fill-0, white)"/>
+<path id="Vector_6" d="M7.99988 6.45753L8.3855 7.3321L9.33569 7.22875L8.77112 8L9.33569 8.77125L8.3855 8.66791L7.99988 9.54247L7.61425 8.66791L6.66406 8.77125L7.22863 8L6.66406 7.22875L7.61425 7.3321L7.99988 6.45753Z" fill="var(--fill-0, #0052B4)"/>
+</g>
+</svg>

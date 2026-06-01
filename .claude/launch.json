@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "premium-design",
+      "runtimeExecutable": "/usr/bin/python3",
+      "runtimeArgs": ["-m", "http.server", "3000"],
+      "port": 3000,
+      "cwd": "/Users/pingalkakati/Claude/Banyan_primary"
+    }
+  ]
+}
