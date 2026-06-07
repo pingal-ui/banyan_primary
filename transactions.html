@@ -8841,6 +8841,8 @@ function openDetail(tx) {
   // Open
   document.getElementById('sheetScroll').scrollTop = 0;
   document.getElementById('detail').classList.add('open');
+  const _bb = document.querySelector('.list-bottom-bar');
+  if (_bb) { _bb.style.opacity = '0'; _bb.style.pointerEvents = 'none'; }
 }
 
 /* ── Per-status action sets ──────────────────────────── */
@@ -9526,6 +9528,8 @@ function journeyStep(tx, action) {
 function closeDetail() {
   closeMoreMenu();
   document.getElementById('detail').classList.remove('open');
+  const _bb = document.querySelector('.list-bottom-bar');
+  if (_bb) { _bb.style.opacity = ''; _bb.style.pointerEvents = ''; }
 }
 
 /* ── Screen navigation ───────────────────────────────── */
