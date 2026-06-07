@@ -53,7 +53,7 @@
 
     body { font-family:'Geist',-apple-system,sans-serif; background:#111; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
 
-    .phone { width:393px; height:852px; background:linear-gradient(180deg, #D5D5D5 0%, #FFF 100%); border-radius:16px; overflow:hidden; position:relative; box-shadow:0 40px 100px rgba(0,0,0,0.65),inset 0 0 0 1px rgba(255,255,255,0.08); flex-shrink:0; overscroll-behavior:none; }
+    .phone { width:393px; height:852px; background:#fff; border-radius:16px; overflow:hidden; position:relative; box-shadow:0 40px 100px rgba(0,0,0,0.65),inset 0 0 0 1px rgba(255,255,255,0.08); flex-shrink:0; overscroll-behavior:none; }
 
     /* ── Icon utility (Phosphor sprite mask) ─────────────────────────── */
     .ico {
@@ -274,7 +274,8 @@
       background: var(--brand-primary); border:1.5px solid #F1F1F1;
       display:none; pointer-events:none;
     }
-    .filter-btn-wrap.has-active .filter-active-dot { display:block; }
+    .filter-btn-wrap.has-active .filter-active-dot,
+    .list-bar-btn.has-active .filter-active-dot { display:block; }
 
     /* ── Share Sheet (iOS-style) ────────────────────────── */
     .share-overlay {
@@ -723,7 +724,7 @@
 
     /* Outer list card — no longer the scroll container */
     .list-card {
-      flex: none; margin: 16px 8px 32px;
+      flex: none; margin: 16px 8px 0;
       background: var(--surface-subtle);
       border: 1px solid rgba(0,0,0,0.05);
       border-radius: 24px;
@@ -732,7 +733,7 @@
       padding-bottom: 8px;
     }
 
-    /* Section 1 — white card (8px padding all sides), rounded-tl/tr-20 */
+    /* Section 1 — wraps the white inner card */
     .list-sec-new {
       padding:8px 8px 0;
       flex-shrink:0;
@@ -743,22 +744,19 @@
       overflow:hidden;
     }
 
-    /* "4 new" chip row inside section 1 */
-    .new-chip-row {
-      display:flex; align-items:center; gap:8px;
-      padding:16px 16px 16px;
+    /* "N new transactions" bar — inside white card, inline with dashed line (mirrors date-header) */
+    .new-tx-bar {
+      display:flex; align-items:center; gap:4px;
+      padding:16px 16px 14px;
+      cursor:pointer;
     }
-    .new-chip-pill {
-      display:inline-flex; align-items:center; gap:4px;
-      padding:4px 12px;
-      background:var(--brand-primary-subtle);
-      border:0.5px solid var(--brand-primary-subtle);
-      border-radius:9999px;
-      font-size:11px; font-weight:500; color: var(--brand-primary);
-      cursor:pointer; white-space:nowrap;
+    .new-tx-bar-text {
+      font-size:11px; font-weight:600; color:var(--brand-primary);
+      white-space:nowrap; line-height:16px;
     }
-    .new-chip-pill svg { width:12px; height:12px; stroke:var(--brand-primary); fill:none; stroke-width:2.5; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
-    .chip-line { flex:1; height:1px; background:rgba(0,0,0,0.08); }
+    .new-tx-bar-line {
+      flex:1; height:0; border-top:1px dashed rgba(0,0,0,0.10); margin-left:4px;
+    }
 
     /* White date-group block inside section 1 */
     .list-date-block-new {
@@ -771,9 +769,58 @@
       padding:0 8px;
       flex-shrink:0;
     }
+    .list-sec-old:last-child { padding-bottom: 120px; }
 
     /* "Section break" — visual gap between section 1 and 2 */
     .list-sec-break { height:8px; }
+
+    /* ── Bottom floating search/filter bar (phone-level absolute) ── */
+    .list-bottom-bar {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 56px 16px 20px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.20) 100%);
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 28%);
+      display: flex; align-items: center; gap: 8px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 250ms var(--ease-out);
+    }
+    .list-bottom-bar > * { pointer-events: auto; }
+    /* Show only when #list is active — adjacent sibling selector */
+    #list.on ~ .list-bottom-bar { opacity: 1; pointer-events: none; }
+    #list.on ~ .list-bottom-bar > * { pointer-events: auto; }
+    .list-search-field {
+      flex: 1; min-width: 0; height: 50px; display: flex; align-items: center; gap: 10px;
+      padding: 0 14px;
+      background: rgba(255,255,255,0.42);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      border: 0.5px solid rgba(255,255,255,0.65);
+      border-radius: 12px; cursor: text;
+    }
+    .list-search-input {
+      flex: 1; min-width: 0; border: none; outline: none; background: transparent;
+      font-family: inherit; font-size: 15px; font-weight: 400;
+      color: rgba(0,0,0,0.80);
+    }
+    /* Remove browser default search cancel button */
+    .list-search-input::-webkit-search-cancel-button { -webkit-appearance: none; }
+    .list-search-input::placeholder { color: rgba(0,0,0,0.50); }
+    .list-bar-btn {
+      width: 50px; height: 50px; flex-shrink: 0;
+      background: #f1f1f1;
+      border: none; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; position: relative;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.10), 0 1px 0 rgba(255,255,255,0.80) inset;
+      transition: transform 140ms var(--ease-out);
+    }
+    .list-bar-btn:active { transform: scale(0.92); }
+    @media (hover: hover) and (pointer: fine) {
+      .list-bar-btn:hover { background: #e8e8e8; }
+    }
 
     /* "4 new transactions" chip row */
     .new-tx-row {
@@ -797,7 +844,7 @@
       font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
       color: var(--text-secondary); flex-shrink:0;
     }
-    .date-header-line { flex:1; height:1px; background:rgba(0,0,0,0.08); }
+    .date-header-line { flex:1; height:0; border-top:1px dashed rgba(0,0,0,0.10); }
     .usecase-header {
       display:flex; align-items:center; gap:8px;
       padding:24px 16px 8px;
@@ -809,7 +856,7 @@
     /* Transaction row */
     .tx-row {
       display:flex; align-items:center; gap:12px;
-      padding:14px 16px; cursor:pointer;
+      padding:8px 16px; cursor:pointer;
       transition:background 0.12s; flex-shrink:0;
     }
     .tx-row:active { background:rgba(0,0,0,0.03); }
@@ -862,7 +909,7 @@
 
     /* Name row: name + pipe divider + status label */
     .tx-name-row { display:flex; align-items:center; gap:0; flex-wrap:nowrap; overflow:hidden; }
-    .tx-name { font-size:15px; font-weight:500; color: var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:1; }
+    .tx-name { font-size:15px; font-weight:400; color: var(--text-primary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex-shrink:1; }
     .tx-pipe { font-size:11px; font-weight:400; color: var(--text-disabled); margin:0 5px; flex-shrink:0; }
     .tx-status-lbl {
       font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase;
@@ -878,8 +925,8 @@
     .tx-sub { font-size:11px; font-weight:500; color: var(--text-tertiary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
     .tx-right { text-align:right; flex-shrink:0; }
-    .tx-amount { font-size:15px; font-weight:500; color: var(--text-primary); white-space:nowrap; }
-    .tx-amount.credit { color: var(--brand-primary); }
+    .tx-amount { font-size:15px; font-weight:400; color: var(--text-primary); white-space:nowrap; }
+    .tx-amount.credit { color: #32b450; }
     .tx-inr { font-size:11px; font-weight:500; color: var(--text-tertiary); margin-top:2px; }
 
     /* ══════════════════════════════════════
@@ -1548,6 +1595,200 @@
       filter: saturate(0.25) sepia(0.85) hue-rotate(88deg) saturate(2.2) brightness(0.82);
     }
 
+    /* ── AI Agent overlay ── */
+    #sm-agent {
+      position: absolute;
+      inset: 0;
+      z-index: 6000;
+      pointer-events: none;
+      /* No background — we blur the phone content below */
+    }
+    #sm-agent.ai-open {
+      pointer-events: all;
+    }
+
+    /* Full-screen content blur layer */
+    .ai-backdrop {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+      background: rgba(0,0,0,0.04);
+      opacity: 0;
+      transition: opacity 300ms var(--ease-out);
+    }
+    #sm-agent.ai-open .ai-backdrop {
+      opacity: 1;
+    }
+
+    /* Green glow orb — peeks above the panel */
+    .ai-glow {
+      position: absolute;
+      bottom: -80px;
+      left: 50%;
+      transform: translateX(-50%) translateY(50px);
+      width: 520px;
+      height: 320px;
+      background: #4fa62c;
+      border-radius: 50% 50% 40px 40px / 40% 40% 30px 30px;
+      filter: blur(52px);
+      opacity: 0;
+      transition: opacity 450ms var(--ease-out), transform 520ms var(--ease-spring);
+      pointer-events: none;
+    }
+    #sm-agent.ai-open .ai-glow {
+      opacity: 0.85;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Bottom AI panel */
+    /* ── AI panel — single clean surface ── */
+    .ai-panel {
+      position: absolute;
+      bottom: 8px; left: 8px; right: 8px;
+      background: #fff;
+      border-radius: 26px;
+      padding: 10px 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      transform: translateY(220px);
+      opacity: 0;
+      transition: transform 420ms var(--ease-spring), opacity 260ms var(--ease-out),
+                  height 380ms var(--ease-spring), bottom 380ms var(--ease-spring),
+                  left 380ms var(--ease-spring), right 380ms var(--ease-spring),
+                  border-radius 380ms var(--ease-spring);
+      box-shadow: 0 2px 24px rgba(0,0,0,0.13), 0 0 0 0.5px rgba(0,0,0,0.07);
+      overflow: hidden;
+      will-change: transform, height;
+    }
+    #sm-agent.ai-open .ai-panel { transform: translateY(0); opacity: 1; }
+
+    /* Expanded (full-page) state */
+    .ai-panel.ai-panel-expanded {
+      bottom: 0; left: 0; right: 0;
+      border-radius: 26px 26px 0 0;
+      box-shadow: none;
+    }
+
+    .ai-panel-grabber {
+      width: 36px; height: 4px;
+      border-radius: 2px;
+      background: rgba(0,0,0,0.12);
+      align-self: center;
+      margin-bottom: 10px;
+      flex-shrink: 0;
+      cursor: grab;
+      touch-action: none;
+    }
+    .ai-panel-grabber:active { cursor: grabbing; }
+
+    /* Input field — bare, full-width, no wrapper box */
+    #aiInputField {
+      width: 100%;
+      border: none; outline: none; background: transparent;
+      font-family: 'Geist', -apple-system, sans-serif;
+      font-size: 16px; font-weight: 400;
+      color: rgba(0,0,0,0.88);
+      line-height: 24px;
+      padding: 4px 4px 12px;
+      margin: 0;
+      caret-color: var(--brand-primary);
+      resize: none;
+      overflow: hidden;
+      display: block;
+      box-sizing: border-box;
+    }
+    #aiInputField::placeholder { color: rgba(0,0,0,0.30); }
+
+    /* Bottom bar: chip left, actions right */
+    .ai-bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    /* Context chip */
+    .ai-context-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      flex-shrink: 1;
+    }
+    .ai-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 26px;
+      padding: 0 7px 0 4px;
+      background: rgba(0,0,0,0.055);
+      border-radius: 99px;
+      max-width: 180px;
+      animation: chipIn 200ms var(--ease-out) both;
+    }
+    @keyframes chipIn {
+      from { opacity: 0; transform: scale(0.82) translateX(-4px); }
+      to   { opacity: 1; transform: scale(1) translateX(0); }
+    }
+    .ai-chip-avatar {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      overflow: hidden; flex-shrink: 0;
+    }
+    .ai-chip-avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ai-chip-label {
+      font-size: 12px; font-weight: 500;
+      color: rgba(0,0,0,0.60);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1;
+    }
+    .ai-chip-close {
+      display: flex; align-items: center; justify-content: center;
+      width: 12px; height: 12px; flex-shrink: 0;
+      cursor: pointer; background: none; border: none; padding: 0;
+      color: rgba(0,0,0,0.30);
+      margin-left: 1px;
+      transition: color 100ms ease;
+    }
+    .ai-chip-close:hover { color: rgba(0,0,0,0.55); }
+
+    /* Action buttons */
+    .ai-action-btns {
+      display: flex; align-items: center; gap: 2px; flex-shrink: 0;
+    }
+    .ai-action-btn {
+      width: 34px; height: 34px;
+      display: flex; align-items: center; justify-content: center;
+      border: none; background: none; padding: 0;
+      cursor: pointer; border-radius: 50%;
+      color: rgba(0,0,0,0.36);
+      transition: background 100ms ease, color 100ms ease, transform 140ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .ai-action-btn:hover { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.6); }
+    }
+    .ai-action-btn:active { transform: scale(0.84); }
+    .ai-send-btn {
+      width: 34px; height: 34px;
+      background: var(--brand-primary);
+      border: none; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+      transition: transform 140ms var(--ease-out), background 200ms ease;
+      box-shadow: 0 2px 8px rgba(70,136,43,0.35);
+    }
+    .ai-send-btn:active { transform: scale(0.84); }
+    .ai-send-btn.ai-send-empty {
+      background: rgba(0,0,0,0.08);
+      box-shadow: none;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ai-panel, .ai-backdrop, .ai-glow { transition: none; }
+    }
+
     /* ── Toast notification ── */
     .toast-notif {
       position: absolute;
@@ -2105,7 +2346,7 @@
       display:block; width:433px; height:235px; flex-shrink:0;
     }
 
-    #sm-review { background:transparent; overflow:hidden; }
+    #sm-review { background:linear-gradient(180deg, #efefef 0%, #f5f5f5 65%, #efefef 100%); overflow:hidden; }
 
     .smr-scroll { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-bottom:172px; display:flex; flex-direction:column; }
     .smr-scroll::-webkit-scrollbar { display:none; }
@@ -2120,43 +2361,118 @@
     .smr-pill-btn svg { width:16px; height:16px; stroke:var(--text-primary); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
 
     /* Main card */
-    .smr-card-wrap { display:flex; flex-direction:column; align-items:center; padding:0 20px; margin-top:8px; flex-shrink:0; }
-    .smr-card { width:100%; backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px); background:rgba(255,255,255,0.8); border:none; border-radius:32px; padding:4px; box-shadow:0 16px 40px rgba(3,20,13,0.1); }
-    .smr-card-inner { background:rgba(0,0,0,0.02); border:0.5px solid rgba(0,0,0,0.05); border-radius:28px; overflow:hidden; }
+    .smr-card-wrap { display:flex; flex-direction:column; align-items:center; padding:0 20px; margin-top:0; flex-shrink:0; }
+    .smr-card { width:100%; backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px); background:rgba(255,255,255,0.80); border-top:2px solid rgba(255,255,255,0.60); border-bottom:2px solid rgba(255,255,255,0); border-left:none; border-right:none; border-radius:32px; padding:4px; box-shadow:0 16px 40px rgba(3,20,13,0.10); }
+    .smr-card-inner { background:rgba(0,0,0,0.05); border:0.5px solid rgba(0,0,0,0.05); border-radius:28px; overflow:hidden; }
 
-    /* Recipient — identical to sm2-recipient */
-    .smr-recip { background:linear-gradient(180deg,rgba(0,0,0,0.04) 0%,rgba(0,0,0,0.10) 100%); border-bottom:0.5px solid rgba(0,0,0,0.08); display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 16px 12px; }
+    /* Recipient */
+    .smr-recip { background:linear-gradient(180deg,rgba(0,0,0,0.02) 0%,rgba(0,0,0,0.05) 100%); border-bottom:0.5px solid rgba(0,0,0,0); display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 16px 12px; }
     .smr-av { width:32px; height:32px; border-radius:999px; overflow:hidden; position:relative; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
     .smr-av-glass { position:absolute; inset:0.5px; background:rgba(255,255,255,0.1); border:0.3px solid white; border-radius:999px; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
     .smr-av-txt { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; font-family:'Geist',sans-serif; font-size:10px; font-weight:600; color:#fff; letter-spacing:-0.2px; white-space:nowrap; }
-    .smr-recip-name { font-family:'Geist',sans-serif; font-size:11px; font-weight:600; color: var(--text-secondary); text-transform:uppercase; letter-spacing:1px; line-height:14px; text-align:center; white-space:nowrap; }
+    .smr-recip-name { font-family:'Geist',sans-serif; font-size:13px; font-weight:600; color:var(--text-secondary); line-height:18px; text-align:center; white-space:nowrap; }
     .smr-recip-sub { display:flex; align-items:center; gap:4px; }
-    .smr-recip-acct { font-family:'Geist',sans-serif; font-size:11px; font-weight:500; color: var(--text-tertiary); }
-    .smr-recip-dot { width:3px; height:3px; border-radius:999px; background:rgba(0,0,0,0.4); flex-shrink:0; }
+    .smr-recip-acct { font-family:'Geist',sans-serif; font-size:11px; font-weight:500; color:var(--text-tertiary); }
+    .smr-recip-dot { width:12px; height:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:rgba(0,0,0,0.4); font-size:4px; }
 
-    /* Amounts */
-    .smr-amounts { background:linear-gradient(180deg,rgba(0,0,0,0.10) 0%,rgba(0,0,0,0) 100%); padding:32px 16px; display:flex; flex-direction:column; gap:16px; border-bottom:0.5px solid rgba(0,0,0,0); }
+    /* Amounts section */
+    .smr-amounts { background:linear-gradient(180deg,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0) 100%); padding:32px 16px 16px; display:flex; flex-direction:column; gap:40px; }
+    .smr-amounts-inner { display:flex; flex-direction:column; gap:16px; }
     .smr-amounts-group { display:flex; flex-direction:column; gap:16px; }
     .smr-divider { height:0.5px; background:rgba(0,0,0,0.08); flex-shrink:0; }
-    .smr-row { display:flex; align-items:center; justify-content:space-between; font-size:13px; font-weight:500; line-height:20px; }
-    .smr-lbl { color: var(--text-secondary); white-space:nowrap; }
-    .smr-val { color: var(--text-primary); text-align:right; }
+    .smr-row { display:flex; align-items:center; justify-content:space-between; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; line-height:18px; }
+    .smr-lbl { color:var(--text-tertiary); white-space:nowrap; }
+    .smr-val { color:var(--text-primary); text-align:right; }
     .smr-fee-group { display:flex; align-items:center; gap:8px; }
-    .smr-free { color: var(--brand-primary); }
-    .smr-strike { color: var(--text-primary); text-decoration:line-through; }
+    .smr-free { color:var(--brand-primary); }
+    .smr-strike { color:var(--text-primary); text-decoration:line-through; }
     .smr-exchange { display:flex; align-items:center; gap:4px; }
     .smr-g-icon { width:12px; height:12px; flex-shrink:0; }
 
-    /* Purpose */
-    .smr-purpose { background:linear-gradient(180deg,rgba(255,255,255,0) 0%,#fff 100%); border-top:0.5px solid rgba(0,0,0,0); padding:32px 16px; display:flex; flex-direction:column; gap:16px; }
-    .smr-purpose-hdr { display:flex; align-items:center; gap:4px; }
-    .smr-purpose-lbl { font-size:11px; font-weight:600; color: var(--text-primary); letter-spacing:1px; text-transform:uppercase; line-height:13px; }
-    .smr-info-icon { width:12px; height:12px; flex-shrink:0; stroke:var(--text-tertiary); fill:none; stroke-width:1.5; }
-    .smr-chips { display:flex; flex-wrap:wrap; gap:8px; }
-    .smr-chip { display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:999px; border:0.5px solid rgba(0,0,0,0.05); background: var(--surface-subtle); font-family:'Geist',sans-serif; font-size:15px; font-weight:500; color: var(--text-secondary); cursor:pointer; position:relative; }
-    .smr-chip img { width:20px; height:20px; flex-shrink:0; }
-    .smr-chip svg { width:20px; height:20px; flex-shrink:0; }
-    .smr-chip.sel { background:linear-gradient(180deg,rgba(70,136,43,0) 0%,rgba(70,136,43,0.05) 100%),rgba(255,255,255,0.6); border-color:white; box-shadow:inset 0 -1px 0 0 white; color: var(--text-primary); }
+    /* Purpose — floating-label input row */
+    .smr-purpose-input { background:rgba(255,255,255,0.40); border:0.5px solid rgba(255,255,255,0.60); border-radius:12px; height:60px; display:flex; align-items:center; gap:8px; padding:10px 16px; cursor:pointer; transition:opacity 0.12s ease; width:100%; }
+    @media (hover:hover) and (pointer:fine) { .smr-purpose-input:hover { opacity:0.85; } }
+    .smr-purpose-input:active { opacity:0.75; }
+    .smr-purpose-ico { font-size:20px; width:20px; height:20px; line-height:1; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .smr-purpose-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; overflow:hidden; height:40px; }
+    .smr-purpose-sublbl { font-family:'Geist',sans-serif; font-size:13px; font-weight:500; color:var(--text-tertiary); line-height:18px; white-space:nowrap; text-align:left; }
+    .smr-purpose-val { font-family:'Geist',sans-serif; font-size:17px; font-weight:500; color:var(--text-primary); line-height:22px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left; }
+    .smr-purpose-caret { flex-shrink:0; color:var(--text-tertiary); }
+
+    /* ── Purpose bottom sheet (1246-45677) ── */
+    .purpose-scrim { position:absolute; inset:0; z-index:12000; background:rgba(0,0,0,0.18); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); opacity:0; pointer-events:none; transition:opacity 0.3s ease; }
+    .purpose-scrim.open { opacity:1; pointer-events:all; }
+    .purpose-sheet { position:absolute; bottom:0; left:0; right:0; z-index:12001; background:rgba(255,255,255,0.60); backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px); border-radius:20px 20px 0 0; border-top:2px solid rgba(255,255,255,0); transform:translateY(100%); transition:transform 0.30s var(--ease-drawer); overflow:hidden; pointer-events:none; max-height:90%; display:flex; flex-direction:column; }
+    .purpose-sheet::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,rgba(255,255,255,0) 0%,white 50%,rgba(255,255,255,0) 100%); }
+    .purpose-sheet.open { transform:translateY(0); pointer-events:all; }
+    /* invoice sheet slides in horizontally */
+    .purpose-sheet-invoice { transform:translateX(100%); transition:transform 0.28s var(--ease-drawer); min-height:88%; position:relative; }
+    .purpose-sheet-invoice.open { transform:translateX(0); }
+    .purpose-handle { width:36px; height:5px; border-radius:999px; background:var(--neutral-black-20); margin:10px auto 0; flex-shrink:0; }
+
+    /* Sheet header */
+    .purpose-hdr { padding:16px 20px 8px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
+    .purpose-back { width:44px; height:44px; border-radius:999px; background:var(--surface-secondary); border:none; border-bottom:1px solid var(--border-focus); box-shadow:0 8px 16px -8px rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:transform 160ms ease-out; }
+    .purpose-back:active { transform:scale(0.95); }
+    .purpose-title { font-family:'Geist',sans-serif; font-size:17px; font-weight:600; color:var(--text-primary); flex:1; text-align:center; }
+    .purpose-hdr-spacer { width:44px; flex-shrink:0; }
+
+    /* Search */
+    .purpose-search-wrap { padding:0 24px 32px; flex-shrink:0; }
+    .purpose-search { height:55px; display:flex; align-items:center; gap:8px; padding:0 12px; background:var(--surface-overlay); border:0.5px solid var(--border-default); border-radius:12px; }
+    .purpose-search input { flex:1; border:none; background:transparent; outline:none; font-family:'Geist',sans-serif; font-size:17px; font-weight:500; color:var(--text-primary); }
+    .purpose-search input::placeholder { color:var(--text-secondary); }
+    .purpose-search-icon { flex-shrink:0; color:var(--text-tertiary); }
+
+    /* Groups + rows */
+    .purpose-list-wrap { flex:1; overflow-y:auto; padding:0 24px 24px; display:flex; flex-direction:column; gap:24px; }
+    .purpose-list-wrap::-webkit-scrollbar { display:none; }
+    .purpose-grp { display:flex; flex-direction:column; gap:4px; }
+    .purpose-grp-lbl { font-family:'Geist',sans-serif; font-size:11px; font-weight:600; color:var(--text-secondary); letter-spacing:1px; text-transform:uppercase; padding:0 12px 6px; }
+    .purpose-grp-rows { display:flex; flex-direction:column; }
+    .purpose-row { display:flex; align-items:center; gap:10px; padding:12px; background:transparent; border:none; width:100%; text-align:left; cursor:pointer; border-radius:16px; transition:background 0.12s ease; }
+    .purpose-row:active { background:rgba(0,0,0,0.04); }
+    .purpose-row.sel { background:rgba(255,255,255,0.40); }
+    @media (hover:hover) and (pointer:fine) { .purpose-row:hover { background:rgba(0,0,0,0.03); } }
+    .purpose-row.sel:hover { background:rgba(255,255,255,0.40); }
+    .purpose-row-icon { font-size:20px; width:20px; height:20px; text-align:center; line-height:1; flex-shrink:0; }
+    .purpose-row-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+    .purpose-row-lbl { font-family:'Geist',sans-serif; font-size:15px; font-weight:500; color:var(--text-secondary); line-height:20px; }
+    .purpose-row.sel .purpose-row-lbl { color:var(--text-primary); font-weight:500; }
+    .purpose-row-sub { font-family:'Geist',sans-serif; font-size:11px; font-weight:500; color:var(--text-tertiary); line-height:16px; }
+    .purpose-row.sel .purpose-row-sub { color:var(--text-secondary); }
+    .purpose-row-check { width:20px; height:20px; flex-shrink:0; display:none; color:var(--brand-primary); }
+    .purpose-row.sel .purpose-row-check { display:block; }
+    @media (prefers-reduced-motion:reduce) { .purpose-row { transition:none; } }
+
+    /* ── Supporting document sheet (1265-46345) ── */
+    .purpose-inv-hdr { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; justify-content:space-between; padding:16px 24px 12px; z-index:1; }
+    .purpose-inv-title { font-family:'Geist',sans-serif; font-size:17px; font-weight:600; color:var(--text-primary); flex:1; text-align:center; }
+    .purpose-inv-content { position:absolute; bottom:0; left:0; right:0; top:0; overflow-y:auto; display:flex; flex-direction:column; gap:0; padding:80px 24px 100px; }
+    .purpose-inv-content::-webkit-scrollbar { display:none; }
+    .purpose-inv-fields { display:flex; flex-direction:column; gap:32px; }
+    /* Amber warning */
+    .purpose-warning { display:flex; align-items:flex-start; gap:8px; background:rgba(193,124,20,0.10); border:1px solid rgba(193,124,20,0.10); border-radius:12px; padding:12px 16px; }
+    .purpose-warning-txt { font-family:'Geist',sans-serif; font-size:15px; font-weight:500; color:var(--semantic-warning); line-height:20px; flex:1; }
+    /* Upload area */
+    .purpose-upload-area { border:1px dashed var(--text-disabled); border-radius:12px; padding:24px 20px; display:flex; flex-direction:column; align-items:center; gap:12px; cursor:pointer; transition:border-color 0.15s ease; background:var(--surface-subtle); }
+    @media (hover:hover) and (pointer:fine) { .purpose-upload-area:hover { border-color:var(--brand-primary); } }
+    .purpose-upload-icon-bg { background:var(--surface-subtle); border-radius:999px; padding:16px; display:flex; align-items:center; justify-content:center; }
+    .purpose-upload-texts { display:flex; flex-direction:column; align-items:center; gap:2px; }
+    .purpose-upload-lbl { font-family:'Geist',sans-serif; font-size:15px; font-weight:600; color:var(--text-primary); }
+    .purpose-upload-sub { font-family:'Geist',sans-serif; font-size:11px; font-weight:500; color:var(--text-tertiary); }
+    /* Uploaded file pill */
+    .purpose-uploaded { display:flex; align-items:center; gap:10px; background:var(--brand-primary-subtle); border-radius:12px; padding:12px 14px; }
+    .purpose-upload-filename { font-family:'Geist',sans-serif; font-size:14px; font-weight:600; color:var(--brand-primary); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .purpose-remove-file { background:none; border:none; cursor:pointer; display:flex; padding:2px; }
+    /* Floating-label input (DS pattern) */
+    .purpose-input { background:var(--surface-overlay); border:0.5px solid var(--border-default); border-radius:12px; padding:10px 16px; height:60px; display:flex; align-items:center; }
+    .purpose-input-inner { display:flex; flex-direction:column; gap:2px; flex:1; }
+    .purpose-input-lbl { font-family:'Geist',sans-serif; font-size:13px; font-weight:500; color:var(--text-tertiary); line-height:18px; }
+    .purpose-input-field { border:none; background:transparent; outline:none; font-family:'Geist',sans-serif; font-size:17px; font-weight:500; color:var(--text-primary); line-height:22px; width:100%; }
+    .purpose-input-field::placeholder { color:var(--text-secondary); }
+    /* Footer CTA */
+    .purpose-inv-footer { position:absolute; bottom:0; left:0; right:0; padding:16px 24px 28px; }
 
     /* Bottom */
     .smr-bottom { position:absolute; bottom:0; left:0; right:0; padding:8px 24px 24px; box-sizing:border-box; display:flex; flex-direction:column; gap:8px; background:linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 28px); }
@@ -2178,21 +2494,81 @@
     .smp-card { backdrop-filter: blur(48px); -webkit-backdrop-filter: blur(48px); background: linear-gradient(180deg, rgba(0,0,0,0) 80%, rgba(0,0,0,0.1) 100%), rgba(255,255,255,0.8); border-top: 2px solid rgba(255,255,255,0.8); border-bottom: 2px solid rgba(255,255,255,0.8); border-left: none; border-right: none; border-radius: 32px; padding: 4px; box-shadow: 0 16px 40px rgba(3,20,13,0.1); }
 
     /* Hero area inside card */
-    .smp-hero { height: 238px; border-radius: 28px; overflow: hidden; position: relative; background: linear-gradient(180deg, #a0d8d3 0%, #c8ecea 40%, #e4f5f3 70%, #f6fbfa 100%); }
-    /* 3D spinning coin */
-    .smp-hero-icon { position: absolute; left: 50%; top: 28px; transform: translateX(-50%); width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; perspective: 240px; }
-    .smp-coin { width: 72px; height: 72px; border-radius: 50%; position: relative; transform-style: preserve-3d; animation: smpCoinSpin 1.6s linear infinite; transition: transform 0.4s var(--ease-spring), opacity 0.3s ease; }
-    .smp-coin-face { position: absolute; inset: 0; border-radius: 50%; backface-visibility: hidden; display: flex; align-items: center; justify-content: center; }
-    .smp-coin-front { background: radial-gradient(circle at 38% 32%, #ffe88a, #e8a800 55%, #b87200); box-shadow: 0 6px 20px rgba(184,114,0,0.45), inset -3px -3px 8px rgba(0,0,0,0.18); }
-    .smp-coin-back { background: radial-gradient(circle at 62% 68%, #f5d060, #c88c00 50%, #8b5200); transform: rotateY(180deg); box-shadow: 0 6px 20px rgba(184,114,0,0.45), inset 3px 3px 8px rgba(0,0,0,0.18); }
-    .smp-coin-sym { font-family: 'Geist',sans-serif; font-size: 26px; font-weight: 700; color: rgba(120,60,0,0.80); line-height: 1; user-select: none; }
-    @keyframes smpCoinSpin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+    .smp-hero { height: 238px; border-radius: 28px; overflow: hidden; position: relative; background: transparent; }
+    /* Hero bg layers — blue slides up, green slides down */
+    .smp-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform 0.7s var(--ease-drawer); will-change: transform; }
+    .smp-hero-bg-blue  { background-image: url('assets/bg-progress-blue.png'); transform: translateY(0); }
+    .smp-hero-bg-green { background-image: url('assets/bg-success-green.png'); transform: translateY(-100%); }
+    .smp-hero.success-anim .smp-hero-bg-blue  { transform: translateY(-100%); }
+    .smp-hero.success-anim .smp-hero-bg-green { transform: translateY(0); }
+
+    /* 3D spinning coin — flat disc with weighted rim */
+    .smp-hero-icon { position: absolute; left: 50%; top: 28px; transform: translateX(-50%); width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; perspective: 600px; }
+    .smp-coin { width: 68px; height: 68px; border-radius: 50%; position: relative; transform-style: preserve-3d;
+      animation: smpCoinSpin 1.4s ease-in-out infinite;
+      transition: transform 0.4s var(--ease-spring), opacity 0.3s ease; }
+    .smp-coin-face {
+      position: absolute; inset: 0; border-radius: 50%;
+      backface-visibility: hidden; display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    /* Inner field ring — the raised beaded border found on real coins */
+    .smp-coin-face::after {
+      content: '';
+      position: absolute; inset: 6px; border-radius: 50%;
+      border: 1px solid rgba(180,110,0,0.45);
+      box-shadow: inset 0 0 0 1px rgba(255,220,80,0.30);
+      pointer-events: none;
+    }
+    /* Conic gradient gives the metallic sweep/sheen of struck gold */
+    .smp-coin-front {
+      background:
+        radial-gradient(ellipse 26% 16% at 27% 19%, rgba(255,255,215,0.96) 0%, transparent 100%),
+        conic-gradient(from 40deg at 50% 50%,
+          #a06400, #e8b820, #fff0a0, #d4940a, #7a4800,
+          #c88c00, #f5d060, #a06400);
+      box-shadow:
+        0 0 0 2.5px #8a5800,
+        0 0 0 5px #d4a010,
+        0 0 0 6.5px #6a3e00,
+        0 10px 28px rgba(120,75,0,0.6);
+    }
+    .smp-coin-back {
+      background:
+        radial-gradient(ellipse 22% 14% at 68% 74%, rgba(255,255,200,0.8) 0%, transparent 100%),
+        conic-gradient(from 220deg at 50% 50%,
+          #a06400, #e8b820, #fff0a0, #d4940a, #7a4800,
+          #c88c00, #f5d060, #a06400);
+      transform: rotateY(180deg);
+      box-shadow:
+        0 0 0 2.5px #8a5800,
+        0 0 0 5px #d4a010,
+        0 0 0 6.5px #6a3e00,
+        0 10px 28px rgba(120,75,0,0.6);
+    }
+    /* Embossed symbol — bright face, shadow below, like die-struck relief */
+    .smp-coin-sym {
+      font-family: 'Geist', sans-serif; font-size: 22px; font-weight: 700;
+      color: rgba(80,42,0,0.88); line-height: 1; user-select: none; position: relative; z-index: 1;
+      text-shadow:
+        0 1px 0 rgba(255,225,80,0.85),
+        0 -1px 1px rgba(50,25,0,0.45);
+    }
+    /* Coin spin: lingers on face, rushes through edge — like a real weighted coin */
+    @keyframes smpCoinSpin {
+      0%   { transform: rotateY(0deg);    animation-timing-function: cubic-bezier(0.4, 0, 1, 0.6); }
+      25%  { transform: rotateY(90deg);   animation-timing-function: cubic-bezier(0, 0.4, 0.6, 1); }
+      50%  { transform: rotateY(180deg);  animation-timing-function: cubic-bezier(0.4, 0, 1, 0.6); }
+      75%  { transform: rotateY(270deg);  animation-timing-function: cubic-bezier(0, 0.4, 0.6, 1); }
+      100% { transform: rotateY(360deg); }
+    }
     /* Result icon replaces coin */
     .smp-result-icon { position: absolute; inset: 4px; border-radius: 50%; display: flex; align-items: center; justify-content: center; opacity: 0; transform: scale(0.5); transition: opacity 0.32s var(--ease-spring), transform 0.4s var(--ease-spring); pointer-events: none; }
     .smp-result-icon.visible { opacity: 1; transform: scale(1); }
-    .smp-result-icon.success { background: var(--brand-primary); box-shadow: 0 6px 20px rgba(70,136,43,0.5); }
+    .smp-result-icon.success { background: transparent; box-shadow: none; }
     .smp-result-icon.failure { background: #c82c2c; box-shadow: 0 6px 20px rgba(200,44,44,0.5); }
     .smp-result-icon svg { width: 32px; height: 32px; stroke: #fff; fill: none; stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+    .smp-result-icon img { width: 100%; height: 100%; object-fit: contain; display: block; }
     @media (prefers-reduced-motion: reduce) { .smp-coin { animation: none; } }
     .smp-hero-center { position: absolute; left: 16px; right: 16px; top: 120px; display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .smp-hero-lbl { font-size: 15px; font-weight: 600; color: var(--text-secondary); line-height: 20px; text-align: center; }
@@ -2205,8 +2581,8 @@
     .smp-hero-eta-txt { font-size: 11px; font-weight: 500; color: #5d8887; line-height: normal; }
 
     /* Status + Txn sections */
-    .smp-sec-status { background: var(--surface-subtle); border: 0.5px solid rgba(0,0,0,0.05); border-radius: 28px 28px 16px 16px; overflow: hidden; position: relative; }
-    .smp-sec-txn    { background: var(--surface-subtle); border: 0.5px solid rgba(0,0,0,0.05); border-radius: 16px 16px 28px 28px; overflow: hidden; }
+    .smp-sec-status { background: var(--surface-subtle); border: 0.5px solid rgba(0,0,0,0.10); border-radius: 28px 28px 16px 16px; overflow: hidden; position: relative; }
+    .smp-sec-txn    { background: var(--surface-subtle); border: 0.5px solid rgba(0,0,0,0.10); border-radius: 16px 16px 28px 28px; overflow: hidden; }
 
     .smp-sec-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; cursor: pointer; }
     .smp-sec-hdr-open { border-bottom: 0.5px solid rgba(0,0,0,0.06); }
@@ -2215,7 +2591,49 @@
     .smp-acc-open .smp-caret { transform: rotate(0deg); }
 
     /* Stepper — new 4-step design */
-    .smp-stepper { display: flex; flex-direction: column; gap: 0; padding: 16px 20px 24px; }
+    /* Stepper wrapper — grid-stacks s1 and s2 so they share the same cell,
+       enabling a smooth cross-fade without any height collapse */
+    .smp-stepper-wrap { display: grid; }
+    .smp-stepper-s1, .smp-stepper-s2, .smp-stepper-s3 { grid-area: 1 / 1; }
+
+    .smp-stepper { display: flex; flex-direction: column; gap: 0; padding: 16px 20px 32px; }
+
+    /* Cross-fade transitions — only opacity + transform (GPU-composited) */
+    .smp-stepper-s1 {
+      transition: opacity 220ms var(--ease-out), transform 260ms var(--ease-out);
+      transform-origin: top center;
+    }
+    .smp-stepper-s2 {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity 280ms var(--ease-out), transform 320ms var(--ease-out);
+      transform-origin: top center;
+    }
+    /* Stagger each step in s2 on entry */
+    .smp-stepper-s2 .smp-step:nth-child(1) { transition: opacity 240ms var(--ease-out) 0ms, transform 280ms var(--ease-out) 0ms; }
+    .smp-stepper-s2 .smp-step:nth-child(2) { transition: opacity 240ms var(--ease-out) 50ms, transform 280ms var(--ease-out) 50ms; }
+    .smp-stepper-s2 .smp-step:nth-child(3) { transition: opacity 240ms var(--ease-out) 100ms, transform 280ms var(--ease-out) 100ms; }
+    .smp-stepper-s2 .smp-step:nth-child(4) { transition: opacity 240ms var(--ease-out) 150ms, transform 280ms var(--ease-out) 150ms; }
+    .smp-stepper-s2 .smp-step { opacity: 0; transform: translateY(6px); }
+    .smp-stepper-s2.smp-state-active .smp-step { opacity: 1; transform: translateY(0); }
+    /* s3 — same pattern */
+    .smp-stepper-s3 {
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(10px);
+      transition: opacity 280ms var(--ease-out), transform 320ms var(--ease-out);
+      transform-origin: top center;
+    }
+    .smp-stepper-s3 .smp-step:nth-child(1) { transition: opacity 240ms var(--ease-out) 0ms, transform 280ms var(--ease-out) 0ms; }
+    .smp-stepper-s3 .smp-step:nth-child(2) { transition: opacity 240ms var(--ease-out) 50ms, transform 280ms var(--ease-out) 50ms; }
+    .smp-stepper-s3 .smp-step:nth-child(3) { transition: opacity 240ms var(--ease-out) 100ms, transform 280ms var(--ease-out) 100ms; }
+    .smp-stepper-s3 .smp-step:nth-child(4) { transition: opacity 240ms var(--ease-out) 150ms, transform 280ms var(--ease-out) 150ms; }
+    .smp-stepper-s3 .smp-step { opacity: 0; transform: translateY(6px); }
+    .smp-stepper-s3.smp-state-active .smp-step { opacity: 1; transform: translateY(0); }
+
+    /* Step name color transition for smoothness */
+    .smp-step-name { transition: color 220ms ease; }
     .smp-step { display: flex; gap: 14px; align-items: flex-start; }
     .smp-step-spine { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 18px; }
     /* Step icon states */
@@ -2225,13 +2643,15 @@
     .smp-si-active-inner { width: 8px; height: 8px; border-radius: 50%; background: #fff; }
     .smp-si-lock { width: 18px; height: 18px; border-radius: 50%; background: rgba(0,0,0,0.08); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
     .smp-si-lock svg { width: 10px; height: 10px; stroke: var(--text-tertiary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    /* Final step indicator — green rounded square + inner dot (Figma 934:112601) */
+    .smp-si-final { width: 18px; height: 18px; background: var(--brand-primary-subtle); border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .smp-si-final-dot { width: 10px; height: 10px; background: var(--brand-primary); border: 0.5px solid white; border-radius: 999px; }
     /* Connector line between steps */
-    .smp-vline { width: 1px; flex: 1; min-height: 36px; background: rgba(0,0,0,0.1); margin: 4px 0; }
+    .smp-vline { width: 1px; flex: 1; min-height: 16px; background: rgba(0,0,0,0.1); margin: 0; }
     /* Step content */
-    .smp-step-body { flex: 1; min-width: 0; padding-bottom: 36px; }
+    .smp-step-body { flex: 1; min-width: 0; padding-bottom: 20px; }
+    .smp-step:last-child .smp-step-body { padding-bottom: 0; }
     /* Extra breathing room when sub-text wraps to 2 lines */
-    .smp-step-body:has(.smp-step-sub) { padding-bottom: 48px; }
-    .smp-step-body:last-child { padding-bottom: 0; }
     .smp-step-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding-top: 1px; }
     .smp-step-name { font-family: 'Geist',sans-serif; font-size: 13px; font-weight: 500; color: var(--text-secondary); line-height: 18px; }
     .smp-step-name.active { font-weight: 600; color: var(--text-primary); }
@@ -2250,7 +2670,7 @@
     .smp-bottom { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 24px 24px; display: flex; gap: 10px; background: linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 28px); }
     .smp-done-btn { flex: 1; height: 60px; background: var(--surface-secondary); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: none; border-bottom: 1px solid var(--border-focus); border-radius: 999px; font-family: 'Geist',sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); cursor: pointer; box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12); transition: transform 160ms ease-out; }
     .smp-done-btn:active { transform: scale(0.97); }
-    .smp-sim-btn { flex: 1; height: 60px; background: var(--brand-primary); border: none; border-bottom: 1px solid var(--border-focus); border-radius: 999px; font-family: 'Geist',sans-serif; font-size: 17px; font-weight: 600; color: #fff; cursor: pointer; box-shadow: 0 8px 16px -8px rgba(70,136,43,0.35); transition: transform 160ms ease-out; }
+    .smp-sim-btn { width: 60px; height: 60px; flex-shrink: 0; background: var(--brand-primary); border: none; border-bottom: 1px solid var(--border-focus); border-radius: 999px; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 16px -8px rgba(70,136,43,0.35); transition: transform 160ms ease-out; }
     .smp-sim-btn:active { transform: scale(0.97); }
     .smp-sim-btn.fail { background: #c82c2c; box-shadow: 0 8px 16px -8px rgba(200,44,44,0.35); }
     @media (hover: hover) and (pointer: fine) { .smp-done-btn:hover { opacity: 0.92; } }
@@ -2820,16 +3240,16 @@
     /* ── Balance ── */
     .home-bal {
       width: 377px; height: 158px;
-      border: 0.5px solid rgba(0,0,0,0.05);
+      border: 1px solid rgba(255,255,255,0.8);
       border-radius: 24px; overflow: hidden;
       position: relative; flex-shrink: 0;
-      background: #e5e5e5;
+      background: var(--surface-overlay);
     }
     .home-bal-inner {
       position: absolute;
       top: 3.5px; left: 3.5px; right: 3.5px;
       border-radius: 20px;
-      background: rgba(255,255,255,0.88);
+      background: rgba(255,255,255,0.96);
       padding: 16px 16px 24px;
       display: flex; align-items: flex-end; gap: 8px;
       overflow: hidden;
@@ -2838,6 +3258,7 @@
       position: absolute; top: 0; left: 0; right: 0;
       width: 100%; height: 90px;
       object-fit: cover; pointer-events: none;
+      opacity: 0.35;
     }
     .home-bal-lbl {
       font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 600;
@@ -4493,71 +4914,157 @@
     /* ══════════════════════════════════════
        BENEFICIARIES SCREEN
     ══════════════════════════════════════ */
-    #beneficiaries { background: transparent; overflow: hidden; }
-    .ben-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; }
+    #beneficiaries { background: linear-gradient(180deg, #efefef 0%, #f5f5f5 65%, #efefef 100%); overflow: hidden; }
+    .ben-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 40px; }
     .ben-scroll::-webkit-scrollbar { display: none; }
 
-    /* Header row — simple, no sticky complexity */
-    .ben-header {
-      display: flex; align-items: flex-end; justify-content: space-between;
-      padding: 56px 20px 12px;
+    /* Dark vignette over the botanical bg at top */
+    #beneficiaries .sm-botanical-bg::after { content:''; position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.18) 0%, transparent 60%); pointer-events:none; }
+
+    /* Header row */
+    .ben-header { display: flex; align-items: center; justify-content: space-between; padding: 64px 20px 0; }
+    .ben-title { font-family: 'Geist', sans-serif; font-size: 28px; font-weight: 500; color: var(--text-primary); letter-spacing: -1.4px; line-height: 34px; }
+    .ben-new-btn {
+      height: 34px; padding: 0 16px; border-radius: 999px;
+      background: var(--brand-primary); border: none; border-bottom: 1px solid var(--border-focus);
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-inverse);
+      display: flex; align-items: center; gap: 4px; cursor: pointer;
+      box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12); transition: transform 160ms ease-out;
     }
-    .ben-title { font-family: 'Geist', sans-serif; font-size: 28px; font-weight: 500; color: var(--text-primary); letter-spacing: -0.05em; line-height: 1; }
-    .ben-subtitle { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 500; color: var(--text-tertiary); margin-top: 3px; display: block; }
-    .ben-add-btn {
-      width: 36px; height: 36px; border-radius: 999px; background: var(--brand-primary);
-      border: none; display: flex; align-items: center; justify-content: center; cursor: pointer;
-      box-shadow: 0 4px 12px -4px rgba(70,136,43,0.45); transition: transform 160ms ease-out; flex-shrink: 0;
-    }
-    .ben-add-btn:active { transform: scale(0.97); }
-    .ben-add-btn svg { width: 16px; height: 16px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+    .ben-new-btn:active { transform: scale(0.97); }
+    .ben-new-btn svg { width: 14px; height: 14px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+    /* Search bar */
+    .ben-search-row { padding: 12px 20px 0; }
+    /* reuses .list-search */
 
     /* Section labels */
-    .ben-sec-lbl { padding: 16px 20px 8px; font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; color: var(--text-tertiary); letter-spacing: 0.8px; text-transform: uppercase; }
+    .ben-sec-lbl { padding: 36px 20px 10px; font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; color: var(--text-secondary); letter-spacing: 1px; text-transform: uppercase; }
 
-    /* Favorites strip */
-    .ben-favs-scroll { overflow-x: auto; overflow-y: visible; padding: 0 20px 4px; display: flex; gap: 20px; scrollbar-width: none; }
+    /* Favourites strip */
+    .ben-favs-scroll { padding: 0 20px 4px; display: flex; gap: 24px; overflow-x: auto; scrollbar-width: none; }
     .ben-favs-scroll::-webkit-scrollbar { display: none; }
-    .ben-fav { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; flex-shrink: 0; }
-    .ben-fav:active .ben-fav-av { opacity: 0.75; }
-    /* 56px blob — bene-av pattern scaled up */
-    .ben-fav-av {
-      width: 56px; height: 56px; border-radius: 999px; position: relative; overflow: hidden;
-      display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.4);
+    .ben-fav { display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; cursor: pointer; }
+    .ben-fav:active .sm-l-av { opacity: 0.8; }
+    .ben-fav-name { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .ben-fav-add {
+      width: 50px; height: 50px; border-radius: 999px;
+      background: var(--surface-subtle); border: 1px dashed var(--text-disabled);
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
     }
-    .ben-fav-av-glass {
-      position: absolute; inset: 1px; border-radius: 999px;
-      backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
-      background: rgba(255,255,255,0.10); border: 0.3px solid white;
-    }
-    .ben-fav-av-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 700; color: #fff; letter-spacing: -0.3px; white-space: nowrap; z-index: 2; }
-    .ben-fav-add { width: 56px; height: 56px; border-radius: 999px; border: 1.5px dashed rgba(0,0,0,0.18); display: flex; align-items: center; justify-content: center; }
-    .ben-fav-add svg { width: 18px; height: 18px; stroke: rgba(0,0,0,0.22); fill: none; stroke-width: 2; }
-    .ben-fav-name { font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 500; color: var(--text-secondary); }
-    .ben-fav-name.dim { color: var(--text-tertiary); }
+    .ben-fav-add svg { width: 16px; height: 16px; stroke: rgba(0,0,0,0.35); fill: none; stroke-width: 2; }
 
-    /* List card — reuses .list-card look exactly */
-    .ben-list-wrap { margin: 0 8px 40px; }
-    .ben-list { background: var(--surface-subtle); border: 1px solid rgba(0,0,0,0.05); border-radius: 24px; overflow: hidden; padding-bottom: 8px; }
-    .ben-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; cursor: pointer; border-top: 0.5px solid rgba(0,0,0,0.06); transition: background 0.12s ease; }
-    .ben-row:first-child { border-top: none; }
-    @media (hover: hover) and (pointer: fine) { .ben-row:hover { background: rgba(255,255,255,0.60); } }
-    .ben-row:active { background: rgba(255,255,255,0.40); }
-    /* 44px blob — same as bene-av pattern */
-    .ben-row-av { width: 44px; height: 44px; border-radius: 999px; position: relative; overflow: hidden; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.4); }
-    .ben-row-av.corp { border-radius: 13px; }
-    .ben-row-av-glass { position: absolute; inset: 0.5px; border-radius: 999px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); background: rgba(255,255,255,0.10); border: 0.3px solid white; }
-    .ben-row-av.corp .ben-row-av-glass { border-radius: 12.5px; }
-    .ben-row-av-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 700; color: #fff; letter-spacing: -0.3px; white-space: nowrap; z-index: 2; }
-    .ben-row-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-    .ben-row-name { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); }
-    .ben-row-sub { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 500; color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ben-row-chevron svg { width: 14px; height: 14px; stroke: var(--text-tertiary); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
+    /* Beneficiary list — frosted glass card */
+    .ben-list-wrap { margin: 0 8px 16px; }
+    .ben-list {
+      background: rgba(255,255,255,0.40); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.80); border-radius: 24px;
+      display: flex; flex-direction: column; gap: 24px;
+      padding: 16px 0;
+    }
+    .ben-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 12px; cursor: pointer;
+    }
+    .ben-row-left { display: flex; align-items: center; gap: 16px; }
+    .ben-row-info { display: flex; flex-direction: column; gap: 4px; }
+    .ben-row-name { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); white-space: nowrap; }
+    .ben-row-sub  { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-tertiary); white-space: nowrap; }
+    /* Pay button — secondary small */
+    .ben-pay-pill {
+      height: 34px; padding: 0 20px; border-radius: 999px;
+      background: var(--surface-secondary); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      border: none; border-bottom: 1px solid var(--border-focus);
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-primary);
+      cursor: pointer; box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12); flex-shrink: 0;
+      transition: transform 160ms ease-out;
+    }
+    .ben-pay-pill:active { transform: scale(0.97); }
 
     /* Stagger */
     @keyframes benRowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
     .ben-row.animate { animation: benRowIn 0.28s var(--ease-spring) both; }
     @media (prefers-reduced-motion: reduce) { .ben-row.animate { animation: none; } }
+
+    /* Detail sheet — Figma 1190-31327 */
+    .ben-detail-overlay { position: absolute; inset: 0; z-index: 5000; background: rgba(0,0,0,0.05); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; display: flex; flex-direction: column; justify-content: flex-end; }
+    .ben-detail-overlay.open { opacity: 1; pointer-events: all; }
+    .ben-detail-sheet {
+      background: rgba(255,255,255,0.60);
+      border-radius: 20px 20px 0 0;
+      height: 88%; display: flex; flex-direction: column;
+      transform: translateY(100%); transition: transform 0.30s var(--ease-drawer);
+      pointer-events: none; overflow: hidden; position: relative;
+    }
+    /* Top shimmer line */
+    .ben-detail-sheet::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, white 50%, rgba(255,255,255,0) 100%); z-index: 1; }
+    .ben-detail-overlay.open .ben-detail-sheet { transform: translateY(0); pointer-events: all; }
+
+    /* Back button inside sheet */
+    .ben-detail-hdr { position: absolute; top: 20px; left: 20px; z-index: 10; }
+    .ben-detail-back { width: 44px; height: 44px; border-radius: 999px; background: var(--surface-secondary); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: none; border-bottom: 1px solid var(--border-focus); box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms ease-out; }
+    .ben-detail-back:active { transform: scale(0.97); }
+    .ben-detail-back svg { width: 14px; height: 14px; stroke: var(--text-primary); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
+
+    /* Profile hero */
+    .ben-profile-hero { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 112px 20px 28px; flex-shrink: 0; }
+    /* Transparent container — the sm-l-av blob inside provides all styling */
+    .ben-profile-av { display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .ben-profile-av-glass { position: absolute; inset: 0.625px; border-radius: 999px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); background: rgba(255,255,255,0.10); border: 0.625px solid white; }
+    .ben-profile-av-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Geist',sans-serif; font-size: 25px; font-weight: 600; color: #fff; letter-spacing: -1.25px; z-index: 2; white-space: nowrap; }
+    .ben-profile-name-group { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .ben-profile-name { font-family: 'Geist',sans-serif; font-size: 17px; font-weight: 500; color: var(--text-primary); }
+    .ben-profile-sub { display: flex; align-items: center; gap: 8px; }
+    .ben-profile-sub span { font-family: 'Geist',sans-serif; font-size: 13px; font-weight: 500; color: var(--text-tertiary); }
+    .ben-profile-divider { width: 1px; height: 12px; background: rgba(0,0,0,0.2); flex-shrink: 0; }
+
+    /* Scrollable body */
+    .ben-detail-body { flex: 1; overflow-y: auto; padding: 0 8px 100px; display: flex; flex-direction: column; gap: 8px; }
+    .ben-detail-body::-webkit-scrollbar { display: none; }
+
+    /* Account details card — Figma 1189-31263 */
+    .ben-acct-card {
+      background: rgba(255,255,255,0.40); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.80); border-radius: 24px;
+      padding: 24px 20px; display: flex; flex-direction: column; gap: 0;
+    }
+
+    /* Segmented control (for India accounts) — sits inside card at top */
+    .ben-seg { background: rgba(0,0,0,0.05); border-radius: 999px; padding: 2px; height: 48px; display: flex; margin-bottom: 24px; }
+    .ben-seg-opt { flex: 1; border-radius: 999px; border: none; background: transparent; font-family: 'Geist',sans-serif; font-size: 15px; font-weight: 500; color: var(--text-tertiary); cursor: pointer; transition: background 0.15s ease, color 0.15s ease; }
+    .ben-seg-opt.active { background: #fff; color: var(--text-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.10); }
+
+    /* Key-value rows */
+    .ben-kv-rows { display: flex; flex-direction: column; gap: 20px; }
+    .ben-kv-row { display: flex; align-items: flex-start; justify-content: space-between; }
+    .ben-kv-key { font-family: 'Geist',sans-serif; font-size: 13px; font-weight: 500; line-height: 18px; color: var(--text-tertiary); white-space: nowrap; flex-shrink: 0; }
+    .ben-kv-val { font-family: 'Geist',sans-serif; font-size: 13px; font-weight: 500; line-height: 18px; color: var(--text-primary); text-align: right; }
+
+    /* Transactions card */
+    .ben-tx-card { background: rgba(255,255,255,0.40); border: 1px solid rgba(255,255,255,0.80); border-radius: 24px; overflow: hidden; display: flex; flex-direction: column; position: relative; }
+    .ben-tx-card-hdr { display: flex; align-items: center; justify-content: space-between; padding: 16px 16px 0 24px; flex-shrink: 0; }
+    .ben-tx-card-lbl { font-family: 'Geist',sans-serif; font-size: 11px; font-weight: 600; color: var(--text-primary); letter-spacing: 1px; text-transform: uppercase; }
+    /* Inline seg for transactions */
+    .ben-tx-seg { background: rgba(0,0,0,0.05); border-radius: 999px; padding: 2px; height: 32px; display: flex; width: 165px; }
+    .ben-tx-seg-opt { flex: 1; border-radius: 999px; border: none; background: transparent; font-family: 'Geist',sans-serif; font-size: 13px; font-weight: 500; color: var(--text-tertiary); cursor: pointer; }
+    .ben-tx-seg-opt.active { background: #fff; color: var(--text-primary); box-shadow: 0 2px 4px rgba(0,0,0,0.10); }
+    /* "See all" ghost link */
+    .ben-see-all { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px; cursor: pointer; font-family: 'Geist',sans-serif; font-size: 13px; font-weight: 600; color: var(--brand-primary); text-align: center; }
+
+    /* Bottom actions pinned */
+    .ben-actions { position: absolute; bottom: 0; left: 0; right: 0; display: flex; gap: 16px; align-items: center; padding: 8px 20px 24px; background: linear-gradient(to top, rgba(0,0,0,0.08) 0%, transparent 100%); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+    .ben-icon-btn { width: 50px; height: 50px; border-radius: 999px; background: var(--surface-secondary); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); border: none; border-bottom: 1px solid var(--border-focus); box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; transition: transform 160ms ease-out; }
+    .ben-icon-btn:active { transform: scale(0.97); }
+    .ben-icon-btn svg { width: 18px; height: 18px; stroke: var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .ben-send-btn { flex: 1; height: 60px; background: var(--brand-primary); border: none; border-bottom: 1px solid var(--border-focus); border-radius: 999px; font-family: 'Geist',sans-serif; font-size: 17px; font-weight: 600; color: var(--text-inverse); cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12); transition: transform 160ms ease-out; }
+    .ben-send-btn:active { transform: scale(0.97); }
+    .ben-send-btn svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+
+    /* Legacy (unused but keep to avoid breakage) */
+    .ben-pay-wrap { display: none; }
+    .ben-pay-btn { display: none; }
+    .ben-tabs-wrap { display: none; }
+
 
     /* Detail sheet — matches bene-sheet exactly */
     .ben-detail-overlay { position: absolute; inset: 0; z-index: 5000; background: rgba(0,0,0,0.18); backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; display: flex; flex-direction: column; justify-content: flex-end; }
@@ -4569,15 +5076,7 @@
     .ben-detail-back { width: 36px; height: 36px; border-radius: 999px; background: var(--surface-secondary); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: none; border-bottom: 1px solid var(--border-focus); box-shadow: 0 4px 12px -4px rgba(0,0,0,0.14); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms ease-out; }
     .ben-detail-back:active { transform: scale(0.97); }
     .ben-detail-back svg { width: 14px; height: 14px; stroke: var(--text-primary); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; display: block; }
-    .ben-profile-hero { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 16px 24px 20px; flex-shrink: 0; }
-    .ben-profile-av-wrap { width: 72px; height: 72px; border-radius: 22px; background: rgba(255,255,255,0.6); display: flex; align-items: center; justify-content: center; border: 0.5px solid rgba(255,255,255,0.8); }
-    .ben-profile-av { width: 60px; height: 60px; border-radius: 999px; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
-    .ben-profile-av.corp { border-radius: 16px; }
-    .ben-profile-av-glass { position: absolute; inset: 1px; border-radius: 999px; backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); background: rgba(255,255,255,0.10); border: 0.3px solid white; }
-    .ben-profile-av.corp .ben-profile-av-glass { border-radius: 15px; }
-    .ben-profile-av-txt { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-family: 'Geist', sans-serif; font-size: 20px; font-weight: 700; color: #fff; letter-spacing: -0.5px; z-index: 2; white-space: nowrap; }
-    .ben-profile-name { font-family: 'Geist', sans-serif; font-size: 20px; font-weight: 600; color: var(--text-primary); letter-spacing: -0.3px; }
-    .ben-profile-meta { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-tertiary); }
+    /* legacy duplicates removed — rules live in the block above */
     /* Tabs — matches list-tabs / ltab */
     .ben-tabs-wrap { padding: 0 20px 16px; flex-shrink: 0; }
     .ben-tabs { display: flex; align-items: center; background: rgba(255,255,255,0.55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 0.5px solid rgba(255,255,255,0.70); border-radius: 9999px; padding: 3px; }
@@ -5187,68 +5686,8 @@
 
     <!-- Bubble card -->
     <div class="sm-l-card">
-      <div class="sm-l-bubbles">
-
-        <!-- RR — 108px, left=192, top=268 -->
-        <div class="sm-l-bubble" style="left:192px;top:268px" onclick="smGoToAmount('Rohan Rathod','RR','linear-gradient(135deg,#46882b,#2d5a16)','••7654 · HDFC Bank',this)">
-          <div class="sm-l-av" style="width:108px;height:108px;background:rgba(255,255,255,0.12)">
-            <img class="sm-l-av-photo" src="assets/blob-purple-v2.png" alt="">
-            <div class="sm-l-av-glass" style="inset:4px;background:rgba(255,255,255,0.1);border:0.5px solid white"></div>
-            <span class="sm-l-av-txt" style="font-size:34px;letter-spacing:-1.7px;line-height:41px">RR</span>
-          </div>
-          <span class="sm-l-name">Rohan Rathod</span>
-        </div>
-
-        <!-- MS — 108px, left=0, top=47 — US account, goes to Within US flow -->
-        <div class="sm-l-bubble" style="left:0;top:47px" onclick="smwOpen('Mansi Singh','MS','linear-gradient(135deg,#7c3aed,#5b21b6)','•• 7654','Bank of America',this)">
-          <div class="sm-l-av" style="width:108px;height:108px;background:rgba(255,255,255,0.12)">
-            <img class="sm-l-av-photo" src="assets/blob-purple-v2.png" alt="">
-            <div class="sm-l-av-glass" style="inset:4px;background:rgba(255,255,255,0.1);border:0.5px solid white"></div>
-            <span class="sm-l-av-txt" style="font-size:34px;letter-spacing:-1.7px;line-height:41px">MS</span>
-          </div>
-          <span class="sm-l-name">Mansi Singh</span>
-        </div>
-
-        <!-- Amazon Pay — 64px, left=22, top=269 -->
-        <div class="sm-l-bubble" style="left:22px;top:269px" onclick="smGoToAmount('Amazon Pay','AP','linear-gradient(135deg,#f59e0b,#d97706)','Amazon Pay UPI',this)">
-          <div class="sm-l-av" style="width:64px;height:64px;background:rgba(0,0,0,0.1)">
-            <img class="sm-l-av-photo" src="assets/blob-green-v2.png" alt="">
-            <div class="sm-l-av-glass" style="inset:2px;background: var(--surface-overlay);border:0.3px solid transparent;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)"></div>
-            <img src="assets/blob-amzpay.png" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;object-fit:cover;border-radius:999px;z-index:3" alt="">
-          </div>
-          <span class="sm-l-name">Amazon Pay</span>
-        </div>
-
-        <!-- NJ — 64px, left=157, top=0 -->
-        <div class="sm-l-bubble" style="left:157px;top:0" onclick="smGoToAmount('Neha Jain','NJ','linear-gradient(135deg,#2563eb,#1d4ed8)','••8821 · ICICI',this)">
-          <div class="sm-l-av" style="width:64px;height:64px;background:rgba(255,255,255,0.12)">
-            <img class="sm-l-av-photo" src="assets/blob-purple-v2.png" alt="">
-            <div class="sm-l-av-glass" style="inset:2px;background:rgba(255,255,255,0.1);border:0.3px solid white;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)"></div>
-            <span class="sm-l-av-txt" style="font-size:20px;letter-spacing:-1px;line-height:25px;font-weight:600">NJ</span>
-          </div>
-          <span class="sm-l-name">Neha Jain</span>
-        </div>
-
-        <!-- JS — 64px, left=241, top=106 -->
-        <div class="sm-l-bubble" style="left:241px;top:106px" onclick="smGoToAmount('Junaid S','JS','linear-gradient(135deg,#0d9488,#0f766e)','••4432 · Axis',this)">
-          <div class="sm-l-av" style="width:64px;height:64px;background:rgba(255,255,255,0.12)">
-            <img class="sm-l-av-photo" src="assets/blob-orange-v2.png" alt="">
-            <div class="sm-l-av-glass" style="inset:2px;background:rgba(255,255,255,0.1);border:0.3px solid white;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)"></div>
-            <span class="sm-l-av-txt" style="font-size:20px;letter-spacing:-1px;line-height:25px;font-weight:600">JS</span>
-          </div>
-          <span class="sm-l-name">Junaid S</span>
-        </div>
-
-        <!-- SR — 64px, left=115, top=172 -->
-        <div class="sm-l-bubble" style="left:115px;top:172px" onclick="smGoToAmount('Soumya Roy','SR','linear-gradient(135deg,#db2777,#be185d)','••6690 · Kotak',this)">
-          <div class="sm-l-av" style="width:64px;height:64px;background:rgba(255,255,255,0.12)">
-            <img class="sm-l-av-photo" src="assets/blob-orange-v2.png" alt="">
-            <div class="sm-l-av-glass" style="inset:2px;background:rgba(255,255,255,0.1);border:0.3px solid white;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)"></div>
-            <span class="sm-l-av-txt" style="font-size:20px;letter-spacing:-1px;line-height:25px;font-weight:600">SR</span>
-          </div>
-          <span class="sm-l-name">Soumya Roy</span>
-        </div>
-
+      <div class="sm-l-bubbles" id="smLBubbles">
+        <!-- populated from BENS by renderSmLBubbles() -->
       </div>
     </div>
 
@@ -5571,83 +6010,59 @@
               <div class="smr-recip-name" id="smReviewRecipientName">Rohan Rathod</div>
               <div class="smr-recip-sub">
                 <span class="smr-recip-acct" id="smReviewRecipAcct">•• 7654</span>
-                <div class="smr-recip-dot"></div>
+                <span class="smr-recip-dot">·</span>
                 <span class="smr-recip-acct" id="smReviewRecipBank">HDFC Bank</span>
               </div>
             </div>
 
-            <!-- Amounts -->
+            <!-- Amounts + Purpose -->
             <div class="smr-amounts">
-              <!-- Group 1: sending / fees / rate -->
-              <div class="smr-amounts-group">
-                <div class="smr-row">
-                  <span class="smr-lbl">You are sending</span>
-                  <span class="smr-val" id="smReviewSending">$1,000.00</span>
-                </div>
-                <div class="smr-row">
-                  <span class="smr-lbl">Banyan's fees</span>
-                  <div class="smr-fee-group">
-                    <span class="smr-free">Free</span>
-                    <span class="smr-strike">$2.00</span>
+              <div class="smr-amounts-inner">
+                <!-- Group 1: sending / fees / rate -->
+                <div class="smr-amounts-group">
+                  <div class="smr-row">
+                    <span class="smr-lbl">You are sending</span>
+                    <span class="smr-val" id="smReviewSending">$1,000.00</span>
+                  </div>
+                  <div class="smr-row">
+                    <span class="smr-lbl">Banyan's fees</span>
+                    <div class="smr-fee-group">
+                      <span class="smr-free">Free</span>
+                      <span class="smr-strike">$2.00</span>
+                    </div>
+                  </div>
+                  <div class="smr-row">
+                    <span class="smr-lbl">Exchange rate</span>
+                    <div class="smr-exchange">
+                      <img class="smr-g-icon" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt="">
+                      <span class="smr-val">$1 = ₹91.78</span>
+                    </div>
                   </div>
                 </div>
-                <div class="smr-row">
-                  <span class="smr-lbl">Exchange rate</span>
-                  <div class="smr-exchange">
-                    <img class="smr-g-icon" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt="">
-                    <span class="smr-val">$1 = ₹91.78</span>
+                <!-- Divider -->
+                <div class="smr-divider"></div>
+                <!-- Group 2: receives / arrival -->
+                <div class="smr-amounts-group">
+                  <div class="smr-row">
+                    <span class="smr-lbl"><span id="smReviewRecipName2">Rohan</span> receives</span>
+                    <span class="smr-val" id="smReviewReceives">₹91,780.00</span>
+                  </div>
+                  <div class="smr-row">
+                    <span class="smr-lbl">Estimated arrival</span>
+                    <span class="smr-val">Today, 9:44 AM IST</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Divider -->
-              <div class="smr-divider"></div>
-
-              <!-- Group 2: receives / arrival -->
-              <div class="smr-amounts-group">
-                <div class="smr-row">
-                  <span class="smr-lbl"><span id="smReviewRecipName2">Rohan</span> receives</span>
-                  <span class="smr-val" id="smReviewReceives">₹91,780.00</span>
+              <!-- Purpose — floating-label input row -->
+              <button class="smr-purpose-input" onclick="smOpenPurposeSheet(event)">
+                <span class="smr-purpose-ico" id="smPurposeIco">🏠</span>
+                <div class="smr-purpose-text">
+                  <span class="smr-purpose-sublbl">Purpose of payment</span>
+                  <span class="smr-purpose-val" id="smPurposeDisplayVal">Family and Personal</span>
                 </div>
-                <div class="smr-row">
-                  <span class="smr-lbl">Estimated arrival</span>
-                  <span class="smr-val">Today, 9:44 AM IST</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Purpose of payment -->
-            <div class="smr-purpose">
-              <div class="smr-purpose-hdr">
-                <span class="smr-purpose-lbl">Purpose of payment</span>
-                <svg class="smr-info-icon" viewBox="0 0 12 12">
-                  <circle cx="6" cy="6" r="5"/>
-                  <line x1="6" y1="5.5" x2="6" y2="8.5"/>
-                  <circle cx="6" cy="3.5" r="0.5" fill="rgba(0,0,0,0.4)" stroke="none"/>
-                </svg>
-              </div>
-              <div class="smr-chips">
-                <button class="smr-chip sel" onclick="smSelectPurpose(this)">
-                  <img src="assets/f732130e-4516-43e6-acf2-848c52c193ce.webp" alt="">
-                  Family
-                </button>
-                <button class="smr-chip" onclick="smSelectPurpose(this)">
-                  <img src="assets/22188a1f-893f-411b-882c-004ef72d6be6.webp" alt="">
-                  Medical
-                </button>
-                <button class="smr-chip" onclick="smSelectPurpose(this)">
-                  <img src="assets/ee3de8b3-49b6-4b2d-926e-135fe291d3f9.webp" alt="">
-                  Bills
-                </button>
-                <button class="smr-chip" onclick="smSelectPurpose(this)">
-                  <img src="assets/034d5c26-ff67-4281-8fa5-bf0fde077b5d.webp" alt="">
-                  Education
-                </button>
-                <button class="smr-chip" onclick="smSelectPurpose(this)">
-                  <img src="assets/f28b1d54-0d62-4efa-ae00-9b74035ce182.webp" alt="">
-                  Others
-                </button>
-              </div>
+                <svg class="smr-purpose-caret" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+              </button>
             </div>
 
           </div><!-- /.smr-card-inner -->
@@ -5661,7 +6076,136 @@
       <button class="smr-note-btn">Add a note (optional)</button>
       <button class="smr-confirm-btn" onclick="smGoToProgress()">Confirm and pay</button>
     </div>
+
   </div><!-- /#sm-review -->
+
+  <!-- ── Purpose of payment bottom sheet (1246-45677) ── -->
+  <div class="purpose-scrim" id="purposeScrim" onclick="smClosePurposeSheet()"></div>
+  <div class="purpose-sheet" id="purposeSheet">
+    <div class="purpose-handle"></div>
+    <div class="purpose-hdr">
+      <button class="purpose-back" onclick="smClosePurposeSheet()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.65)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12L6 8l4-4"/></svg>
+      </button>
+      <span class="purpose-title">Purpose of payment</span>
+      <span class="purpose-hdr-spacer"></span>
+    </div>
+
+    <!-- Search -->
+    <div class="purpose-search-wrap">
+      <div class="purpose-search">
+        <svg class="purpose-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="M13 13l-2.9-2.9"/></svg>
+        <input type="text" placeholder="Search..." id="purposeSearch" oninput="smFilterPurpose(this.value)">
+      </div>
+    </div>
+
+    <!-- Grouped rows -->
+    <div class="purpose-list-wrap" id="purposeListWrap">
+      <!-- Commonly used purposes -->
+      <div class="purpose-grp" id="purposeCommonGrp">
+        <div class="purpose-grp-lbl">Commonly used purposes</div>
+        <div class="purpose-grp-rows">
+          <button class="purpose-row sel" data-code="P1301" onclick="smPickPurpose(this,'Family &amp; Personal','P1301')">
+            <span class="purpose-row-icon">🏠</span>
+            <div class="purpose-row-info"><span class="purpose-row-lbl">Family and Personal</span><span class="purpose-row-sub">Sending money to your family or your own account</span></div>
+            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="purpose-row" data-code="P1108" onclick="smPickPurpose(this,'Medical','P1108')">
+            <span class="purpose-row-icon">🏥</span>
+            <div class="purpose-row-info"><span class="purpose-row-lbl">Medical</span><span class="purpose-row-sub">Hospital bills and medical treatment</span></div>
+            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="purpose-row" data-code="P1109" onclick="smPickPurpose(this,'Utility Bills &amp; Taxes','P1109')">
+            <span class="purpose-row-icon">💡</span>
+            <div class="purpose-row-info"><span class="purpose-row-lbl">Utility bills and Taxes</span><span class="purpose-row-sub">Utilities, tax payments and recurring obligations</span></div>
+            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="purpose-row" data-code="P1107" onclick="smPickPurpose(this,'Education','P1107')">
+            <span class="purpose-row-icon">🎓</span>
+            <div class="purpose-row-info"><span class="purpose-row-lbl">Education</span><span class="purpose-row-sub">Tuitions, fees or payments to schools or colleges</span></div>
+            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button class="purpose-row" data-code="P0601" onclick="smPickPurpose(this,'Insurance &amp; Travel','P0601')">
+            <span class="purpose-row-icon">🛡️</span>
+            <div class="purpose-row-info"><span class="purpose-row-lbl">Insurance and Travel</span><span class="purpose-row-sub">Insurance premiums, hotel stays or travel bookings</span></div>
+            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Professional and Business services -->
+      <div class="purpose-grp" id="purposeProfGrp">
+        <div class="purpose-grp-lbl">Professional and Business services</div>
+        <div class="purpose-grp-rows" id="purposeProfRows">
+          <!-- Rendered by JS (smBuildProfRows) -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Supporting document sheet (1265-46345) ── -->
+  <div class="purpose-sheet purpose-sheet-invoice" id="purposeSheetInvoice">
+    <!-- Scrollable content area -->
+    <div class="purpose-inv-content">
+      <div class="purpose-inv-fields">
+        <!-- Amber RBI warning -->
+        <div class="purpose-warning">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="flex-shrink:0;color:var(--semantic-warning)"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.5"/><line x1="12" y1="8" x2="12" y2="8.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="11" x2="12" y2="16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <p class="purpose-warning-txt">RBI requires proof of service for professional and trade payments</p>
+        </div>
+
+        <!-- Upload area -->
+        <div class="purpose-upload-area" id="purposeUploadArea" onclick="purposeSimulateUpload()">
+          <div class="purpose-upload-icon-bg">
+            <svg width="40" height="40" viewBox="0 0 40 40" fill="none" stroke="rgba(0,0,0,0.40)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 26V16M20 16l-5 5M20 16l5 5"/><path d="M8 28v2a2 2 0 002 2h20a2 2 0 002-2v-2"/></svg>
+          </div>
+          <div class="purpose-upload-texts">
+            <span class="purpose-upload-lbl">Attach invoice or contract</span>
+            <span class="purpose-upload-sub">PDF, JPG, PNG (max limit: 10MB)</span>
+          </div>
+        </div>
+        <div class="purpose-uploaded" id="purposeUploaded" style="display:none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          <span class="purpose-upload-filename" id="purposeUploadFilename">invoice.pdf</span>
+          <button class="purpose-remove-file" onclick="purposeRemoveFile()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.40)" stroke-width="2.5" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+
+        <!-- Invoice/Reference input (floating label) -->
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div class="purpose-input">
+            <div class="purpose-input-inner">
+              <span class="purpose-input-lbl">Invoice/Reference number</span>
+              <input class="purpose-input-field" type="text" placeholder="INV-2026-001" id="purposeInvRef">
+            </div>
+          </div>
+          <!-- Notes input -->
+          <div class="purpose-input">
+            <div class="purpose-input-inner" style="height:auto;">
+              <input class="purpose-input-field" type="text" placeholder="Notes (optional)" id="purposeInvNotes" style="line-height:22px;padding:0;">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fixed header — sits on top -->
+    <div class="purpose-inv-hdr">
+      <button class="purpose-back" onclick="smClosePurposeInvoice()">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.65)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12L6 8l4-4"/></svg>
+      </button>
+      <span class="purpose-inv-title">Supporting document</span>
+      <span style="width:44px;flex-shrink:0;"></span>
+    </div>
+
+    <!-- Fixed footer CTA -->
+    <div class="purpose-inv-footer">
+      <button class="smr-confirm-btn" onclick="smConfirmPurposeInvoice()">Confirm purpose</button>
+    </div>
+  </div>
+
+
 
 
   <!-- ══════════════════════════════════════
@@ -5677,11 +6221,13 @@
         <div class="smp-card">
 
           <!-- Hero: mint gradient + money icon + amount + ETA -->
-          <div class="smp-hero">
+          <div class="smp-hero" id="smpHero">
+            <div class="smp-hero-bg smp-hero-bg-blue"></div>
+            <div class="smp-hero-bg smp-hero-bg-green"></div>
             <div class="smp-hero-icon" id="smpHeroIcon">
             <div class="smp-coin" id="smpCoin">
               <div class="smp-coin-face smp-coin-front"><span class="smp-coin-sym">$</span></div>
-              <div class="smp-coin-face smp-coin-back"><span class="smp-coin-sym">$</span></div>
+              <div class="smp-coin-face smp-coin-back"><span class="smp-coin-sym">₹</span></div>
             </div>
             <div class="smp-result-icon" id="smpResultIcon">
               <!-- icon injected by JS -->
@@ -5702,7 +6248,7 @@
           </div>
 
           <!-- Sections -->
-          <div style="display:flex;flex-direction:column;gap:8px;padding:8px 0 0">
+          <div style="display:flex;flex-direction:column;gap:24px;padding:8px 0 0">
 
             <!-- STATUS DETAILS — always open, no toggle -->
             <div class="smp-sec-status smp-acc-open" id="smAccStatus">
@@ -5713,6 +6259,7 @@
               </div>
 
               <!-- 4-step stepper — step 1 state (default) -->
+              <div class="smp-stepper-wrap">
               <div class="smp-stepper smp-stepper-s1">
                 <!-- Step 1: done -->
                 <div class="smp-step">
@@ -5769,8 +6316,8 @@
                 </div>
               </div>
 
-              <!-- 4-step stepper — step 2 state (hidden until JS adds class smp-state2 to #sm-progress) -->
-              <div class="smp-stepper smp-stepper-s2" style="display:none">
+              <!-- 4-step stepper — step 2 state -->
+              <div class="smp-stepper smp-stepper-s2">
                 <!-- Step 1: done -->
                 <div class="smp-step">
                   <div class="smp-step-spine">
@@ -5827,6 +6374,66 @@
                 </div>
               </div>
 
+              <!-- 4-step stepper — step 3 state (all done, funds arrived) -->
+              <div class="smp-stepper smp-stepper-s3">
+                <!-- Step 1: done -->
+                <div class="smp-step">
+                  <div class="smp-step-spine">
+                    <div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+                    <div class="smp-vline"></div>
+                  </div>
+                  <div class="smp-step-body">
+                    <div class="smp-step-row">
+                      <span class="smp-step-name">Payment initiated</span>
+                      <span class="smp-step-time">2 mins ago</span>
+                    </div>
+                    <div class="smp-step-sub">We've received your transfer request.</div>
+                  </div>
+                </div>
+                <!-- Step 2: done -->
+                <div class="smp-step">
+                  <div class="smp-step-spine">
+                    <div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+                    <div class="smp-vline"></div>
+                  </div>
+                  <div class="smp-step-body">
+                    <div class="smp-step-row">
+                      <span class="smp-step-name">Transfer processed</span>
+                      <span class="smp-step-time">1 min ago</span>
+                    </div>
+                    <div class="smp-step-sub">By Banyan and our banking partner.</div>
+                  </div>
+                </div>
+                <!-- Step 3: done -->
+                <div class="smp-step">
+                  <div class="smp-step-spine">
+                    <div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+                    <div class="smp-vline"></div>
+                  </div>
+                  <div class="smp-step-body">
+                    <div class="smp-step-row">
+                      <span class="smp-step-name">Sent to <span class="smp-recip-first-name">Rohan</span>'s bank</span>
+                      <span class="smp-step-time">1 min ago</span>
+                    </div>
+                    <div class="smp-step-sub">The money has reached HDFC Bank.</div>
+                  </div>
+                </div>
+                <!-- Step 4: final (green dot — just arrived) -->
+                <div class="smp-step">
+                  <div class="smp-step-spine">
+                    <div class="smp-si-final"><div class="smp-si-final-dot"></div></div>
+                  </div>
+                  <div class="smp-step-body" style="padding-bottom:4px">
+                    <div class="smp-step-row">
+                      <span class="smp-step-name active" id="smProgressRecipStepS3">Funds in Rohan's account</span>
+                      <span class="smp-step-time">Just now</span>
+                    </div>
+                    <div class="smp-step-sub" style="color:var(--text-secondary)"><span id="smProgressRecipSubS3">Rohan</span> has received the money in their HDFC Bank account.</div>
+                  </div>
+                </div>
+              </div>
+              </div><!-- /.smp-stepper-wrap -->
+
             </div><!-- /#smAccStatus -->
 
             <!-- TRANSACTION DETAILS (closed by default, togglable) -->
@@ -5853,8 +6460,12 @@
     <!-- Simulate / Done — pinned outside scroll so it truly sticks to screen bottom -->
     <div class="smp-bottom" id="smpBottom">
       <button class="smp-done-btn" onclick="smGoToSuccess()">Done</button>
-      <button class="smp-sim-btn" onclick="smpSimulateSuccess()">Simulate success</button>
-      <button class="smp-sim-btn fail" onclick="smpSimulateFailure()">Simulate failure</button>
+      <button class="smp-sim-btn" onclick="smpSimulateSuccess()" title="Simulate success">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,12 9,17 20,7"/></svg>
+      </button>
+      <button class="smp-sim-btn fail" onclick="smpSimulateFailure()" title="Simulate failure">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+      </button>
     </div>
   </div><!-- /#sm-progress -->
 
@@ -5886,7 +6497,7 @@
           </div>
 
           <!-- Sections -->
-          <div style="display:flex;flex-direction:column;gap:8px;padding:8px 0 0">
+          <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
 
             <!-- STATUS DETAILS — all 4 done, last one active -->
             <div class="smp-sec-status" id="smAccStatus_s">
@@ -5994,8 +6605,7 @@
     <div class="sm-botanical-bg"><img src="beneBG.png" alt=""></div>
     <div class="ben-scroll" id="benScroll">
 
-      <!-- Header -->
-      <!-- Nav — exact list screen sticky nav pattern -->
+      <!-- Header: back + title + New button -->
       <div id="benNavSticky" style="position:sticky;top:0;z-index:10;padding-top:44px;overflow:visible;">
         <div class="nav-blur-bg" style="background:linear-gradient(to bottom,rgba(255,255,255,0.88) 0%,rgba(255,255,255,0.55) 55%,rgba(255,255,255,0) 100%);"></div>
         <div class="list-back-row" style="position:relative;z-index:1">
@@ -6003,10 +6613,11 @@
             <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
         </div>
-        <div class="list-header-row" style="position:relative;z-index:1">
-          <span class="list-title">Beneficiaries</span>
-          <button class="list-back-btn" onclick="benOpenAdd()" style="background:var(--brand-primary);border-bottom-color:rgba(255,255,255,0.3);">
-            <svg viewBox="0 0 24 24" style="stroke:#fff"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <div class="ben-header" style="position:relative;z-index:1;padding-top:4px;">
+          <span class="ben-title">Beneficiaries</span>
+          <button class="ben-new-btn" onclick="benOpenAdd()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            New
           </button>
         </div>
         <div class="list-search-row" style="position:relative;z-index:1">
@@ -6017,12 +6628,12 @@
         </div>
       </div>
 
-      <!-- Favorites -->
-      <div class="ben-sec-lbl">Favorites</div>
+      <!-- Favourites -->
+      <div class="ben-sec-lbl">Favourites</div>
       <div class="ben-favs-scroll" id="benFavs"></div>
 
-      <!-- All recipients -->
-      <div class="ben-sec-lbl">All recipients</div>
+      <!-- All beneficiaries -->
+      <div class="ben-sec-lbl">All beneficiaries</div>
       <div class="ben-list-wrap">
         <div class="ben-list" id="benList"></div>
       </div>
@@ -6032,32 +6643,39 @@
     <!-- Detail sheet -->
     <div class="ben-detail-overlay" id="benDetailOverlay" onclick="benCloseDetail(event)">
       <div class="ben-detail-sheet" id="benDetailSheet">
+        <!-- Back button -->
         <div class="ben-detail-hdr">
           <button class="ben-detail-back" onclick="benCloseDetail()">
-            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
           </button>
         </div>
-        <!-- Profile hero -->
-        <div class="ben-profile-hero">
-          <div class="ben-profile-av-wrap">
-            <div class="ben-profile-av" id="benDetailAv"></div>
+        <!-- Profile -->
+        <div class="ben-profile-hero" id="benProfileHero">
+          <div class="ben-profile-av" id="benDetailAv"></div>
+          <div class="ben-profile-name-group">
+            <span class="ben-profile-name" id="benDetailName"></span>
+            <div class="ben-profile-sub" id="benDetailSub"></div>
           </div>
-          <span class="ben-profile-name" id="benDetailName"></span>
-          <span class="ben-profile-meta" id="benDetailMeta"></span>
-        </div>
-        <!-- Rail tabs -->
-        <div class="ben-tabs-wrap" id="benTabsWrap">
-          <div class="ben-tabs" id="benTabs"></div>
         </div>
         <!-- Scrollable body -->
         <div class="ben-detail-body" id="benDetailBody"></div>
-        <!-- Pay CTA -->
-        <div class="ben-pay-wrap">
-          <button class="ben-pay-btn" id="benPayBtn" onclick="benPay()">Pay</button>
+        <!-- Bottom actions -->
+        <div class="ben-actions">
+          <button class="ben-icon-btn" title="Delete">
+            <svg viewBox="0 0 24 24"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+          </button>
+          <button class="ben-icon-btn" title="Edit">
+            <svg viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="ben-send-btn" id="benSendBtn" onclick="benPay()">
+            Send money
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
         </div>
       </div>
     </div>
   </div><!-- /#beneficiaries -->
+
 
 
   <!-- ══════════════════════════════════════
@@ -6182,226 +6800,205 @@
   <!-- ══════════════════════════════════════
        WITHIN US — TRANSFER IN PROGRESS
   ══════════════════════════════════════ -->
+  <!-- ══════════════════════════════════════
+       WITHIN US — TRANSFER IN PROGRESS
+  ══════════════════════════════════════ -->
   <div class="screen hr" id="smw-us-progress">
-    <!-- BG: gray gradient + green botanical -->
-    <div class="smwp-botanical">
-      <img src="assets/e851d677-84f6-4748-a091-b45decd3d586.webp" alt="">
-    </div>
+    <div class="sm-botanical-bg"><img src="beneBG.png" alt=""></div>
+    <div class="smp-scroll">
 
-    <div class="smwp-scroll">
-      <div class="smwp-card-wrap">
-        <div class="smwp-card">
-          <div class="smwp-card-inner">
+      <div class="smp-card-wrap" style="padding-top:52px">
+        <div class="smp-card">
 
-            <!-- Hero -->
-            <div class="smwp-hero">
-              <!-- Gray circle icon -->
-              <div class="smwp-hero-icon">
-                <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:40px;height:40px;opacity:0.5">
-                  <rect x="6" y="14" width="36" height="24" rx="4" stroke="rgba(0,0,0,0.6)" stroke-width="2.5"/>
-                  <path d="M6 20h36" stroke="rgba(0,0,0,0.6)" stroke-width="2.5"/>
-                  <circle cx="14" cy="30" r="3" fill="rgba(0,0,0,0.4)"/>
-                  <path d="M20 30h12" stroke="rgba(0,0,0,0.4)" stroke-width="2" stroke-linecap="round"/>
-                  <path d="M30 10l8 4-8 4" stroke="rgba(0,0,0,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
+          <!-- Hero with bg images + coin -->
+          <div class="smp-hero" id="smwpHero">
+            <div class="smp-hero-bg smp-hero-bg-blue"></div>
+            <div class="smp-hero-bg smp-hero-bg-green"></div>
+            <div class="smp-hero-icon" id="smwpHeroIcon">
+              <div class="smp-coin" id="smwpCoin">
+                <div class="smp-coin-face smp-coin-front"><span class="smp-coin-sym">$</span></div>
+                <div class="smp-coin-face smp-coin-back"><span class="smp-coin-sym">$</span></div>
               </div>
-              <span class="smwp-hero-lbl">Transfer in progress</span>
-              <div class="smwp-hero-amount">
-                <span class="smwp-hero-sym">$</span>
-                <span class="smwp-hero-int" id="smwpInt">1,000</span>
-                <span class="smwp-hero-dec" id="smwpDec">.00</span>
+              <div class="smp-result-icon" id="smwpResultIcon"></div>
+            </div>
+            <div class="smp-hero-center">
+              <span class="smp-hero-lbl" id="smwpHeroLbl">Transfer in progress</span>
+              <div class="smp-hero-amount">
+                <span class="smp-hero-sym">$</span>
+                <span class="smp-hero-int" id="smwpInt">1,000</span>
+                <span class="smp-hero-dec" id="smwpDec">.00</span>
               </div>
-              <div class="smwp-eta">
-                <svg viewBox="0 0 24 24" fill="none" stroke="#5d8887" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><polyline points="12 9 12 13 14.5 14.5"/><path d="M9 3h6"/></svg>
-                <span>ETA: 3 mins</span>
+              <div class="smp-hero-eta" id="smwpEta">
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none" style="color:#5d8887;flex-shrink:0"><circle cx="8" cy="8" r="6.5" stroke="#5d8887" stroke-width="1.5"/><path d="M8 4.5V8L10.5 10" stroke="#5d8887" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <span class="smp-hero-eta-txt">Estimated arrival: same day</span>
               </div>
             </div>
+          </div>
 
-            <!-- Sections -->
-            <div class="smwp-sections">
+          <!-- Sections -->
+          <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
 
-              <!-- STATUS DETAILS — expanded -->
-              <div class="smwp-section open" id="smwpStatusSec">
-                <div class="smwp-sec-hdr" onclick="this.parentElement.classList.toggle('open');this.querySelector('.smwp-sec-caret').classList.toggle('flipped')">
-                  <span class="smwp-sec-lbl">Status details</span>
-                  <span class="ico ol smwp-sec-caret flipped" style="--ico:url('Icons/CaretDown.svg');color:rgba(0,0,0,0.50)"></span>
-                </div>
-                <div class="smwp-acc-body">
-                  <div class="smwp-stepper">
-                    <!-- Spine -->
-                    <div class="smwp-spine">
-                      <span class="ico smwp-spine-check" style="--ico:url('Icons/Check.svg');color:var(--brand-primary)"></span>
-                      <div class="smwp-spine-line" style="height:26px"></div>
-                      <div class="smwp-dot-active"><div class="smwp-dot-active-inner"></div></div>
-                      <div class="smwp-spine-line" style="height:52px"></div>
-                      <div class="smwp-dot-inactive"><div class="smwp-dot-inactive-inner"></div></div>
+            <!-- STATUS DETAILS -->
+            <div class="smp-sec-status smp-acc-open" id="smwpAccStatus">
+              <div class="smp-sec-hdr flipped" style="cursor:pointer" onclick="smpToggle('smwpAccStatus','smwpAccTxn')">
+                <span class="smp-sec-lbl">Status details</span>
+                <span class="ico ol smp-caret" style="--ico:url('Icons/CaretUp.svg');color:rgba(0,0,0,0.40);transition:transform 0.22s"></span>
+              </div>
+              <div class="smp-stepper">
+                <!-- Step 1: done -->
+                <div class="smp-step">
+                  <div class="smp-step-spine">
+                    <div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
+                    <div class="smp-vline"></div>
+                  </div>
+                  <div class="smp-step-body">
+                    <div class="smp-step-row">
+                      <span class="smp-step-name">Payment initiated</span>
+                      <span class="smp-step-time">2 mins ago</span>
                     </div>
-                    <!-- Steps -->
-                    <div class="smwp-steps">
-                      <div class="smwp-step">
-                        <div class="smwp-step-row">
-                          <span class="smwp-step-name">Payment initiated</span>
-                          <span class="smwp-step-time" style="font-size:8px;letter-spacing:1px;text-transform:uppercase">2 mins ago</span>
-                        </div>
-                        <div style="height:26px;flex-shrink:0"></div>
-                      </div>
-                      <div class="smwp-step">
-                        <div class="smwp-step-row">
-                          <span class="smwp-step-name bold">Being processed by the bank</span>
-                          <span class="smwp-step-time" style="font-size:8px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap">1 min ago</span>
-                        </div>
-                        <div class="smwp-step-sub">Funds will be on the way to the recipient post this.</div>
-                        <div style="height:18px;flex-shrink:0"></div>
-                      </div>
-                      <div class="smwp-step">
-                        <div class="smwp-step-row">
-                          <span class="smwp-step-name dim" id="smwpRecipStep">Funds in Rohan's account</span>
-                          <span class="smwp-step-time" style="font-size:8px;letter-spacing:1px;text-transform:uppercase;white-space:nowrap">in 2 mins</span>
-                        </div>
-                      </div>
+                    <div class="smp-step-sub">We've received your transfer request.</div>
+                  </div>
+                </div>
+                <!-- Step 2: active -->
+                <div class="smp-step">
+                  <div class="smp-step-spine">
+                    <div class="smp-si-active"><div class="smp-si-active-inner"></div></div>
+                    <div class="smp-vline"></div>
+                  </div>
+                  <div class="smp-step-body">
+                    <div class="smp-step-row">
+                      <span class="smp-step-name active">Being processed by the bank</span>
+                      <span class="smp-step-time">1 min ago</span>
+                    </div>
+                    <div class="smp-step-sub">Funds will be on the way to the recipient shortly.</div>
+                  </div>
+                </div>
+                <!-- Step 3: pending -->
+                <div class="smp-step">
+                  <div class="smp-step-spine">
+                    <div class="smp-si-lock"><svg viewBox="0 0 12 12"><rect x="2.5" y="5.5" width="7" height="5" rx="1"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg></div>
+                  </div>
+                  <div class="smp-step-body">
+                    <div class="smp-step-row">
+                      <span class="smp-step-name pending" id="smwpRecipStep">Funds in Rohan's account</span>
+                      <span class="smp-step-time">in 3 mins</span>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              <!-- TRANSACTION DETAILS — collapsed -->
-              <div class="smwp-section" id="smwpTxnSec">
-                <div class="smwp-sec-hdr" onclick="this.parentElement.classList.toggle('open');this.querySelector('.smwp-sec-caret').classList.toggle('flipped')">
-                  <span class="smwp-sec-lbl">Transaction details</span>
-                  <span class="ico ol smwp-sec-caret" style="--ico:url('Icons/CaretDown.svg');color:rgba(0,0,0,0.50)"></span>
-                </div>
-                <div class="smwp-acc-body" style="flex-direction:column">
-                  <div class="smwp-row"><span class="smwp-row-lbl">Recipient</span><span class="smwp-row-val" id="smwpRecip">Rohan Rathod</span></div>
-                  <div class="smwp-row"><span class="smwp-row-lbl">Paid to</span><span class="smwp-row-val" id="smwpPaidTo" style="text-align:right">•• 7654<br>(Bank of America)</span></div>
-                  <div class="smwp-row"><span class="smwp-row-lbl">Amount sent</span><span class="smwp-row-val" id="smwpAmt">$1,000.00</span></div>
-                  <div class="smwp-row"><span class="smwp-row-lbl">Fee</span><span class="smwp-row-val">$10.00</span></div>
-                  <div class="smwp-row"><span class="smwp-row-lbl">Paid from</span><span class="smwp-row-val">USD Checking ••3214</span></div>
-                </div>
+            <!-- TRANSACTION DETAILS -->
+            <div class="smp-sec-txn" id="smwpAccTxn">
+              <div class="smp-sec-hdr flipped" style="cursor:pointer" onclick="smpToggle('smwpAccTxn','smwpAccStatus')">
+                <span class="smp-sec-lbl">Transaction details</span>
+                <span class="ico ol smp-caret" style="--ico:url('Icons/CaretUp.svg');color:rgba(0,0,0,0.40);transition:transform 0.22s"></span>
               </div>
+              <div class="smp-acc-body">
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Recipient</span><span class="smp-acc-val" id="smwpRecip">Rohan Rathod</span></div>
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Paid to</span><span class="smp-acc-val" id="smwpPaidTo" style="text-align:right">•• 7654 · Bank of America</span></div>
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Amount</span><span class="smp-acc-val" id="smwpAmt">$1,000.00</span></div>
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Fee</span><span class="smp-acc-val" style="color:var(--brand-primary)">Free</span></div>
+                <div class="smp-acc-row" style="padding-bottom:8px"><span class="smp-acc-lbl">From account</span><span class="smp-acc-val">USD Checking ••3214</span></div>
+              </div>
+            </div>
 
-            </div><!-- /smwp-sections -->
-          </div><!-- /.smwp-card-inner -->
-        </div><!-- /.smwp-card -->
-      </div><!-- /.smwp-card-wrap -->
-
-      <!-- Done button -->
-      <div class="smwp-bottom">
-        <button class="smwp-done-btn" onclick="smwGoToSuccess()">Done</button>
+          </div>
+        </div>
       </div>
 
-    </div><!-- /.smwp-scroll -->
+    </div><!-- /.smp-scroll -->
+
+    <!-- Simulate / Done -->
+    <div class="smp-bottom" id="smwpBottom">
+      <button class="smp-done-btn" onclick="smwGoToSuccess()">Done</button>
+      <button class="smp-sim-btn" onclick="smwSimulateSuccess()" title="Simulate success">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,12 9,17 20,7"/></svg>
+      </button>
+      <button class="smp-sim-btn fail" onclick="smwSimulateFailure()" title="Simulate failure">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
+      </button>
+    </div>
   </div><!-- /#smw-us-progress -->
 
 
   <!-- ══════════════════════════════════════
-       WITHIN US — SUCCESSFULLY TRANSFERRED
+       WITHIN US — SUCCESS
   ══════════════════════════════════════ -->
   <div class="screen hr" id="smw-us-success">
-    <!-- BG: luminosity gradient + green botanical top-left -->
-    <div class="smwp-botanical">
-      <img src="assets/b2be9639-bfd1-4799-beae-cfc1b025e922.webp" alt="">
-    </div>
+    <div class="sm-botanical-bg"><img src="beneBG.png" alt=""></div>
+    <div class="sms-scroll">
 
-    <div class="smws-scroll">
-      <div class="smwp-card-wrap">
-        <div class="smwp-card">
-          <div class="smwp-card-inner">
+      <div class="smp-card-wrap" style="padding-top:52px">
+        <div class="smp-card">
 
-            <!-- Hero with green gradient bg -->
-            <div class="smwp-hero" style="position:relative;overflow:hidden;background:none;padding-top:28px;min-height:209px;justify-content:flex-end;padding-bottom:20px">
-              <!-- Green gradient decorative bg -->
-              <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(70,136,43,0.22) 0%,rgba(70,136,43,0.04) 100%);pointer-events:none"></div>
-              <!-- Success icon -->
-              <div style="position:absolute;top:24px;left:50%;transform:translateX(-50%);width:88px;height:88px;overflow:hidden;border-radius:999px">
-                <img src="assets/9b1cfd29-9fb1-413f-82cd-cb0dcbec4036.webp" alt="Success" style="width:135%;height:135%;position:absolute;top:-17.5%;left:-17.5%;max-width:none">
+          <div class="sms-hero">
+            <div class="sms-hero-icon">
+              <svg viewBox="0 0 44 44"><polyline points="8,22 18,32 36,14"/></svg>
+            </div>
+            <div class="sms-hero-center">
+              <span class="sms-hero-lbl">Successfully transferred</span>
+              <div class="sms-hero-amount">
+                <span class="sms-hero-sym">$</span>
+                <span class="sms-hero-int" id="smwsInt">1,000</span>
+                <span class="sms-hero-dec" id="smwsDec">.00</span>
               </div>
-              <!-- Text below icon -->
-              <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center">
-                <span class="smwp-hero-lbl green">Successfully transferred</span>
-                <div class="smwp-hero-amount">
-                  <span class="smwp-hero-sym">$</span>
-                  <span class="smwp-hero-int" id="smwsInt">1,000</span>
-                  <span class="smwp-hero-dec" id="smwsDec">.00</span>
+            </div>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
+
+            <!-- STATUS DETAILS — all done -->
+            <div class="smp-sec-status smp-acc-open" id="smwsAccStatus">
+              <div class="smp-sec-hdr flipped" style="cursor:pointer" onclick="smpToggle('smwsAccStatus','smwsAccTxn')">
+                <span class="smp-sec-lbl">Status details</span>
+                <span class="ico ol smp-caret" style="--ico:url('Icons/CaretUp.svg');color:rgba(0,0,0,0.40);transition:transform 0.22s"></span>
+              </div>
+              <div class="smp-stepper">
+                <div class="smp-step">
+                  <div class="smp-step-spine"><div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="smp-vline"></div></div>
+                  <div class="smp-step-body"><div class="smp-step-row"><span class="smp-step-name">Payment initiated</span><span class="smp-step-time">2 mins ago</span></div><div class="smp-step-sub">We've received your transfer request.</div></div>
+                </div>
+                <div class="smp-step">
+                  <div class="smp-step-spine"><div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div><div class="smp-vline"></div></div>
+                  <div class="smp-step-body"><div class="smp-step-row"><span class="smp-step-name">Transfer processed</span><span class="smp-step-time">1 min ago</span></div><div class="smp-step-sub">Processed by the bank successfully.</div></div>
+                </div>
+                <div class="smp-step">
+                  <div class="smp-step-spine"><div class="smp-si-active"><div class="smp-si-active-inner"></div></div></div>
+                  <div class="smp-step-body"><div class="smp-step-row"><span class="smp-step-name active" id="smwsRecipStep">Funds in Rohan's account</span><span class="smp-step-time">just now</span></div><div class="smp-step-sub" id="smwsRecipSub">Rohan has received the money in their Bank of America account.</div></div>
                 </div>
               </div>
             </div>
 
-            <!-- Sections -->
-            <div class="smwp-sections">
-
-              <!-- STATUS DETAILS — collapsed -->
-              <div class="smwp-section" id="smwsStatusSec" style="background:rgba(0,0,0,0.03);border-radius:16px 16px 0 0">
-                <div class="smwp-sec-hdr" onclick="this.parentElement.classList.toggle('open');this.querySelector('.smwp-sec-caret').classList.toggle('flipped')">
-                  <span class="smwp-sec-lbl">Status details</span>
-                  <span class="ico ol smwp-sec-caret" style="--ico:url('Icons/CaretDown.svg');color:rgba(0,0,0,0.50)"></span>
-                </div>
-                <div class="smwp-acc-body" style="flex-direction:column;padding:0 16px 16px">
-                  <div class="smwp-row"><span class="smwp-row-lbl">All steps completed</span><span class="smwp-row-val" style="color:var(--brand-primary)">✓ Done</span></div>
-                </div>
+            <!-- TRANSACTION DETAILS -->
+            <div class="smp-sec-txn" id="smwsAccTxn">
+              <div class="smp-sec-hdr flipped" style="cursor:pointer" onclick="smpToggle('smwsAccTxn','smwsAccStatus')">
+                <span class="smp-sec-lbl">Transaction details</span>
+                <span class="ico ol smp-caret" style="--ico:url('Icons/CaretUp.svg');color:rgba(0,0,0,0.40);transition:transform 0.22s"></span>
               </div>
-
-              <!-- TRANSACTION DETAILS — expanded -->
-              <div class="smwp-section open" id="smwsTxnSec" style="background:rgba(0,0,0,0.03);border-radius:0 0 16px 16px">
-                <div class="smwp-sec-hdr" style="border-top:0.5px solid rgba(0,0,0,0.08)" onclick="this.parentElement.classList.toggle('open');this.querySelector('.smwp-sec-caret').classList.toggle('flipped')">
-                  <span class="smwp-sec-lbl">Transaction details</span>
-                  <span class="ico ol smwp-sec-caret flipped" style="--ico:url('Icons/CaretDown.svg');color:rgba(0,0,0,0.50)"></span>
-                </div>
-                <div class="smwp-acc-body" style="flex-direction:column;gap:0;padding:0 20px 20px">
-                  <!-- Top rows -->
-                  <div style="display:flex;flex-direction:column;gap:20px;padding-bottom:16px">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.40)">Rohan receives</span>
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.80)" id="smwsReceives">$990.00</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.40)">Banyan fee</span>
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.80)">$10.00</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:flex-start">
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.40)">Paid to</span>
-                      <span style="font-size:13px;font-weight:500;color: var(--text-primary);text-align:right" id="smwsPaidTo">Rohan Rathod<br>** 7654 (Bank of America)</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.40)">Paid from</span>
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.80)">USD Checking ••3214</span>
-                    </div>
-                  </div>
-                  <!-- Divider -->
-                  <div style="height:0.5px;background:rgba(0,0,0,0.12);margin:0 0 16px"></div>
-                  <!-- Bottom rows -->
-                  <div style="display:flex;flex-direction:column;gap:20px">
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.40)">Transaction ID</span>
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.80)">#0976543456787</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.40)">Payment purpose</span>
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.80)">Family</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.40)">Notes</span>
-                      <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.80)">Some random reason</span>
-                    </div>
-                  </div>
-                </div>
+              <div class="smp-acc-body">
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Recipient</span><span class="smp-acc-val" id="smwsPaidTo">Rohan Rathod</span></div>
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Amount sent</span><span class="smp-acc-val" id="smwsAmt">$1,000.00</span></div>
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Recipient receives</span><span class="smp-acc-val" id="smwsReceives">$1,000.00</span></div>
+                <div class="smp-acc-row"><span class="smp-acc-lbl">Fee</span><span class="smp-acc-val" style="color:var(--brand-primary)">Free</span></div>
+                <div class="smp-acc-row"><span class="smp-acc-lbl">From account</span><span class="smp-acc-val">USD Checking ••3214</span></div>
+                <div class="smp-acc-row" style="padding-bottom:8px"><span class="smp-acc-lbl">Transaction ID</span><span class="smp-acc-val" style="font-size:11px;color:rgba(0,0,0,0.45)">TXN-2026-BNY-0033</span></div>
               </div>
+            </div>
 
-            </div><!-- /smwp-sections -->
-          </div><!-- /.smwp-card-inner -->
-        </div><!-- /.smwp-card -->
-      </div><!-- /.smwp-card-wrap -->
-
-      <!-- Done + Share buttons -->
-      <div class="smwp-bottom" style="padding-top:20px;gap:12px;flex-direction:row">
-        <button class="smwp-done-btn" style="width:auto;flex:1" onclick="smwClose()">Done</button>
-        <button class="smwp-share-btn" style="width:auto;flex:1" onclick="smwShareSuccess()">
-          <span class="ico ol share-icon" style="--ico:url('Icons/Export.svg');color:var(--brand-primary)"></span>
-          <span style="position:relative;z-index:1">Share</span>
-          <img class="smwp-share-glow" src="assets/71c0bdbe-790f-4d0a-80e4-f6bc89f287d2.svg" alt="">
-        </button>
+          </div>
+        </div>
       </div>
 
-    </div><!-- /.smws-scroll -->
+    </div><!-- /.sms-scroll -->
+
+    <div class="sms-bottom">
+      <button class="sms-done-btn" onclick="smwClose()">Done</button>
+      <button class="sms-share-btn" onclick="smwShareSuccess()">
+        <svg viewBox="0 0 20 20"><circle cx="15" cy="4" r="2"/><circle cx="5" cy="10" r="2"/><circle cx="15" cy="16" r="2"/><line x1="7" y1="11" x2="13" y2="15"/><line x1="7" y1="9" x2="13" y2="5"/></svg>
+        Share
+      </button>
+    </div>
   </div><!-- /#smw-us-success -->
 
 
@@ -6713,14 +7310,6 @@
       <div id="compactNav">
         <div class="compact-bar">
           <span class="compact-title">Transactions</span>
-          <div class="compact-actions">
-            <button class="compact-btn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            </button>
-            <button class="compact-btn" id="filterBtnCompact">
-              <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-            </button>
-          </div>
         </div>
         <div class="active-filters-row" id="activeFiltersRowCompact"></div>
       </div>
@@ -6739,18 +7328,6 @@
             <button class="ltab" onclick="switchTab('scheduled',this)">Scheduled</button>
           </div>
         </div>
-        <div class="list-search-row">
-          <div class="list-search">
-            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
-            <input id="txSearch" type="text" placeholder="Search..." autocomplete="off" spellcheck="false">
-          </div>
-          <div class="filter-btn-wrap" id="filterBtnWrap">
-            <button class="list-filter-btn" id="filterBtn">
-              <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="11" y1="18" x2="13" y2="18"/></svg>
-            </button>
-            <div class="filter-active-dot"></div>
-          </div>
-        </div>
         <!-- Active filter chips — lives inside fullNav so it collapses with it -->
         <div class="active-filters-row" id="activeFiltersRow"></div>
       </div>
@@ -6760,12 +7337,26 @@
     <!-- Outer card — full-height content, no internal scroll -->
     <div class="list-card" id="txList"></div>
 
-
     <!-- Filter sheet overlay -->
     <div class="filter-overlay" id="filterOverlay">
       <div class="filter-sheet" id="filterSheet"></div>
     </div>
   </div><!-- /#list -->
+
+  <!-- Bottom search/filter bar — phone-level; shown via CSS sibling selector when #list.on -->
+  <div class="list-bottom-bar">
+    <label class="list-search-field" for="txSearch">
+      <span class="ico ol" style="--ico:url('Icons/MagnifyingGlass.svg');--sz:18px;color:rgba(0,0,0,0.40);flex-shrink:0"></span>
+      <input id="txSearch" type="search" placeholder="Search..." autocomplete="off" spellcheck="false" class="list-search-input">
+    </label>
+    <button class="list-bar-btn filter-btn-wrap" id="filterBtnWrap" aria-label="Filter">
+      <span class="ico ol" style="--ico:url('Icons/Funnel.svg');--sz:16px;color:rgba(0,0,0,0.60)"></span>
+      <div class="filter-active-dot"></div>
+    </button>
+    <button class="list-bar-btn" aria-label="Download">
+      <span class="ico ol" style="--ico:url('Icons/DownloadSimple.svg');--sz:16px;color:rgba(0,0,0,0.60)"></span>
+    </button>
+  </div>
 
   <!-- Dispute form overlay — phone-level so it stacks above #detail (z-index:20) -->
   <div class="dispute-overlay" id="disputeOverlay">
@@ -6942,6 +7533,59 @@
     </div>
   </div>
 
+  <!-- AI Agent overlay — sits above all screens, below nav interactions -->
+  <div id="sm-agent">
+    <!-- Content blur — tap to dismiss -->
+    <div class="ai-backdrop" onclick="closeAgent()"></div>
+    <!-- Green glow orb -->
+    <div class="ai-glow"></div>
+    <!-- Bottom panel -->
+    <div class="ai-panel">
+      <div class="ai-panel-grabber"></div>
+
+      <!-- Input — bare, prominent, auto-growing textarea -->
+      <textarea
+        id="aiInputField"
+        placeholder="Ask Banyan…"
+        rows="1"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        oninput="aiOnInput(this)"
+        onkeydown="aiOnKeydown(event)"
+      ></textarea>
+
+      <!-- Bottom bar: context chip (left) + action icons (right) -->
+      <div class="ai-bottom-bar">
+        <div class="ai-context-row" id="aiContextRow">
+          <div class="ai-chip">
+            <div class="ai-chip-avatar">
+              <img src="assets/space-usd-checking.webp" alt="USD Checking">
+            </div>
+            <span class="ai-chip-label">USD Checking</span>
+            <button class="ai-chip-close" onclick="aiRemoveChip(this)" aria-label="Remove">
+              <span class="ico ol" style="--ico:url('Icons/X.svg');--sz:9px;color:inherit"></span>
+            </button>
+          </div>
+        </div>
+        <div class="ai-action-btns">
+          <button class="ai-action-btn" aria-label="Attach" onclick="aiAttach()">
+            <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:16px;color:inherit"></span>
+          </button>
+          <button class="ai-action-btn" aria-label="Photo" onclick="aiCamera()">
+            <span class="ico ol" style="--ico:url('Icons/Camera.svg');--sz:16px;color:inherit"></span>
+          </button>
+          <button class="ai-action-btn" aria-label="Voice" onclick="aiMic()">
+            <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:16px;color:inherit"></span>
+          </button>
+          <button class="ai-send-btn ai-send-empty" id="aiSendBtn" aria-label="Send" onclick="aiSend()">
+            <span class="ico ol" style="--ico:url('Icons/ArrowUp.svg');--sz:13px;color:#fff"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Global bottom nav — single instance, always on top -->
   <div class="bnav-wrap" id="globalNav">
     <div class="bnav-pill" id="bnavPill">
@@ -6997,7 +7641,7 @@
       </div><!-- /.bnav-picker -->
 
     </div>
-    <div class="bnav-ai">
+    <div class="bnav-ai" onclick="openAgent()" style="cursor:pointer;">
       <div class="bnav-ai-inner">
         <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
       </div>
@@ -7211,6 +7855,229 @@ function showNav(visible) {
   if (nav) nav.classList.toggle('bnav-hidden', !visible);
 }
 
+/* ── AI Agent ───────────────────────────────────────── */
+let _agentOpen = false;
+
+function openAgent() {
+  if (_agentOpen) return;
+  _agentOpen = true;
+  const overlay = document.getElementById('sm-agent');
+  overlay.classList.add('ai-open');
+  // Softly hide nav
+  const nav = document.getElementById('globalNav');
+  if (nav) {
+    nav.style.transition = 'opacity 250ms ease, transform 300ms var(--ease-spring)';
+    nav.style.opacity = '0';
+    nav.style.transform = 'translateY(12px)';
+    nav.style.pointerEvents = 'none';
+  }
+  // Focus input after panel finishes animating in
+  setTimeout(function() {
+    const f = document.getElementById('aiInputField');
+    if (f) f.focus();
+  }, 420);
+}
+
+function closeAgent() {
+  if (!_agentOpen) return;
+  _agentOpen = false;
+  const overlay = document.getElementById('sm-agent');
+  overlay.classList.remove('ai-open');
+  // Restore nav
+  const nav = document.getElementById('globalNav');
+  if (nav) {
+    nav.style.transition = 'opacity 300ms var(--ease-out), transform 360ms var(--ease-spring)';
+    nav.style.opacity = '1';
+    nav.style.transform = 'translateY(0)';
+    nav.style.pointerEvents = '';
+  }
+  // Clear input
+  const f = document.getElementById('aiInputField');
+  const s = document.getElementById('aiSendBtn');
+  if (f) { f.value = ''; f.style.height = 'auto'; }
+  if (s) s.classList.add('ai-send-empty');
+  // Restore chip row
+  const row = document.getElementById('aiContextRow');
+  if (row) { row.style.display = ''; row.innerHTML = `
+    <div class="ai-chip">
+      <div class="ai-chip-avatar"><img src="assets/space-usd-checking.webp" alt="USD Checking"></div>
+      <span class="ai-chip-label">USD Checking</span>
+      <button class="ai-chip-close" onclick="aiRemoveChip(this)" aria-label="Remove context">
+        <span class="ico ol" style="--ico:url('Icons/X.svg');--sz:10px;color:inherit"></span>
+      </button>
+    </div>`; }
+}
+
+function aiOnInput(input) {
+  // Auto-grow
+  input.style.height = 'auto';
+  input.style.height = input.scrollHeight + 'px';
+  // Send button state
+  const sendBtn = document.getElementById('aiSendBtn');
+  if (!sendBtn) return;
+  const hasText = input.value.trim().length > 0;
+  sendBtn.classList.toggle('ai-send-empty', !hasText);
+}
+
+function aiOnKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    aiSend();
+  }
+  if (e.key === 'Escape') closeAgent();
+}
+
+function aiSend() {
+  const f = document.getElementById('aiInputField');
+  const s = document.getElementById('aiSendBtn');
+  if (!f || !f.value.trim()) return;
+  // Pulse send button
+  if (s) {
+    s.style.transform = 'scale(0.84)';
+    setTimeout(function() { s.style.transform = ''; }, 160);
+  }
+  f.value = ''; f.style.height = 'auto';
+  if (s) s.classList.add('ai-send-empty');
+}
+
+function aiRemoveChip(btn) {
+  var chip = btn.closest('.ai-chip');
+  if (!chip) return;
+  chip.style.transition = 'opacity 160ms ease, transform 180ms var(--ease-out)';
+  chip.style.opacity = '0';
+  chip.style.transform = 'scale(0.82)';
+  setTimeout(function() {
+    chip.remove();
+    // If no chips left, hide the row to reclaim space
+    var row = document.getElementById('aiContextRow');
+    if (row && row.querySelectorAll('.ai-chip').length === 0) {
+      row.style.display = 'none';
+    }
+  }, 180);
+}
+
+function aiAttach() { /* placeholder */ }
+function aiCamera() { /* placeholder */ }
+function aiMic()    { /* placeholder */ }
+
+/* ── AI panel drag-to-expand ─────────────────────────── */
+(function() {
+  var panel, grabber, phone;
+  var dragging = false;
+  var startY = 0, startH = 0, curH = 0;
+  var expanded = false;
+  var SNAP_VELOCITY = 0.4; // fraction of max height to trigger expand
+
+  function init() {
+    panel   = document.querySelector('.ai-panel');
+    grabber = document.querySelector('.ai-panel-grabber');
+    phone   = document.querySelector('.phone');
+    if (!grabber) return;
+    grabber.addEventListener('pointerdown', onDown);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup',   onUp);
+  }
+
+  function maxH() {
+    // Full panel: phone height minus status bar gap
+    return phone.offsetHeight - 44;
+  }
+
+  function compactH() {
+    // Natural (auto) height — measure it
+    panel.style.height = '';
+    return panel.offsetHeight;
+  }
+
+  function onDown(e) {
+    if (!_agentOpen) return;
+    e.preventDefault();
+    dragging = true;
+    startY = e.clientY;
+    // Freeze current height so we can animate from it
+    panel.style.transition = 'none';
+    if (expanded) {
+      startH = panel.offsetHeight;
+    } else {
+      startH = panel.offsetHeight;
+    }
+    curH = startH;
+    panel.style.height = startH + 'px';
+    grabber.setPointerCapture(e.pointerId);
+  }
+
+  function onMove(e) {
+    if (!dragging) return;
+    var dy = startY - e.clientY; // positive = drag up
+    var newH = Math.max(80, Math.min(startH + dy, maxH()));
+    curH = newH;
+    panel.style.height = newH + 'px';
+    // Adjust bottom/left/right and border-radius proportionally
+    var progress = Math.max(0, Math.min(1, (newH - startH) / (maxH() - startH)));
+    if (!expanded) {
+      panel.style.bottom        = (8 - 8 * progress) + 'px';
+      panel.style.left          = (8 - 8 * progress) + 'px';
+      panel.style.right         = (8 - 8 * progress) + 'px';
+      panel.style.borderRadius  = (26 - 10 * progress) + 'px ' + (26 - 10 * progress) + 'px 0 0';
+    }
+  }
+
+  function onUp(e) {
+    if (!dragging) return;
+    dragging = false;
+    panel.style.transition = ''; // restore CSS transition
+
+    var mid = (startH + maxH()) / 2;
+    if (!expanded && curH > mid) {
+      snapExpand();
+    } else if (expanded && curH < mid) {
+      snapCollapse();
+    } else if (!expanded) {
+      snapCollapse(); // bounce back
+    } else {
+      snapExpand();   // bounce back
+    }
+  }
+
+  function snapExpand() {
+    expanded = true;
+    panel.style.height = maxH() + 'px';
+    panel.style.bottom = '0';
+    panel.style.left   = '0';
+    panel.style.right  = '0';
+    panel.style.borderRadius = '26px 26px 0 0';
+    panel.classList.add('ai-panel-expanded');
+  }
+
+  function snapCollapse() {
+    expanded = false;
+    panel.classList.remove('ai-panel-expanded');
+    panel.style.height       = '';
+    panel.style.bottom       = '';
+    panel.style.left         = '';
+    panel.style.right        = '';
+    panel.style.borderRadius = '';
+  }
+
+  // Reset on agent close
+  var origClose = window.closeAgent;
+  window.closeAgent = function() {
+    expanded = false;
+    if (panel) {
+      panel.classList.remove('ai-panel-expanded');
+      panel.style.height = panel.style.bottom = panel.style.left = panel.style.right = panel.style.borderRadius = '';
+    }
+    origClose();
+  };
+
+  // Init once DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+
 /* ── Status config ───────────────────────────────────── */
 const S = {
   completed:          { label:'Completed',             badge:'b-green', hdr:'dh-green',   desc:null,                                                                           cta:'Share receipt',   ctaType:'primary', icon:'share' },
@@ -7240,218 +8107,67 @@ const S = {
 
 const RECENT = [
   // ── NEW (section 1, white card) ───────────────────────
-  { id:'t1',  date:'Jul 27', new:true,
+  { id:'t1', date:'Jun 7', new:true,
     name:'Whole Foods',     av:{ds:'shopping'},
     status:'completed',     amt:[89,43],
     method:'card',          to:'Whole Foods Market', card:'Debit card ••4242' },
 
-  { id:'t3',  date:'Jul 26', new:true,
+  { id:'t2', date:'Jun 7', new:true,
     name:'Netflix',         av:{ds:'entertainment'},
     status:'completed',     amt:[15,49],
     method:'card',          to:'Netflix', card:'Debit card ••4242' },
 
-  { id:'t4',  date:'Jul 26', new:true,
+  { id:'t3', date:'Jun 6', new:true,
     name:'Ahmed Al-Farsi',  av:{bg:'linear-gradient(145deg,#E09040,#B06010)',ini:'AA'},
     status:'pending',       amt:[2100,0],
     method:'wire',          to:'Ahmed Al-Farsi · →5503 (Wells Fargo)' },
 
   // ── OLDER (section 2, gray bg) ────────────────────────
-  { id:'t5',  date:'Jul 26',
+  { id:'t4', date:'Jun 6',
     name:'Payroll',         av:{ds:'income'},
     status:'completed',     amt:[4850,0], isCredit:true,
     rowIcon:'repeat',       method:'wire', to:'USD Checking ~~3214' },
 
-  { id:'t6',  date:'Jul 26',
+  { id:'t5', date:'Jun 6',
     name:'Amazon',          av:{ds:'shopping'},
     status:'completed',     amt:[234,18],
     method:'card',          to:'Amazon.com', card:'Debit card ••4242' },
 
-  { id:'t7',  date:'Jul 25',
+  { id:'t6', date:'Jun 5',
     name:'Lyft',            av:{ds:'transport'},
     status:'completed',     amt:[24,75],
     method:'card',          to:'Lyft', card:'Debit card ••4242' },
 
-  { id:'t8',  date:'Jul 25',
-    name:'Starbucks',       av:{ds:'food'},
-    status:'completed',     amt:[9,50],
-    method:'card',          to:'Starbucks', card:'Debit card ••4242' },
-
-  { id:'t9',  date:'Jul 25',
-    name:'Kenji Watanabe',  av:{bg:'linear-gradient(145deg,#30A890,#187060)',ini:'KW'},
-    status:'completed',     amt:[120,0],  sub:'Game night',
-    method:'wire',          to:'Kenji Watanabe · →0047 (Bank of America)' },
-
-  { id:'t10', date:'Jul 25',
+  { id:'t7', date:'Jun 5',
     name:'Maya Sarini',     av:{bg:'linear-gradient(145deg,#D85090,#962858)',ini:'MS'},
     status:'completed',     amt:[568,36],
     method:'wire',          to:'Maya Sarini · →7654 (HDFC Bank)',
     inr:'− ₹53,878.21' },
 
-  // ── USE CASES ─────────────────────────────────────────
-  // scheduled
-  { id:'a1',  allStatuses:true,  date:'Jul 24',
-    name:'Spotify',         av:{ds:'entertainment'},
-    status:'scheduled',     amt:[9,99],   sub:'28 Jul 2026',
-    method:'card',          to:'Spotify Premium', card:'Debit card ••4242' },
-
-  // failed
-  { id:'a2',  allStatuses:true, date:'Jul 24',
+  { id:'t8', date:'Jun 5',
     name:'Zara',            av:{ds:'shopping'},
-    status:'failed',        amt:[189,0],  sub:'Insufficient funds',
+    status:'failed',        amt:[189,0],
     method:'card',          to:'Zara', card:'Debit card ••4242' },
 
-  // cancelled
-  { id:'a3',  allStatuses:true, date:'Jul 24',
+  { id:'t9', date:'Jun 4',
     name:'Carlos Mendez',   av:{bg:'linear-gradient(145deg,#4890D8,#2058A8)',ini:'CM'},
-    status:'cancelled',     amt:[500,0],  sub:'Banyan compliance',
+    status:'cancelled',     amt:[500,0],
     method:'wire',          to:'Carlos Mendez · →1188 (Citibank)' },
 
-  // on hold
-  { id:'a4',  allStatuses:true, date:'Jul 24',
+  { id:'t10', date:'Jun 4',
     name:'Delta Airlines',  av:{ds:'transport'},
     status:'on_hold',       amt:[890,0],
     method:'card',          to:'Delta Airlines', card:'Debit card ••4242' },
 
-  // returned — outgoing wire rejected by bene bank, money returned
-  { id:'a5',  allStatuses:true, date:'Jul 24',
-    name:'Elena Volkov',    av:{bg:'linear-gradient(145deg,#9050D8,#5828A8)',ini:'EV'},
-    status:'returned',      amt:[250,0],  sub:'No account found',
-    isCredit:false,         method:'wire', to:'Elena Volkov · →4421 (TD Bank)' },
-
-  // refund companion — money returned to sender's account
-  { id:'a5_refund', date:'Jul 24',
-    name:'Elena Volkov', av:{bg:'linear-gradient(145deg,#9050D8,#5828A8)',ini:'EV'},
-    status:'refund',        amt:[250,0],  isCredit:true,
-    useCase:true, linkedParent:'a5' },
-
-  // skipped
-  { id:'a6',  allStatuses:true, date:'Jul 24',
+  { id:'t11', date:'Jun 3',
     name:'DoorDash',        av:{ds:'food'},
-    status:'skipped',       amt:[145,20], sub:'Insufficient balance',
+    status:'skipped',       amt:[145,20],
     method:'card',          to:'DoorDash', card:'Debit card ••4242' },
 
-  // reversal requested — ACH only
-  { id:'a8',  allStatuses:true, date:'Jul 23',
-    name:'Marcus Webb',     av:{bg:'linear-gradient(145deg,#3060A8,#183880)',ini:'MW'},
-    status:'reversal_requested', amt:[3200,0],
-    method:'ach',           to:'Marcus Webb · ACH ••6614' },
-
-  // reversal rejected — ACH only
-  { id:'a9',  allStatuses:true, date:'Jul 23',
-    name:'Rohan Rathod',    av:{bg:'linear-gradient(145deg,#A050E8,#6828B8)',ini:'RR'},
-    inr:'− ₹41,258.50',
-    status:'reversal_rejected',  amt:[750,0],
-    method:'ach',           to:'Rohan Rathod · ACH ••7654' },
-
-  // reversed — ACH only, plus companion refund below
-  { id:'a10', allStatuses:true, date:'Jul 23',
-    name:'Target',          av:{ds:'shopping'},
-    status:'reversed',      amt:[412,0],  isCredit:false,
-    method:'ach',           to:'Target · ACH ••5541' },
-
-  // refund companion for a10 — the credit that hit the account after ACH reversal
-  { id:'a10_refund', date:'Jul 23',
-    name:'Target',          av:{ds:'shopping'},
-    status:'refund',        amt:[412,0],  isCredit:true,
-    method:'ach',           to:'Target · ACH ••5541',
-    linkedParent:'a10' },
-
-  // refund (credit) — standalone merchant-initiated refund
-  { id:'a11', allStatuses:true, date:'Jul 23',
-    name:'Airbnb',          av:{ds:'travel'},
-    status:'refund',        amt:[280,0],  isCredit:true,
-    method:'card',          to:'Airbnb', card:'Debit card ••4242' },
-
-  // dispute submitted — has a provisional credit linked
-  { id:'a12', allStatuses:true, date:'Jul 22',
-    name:'Instacart',       av:{ds:'shopping'},
-    status:'dispute_submitted',  amt:[156,80],
-    method:'card',          to:'Instacart', card:'Debit card ••4242',
-    relatedAmt:'+$156.80', relatedName:'Instacart (Provisional credit)', relatedBadge:'Provisional' },
-
-  // provisional credit companion for a12 (linked only — not a standalone list row)
-  { id:'a12_pc', date:'Jul 22',
-    name:'Instacart (Provisional credit)', av:{ds:'shopping'},
-    status:'completed',     amt:[156,80], isCredit:true,
-    isProvisionalCredit:true, pcTo:'Debit card ••4242', pcFrom:'Banyan Credit',
-    linkedParent:'a12' },
-
-  // dispute under review
-  { id:'a13', allStatuses:true, date:'Jul 22',
-    name:'Hilton Hotels',   av:{ds:'shopping'},
-    status:'dispute_review',     amt:[1240,0],
-    method:'card',          to:'Hilton Hotels', card:'Debit card ••4242' },
-
-  // dispute rejected
-  { id:'a14', allStatuses:true, date:'Jul 22',
-    name:'Adobe',           av:{ds:'bill'},
-    status:'dispute_rejected',   amt:[59,99],
-    method:'card',          to:'Adobe Creative Cloud', card:'Debit card ••4242' },
-
-  // provisional credit issued when dispute was submitted
-  { id:'a14_pc', date:'Jul 22',
-    name:'Adobe (Provisional credit)', av:{ds:'bill'},
-    status:'completed',     amt:[59,99],  isCredit:true,
-    isProvisionalCredit:true, pcTo:'Debit card ••4242', pcFrom:'Banyan Credit',
-    useCase:true, linkedParent:'a14' },
-
-  // credit clawback — provisional credit reversed after dispute rejected
-  { id:'a14_cc', date:'Jul 22',
-    name:'Adobe (Credit clawback)', av:{ds:'bill'},
-    status:'completed',     amt:[59,99],  isCredit:false,
-    useCase:true, linkedParent:'a14' },
-
-  // dispute resolved — original debit stays as dispute_resolved; refund is a separate tx
-  { id:'a15', allStatuses:true, date:'Jul 22',
-    name:'Southwest',       av:{ds:'transport'},
-    status:'dispute_resolved',   amt:[380,0], isCredit:false,
-    method:'card',          to:'Southwest Airlines', card:'Debit card ••4242',
-    relatedAmt:'+$380.00', relatedName:'Southwest (Provisional credit)', relatedBadge:'Provisional' },
-
-  // provisional credit companion for a15 — card dispute: provisional credit becomes permanent
-  { id:'a15_pc', date:'Jul 22',
-    name:'Southwest (Provisional credit)', av:{ds:'transport'},
-    status:'completed',     amt:[380,0],  isCredit:true,
-    isProvisionalCredit:true, pcTo:'Debit card ••4242', pcFrom:'Banyan Credit',
-    linkedParent:'a15' },
-
-  // ACH dispute submitted — no provisional credit
-  { id:'b1', allStatuses:true, date:'Jul 21',
-    name:'Venmo',           av:{ds:'income'},
-    status:'dispute_submitted',  amt:[340,0],
-    method:'ach',           to:'Venmo · ACH ••8821' },
-
-  // ACH dispute resolved — generates a refund (unlike card which uses provisional credit)
-  { id:'b2', allStatuses:true, date:'Jul 21',
-    name:'Zelle',           av:{ds:'income'},
-    status:'dispute_resolved',   amt:[275,50], isCredit:false,
-    method:'ach',           to:'Zelle · ACH ••2291' },
-
-  // ACH refund companion for b2
-  { id:'b2_refund', date:'Jul 21',
-    name:'Zelle',           av:{ds:'income'},
-    status:'refund',        amt:[275,50], isCredit:true,
-    method:'ach',           to:'Zelle · ACH ••2291',
-    linkedParent:'b2' },
-
-  // ── JOURNEY DEMOS ──────────────────────────────────────
-  // Journey 1: Card dispute
-  { id:'j1',  useCase:true, date:'Jul 21', journey:'card_dispute',
-    name:'DoorDash',           av:{ds:'food'},
-    status:'completed',        amt:[67,40],
-    method:'card',             to:'DoorDash · Debit card ••4242', card:'Debit card ••4242' },
-
-  // Journey 2: ACH dispute + reversal options
-  { id:'j2',  useCase:true, date:'Jul 21', journey:'dispute_and_reversal',
-    name:'Sam Rivera',         av:{bg:'linear-gradient(145deg,#E06040,#A03020)',ini:'SR'},
-    status:'completed',        amt:[1200,0],
-    method:'ach',              to:'Sam Rivera · ACH ••9932' },
-
-  // Journey 3: ACH dispute + reversal options
-  { id:'j3',  useCase:true, date:'Jul 21', journey:'dispute_and_reversal',
-    name:'Raj Patel',          av:{bg:'linear-gradient(145deg,#4080F0,#2858C0)',ini:'RP'},
-    status:'completed',        amt:[2500,0],
-    method:'ach',              to:'Raj Patel · ACH ••3344' },
+  { id:'t12', date:'Jun 3',
+    name:'Kenji Watanabe',  av:{bg:'linear-gradient(145deg,#30A890,#187060)',ini:'KW'},
+    status:'completed',     amt:[120,0],
+    method:'wire',          to:'Kenji Watanabe · →0047 (Bank of America)' },
 ];
 
 const SCHEDULED = [
@@ -7531,23 +8247,13 @@ function clearFilter(key) {
 
 /* ── Status config for LIST rows ─────────────────────── */
 const SL = {
-  completed:          { label:null,                    color:null,                   icon:null,        inactive:false },
-  pending:            { label:'Pending',               color:'rgba(0,0,0,0.50)',     icon:null,        inactive:false },
-  scheduled:          { label:null,                    color:null,                   icon:null,        inactive:false },
-  failed:             { label:'Failed',                color:'#C82C2C',              icon:null,        inactive:true  },
-  cancelled:          { label:'Cancelled',             color:'#C82C2C',              icon:null,        inactive:true  },
-  on_hold:            { label:'On Hold',               color:'#C17C14',              icon:null,        inactive:true  },
-  returned:           { label:'Return',                color:'#C82C2C',              icon:null,        inactive:false },
-  skipped:            { label:'Skipped',               color:'rgba(0,0,0,0.50)',     icon:'doubleup',  inactive:true  },
-  rejected:           { label:'Rejected',              color:'#C82C2C',              icon:null,        inactive:false },
-  reversal_requested: { label:'Reversal Req.',         color:'#C17C14',              icon:'undo',      inactive:false },
-  reversal_rejected:  { label:'Reversal Rejected',     color:'#C82C2C',              icon:null,        inactive:false },
-  reversed:           { label:'Reversed',              color:'rgba(0,0,0,0.50)',     icon:'undo',      inactive:false },
-  refund:             { label:'Refund',                color:'#46882B',              icon:null,        inactive:false },
-  dispute_submitted:  { label:'Disputed',              color:'#C82C2C',              icon:'flag',      inactive:false },
-  dispute_rejected:   { label:'Dispute Rejected',      color:'#C82C2C',              icon:'flag',      inactive:false },
-  dispute_review:     { label:'Under Review',          color:'#C17C14',              icon:'flag',      inactive:false },
-  dispute_resolved:   { label:'Dispute Resolved',      color:'rgba(0,0,0,0.50)',     icon:null,        inactive:false },
+  completed:  { label:null,          color:null,                 icon:null,       inactive:false },
+  pending:    { label:'Pending',     color:'rgba(0,0,0,0.50)',   icon:null,       inactive:false },
+  scheduled:  { label:null,          color:null,                 icon:null,       inactive:false },
+  failed:     { label:'Failed',      color:'#C82C2C',            icon:null,       inactive:true  },
+  cancelled:  { label:'Cancelled',   color:'#C82C2C',            icon:null,       inactive:true  },
+  on_hold:    { label:'On Hold',     color:'#C17C14',            icon:null,       inactive:true  },
+  skipped:    { label:'Skipped',     color:'rgba(0,0,0,0.50)',   icon:'doubleup', inactive:true  },
 };
 
 /* Small SVG icons for status labels */
@@ -7743,17 +8449,15 @@ function renderList(tab) {
     const sec1Inner = document.createElement('div');
     sec1Inner.className = 'list-sec-new-inner';
 
-    // "4 new" chip row
+    // "N new transactions" bar — plain row INSIDE the white card
     const newCount = data.filter(t => t.new).length;
-    const chipRow = document.createElement('div');
-    chipRow.className = 'new-chip-row';
-    chipRow.innerHTML = `
-      <div class="new-chip-pill">
-        ${newCount} new transactions
-        <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-      </div>
-      <div class="chip-line"></div>`;
-    sec1.appendChild(chipRow);
+    const newBar = document.createElement('div');
+    newBar.className = 'new-tx-bar';
+    newBar.innerHTML = `
+      <span class="new-tx-bar-text">${newCount} new transactions</span>
+      <span class="ico ol" style="--ico:url('Icons/ArrowDown.svg');--sz:12px;color:var(--brand-primary);flex-shrink:0"></span>
+      <div class="new-tx-bar-line"></div>`;
+    sec1Inner.appendChild(newBar);
 
     // Group new transactions by date
     const newTxns = data.filter(t => t.new);
@@ -7773,11 +8477,11 @@ function renderList(tab) {
     brk.className = 'list-sec-break';
     list.appendChild(brk);
 
-    // ── SECTION 2: regular older transactions ────────────
+    // ── SECTION 2: older transactions ────────────
     const sec2 = document.createElement('div');
     sec2.className = 'list-sec-old';
 
-    const oldTxns = data.filter(t => !t.new && !t.useCase && !t.allStatuses);
+    const oldTxns = data.filter(t => !t.new);
     const oldByDate = groupByDate(oldTxns);
     for (const [date, rows] of oldByDate) {
       sec2.appendChild(dateHeader(date));
@@ -7787,38 +8491,6 @@ function renderList(tab) {
       });
     }
     list.appendChild(sec2);
-
-    // ── SECTION 3: all-statuses ───────────────────────────
-    const allStatusTxns = data.filter(t => t.allStatuses);
-    if (allStatusTxns.length > 0) {
-      const sec3 = document.createElement('div');
-      sec3.className = 'list-sec-old';
-      const h3 = document.createElement('div');
-      h3.className = 'usecase-header';
-      h3.innerHTML = `All Statuses<div class="usecase-header-line"></div>`;
-      sec3.appendChild(h3);
-      allStatusTxns.forEach((tx, i) => {
-        sec3.appendChild(buildRow(tx));
-        if (i < allStatusTxns.length - 1) sec3.appendChild(rowSep('0 16px'));
-      });
-      list.appendChild(sec3);
-    }
-
-    // ── SECTION 4: use-case journeys ─────────────────────
-    const useCaseTxns = data.filter(t => t.useCase);
-    if (useCaseTxns.length > 0) {
-      const sec4 = document.createElement('div');
-      sec4.className = 'list-sec-old';
-      const h4 = document.createElement('div');
-      h4.className = 'usecase-header';
-      h4.innerHTML = `Use Cases<div class="usecase-header-line"></div>`;
-      sec4.appendChild(h4);
-      useCaseTxns.forEach((tx, i) => {
-        sec4.appendChild(buildRow(tx));
-        if (i < useCaseTxns.length - 1) sec4.appendChild(rowSep('0 16px'));
-      });
-      list.appendChild(sec4);
-    }
 
   } else {
     // SCHEDULED tab — single section, no chip
@@ -8867,6 +9539,7 @@ function showList() {
   document.getElementById('list').className    = 'screen on';
   setSbLight(false);
   showNav(false);
+  if (typeof _TW !== 'undefined') _TW.start();
 }
 /* ── Render embedded tx section (Home + Account Detail) ─ */
 /* ── Per-container segmented tab state ──────────────── */
@@ -9789,8 +10462,93 @@ function smCloseAll() {
   setNavActive(smOrigin === 'explore' ? 3 : smOrigin === 'accounts' ? 2 : 0);
 }
 
+/* ── Render sm-landing bubbles from BENS ── */
+function renderSmLBubbles() {
+  var wrap = document.getElementById('smLBubbles');
+  if (!wrap || typeof BENS === 'undefined') return;
+  wrap.innerHTML = '';
+
+  // 2 large (108px) + 4 small (64px), positions match original layout
+  var POSITIONS = [
+    { size:108, left:192, top:268 },
+    { size:108, left:0,   top:47  },
+    { size:64,  left:22,  top:269 },
+    { size:64,  left:157, top:0   },
+    { size:64,  left:241, top:106 },
+    { size:64,  left:115, top:172 },
+  ];
+
+  // Use first 6 BENS (non-corporate preferred for large slots)
+  var people = BENS.filter(function(b) { return !b.corp; });
+  var corps  = BENS.filter(function(b) { return b.corp; });
+  var ordered = people.concat(corps).slice(0, POSITIONS.length);
+
+  ordered.forEach(function(b, i) {
+    var pos  = POSITIONS[i];
+    var size = pos.size;
+    var isUS = Object.keys(b.rails).length === 1 && b.rails['US Bank'];
+    var rail = b.rails[Object.keys(b.rails)[0]];
+    // Build account string: UPI ID → show UPI ID; Bank → show acct no · bank name
+    var railName = Object.keys(b.rails)[0];
+    var acctStr = '';
+    if (rail && rail.rows) {
+      var upiRow  = rail.rows.find(function(r){ return r[0]==='UPI ID'; });
+      var acctRow = rail.rows.find(function(r){ return r[0].toLowerCase().includes('account no'); });
+      var bankRow = rail.rows.find(function(r){ return r[0]==='Bank'; });
+      if (upiRow)        acctStr = upiRow[1];
+      else if (acctRow)  acctStr = acctRow[1] + (bankRow ? ' · ' + bankRow[1] : '');
+    }
+    var photo = b.photo || 'assets/blob-purple-v2.png';
+    var inset = size >= 80 ? '4px' : '2px';
+    var fs = Math.round(size * 0.31);
+
+    var bubble = document.createElement('div');
+    bubble.className = 'sm-l-bubble';
+    bubble.style.cssText = 'left:' + pos.left + 'px;top:' + pos.top + 'px';
+
+    // onclick: US → smwOpen, India/UPI → smGoToAmount
+    bubble.onclick = (function(ben, usOnly, str) {
+      return function() {
+        if (usOnly) {
+          var bankName = (ben.rails['US Bank'].rows.find(function(r){ return r[0]==='Bank'; }) || ['',''])[1];
+          var acctNo   = (ben.rails['US Bank'].rows.find(function(r){ return r[0].includes('Account no'); }) || ['',''])[1];
+          smwOpen(ben.name, ben.ini, ben.bg, acctNo, bankName, bubble);
+        } else {
+          smGoToAmount(ben.name, ben.ini, ben.bg, str, bubble);
+        }
+      };
+    })(b, isUS, acctStr);
+
+    // Avatar
+    var av = document.createElement('div');
+    av.className = 'sm-l-av';
+    av.style.cssText = 'width:' + size + 'px;height:' + size + 'px;background:rgba(255,255,255,0.12)';
+    var ph = document.createElement('img');
+    ph.className = 'sm-l-av-photo'; ph.src = photo; ph.alt = '';
+    av.appendChild(ph);
+    var glass = document.createElement('div');
+    glass.className = 'sm-l-av-glass';
+    glass.style.cssText = 'inset:' + inset + ';background:rgba(255,255,255,0.1);border:0.3px solid white;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)';
+    av.appendChild(glass);
+    var txt = document.createElement('span');
+    txt.className = 'sm-l-av-txt';
+    txt.style.cssText = 'font-size:' + fs + 'px;letter-spacing:-' + (fs*0.05).toFixed(1) + 'px;font-weight:600;line-height:' + Math.round(fs*1.25) + 'px';
+    txt.textContent = b.ini;
+    av.appendChild(txt);
+
+    var nm = document.createElement('span');
+    nm.className = 'sm-l-name';
+    nm.textContent = b.alias;
+
+    bubble.appendChild(av);
+    bubble.appendChild(nm);
+    wrap.appendChild(bubble);
+  });
+}
+
 function showSendMoney(from) {
   smOrigin = from || _smOrigin || 'home';
+  renderSmLBubbles();
   ['home','accounts','explore'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.className = 'screen hb';
@@ -10127,6 +10885,9 @@ function smGoToReview() {
   const acctParts = (smRecipient.account || '').split('·');
   document.getElementById('smReviewRecipAcct').textContent  = (acctParts[0] || '').trim();
   document.getElementById('smReviewRecipBank').textContent  = (acctParts[1] || '').trim();
+  // Hide dot when there is no bank detail to show
+  var dot = document.querySelector('.smr-recip-dot');
+  if (dot) dot.style.display = (acctParts[1] || '').trim() ? '' : 'none';
   document.getElementById('smReviewAvatar').style.background = 'rgba(255,255,255,0.4)';
 
   var amountEl = document.getElementById('sm-amount');
@@ -10348,8 +11109,77 @@ function smwGoToReview() {
 }
 
 function smwGoToSuccess() {
-  document.getElementById('smw-us-progress').className = 'screen hl';
-  document.getElementById('smw-us-success').className  = 'screen on';
+  var dollars = smwCents / 100;
+  var intPart = Math.floor(dollars).toLocaleString('en-US');
+  var decPart = '.' + String(Math.round((dollars%1)*100)).padStart(2,'0');
+  var fmtD = dollars.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  var firstName = smRecipient.name.split(' ')[0];
+  document.getElementById('smwsInt').textContent = intPart;
+  document.getElementById('smwsDec').textContent = decPart;
+  document.getElementById('smwsAmt').textContent = '$'+fmtD;
+  document.getElementById('smwsReceives').textContent = '$'+fmtD;
+  document.getElementById('smwsRecipStep').textContent = 'Funds in '+firstName+"'s account";
+  var paidTo = document.getElementById('smwsPaidTo');
+  if (paidTo) paidTo.textContent = smRecipient.name;
+  var subEl = document.getElementById('smwsRecipSub');
+  if (subEl) subEl.textContent = firstName + ' has received the money in their account.';
+
+  var reviewEl  = document.getElementById('smw-us-progress');
+  var successEl = document.getElementById('smw-us-success');
+  var prgCard   = reviewEl.querySelector('.smp-card');
+  var sucCard   = successEl.querySelector('.smp-card');
+  var spring    = 'cubic-bezier(0.16,1,0.3,1)';
+  successEl.style.cssText='transition:none;opacity:1;z-index:3';
+  successEl.className='screen on';
+  if(prgCard) prgCard.style.cssText='transition:none;opacity:0';
+  var sucSections = sucCard ? sucCard.querySelectorAll('.smp-sec-status,.smp-sec-txn') : [];
+  var sucBottom = successEl.querySelector('.sms-bottom');
+  sucSections.forEach(function(el){el.style.cssText='transition:none;opacity:0;transform:translateY(20px)';});
+  if(sucBottom) sucBottom.style.cssText='transition:none;opacity:0;transform:translateY(40px)';
+  requestAnimationFrame(function(){requestAnimationFrame(function(){
+    sucSections.forEach(function(el,i){el.style.cssText='transition:opacity 0.28s ease '+(0.10+i*0.06)+'s,transform 0.36s '+spring+' '+(0.10+i*0.06)+'s;opacity:1;transform:translateY(0)';});
+    if(sucBottom) sucBottom.style.cssText='transition:opacity 0.28s ease 0.22s,transform 0.38s '+spring+' 0.22s;opacity:1;transform:translateY(0)';
+  });});
+  setTimeout(function(){
+    successEl.style.cssText=''; reviewEl.className='screen hl';
+    if(prgCard) prgCard.style.cssText='';
+    sucSections.forEach(function(el){el.style.cssText='';});
+    if(sucBottom) sucBottom.style.cssText='';
+    // Reset progress screen coin
+    var coin=document.getElementById('smwpCoin'); if(coin) coin.style.cssText='';
+    var icon=document.getElementById('smwpResultIcon'); if(icon){icon.className='smp-result-icon';icon.innerHTML='';}
+    var hero=document.getElementById('smwpHero'); if(hero) hero.classList.remove('success-anim');
+    document.querySelectorAll('#smwpBottom .smp-sim-btn').forEach(function(b){b.disabled=false;b.style.display='';});
+    var doneBtn=document.querySelector('#smwpBottom .smp-done-btn'); if(doneBtn) doneBtn.onclick=function(){smwGoToSuccess();};
+  }, 550);
+}
+
+function smwSimulateSuccess() {
+  var btns = document.querySelectorAll('#smwpBottom .smp-sim-btn');
+  btns.forEach(function(b){b.disabled=true;});
+  var coin=document.getElementById('smwpCoin');
+  var icon=document.getElementById('smwpResultIcon');
+  var hero=document.getElementById('smwpHero');
+  if(coin){coin.style.transition='transform 0.28s var(--ease-spring),opacity 0.22s ease';coin.style.transform='rotateY(90deg) scale(0.6)';coin.style.opacity='0';}
+  if(hero) hero.classList.add('success-anim');
+  setTimeout(function(){
+    if(icon){icon.className='smp-result-icon success';icon.innerHTML='<img src="assets/check-success.webp" alt="Success">';requestAnimationFrame(function(){requestAnimationFrame(function(){icon.classList.add('visible');});});}
+    var lbl=document.getElementById('smwpHeroLbl'); if(lbl){lbl.style.color='var(--brand-primary)';lbl.textContent='Successfully transferred';}
+    document.querySelectorAll('#smwpBottom .smp-sim-btn').forEach(function(b){b.style.display='none';});
+    var doneBtn=document.querySelector('#smwpBottom .smp-done-btn'); if(doneBtn) doneBtn.onclick=function(){smwGoToSuccess();};
+  }, 600);
+  setTimeout(smwGoToSuccess, 2000);
+}
+
+function smwSimulateFailure() {
+  document.querySelectorAll('#smwpBottom .smp-sim-btn').forEach(function(b){b.disabled=true;});
+  var coin=document.getElementById('smwpCoin');
+  var icon=document.getElementById('smwpResultIcon');
+  if(coin){coin.style.transition='transform 0.28s var(--ease-spring),opacity 0.22s ease';coin.style.transform='rotateY(90deg) scale(0.6)';coin.style.opacity='0';}
+  setTimeout(function(){
+    if(icon){icon.className='smp-result-icon failure';icon.innerHTML='<svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';requestAnimationFrame(function(){requestAnimationFrame(function(){icon.classList.add('visible');});});}
+  }, 180);
+  setTimeout(smwClose, 1800);
 }
 
 function smwShareSuccess() {
@@ -10381,7 +11211,7 @@ function smpShowResult(type) {
   setTimeout(function() {
     icon.className = 'smp-result-icon ' + type;
     icon.innerHTML = type === 'success'
-      ? '<svg viewBox="0 0 24 24"><polyline points="4,12 9,17 20,7"/></svg>'
+      ? '<img src="assets/check-success.webp" alt="Success">'
       : '<svg viewBox="0 0 24 24"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
     requestAnimationFrame(function() {
       requestAnimationFrame(function() { icon.classList.add('visible'); });
@@ -10399,15 +11229,47 @@ function smpSimulateSuccess() {
   setTimeout(function() {
     var s1 = document.querySelector('#sm-progress .smp-stepper-s1');
     var s2 = document.querySelector('#sm-progress .smp-stepper-s2');
-    if (s1) s1.style.display = 'none';
-    if (s2) s2.style.display = '';
+    if (!s1 || !s2) return;
+    s1.style.opacity = '0'; s1.style.transform = 'translateY(-6px)'; s1.style.pointerEvents = 'none';
+    s2.style.opacity = '1'; s2.style.transform = 'translateY(0)'; s2.style.pointerEvents = 'all';
+    s2.classList.add('smp-state-active');
   }, 800);
 
-  // Coin → tick
-  setTimeout(function() { smpShowResult('success'); }, 1600);
+  // State 2→3: step 3 done, step 4 final (funds arrived)
+  setTimeout(function() {
+    var s2 = document.querySelector('#sm-progress .smp-stepper-s2');
+    var s3 = document.querySelector('#sm-progress .smp-stepper-s3');
+    if (!s2 || !s3) return;
+    s2.style.opacity = '0'; s2.style.transform = 'translateY(-6px)'; s2.style.pointerEvents = 'none';
+    s3.style.opacity = '1'; s3.style.transform = 'translateY(0)'; s3.style.pointerEvents = 'all';
+    s3.classList.add('smp-state-active');
+  }, 1600);
 
-  // Go to success screen
-  setTimeout(function() { smGoToSuccess(); }, 2400);
+  // Coin → check (only after all steps complete)
+  setTimeout(function() { smpShowResult('success'); }, 2400);
+
+  // Animate hero: blue slides UP, green slides DOWN — after coin shows
+  setTimeout(function() {
+    var hero = document.getElementById('smpHero');
+    if (hero) hero.classList.add('success-anim');
+    // Update text after bg transition
+    setTimeout(function() {
+      var lbl = document.querySelector('#sm-progress .smp-hero-lbl');
+      if (lbl) { lbl.style.color = 'var(--brand-primary)'; lbl.textContent = 'Successfully transferred'; }
+      var eta = document.querySelector('#sm-progress .smp-hero-eta');
+      if (eta) {
+        eta.style.opacity = '0';
+        setTimeout(function() {
+          eta.innerHTML = '<span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:12px;color:var(--brand-primary)"></span><span class="smp-hero-eta-txt" style="color:var(--brand-primary)">Completed</span>';
+          eta.style.transition = 'opacity 0.3s ease';
+          eta.style.opacity = '1';
+        }, 200);
+      }
+    }, 600);
+    var doneBtn = document.querySelector('#smpBottom .smp-done-btn');
+    if (doneBtn) doneBtn.onclick = function() { smDone(); };
+    document.querySelectorAll('.smp-sim-btn').forEach(function(b) { b.style.display = 'none'; });
+  }, 3200);
 }
 
 /* ── Simulate failure ── */
@@ -10450,16 +11312,34 @@ function smGoToProgress() {
   document.getElementById('smAccTxn').classList.remove('smp-acc-open');
   var s1 = document.querySelector('#sm-progress .smp-stepper-s1');
   var s2 = document.querySelector('#sm-progress .smp-stepper-s2');
-  if (s1) s1.style.display = '';
-  if (s2) s2.style.display = 'none';
-  // Re-enable sim buttons and restore spinning coin
-  document.querySelectorAll('.smp-sim-btn').forEach(function(b) { b.disabled = false; });
+  var s3 = document.querySelector('#sm-progress .smp-stepper-s3');
+  // Reset stepper to s1 state (no transition on reset — instantaneous is correct here)
+  if (s1) { s1.style.transition = 'none'; s1.style.opacity = '1'; s1.style.transform = ''; s1.style.pointerEvents = ''; }
+  if (s2) { s2.style.transition = 'none'; s2.style.opacity = '0'; s2.style.transform = 'translateY(10px)'; s2.style.pointerEvents = 'none'; s2.classList.remove('smp-state-active'); }
+  if (s3) { s3.style.transition = 'none'; s3.style.opacity = '0'; s3.style.transform = 'translateY(10px)'; s3.style.pointerEvents = 'none'; s3.classList.remove('smp-state-active'); }
+  // Re-enable transitions after reset frame
+  requestAnimationFrame(function() {
+    if (s1) s1.style.transition = '';
+    if (s2) s2.style.transition = '';
+    if (s3) s3.style.transition = '';
+  });
+  // Re-enable sim buttons, restore coin, reset hero
+  document.querySelectorAll('.smp-sim-btn').forEach(function(b) { b.disabled = false; b.style.display = ''; });
   document.querySelector('.smp-sim-btn:not(.fail)') && (document.querySelector('.smp-sim-btn:not(.fail)').textContent = 'Simulate success');
   document.querySelector('.smp-sim-btn.fail') && (document.querySelector('.smp-sim-btn.fail').textContent = 'Simulate failure');
   var coin = document.getElementById('smpCoin');
   var icon = document.getElementById('smpResultIcon');
   if (coin) { coin.style.cssText = ''; }
   if (icon) { icon.className = 'smp-result-icon'; icon.innerHTML = ''; }
+  // Reset hero background and label
+  var hero = document.getElementById('smpHero');
+  if (hero) { hero.style.transition = 'none'; hero.classList.remove('success-anim'); }
+  var lbl = document.querySelector('#sm-progress .smp-hero-lbl');
+  if (lbl) { lbl.style.color = ''; lbl.textContent = 'Transfer in progress'; }
+  var eta = document.querySelector('#sm-progress .smp-hero-eta');
+  if (eta) { eta.style.opacity = ''; eta.style.transition = ''; }
+  var doneBtn = document.querySelector('#smpBottom .smp-done-btn');
+  if (doneBtn) doneBtn.onclick = function() { smGoToSuccess(); };
 
   var reviewEl   = document.getElementById('sm-review');
   var progressEl = document.getElementById('sm-progress');
@@ -10541,9 +11421,153 @@ function smDone() {
   document.getElementById('explore').className = 'screen on';
 }
 
-function smSelectPurpose(el) {
-  document.querySelectorAll('.smr-chip').forEach(c => c.classList.remove('sel'));
+/* ── Purpose of payment ─────────────────────────────── */
+var _purposeCode = 'P1301';
+var _purposeLabel = 'Family & Personal';
+
+const PURPOSE_PROF = [
+  { code:'P1006', label:'Business consulting',       sub:'Strategic, management or operational advice' },
+  { code:'P1004', label:'Legal services',             sub:'Solicitors, legal counsel or representation' },
+  { code:'P1005', label:'Accounting & audit',         sub:'Bookkeeping, audit or tax consulting' },
+  { code:'P1007', label:'Advertising & trade fairs',  sub:'Marketing, PR, events or exhibitions' },
+  { code:'P1008', label:'R&D services',               sub:'Research, development or innovation work' },
+  { code:'P1009', label:'Architecture & engineering', sub:'Design, surveying or technical services' },
+  { code:'P0802', label:'Software consulting',        sub:'IT strategy, system design or implementation' },
+  { code:'P0803', label:'Data processing',            sub:'Data entry, processing or analytics' },
+  { code:'P0804', label:'IT maintenance',             sub:'Support, maintenance or hosting' },
+  { code:'P0805', label:'News agency',                sub:'Subscription to news or media services' },
+  { code:'P0806', label:'Subscriptions & media',      sub:'Digital subscriptions or publications' },
+  { code:'P0801', label:'Hardware consulting',        sub:'Hardware advisory or technical support' },
+  { code:'P0807', label:'Software exports',           sub:'Sale or export of software products' },
+  { code:'P0102', label:'Export bill realisation',    sub:'Proceeds from goods exported' },
+  { code:'P0103', label:'Export advance',             sub:'Advance payment for future exports' },
+  { code:'P0104', label:'Transit trade',              sub:'Goods in transit through third countries' },
+  { code:'P0109', label:'Nepal/Bhutan exports',       sub:'Trade with Nepal or Bhutan' },
+];
+
+function smBuildProfRows(filter) {
+  var wrap = document.getElementById('purposeProfRows');
+  if (!wrap) return;
+  var q = (filter || '').toLowerCase().trim();
+  var items = q ? PURPOSE_PROF.filter(function(i) {
+    return i.label.toLowerCase().includes(q) || i.code.toLowerCase().includes(q) || i.sub.toLowerCase().includes(q);
+  }) : PURPOSE_PROF;
+
+  wrap.innerHTML = '';
+  var checkSvg = '<svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  items.forEach(function(item) {
+    var btn = document.createElement('button');
+    btn.className = 'purpose-row' + (_purposeCode === item.code ? ' sel' : '');
+    btn.dataset.code = item.code;
+    btn.innerHTML = '<span class="purpose-row-icon">💼</span>' +
+      '<div class="purpose-row-info"><span class="purpose-row-lbl">' + item.label + '</span><span class="purpose-row-sub">' + item.sub + '</span></div>' + checkSvg;
+    btn.onclick = function() { smPickProf(item.label, item.code); };
+    wrap.appendChild(btn);
+  });
+
+  // Show/hide professional group if no results
+  var grp = document.getElementById('purposeProfGrp');
+  if (grp) grp.style.display = items.length ? '' : 'none';
+}
+
+function smFilterPurpose(q) {
+  // Filter common rows
+  var commonRows = document.querySelectorAll('#purposeCommonGrp .purpose-row');
+  var hasCommon = false;
+  commonRows.forEach(function(row) {
+    var lbl = (row.querySelector('.purpose-row-lbl') || {}).textContent || '';
+    var sub = (row.querySelector('.purpose-row-sub') || {}).textContent || '';
+    var show = !q || lbl.toLowerCase().includes(q.toLowerCase()) || sub.toLowerCase().includes(q.toLowerCase());
+    row.style.display = show ? '' : 'none';
+    if (show) hasCommon = true;
+  });
+  var commonGrp = document.getElementById('purposeCommonGrp');
+  if (commonGrp) commonGrp.style.display = hasCommon ? '' : 'none';
+  // Filter professional rows
+  smBuildProfRows(q);
+}
+
+function smOpenPurposeSheet(ev) {
+  if (ev) ev.stopPropagation();
+  // Build professional rows on first open
+  var wrap = document.getElementById('purposeProfRows');
+  if (wrap && wrap.children.length === 0) smBuildProfRows('');
+  // Sync sel state to current code
+  document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) {
+    r.classList.toggle('sel', r.dataset.code === _purposeCode);
+  });
+  document.getElementById('purposeScrim').classList.add('open');
+  document.getElementById('purposeSheet').classList.add('open');
+}
+function smClosePurposeSheet() {
+  document.getElementById('purposeScrim').classList.remove('open');
+  document.getElementById('purposeSheet').classList.remove('open');
+  document.getElementById('purposeSheetInvoice').classList.remove('open');
+  var si = document.getElementById('purposeSearch'); if (si) si.value = '';
+  smFilterPurpose('');
+}
+
+/* Pick a common purpose row (no invoice needed) */
+function smPickPurpose(el, label, code) {
+  _purposeCode = code;
+  _purposeLabel = label;
+  // Update sheet rows
+  document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) { r.classList.remove('sel'); });
   el.classList.add('sel');
+  // Sync purpose display row
+  smSyncPurposeDisplay(label, code);
+  setTimeout(smClosePurposeSheet, 200);
+}
+
+/* Pick a professional/business service (invoice required) */
+function smPickProf(label, code) {
+  _purposeCode = code;
+  _purposeLabel = label;
+  document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) { r.classList.remove('sel'); });
+  var profRows = document.querySelectorAll('#purposeProfRows .purpose-row');
+  profRows.forEach(function(r) { if (r.dataset.code === code) r.classList.add('sel'); });
+  smSyncPurposeDisplay(label, code);
+  smOpenPurposeInvoice(label);
+}
+
+/* Sync the floating-label purpose row on the review card */
+var PURPOSE_ICONS = { P1301:'🏠', P1108:'🏥', P1109:'💡', P1107:'🎓', P0601:'🛡️' };
+function smSyncPurposeDisplay(label, code) {
+  var ico = document.getElementById('smPurposeIco');
+  var val = document.getElementById('smPurposeDisplayVal');
+  if (ico) ico.textContent = PURPOSE_ICONS[code] || '📋';
+  if (val) val.textContent = label;
+}
+
+/* ── Supporting document sheet ─────────────────────── */
+function smOpenPurposeInvoice(label) {
+  // Reset fields
+  var ref = document.getElementById('purposeInvRef');
+  var notes = document.getElementById('purposeInvNotes');
+  if (ref) ref.value = '';
+  if (notes) notes.value = '';
+  purposeRemoveFile();
+  document.getElementById('purposeSheetInvoice').classList.add('open');
+}
+function smClosePurposeInvoice() {
+  document.getElementById('purposeSheetInvoice').classList.remove('open');
+}
+function smConfirmPurposeInvoice() {
+  smClosePurposeSheet();
+}
+function purposeSimulateUpload() {
+  var area = document.getElementById('purposeUploadArea');
+  var uploaded = document.getElementById('purposeUploaded');
+  var fname = document.getElementById('purposeUploadFilename');
+  if (area) area.style.display = 'none';
+  if (uploaded) uploaded.style.display = 'flex';
+  if (fname) fname.textContent = 'invoice_2026.pdf';
+}
+function purposeRemoveFile() {
+  var area = document.getElementById('purposeUploadArea');
+  var uploaded = document.getElementById('purposeUploaded');
+  if (area) area.style.display = '';
+  if (uploaded) uploaded.style.display = 'none';
 }
 
 function smToggleAccordion(id) {
@@ -10831,10 +11855,14 @@ function applyQuickFilter(group, val) {
 function openFilterSheet() {
   buildFilterSheet();
   document.getElementById('filterOverlay').classList.add('open');
+  const bar = document.querySelector('.list-bottom-bar');
+  if (bar) { bar.style.opacity = '0'; bar.style.pointerEvents = 'none'; }
 }
 
 function closeFilterSheet() {
   document.getElementById('filterOverlay').classList.remove('open');
+  const bar = document.querySelector('.list-bottom-bar');
+  if (bar) { bar.style.opacity = ''; bar.style.pointerEvents = ''; }
 }
 
 /* ── Init ─────────────────────────────────────────────── */
@@ -11042,12 +12070,88 @@ document.getElementById('txSearch').addEventListener('input', function() {
   updateFilterDot();
 });
 
-document.getElementById('filterBtn').addEventListener('click', openFilterSheet);
-document.getElementById('filterBtnCompact').addEventListener('click', openFilterSheet);
+document.getElementById('filterBtnWrap').addEventListener('click', openFilterSheet);
+const _filterBtnCompact = document.getElementById('filterBtnCompact');
+if (_filterBtnCompact) _filterBtnCompact.addEventListener('click', openFilterSheet);
 
 document.getElementById('filterOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeFilterSheet();
 });
+
+/* ── Search placeholder typewriter ───────────────────────── */
+const _TW = (function() {
+  const PROMPTS = [
+    'My Uber transactions',
+    'Any refunds this week?',
+    'Last payment to Dexter?',
+    'Biggest spend this month?',
+    'Everything over $100',
+  ];
+  const TYPE_SPEED  = 50;
+  const ERASE_SPEED = 24;
+  const PAUSE_FULL  = 1500;
+  const PAUSE_EMPTY = 300;
+  const CURSOR      = '|';
+
+  const input = document.getElementById('txSearch');
+  let promptIdx, charIdx, erasing, timer, aborted;
+
+  function reset() {
+    clearTimeout(timer);
+    timer     = null;
+    promptIdx = 0;
+    charIdx   = 0;
+    erasing   = false;
+    aborted   = false;
+  }
+
+  function abort() {
+    reset();
+    aborted = true;
+    input.placeholder = 'Search...';
+  }
+
+  function tick() {
+    if (aborted) return;
+    const prompt = PROMPTS[promptIdx];
+
+    if (!erasing) {
+      charIdx++;
+      input.placeholder = prompt.slice(0, charIdx) + CURSOR;
+      if (charIdx < prompt.length) {
+        timer = setTimeout(tick, TYPE_SPEED);
+      } else {
+        timer = setTimeout(() => { erasing = true; tick(); }, PAUSE_FULL);
+      }
+    } else {
+      charIdx--;
+      input.placeholder = charIdx > 0 ? prompt.slice(0, charIdx) + CURSOR : CURSOR;
+      if (charIdx > 0) {
+        timer = setTimeout(tick, ERASE_SPEED);
+      } else {
+        promptIdx++;
+        erasing = false;
+        if (promptIdx >= PROMPTS.length) {
+          input.placeholder = 'Search...';
+          timer = null;
+        } else {
+          timer = setTimeout(tick, PAUSE_EMPTY);
+        }
+      }
+    }
+  }
+
+  input.addEventListener('focus', abort);
+
+  return {
+    start() {
+      if (input.value.trim()) return; // user has typed something, skip
+      reset();
+      // Brief delay so screen slide-in completes first
+      timer = setTimeout(tick, 500);
+    }
+  };
+})();
 
 /* ── Scroll-collapse nav ─────────────────────────────── */
 (function() {
@@ -11201,58 +12305,64 @@ function _benAv(b, size) {
 }
 
 function _benRender(list) {
-  // Favorites
-  const favsEl = document.getElementById('benFavs');
+  // ── Favourites (50px blobs) ──
+  var favsEl = document.getElementById('benFavs');
   favsEl.innerHTML = '';
-  const favs = list.filter(b => b.fav);
-  favs.forEach(b => {
-    const wrap = document.createElement('div');
+  var favs = list.filter(function(b) { return b.fav; });
+  favs.forEach(function(b) {
+    var wrap = document.createElement('div');
     wrap.className = 'ben-fav';
-    wrap.onclick = () => benOpenDetail(b);
-    const av = _benAv(b, 56);
-    const nm = document.createElement('span');
+    wrap.onclick = function() { benOpenDetail(b); };
+    var av = _benAv(b, 50);
+    var nm = document.createElement('span');
     nm.className = 'ben-fav-name';
     nm.textContent = b.alias;
-    wrap.appendChild(av);
-    wrap.appendChild(nm);
+    wrap.appendChild(av); wrap.appendChild(nm);
     favsEl.appendChild(wrap);
   });
   // Add button
-  const addWrap = document.createElement('div');
+  var addWrap = document.createElement('div');
   addWrap.className = 'ben-fav';
-  addWrap.innerHTML = '<div class="ben-fav-add"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.25)" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div><span class="ben-fav-name dim">Add</span>';
+  var addCircle = document.createElement('div');
+  addCircle.className = 'ben-fav-add';
+  addCircle.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>';
+  var addNm = document.createElement('span');
+  addNm.className = 'ben-fav-name';
+  addNm.textContent = 'Add';
+  addWrap.appendChild(addCircle); addWrap.appendChild(addNm);
   favsEl.appendChild(addWrap);
 
-  // List
-  const listEl = document.getElementById('benList');
+  // ── All beneficiaries list (32px blobs, glass card) ──
+  var listEl = document.getElementById('benList');
   listEl.innerHTML = '';
-  list.forEach((b, i) => {
-    const row = document.createElement('div');
+  list.forEach(function(b, i) {
+    var row = document.createElement('div');
     row.className = 'ben-row animate';
     row.style.animationDelay = (i * 35) + 'ms';
-    row.onclick = () => benOpenDetail(b);
-    const av = _benAv(b, 44);
-    const info = document.createElement('div');
+    row.onclick = function() { benOpenDetail(b); };
+
+    var left = document.createElement('div');
+    left.className = 'ben-row-left';
+    var av = _benAv(b, 32);
+    var info = document.createElement('div');
     info.className = 'ben-row-info';
-    const nm = document.createElement('span');
+    var nm = document.createElement('span');
     nm.className = 'ben-row-name';
     nm.textContent = b.name;
-    const sub = document.createElement('span');
+    var sub = document.createElement('span');
     sub.className = 'ben-row-sub';
-    const railKeys = Object.keys(b.rails);
-    sub.textContent = railKeys.map(k => {
-      const r = b.rails[k];
-      if (k === 'UPI') return r.rows[0][1];
-      return (r.rows.find(x => x[0].includes('no.') || x[0]==='Account no.' || x[0]==='UPI ID') || r.rows[r.rows.length-1])[1];
-    }).join(' · ');
-    info.appendChild(nm);
-    info.appendChild(sub);
-    const chev = document.createElement('div');
-    chev.className = 'ben-row-chevron';
-    chev.innerHTML = '<svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>';
-    row.appendChild(av);
-    row.appendChild(info);
-    row.appendChild(chev);
+    // Show phone from contact if available, else rail info
+    var phone = b.contact && b.contact.find(function(c) { return c[0]==='Phone'; });
+    sub.textContent = phone ? phone[1] : Object.keys(b.rails)[0];
+    info.appendChild(nm); info.appendChild(sub);
+    left.appendChild(av); left.appendChild(info);
+
+    var payBtn = document.createElement('button');
+    payBtn.className = 'ben-pay-pill';
+    payBtn.textContent = 'Pay';
+    payBtn.onclick = function(e) { e.stopPropagation(); benOpenDetail(b); };
+
+    row.appendChild(left); row.appendChild(payBtn);
     listEl.appendChild(row);
   });
 }
@@ -11270,71 +12380,84 @@ function benFilter(q) {
 
 function benOpenDetail(b) {
   _benCurrent = b;
-  const railKeys = Object.keys(b.rails);
+  var railKeys = Object.keys(b.rails);
   _benCurrentRail = railKeys[0];
-  const detAv = document.getElementById('benDetailAv');
+  var isUSOnly = railKeys.length === 1 && railKeys[0] === 'US Bank';
+
+  // Avatar
+  var detAv = document.getElementById('benDetailAv');
   detAv.innerHTML = '';
+  var blob = _benAv(b, 80);
+  detAv.appendChild(blob);
   detAv.style.cssText = '';
-  // Replace the whole ben-profile-av-wrap with just the blob
-  const avWrap = detAv.closest('.ben-profile-av-wrap');
-  if (avWrap) {
-    const blob = _benAv(b, 72);
-    avWrap.replaceWith(blob);
-  } else {
-    detAv.appendChild(_benAv(b, 72));
-  }
+
+  // Name
   document.getElementById('benDetailName').textContent = b.name;
-  document.getElementById('benDetailMeta').textContent = b.rel + ' · ' + b.loc;
-  // Tabs
-  const tabsEl = document.getElementById('benTabs');
-  tabsEl.innerHTML = '';
-  railKeys.forEach(k => {
-    const btn = document.createElement('button');
-    btn.className = 'ben-tab' + (k === _benCurrentRail ? ' active' : '');
-    btn.textContent = k;
-    btn.onclick = () => benSwitchRail(k);
-    tabsEl.appendChild(btn);
-  });
-  document.getElementById('benTabsWrap').style.display = railKeys.length > 1 ? '' : 'none';
-  _benRenderDetail();
-  document.getElementById('benPayBtn').textContent = 'Pay via ' + _benCurrentRail;
+
+  // Sub: phone | email
+  var subEl = document.getElementById('benDetailSub');
+  subEl.innerHTML = '';
+  var phone = b.contact && b.contact.find(function(c){ return c[0]==='Phone'; });
+  var email = b.contact && b.contact.find(function(c){ return c[0]==='Email'; });
+  if (phone) { var p = document.createElement('span'); p.textContent = phone[1]; subEl.appendChild(p); }
+  if (phone && email) { var d = document.createElement('div'); d.className='ben-profile-divider'; subEl.appendChild(d); }
+  if (email) { var e = document.createElement('span'); e.textContent = email[1]; subEl.appendChild(e); }
+
+  _benRenderDetail(isUSOnly);
+
   document.getElementById('benDetailOverlay').classList.add('open');
+}
+
+function _benRenderDetail(isUSOnly) {
+  var b = _benCurrent;
+  var railKeys = Object.keys(b.rails);
+  var body = document.getElementById('benDetailBody');
+  body.innerHTML = '';
+  var spring = 'var(--ease-spring)';
+
+  // ── Account details card ──
+  var acctCard = document.createElement('div');
+  acctCard.className = 'ben-acct-card';
+
+  if (!isUSOnly) {
+    // Segmented control for multi-rail accounts
+    var seg = document.createElement('div');
+    seg.className = 'ben-seg';
+    railKeys.forEach(function(k) {
+      var opt = document.createElement('button');
+      opt.className = 'ben-seg-opt' + (k === _benCurrentRail ? ' active' : '');
+      opt.textContent = k === 'US Bank' ? 'Bank account' : k === 'India Bank' ? 'Bank account' : k;
+      opt.onclick = function() {
+        _benCurrentRail = k;
+        document.querySelectorAll('.ben-seg-opt').forEach(function(o) { o.classList.remove('active'); });
+        opt.classList.add('active');
+        _benRenderDetail(false);
+      };
+      seg.appendChild(opt);
+    });
+    acctCard.appendChild(seg);
+  }
+
+  // Key-value rows
+  var r = b.rails[_benCurrentRail];
+  var kvWrap = document.createElement('div');
+  kvWrap.className = 'ben-kv-rows';
+  r.rows.forEach(function(row) {
+    var kv = document.createElement('div');
+    kv.className = 'ben-kv-row';
+    var k = document.createElement('span'); k.className = 'ben-kv-key'; k.textContent = row[0];
+    var v = document.createElement('span'); v.className = 'ben-kv-val'; v.textContent = row[1];
+    kv.appendChild(k); kv.appendChild(v);
+    kvWrap.appendChild(kv);
+  });
+  acctCard.appendChild(kvWrap);
+  body.appendChild(acctCard);
+
 }
 
 function benSwitchRail(rail) {
   _benCurrentRail = rail;
-  document.querySelectorAll('#benTabs .ben-tab').forEach(t => t.classList.toggle('active', t.textContent === rail));
-  document.getElementById('benPayBtn').textContent = 'Pay via ' + rail;
-  _benRenderDetail();
-}
-
-function _benRenderDetail() {
-  const body = document.getElementById('benDetailBody');
-  body.innerHTML = '';
-  const b = _benCurrent;
-  const r = b.rails[_benCurrentRail];
-  // Account section
-  const accLblRow = document.createElement('div');
-  accLblRow.innerHTML = '<div class="ben-detail-sec-lbl">Account details<span class="ben-detail-badge">' + r.badge + '</span></div>';
-  body.appendChild(accLblRow);
-  const tbl = document.createElement('div');
-  tbl.className = 'ben-detail-table';
-  r.rows.forEach(([k,v]) => {
-    tbl.innerHTML += '<div class="ben-detail-row"><span class="ben-detail-key">'+k+'</span><span class="ben-detail-val">'+v+'</span></div>';
-  });
-  body.appendChild(tbl);
-  // Contact section
-  if (b.contact && b.contact.length) {
-    const cLblRow = document.createElement('div');
-    cLblRow.innerHTML = '<div class="ben-detail-sec-lbl">Profile & contact</div>';
-    body.appendChild(cLblRow);
-    const ctbl = document.createElement('div');
-    ctbl.className = 'ben-detail-table';
-    b.contact.forEach(([k,v]) => {
-      ctbl.innerHTML += '<div class="ben-detail-row"><span class="ben-detail-key">'+k+'</span><span class="ben-detail-val">'+v+'</span></div>';
-    });
-    body.appendChild(ctbl);
-  }
+  _benRenderDetail(Object.keys(_benCurrent.rails).length === 1);
 }
 
 function benCloseDetail(e) {
