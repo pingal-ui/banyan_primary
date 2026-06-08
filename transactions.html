@@ -155,48 +155,31 @@
       z-index: 1;
     }
 
-    /* Back button row */
-    .list-back-row {
-      height:56px; display:flex; align-items:flex-end; padding:0 20px 10px;
-      flex-shrink:0; position:relative; z-index:2;
+    /* ── List nav bar (Figma 1749-34379) ── */
+    .list-nav-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 8px 20px;
+      flex-shrink: 0; position: relative; z-index: 2;
     }
-    .list-back-btn {
-      width:36px; height:36px; border-radius:999px;
-      background: var(--surface-secondary);
-      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
-      border:none; border-bottom:1px solid var(--border-default);
-      box-shadow:0 4px 12px -4px rgba(0,0,0,0.14);
-      cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    .list-nav-btn {
+      width: 44px; height: 44px; flex-shrink: 0;
+      border-radius: 9999px;
+      background: #f1f1f1;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      border: none; border-bottom: 1px solid #fff;
+      box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+      transition: transform 140ms var(--ease-out);
     }
-    .list-back-btn svg { width:16px; height:16px; stroke:var(--text-primary); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-
-    /* Title + tabs row */
-    .list-header-row {
-      display:flex; align-items:center;
-      padding:0 20px; height:44px; flex-shrink:0; position:relative; z-index:2;
+    .list-nav-btn:active { transform: scale(0.92); }
+    @media (hover: hover) and (pointer: fine) {
+      .list-nav-btn:hover { background: #e8e8e8; }
     }
-    .list-title {
-      flex:1; font-size:28px; font-weight:500;
-      color: var(--text-primary); letter-spacing:-0.05em; line-height:1;
-    }
-    /* Segmented control */
-    .list-tabs {
-      display:flex; align-items:center;
-      width:163px; height:32px;
-      background:rgba(255,255,255,0.55);
-      backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
-      border:0.5px solid rgba(255,255,255,0.70);
-      border-radius:9999px; padding:3px; gap:0; flex-shrink:0;
-    }
-    .ltab {
-      flex:1; height:100%; border:none; border-radius:9999px;
-      background:transparent; font-family:inherit; font-size:12px; font-weight:600;
-      color:rgba(0,0,0,0.50); cursor:pointer; transition:background 0.15s ease, color 0.15s ease; white-space:nowrap;
-    }
-    .ltab.active {
-      background:#fff;
-      color: var(--text-primary);
-      box-shadow:0 1px 4px rgba(0,0,0,0.14);
+    .list-nav-title {
+      flex: 1; text-align: center;
+      font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 600;
+      color: #000; line-height: 22px;
     }
 
     /* Search + filter row */
@@ -788,7 +771,7 @@
       opacity: 0;
       transition: opacity 250ms var(--ease-out);
     }
-    .list-bottom-bar > * { pointer-events: auto; }
+    .list-bottom-bar > * { pointer-events: none; }
     /* Show only when #list is active — adjacent sibling selector */
     #list.on ~ .list-bottom-bar { opacity: 1; pointer-events: none; }
     #list.on ~ .list-bottom-bar > * { pointer-events: auto; }
@@ -820,6 +803,25 @@
     .list-bar-btn:active { transform: scale(0.92); }
     @media (hover: hover) and (pointer: fine) {
       .list-bar-btn:hover { background: #e8e8e8; }
+    }
+
+    /* AI orb in bottom bar */
+    .list-bar-orb {
+      background: #4fa62c !important;
+      overflow: hidden; padding: 0;
+    }
+    .list-bar-orb-inner {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: #4fa62c;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    .list-bar-orb-inner video {
+      width: 180%; height: 180%; object-fit: cover; flex-shrink: 0;
+      filter: saturate(0.25) sepia(0.85) hue-rotate(88deg) saturate(2.2) brightness(0.82);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .list-bar-orb:hover { background: #3d8f22 !important; }
     }
 
     /* "4 new transactions" chip row */
@@ -1269,15 +1271,13 @@
 
     .compact-bar {
       display:flex; align-items:center;
-      padding:6px 16px 10px; gap:8px;
+      padding:6px 20px 10px; gap:8px;
     }
-    #list.compact .compact-bar {
-      padding-bottom:0;
-    }
+    #list.compact .compact-bar { padding-bottom:0; }
     .compact-title {
-      flex:1;
+      flex:1; text-align:center;
       font-size:17px; font-weight:600;
-      color: var(--text-primary); letter-spacing:-0.03em;
+      color: #000;
     }
     .compact-actions { display:flex; align-items:center; gap:6px; }
     .compact-btn {
@@ -1593,6 +1593,287 @@
       flex-shrink: 0;
       /* Mossy green: desaturate, warm sepia base, olive hue, low saturation, dim */
       filter: saturate(0.25) sepia(0.85) hue-rotate(88deg) saturate(2.2) brightness(0.82);
+    }
+
+    /* ══════════════════════════════════════
+       HOME AGENT SCREEN  (Figma 1642-series)
+    ══════════════════════════════════════ */
+
+    #agent-screen {
+      position: absolute;
+      inset: 0;
+      z-index: 5500;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Background image layer */
+    #agent-screen .ag-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    #agent-screen .ag-bg img {
+      position: absolute;
+      inset: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      transform: scale(1.08);
+      transform-origin: center center;
+    }
+    #agent-screen .ag-bg-blur {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      background: rgba(0,0,0,0.04);
+      opacity: 0;
+      transition: opacity 320ms var(--ease-out);
+    }
+    /* White fade layer — activated when conversation starts */
+    #agent-screen .ag-bg-white {
+      position: absolute;
+      inset: 0;
+      background: #f5f5f5;
+      opacity: 0;
+      transition: opacity 500ms var(--ease-out);
+      pointer-events: none;
+    }
+
+    /* Green glow orb at bottom */
+    #agent-screen .ag-glow {
+      position: absolute;
+      bottom: -160px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      width: 694px;
+      height: 434px;
+      background: #4fa62c;
+      border-radius: 1500px 1500px 60px 60px;
+      filter: blur(52px);
+      opacity: 0;
+      transition: opacity 500ms var(--ease-out), transform 600ms var(--ease-spring);
+      pointer-events: none;
+    }
+
+    /* Messages scroll area */
+    #agent-screen .ag-msgs {
+      position: absolute;
+      top: 64px; /* below status bar + back btn area */
+      left: 0; right: 0;
+      bottom: 164px; /* above input card */
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      padding: 16px 0 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+    #agent-screen .ag-msgs::-webkit-scrollbar { display: none; }
+
+    /* Individual message bubbles */
+    .ag-msg-user, .ag-msg-ai {
+      padding: 0 16px;
+      margin-bottom: 12px;
+      opacity: 0;
+      transform: translateY(12px);
+      transition: opacity 280ms var(--ease-out), transform 320ms var(--ease-spring);
+    }
+    .ag-msg-user.visible, .ag-msg-ai.visible {
+      opacity: 1; transform: translateY(0);
+    }
+    .ag-msg-user-bubble {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 0.5px solid rgba(255,255,255,0.9);
+      border-radius: 18px 18px 4px 18px;
+      padding: 12px 16px;
+      font-family: 'Geist', sans-serif;
+      font-size: 15px; font-weight: 400;
+      color: rgba(0,0,0,0.88);
+      line-height: 20px;
+      max-width: 280px;
+      margin-left: auto;
+    }
+    /* In conversation mode (white bg), user bubble is solid */
+    #agent-screen.ag-convo .ag-msg-user-bubble {
+      background: rgba(0,0,0,0.06);
+      border-color: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    .ag-msg-ai-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      max-width: 100%;
+    }
+    .ag-msg-ai-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: #4fa62c;
+      flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+      box-shadow: 0 0 12px rgba(79,166,44,0.4);
+    }
+    .ag-msg-ai-avatar video {
+      width: 180%; height: 180%;
+      object-fit: cover;
+      filter: saturate(0.25) sepia(0.85) hue-rotate(88deg) saturate(2.2) brightness(0.82);
+    }
+    .ag-msg-ai-bubble {
+      font-family: 'Geist', sans-serif;
+      font-size: 15px; font-weight: 400;
+      color: rgba(0,0,0,0.80);
+      line-height: 20px;
+      flex: 1;
+      padding-top: 4px;
+    }
+
+    /* Typing indicator (3 dots) */
+    .ag-typing-dot {
+      display: inline-block;
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: rgba(0,0,0,0.35);
+      margin: 0 2px;
+      animation: ag-dot-bounce 1.2s infinite ease-in-out;
+    }
+    .ag-typing-dot:nth-child(2) { animation-delay: 0.18s; }
+    .ag-typing-dot:nth-child(3) { animation-delay: 0.36s; }
+    @keyframes ag-dot-bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.35; }
+      40% { transform: translateY(-5px); opacity: 0.85; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .ag-typing-dot { animation: none; }
+    }
+
+    /* Input card — frosted glass, fixed at bottom */
+    #agent-screen .ag-input-card {
+      position: absolute;
+      bottom: 28px;
+      left: 16px; right: 16px;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 0.5px solid rgba(255,255,255,0.95);
+      border-radius: 20px;
+      padding: 15px 15px 12px;
+      box-shadow: 0 8px 32px -8px rgba(0,0,0,0.16), 0 0 0 0.5px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transform: translateY(120px);
+      opacity: 0;
+      transition: transform 440ms var(--ease-spring), opacity 280ms var(--ease-out);
+    }
+    #agent-screen .ag-input-card textarea {
+      width: 100%;
+      border: none; outline: none;
+      background: transparent;
+      font-family: 'Geist', -apple-system, sans-serif;
+      font-size: 15px; font-weight: 400;
+      color: rgba(0,0,0,0.88);
+      line-height: 20px;
+      padding: 0;
+      margin: 0;
+      resize: none;
+      overflow: hidden;
+      min-height: 20px;
+      caret-color: var(--brand-primary);
+    }
+    #agent-screen .ag-input-card textarea::placeholder {
+      color: rgba(0,0,0,0.38);
+    }
+    .ag-input-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .ag-input-btn {
+      width: 28px; height: 28px;
+      border-radius: 999px;
+      background: #f1f1f1;
+      border: none; border-bottom: 1px solid #fff;
+      box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0; flex-shrink: 0;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      transition: transform 140ms var(--ease-out);
+    }
+    .ag-input-btn:active { transform: scale(0.92); }
+    @media (hover: hover) and (pointer: fine) {
+      .ag-input-btn:hover { background: #e8e8e8; }
+    }
+    .ag-input-btns-r {
+      display: flex; align-items: center; gap: 10px;
+    }
+    /* Send button — grey when empty, green when has text */
+    .ag-send {
+      background: #f1f1f1;
+      transition: background 180ms var(--ease-out), transform 140ms var(--ease-out);
+    }
+    .ag-send.active {
+      background: var(--brand-primary);
+    }
+    .ag-send.active .ico { color: #fff !important; }
+
+    /* Back / close button top-left */
+    .ag-back-btn {
+      position: absolute;
+      top: 52px; left: 16px;
+      width: 44px; height: 44px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.18);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: none; border-bottom: 0.5px solid rgba(255,255,255,0.4);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; padding: 0;
+      opacity: 0;
+      transition: opacity 300ms var(--ease-out), transform 140ms var(--ease-out), background 200ms ease;
+      z-index: 2;
+    }
+    .ag-back-btn:active { transform: scale(0.92); }
+    @media (hover: hover) and (pointer: fine) {
+      .ag-back-btn:hover { background: rgba(255,255,255,0.28); }
+    }
+    /* In convo mode, back button goes dark */
+    #agent-screen.ag-convo .ag-back-btn {
+      background: #f1f1f1;
+      border-bottom-color: #fff;
+    }
+
+    /* ── Open state ── */
+    #agent-screen.ag-open {
+      pointer-events: all;
+    }
+    #agent-screen.ag-open .ag-bg-blur { opacity: 1; }
+    #agent-screen.ag-open .ag-glow {
+      opacity: 0.58;
+      transform: translateX(-50%) translateY(0);
+    }
+    #agent-screen.ag-open .ag-input-card {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    #agent-screen.ag-open .ag-back-btn { opacity: 1; }
+
+    /* ── Conversation mode (white bg) ── */
+    #agent-screen.ag-convo .ag-bg-white { opacity: 1; }
+    #agent-screen.ag-convo .ag-glow { opacity: 0; }
+    #agent-screen.ag-convo .ag-input-card {
+      background: rgba(255,255,255,0.98);
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
     }
 
     /* ── AI Agent overlay ── */
@@ -3128,9 +3409,12 @@
     /* ── Hero card ── */
     .home-hero {
       position: relative;
-      width: 377px; height: 301px;
+      width: 377px;
       border-radius: 24px; overflow: hidden;
       background: #a1b1a0; flex-shrink: 0;
+      /* Height driven by content — top padding matches bar height, bottom = side margin (4px) */
+      padding: 78px 4px 4px;
+      box-sizing: border-box;
     }
     .home-hero-bg {
       position: absolute; inset: 0;
@@ -3146,9 +3430,9 @@
     }
     .home-hero-av {
       width: 44px; height: 44px; border-radius: 999px;
-      background: var(--surface-secondary);
+      background: #f1f1f1;
       backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-      border: none; border-bottom: 1px solid var(--border-focus);
+      border: none; border-bottom: 1px solid #fff;
       box-shadow: 0 8px 8px rgba(0,0,0,0.12);
       display: flex; align-items: center; justify-content: center;
       padding: 4px; box-sizing: border-box;
@@ -3160,51 +3444,61 @@
     }
     .home-hero-av-inner span {
       font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600;
-      color: var(--text-primary);
+      color: var(--text-primary); line-height: 18px;
     }
     .home-hero-bell {
       width: 44px; height: 44px; border-radius: 999px;
-      background: var(--surface-secondary);
+      background: #f1f1f1;
       backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-      border: none; border-bottom: 1px solid var(--border-focus);
+      border: none; border-bottom: 1px solid #fff;
       box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
       display: flex; align-items: center; justify-content: center; cursor: pointer;
+      padding: 0; overflow: hidden;
     }
     .home-hero-bell img { width: 16px; height: 16px; }
     .home-hero-center {
-      position: absolute; top: 62px; bottom: 20px; left: 50%; transform: translateX(-50%);
-      width: 337px;
+      position: relative; z-index: 2;
+      width: 100%;
       display: flex; flex-direction: column; align-items: center;
-      justify-content: space-between;
-      z-index: 2;
+      gap: 16px;
     }
     .home-greeting { width: 100%; text-align: center; display: flex; flex-direction: column; gap: 4px; }
     .home-greeting-hi {
       font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 500;
-      color: var(--text-secondary); letter-spacing: -0.8px;
+      color: rgba(0,0,0,0.60); letter-spacing: -0.8px;
     }
     .home-greeting-ask {
       font-family: 'Geist', sans-serif; font-size: 24px; font-weight: 500;
-      color: var(--text-primary); letter-spacing: -1.2px; line-height: 1.2;
+      color: rgba(0,0,0,0.80); letter-spacing: -1.2px; line-height: 1.2;
     }
     .home-ai {
-      width: 100%; background: rgba(255,255,255,0.8);
-      border: 0.5px solid #fff; border-radius: 16px; padding: 12px;
-      box-sizing: border-box; display: flex; flex-direction: column; gap: 8px;
+      width: 100%; background: rgba(255,255,255,0.80);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 0.5px solid #fff; border-radius: 20px; padding: 20px;
+      box-sizing: border-box; display: flex; flex-direction: column;
+      gap: 12px; height: 146px;
     }
     .home-ai-ph {
-      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 400;
-      color: var(--text-secondary); height: 60px; display: flex; align-items: flex-start;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400;
+      color: rgba(0,0,0,0.60); line-height: 20px;
+      flex: 1; min-height: 1px; overflow: hidden;
     }
-    .home-ai-row { display: flex; align-items: center; justify-content: space-between; }
+    .home-ai-row { display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
     .home-ai-row-r { display: flex; align-items: center; gap: 10px; }
     .home-ai-btn {
-      width: 28px; height: 28px; border-radius: 999px;
-      background: var(--surface-secondary); border: none; border-bottom: 1px solid var(--border-focus);
-      backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+      width: 34px; height: 34px; border-radius: 999px;
+      background: #f1f1f1; border: none; border-bottom: 1px solid #fff;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
       box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
       display: flex; align-items: center; justify-content: center; cursor: pointer;
+      flex-shrink: 0; padding: 0;
     }
+    @media (hover: hover) and (pointer: fine) {
+      .home-ai-btn:hover { background: #e8e8e8; }
+      .home-hero-bell:hover { background: #e8e8e8; }
+    }
+    .home-ai-btn:active { transform: scale(0.94); transition: transform 120ms var(--ease-out); }
+    .home-hero-bell:active { transform: scale(0.94); transition: transform 120ms var(--ease-out); }
     .home-ai-btn .ico { pointer-events: none; }
 
     /* ── Key Actions ── */
@@ -3221,7 +3515,7 @@
       color: #aa7065; letter-spacing: 0.5px; text-transform: uppercase;
     }
     .home-ka-items { display: flex; gap: 16px; }
-    .home-ka-item { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    .home-ka-item { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
     .home-ka-icon { position: relative; width: 32px; height: 32px; flex-shrink: 0; }
     .home-ka-icon-bg { position: absolute; inset: 0; width: 32px; height: 32px; }
     .home-ka-icon-inner {
@@ -5140,28 +5434,28 @@
               <div class="home-hero-av-inner"><span>SR</span></div>
             </div>
             <button class="home-hero-bell">
-              <span class="ico ol" style="--ico:url('Icons/BellRinging.svg');color:rgba(0,0,0,0.70)"></span>
+              <span class="ico ol" style="--ico:url('Icons/BellRinging.svg');--sz:16px;color:rgba(0,0,0,0.70)"></span>
             </button>
           </div>
 
           <!-- Center: greeting + AI input -->
           <div class="home-hero-center">
             <div class="home-greeting">
-              <span class="home-greeting-hi">Hello, Satya</span>
-              <span class="home-greeting-ask">What brings you<br>to Banyan today?</span>
+              <span class="home-greeting-hi">Good to see you, Satya</span>
+              <span class="home-greeting-ask">What can we take<br>care of today?</span>
             </div>
-            <div class="home-ai">
+            <div class="home-ai" onclick="openHomeAgent()" style="cursor:pointer;">
               <div class="home-ai-ph">Ask Banyan...</div>
               <div class="home-ai-row">
-                <button class="home-ai-btn">
-                  <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.40)"></span>
+                <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
+                  <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
                 </button>
                 <div class="home-ai-row-r">
-                  <button class="home-ai-btn">
-                    <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:12px;color:rgba(0,0,0,0.40)"></span>
+                  <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
+                    <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
                   </button>
-                  <button class="home-ai-btn">
-                    <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:12px;color:rgba(0,0,0,0.40)"></span>
+                  <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
+                    <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
                   </button>
                 </div>
               </div>
@@ -7309,24 +7603,27 @@
       <!-- Compact nav (slides in on scroll-up) -->
       <div id="compactNav">
         <div class="compact-bar">
+          <button class="list-nav-btn" onclick="goBack()" aria-label="Back">
+            <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+          </button>
           <span class="compact-title">Transactions</span>
+          <button class="list-nav-btn" aria-label="Download">
+            <span class="ico ol" style="--ico:url('Icons/FileArrowDown.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+          </button>
         </div>
         <div class="active-filters-row" id="activeFiltersRowCompact"></div>
       </div>
 
       <!-- Full nav (collapses on scroll-up) -->
       <div id="fullNav">
-        <div class="list-back-row">
-          <button class="list-back-btn" onclick="goBack()">
-            <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        <div class="list-nav-bar">
+          <button class="list-nav-btn" onclick="goBack()" aria-label="Back">
+            <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
           </button>
-        </div>
-        <div class="list-header-row">
-          <span class="list-title">Transactions</span>
-          <div class="list-tabs">
-            <button class="ltab active" onclick="switchTab('recent',this)">Recent</button>
-            <button class="ltab" onclick="switchTab('scheduled',this)">Scheduled</button>
-          </div>
+          <span class="list-nav-title">Transactions</span>
+          <button class="list-nav-btn" aria-label="Download">
+            <span class="ico ol" style="--ico:url('Icons/FileArrowDown.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+          </button>
         </div>
         <!-- Active filter chips — lives inside fullNav so it collapses with it -->
         <div class="active-filters-row" id="activeFiltersRow"></div>
@@ -7353,8 +7650,10 @@
       <span class="ico ol" style="--ico:url('Icons/Funnel.svg');--sz:16px;color:rgba(0,0,0,0.60)"></span>
       <div class="filter-active-dot"></div>
     </button>
-    <button class="list-bar-btn" aria-label="Download">
-      <span class="ico ol" style="--ico:url('Icons/DownloadSimple.svg');--sz:16px;color:rgba(0,0,0,0.60)"></span>
+    <button class="list-bar-btn list-bar-orb" aria-label="Ask Banyan" onclick="openAgent()">
+      <div class="list-bar-orb-inner">
+        <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
+      </div>
     </button>
   </div>
 
@@ -7529,6 +7828,52 @@
       </div>
       <div class="dispute-cta-bar">
         <button class="dispute-submit ready" onclick="saveNote()">Save note</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════
+       HOME AGENT SCREEN
+  ══════════════════════════════════════ -->
+  <div id="agent-screen">
+    <!-- Blurred home background -->
+    <div class="ag-bg">
+      <img src="assets/home-bg.webp" alt="">
+      <div class="ag-bg-blur"></div>
+      <div class="ag-bg-white"></div>
+    </div>
+    <!-- Green glow orb -->
+    <div class="ag-glow"></div>
+    <!-- Messages scroll area -->
+    <div class="ag-msgs" id="agentMsgs"></div>
+    <!-- Back button -->
+    <button class="ag-back-btn" onclick="closeHomeAgent()" aria-label="Back">
+      <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:rgba(0,0,0,0.70)"></span>
+    </button>
+    <!-- Input card -->
+    <div class="ag-input-card" id="agentInputCard">
+      <textarea
+        id="agentField"
+        placeholder="Ask Banyan..."
+        rows="1"
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+        oninput="agentOnInput(this)"
+        onkeydown="agentKeydown(event)"
+      ></textarea>
+      <div class="ag-input-actions">
+        <button class="ag-input-btn" aria-label="Attach">
+          <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.50)"></span>
+        </button>
+        <div class="ag-input-btns-r">
+          <button class="ag-input-btn" aria-label="Voice">
+            <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:12px;color:rgba(0,0,0,0.50)"></span>
+          </button>
+          <button class="ag-input-btn ag-send" id="agentSend" aria-label="Send" onclick="agentSend()">
+            <span class="ico ol" style="--ico:url('Icons/ArrowUp.svg');--sz:12px;color:rgba(0,0,0,0.40)"></span>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -7853,6 +8198,141 @@ function setNavActive(tabIndex) {
 function showNav(visible) {
   const nav = document.getElementById('globalNav');
   if (nav) nav.classList.toggle('bnav-hidden', !visible);
+}
+
+/* ══════════════════════════════════════════════════════
+   HOME AGENT EXPERIENCE
+══════════════════════════════════════════════════════ */
+
+const _AG_RESPONSES = [
+  "I found it! Maya Sarini received $340 on March 12th from your USD Checking account.",
+  "Looking at your last 30 days, your top category is Dining at $1,240 — up 18% from last month.",
+  "You have 3 pending transactions totalling $284. The largest is a $180 charge from Airbnb on April 2nd.",
+  "Your USD Checking balance is $12,600. No unusual activity detected in the past 7 days.",
+  "I can see 2 refunds this week — $24 from Uber and $63 from Amazon, both processed.",
+];
+let _agResponseIdx = 0;
+let _homeAgentOpen = false;
+let _homeAgentConvo = false;
+
+function openHomeAgent() {
+  if (_homeAgentOpen) return;
+  _homeAgentOpen = true;
+  const screen = document.getElementById('agent-screen');
+  screen.classList.add('ag-open');
+  // Hide global nav
+  const nav = document.getElementById('globalNav');
+  if (nav) {
+    nav.style.transition = 'opacity 250ms ease, transform 300ms var(--ease-spring)';
+    nav.style.opacity = '0';
+    nav.style.transform = 'translateY(12px)';
+    nav.style.pointerEvents = 'none';
+  }
+  // Focus input after animation
+  setTimeout(function() {
+    const f = document.getElementById('agentField');
+    if (f) f.focus();
+  }, 480);
+}
+
+function closeHomeAgent() {
+  if (!_homeAgentOpen) return;
+  _homeAgentOpen = false;
+  _homeAgentConvo = false;
+  const screen = document.getElementById('agent-screen');
+  screen.classList.remove('ag-open', 'ag-convo');
+  // Clear messages
+  const msgs = document.getElementById('agentMsgs');
+  if (msgs) msgs.innerHTML = '';
+  // Clear input
+  const f = document.getElementById('agentField');
+  const s = document.getElementById('agentSend');
+  if (f) { f.value = ''; f.style.height = 'auto'; }
+  if (s) s.classList.remove('active');
+  // Restore nav
+  const nav = document.getElementById('globalNav');
+  if (nav) {
+    nav.style.transition = 'opacity 300ms var(--ease-out), transform 360ms var(--ease-spring)';
+    nav.style.opacity = '1';
+    nav.style.transform = 'translateY(0)';
+    nav.style.pointerEvents = '';
+  }
+  _agResponseIdx = 0;
+}
+
+function agentOnInput(input) {
+  input.style.height = 'auto';
+  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  const sendBtn = document.getElementById('agentSend');
+  if (!sendBtn) return;
+  const hasText = input.value.trim().length > 0;
+  if (hasText) sendBtn.classList.add('active');
+  else sendBtn.classList.remove('active');
+}
+
+function agentKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    agentSend();
+  }
+}
+
+function agentSend() {
+  const f = document.getElementById('agentField');
+  if (!f) return;
+  const text = f.value.trim();
+  if (!text) return;
+
+  const screen = document.getElementById('agent-screen');
+  const msgs = document.getElementById('agentMsgs');
+
+  // Transition to conversation mode (white bg) on first send
+  if (!_homeAgentConvo) {
+    _homeAgentConvo = true;
+    screen.classList.add('ag-convo');
+  }
+
+  // Add user message
+  const userDiv = document.createElement('div');
+  userDiv.className = 'ag-msg-user';
+  userDiv.innerHTML = '<div class="ag-msg-user-bubble">' + _agEscape(text) + '</div>';
+  msgs.appendChild(userDiv);
+  requestAnimationFrame(() => userDiv.classList.add('visible'));
+
+  // Clear input
+  f.value = '';
+  f.style.height = 'auto';
+  document.getElementById('agentSend').classList.remove('active');
+
+  // Scroll to bottom
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // AI typing indicator
+  const typingDiv = document.createElement('div');
+  typingDiv.className = 'ag-msg-ai';
+  typingDiv.innerHTML = '<div class="ag-msg-ai-inner">' +
+    '<div class="ag-msg-ai-avatar"><video src="ai-orb.mp4" autoplay loop muted playsinline></video></div>' +
+    '<div class="ag-msg-ai-bubble">' +
+      '<span class="ag-typing-dot"></span><span class="ag-typing-dot"></span><span class="ag-typing-dot"></span>' +
+    '</div></div>';
+  msgs.appendChild(typingDiv);
+  requestAnimationFrame(() => typingDiv.classList.add('visible'));
+  msgs.scrollTop = msgs.scrollHeight;
+
+  // Replace typing with response after delay
+  const responseText = _AG_RESPONSES[_agResponseIdx % _AG_RESPONSES.length];
+  _agResponseIdx++;
+  setTimeout(function() {
+    typingDiv.querySelector('.ag-msg-ai-bubble').innerHTML = _agEscape(responseText);
+    msgs.scrollTop = msgs.scrollHeight;
+  }, 1400);
+
+  // Focus back
+  setTimeout(function() { if (f) f.focus(); }, 100);
+}
+
+function _agEscape(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
 /* ── AI Agent ───────────────────────────────────────── */
@@ -9775,6 +10255,16 @@ function renderEmbeddedTxSection(containerId, spaceTxns) {
   container.appendChild(outer);
 }
 
+const _HOME_GREETINGS = [
+  { hi: 'Good to see you, Satya',         ask: 'What can we take\ncare of today?' },
+  { hi: 'Hey Satya, you\'re all set',     ask: 'Everything\'s running\nsmoothly.' },
+  { hi: 'Hey Satya',                      ask: 'Ready when you are.' },
+  { hi: 'It\'s evening in Mumbai, Satya', ask: 'Everything back home\nis on track.' },
+  { hi: 'Hello again, Satya',             ask: 'Anything need\nyour attention?' },
+];
+let _greetingIdx = parseInt(localStorage.getItem('_greetingIdx') || '0', 10);
+let _greetingSet = false;
+
 function showHome() {
   document.getElementById('explore').className  = 'screen hb';
   document.getElementById('accounts').className = 'screen hb';
@@ -9786,6 +10276,18 @@ function showHome() {
   setNavActive(0);
   _smOrigin = 'home';
   renderEmbeddedTxSection('homeTxList');
+
+  // Rotate greeting once per page load, persist for next session
+  if (!_greetingSet) {
+    _greetingSet = true;
+    const g = _HOME_GREETINGS[_greetingIdx % _HOME_GREETINGS.length];
+    _greetingIdx++;
+    localStorage.setItem('_greetingIdx', _greetingIdx);
+    const hiEl  = document.querySelector('#home .home-greeting-hi');
+    const askEl = document.querySelector('#home .home-greeting-ask');
+    if (hiEl)  hiEl.textContent = g.hi;
+    if (askEl) askEl.innerHTML  = g.ask.replace(/\n/g, '<br>');
+  }
 }
 function showExplore() {
   document.getElementById('list').className     = 'screen hr';
