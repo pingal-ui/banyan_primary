@@ -1893,7 +1893,7 @@
       -webkit-overflow-scrolling: touch;
       padding: 8px 0 8px;
       display: flex; flex-direction: column;
-      justify-content: flex-end;
+      justify-content: flex-start;
       z-index: 3;
     }
     #agent-screen .ag-msgs::-webkit-scrollbar { display: none; }
@@ -1906,11 +1906,11 @@
     }
     /* Conversation grouping: user + AI pair share a block, gap between pairs */
     .ag-msg-user {
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       transform: translateX(16px);
     }
     .ag-msg-ai {
-      margin-bottom: 20px;
+      margin-bottom: 32px;
       transform: translateY(8px);
     }
     .ag-msg-user.visible { opacity: 1; transform: translateX(0); }
@@ -2004,7 +2004,7 @@
     /* ── Input card ── */
     #agent-screen .ag-input-card {
       position: absolute;
-      bottom: 28px; left: 16px; right: 16px;
+      bottom: 16px; left: 16px; right: 16px;
       background: rgba(255,255,255,0.84);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
@@ -8594,7 +8594,7 @@ function agentSend() {
   const currentIdx = _agResponseIdx;
   _agResponseIdx++;
 
-  const THINKING_MS = 900 + Math.random() * 400;
+  const THINKING_MS = 2200 + Math.random() * 800;
   setTimeout(function() {
     const waveEl = document.getElementById('agWave_' + currentIdx);
     if (!waveEl) return;
