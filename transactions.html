@@ -1660,11 +1660,17 @@
       opacity: 0;
       transition: opacity 380ms var(--ease-out);
     }
+    /* Conversation wash — a soft warm-white veil over the blurred bg, not a flat replacement */
     #agent-screen .ag-bg-white {
       position: absolute; inset: 0;
-      background: #f4f4f4;
+      background: linear-gradient(
+        180deg,
+        rgba(248,248,247,0.92) 0%,
+        rgba(246,247,245,0.88) 60%,
+        rgba(242,246,240,0.82) 100%
+      );
       opacity: 0;
-      transition: opacity 600ms var(--ease-out);
+      transition: opacity 700ms var(--ease-out);
       pointer-events: none;
     }
 
@@ -1712,7 +1718,12 @@
       opacity: 0.55;
       transform: translateX(-50%) translateY(0);
     }
-    #agent-screen.ag-convo .ag-glow,
+    /* In convo mode glow doesn't vanish — it retreats to a whisper */
+    #agent-screen.ag-convo .ag-glow {
+      opacity: 0.11 !important;
+      animation: none;
+      transform: translateX(-50%) translateY(20px) !important;
+    }
     #agent-screen.ag-convo .ag-glow-inner { opacity: 0 !important; animation: none; }
 
     /* ── Back button ── */
@@ -1887,56 +1898,65 @@
     }
     #agent-screen .ag-msgs::-webkit-scrollbar { display: none; }
 
-    /* ── Message bubbles ── */
+    /* ── Messages — editorial, text-first, no bubble scaffolding ── */
     .ag-msg-user, .ag-msg-ai {
-      padding: 0 16px;
-      margin-bottom: 8px;
+      padding: 0 20px;
       opacity: 0;
-      transition: opacity 260ms var(--ease-out), transform 300ms var(--ease-spring);
+      transition: opacity 280ms var(--ease-out), transform 320ms var(--ease-spring);
     }
-    .ag-msg-user { transform: translateX(20px); }
-    .ag-msg-ai   { transform: translateY(10px); }
+    /* Conversation grouping: user + AI pair share a block, gap between pairs */
+    .ag-msg-user {
+      margin-bottom: 6px;
+      transform: translateX(16px);
+    }
+    .ag-msg-ai {
+      margin-bottom: 20px;
+      transform: translateY(8px);
+    }
     .ag-msg-user.visible { opacity: 1; transform: translateX(0); }
     .ag-msg-ai.visible   { opacity: 1; transform: translateY(0); }
 
+    /* User: right-aligned, barely-there green-tinted pill */
     .ag-msg-user-bubble {
-      background: #fff;
-      border-radius: 20px 20px 4px 20px;
-      padding: 10px 14px;
+      display: inline-block;
+      background: rgba(70,136,43,0.10);
+      border-radius: 16px 16px 3px 16px;
+      padding: 9px 14px;
       font-family: 'Geist', sans-serif;
       font-size: 15px; font-weight: 400;
-      color: rgba(0,0,0,0.86);
-      line-height: 20px;
-      max-width: 78%;
-      margin-left: auto;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.10), 0 0 0 0.5px rgba(0,0,0,0.06);
+      color: rgba(0,0,0,0.82);
+      line-height: 21px;
+      max-width: 80%;
+      float: right;
+      clear: both;
     }
+    /* Clearfix so the next element clears the float */
+    .ag-msg-user::after { content: ''; display: table; clear: both; }
 
-    /* AI sender label */
+    /* AI: full-width left, no background, just text — editorial */
     .ag-msg-ai-label {
-      display: flex; align-items: center; gap: 6px;
-      margin-bottom: 5px;
+      display: flex; align-items: center; gap: 5px;
+      margin-bottom: 6px;
     }
     .ag-msg-ai-dot {
-      width: 8px; height: 8px; border-radius: 50%;
+      width: 7px; height: 7px; border-radius: 50%;
       background: var(--brand-primary);
-      box-shadow: 0 0 6px rgba(70,136,43,0.55);
+      opacity: 0.75;
     }
     .ag-msg-ai-name {
       font-family: 'Geist', sans-serif;
-      font-size: 12px; font-weight: 600;
+      font-size: 11px; font-weight: 600;
       color: var(--brand-primary);
-      letter-spacing: 0.01em;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      opacity: 0.80;
     }
     .ag-msg-ai-text {
       font-family: 'Geist', sans-serif;
-      font-size: 15px; font-weight: 400;
-      color: rgba(0,0,0,0.80);
-      line-height: 22px;
-      max-width: 88%;
-    }
-    #agent-screen.ag-convo .ag-msg-ai-text {
-      color: rgba(0,0,0,0.82);
+      font-size: 16px; font-weight: 400;
+      color: rgba(0,0,0,0.78);
+      line-height: 24px;
+      letter-spacing: -0.1px;
     }
 
     /* Typing indicator — wave bars */
@@ -2050,13 +2070,15 @@
     #agent-screen.ag-open .ag-input-card {
       transform: translateY(0); opacity: 1;
     }
-    /* Convo mode — blur bg fades to white, input solidifies */
+    /* Convo mode — wash veil over the background, input stays frosted */
     #agent-screen.ag-open .ag-bg-blur { opacity: 1; }
     #agent-screen.ag-convo .ag-bg-white { opacity: 1; }
     #agent-screen.ag-convo .ag-input-card {
-      background: rgba(255,255,255,0.99);
-      backdrop-filter: none; -webkit-backdrop-filter: none;
-      box-shadow: 0 -1px 0 rgba(0,0,0,0.06), 0 4px 24px rgba(0,0,0,0.08);
+      background: rgba(255,255,255,0.88);
+      box-shadow:
+        0 2px 20px rgba(0,0,0,0.10),
+        0 0 0 0.5px rgba(0,0,0,0.05),
+        0 0 0 4px rgba(255,255,255,0.30);
     }
 
     /* ── AI Agent overlay ── */
