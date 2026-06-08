@@ -2106,6 +2106,7 @@
     /* Container */
     .ag-steps-wrap {
       margin: 4px 0 12px;
+      padding-left: 2px;
       overflow: hidden;
       transition: max-height 340ms var(--ease-drawer),
                   opacity 220ms var(--ease-out),
