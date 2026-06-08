@@ -1091,8 +1091,8 @@ function focusHomeAi() {
   var home = document.getElementById('home');
   if (!home || home.classList.contains('home-ai-focused')) return;
   home.classList.add('home-ai-focused');
-  // Wait for the lift + blur animation to settle, then open agent screen
-  setTimeout(openHomeAgent, 260);
+  // Let the lift + blur animation peak (420ms spring) and hold for a beat, then transition
+  setTimeout(openHomeAgent, 580);
 }
 
 function openHomeAgent() {
@@ -5940,4 +5940,73 @@ function benPay() {
 }
 
 function benOpenAdd() {}
+
+/* ── Keyboard-aware agent hero layout ─────────────────────────────────────
+   When the iOS software keyboard opens, the visual viewport shrinks.
+   The input card is at bottom:16px on the agent screen (position:absolute).
+   On iOS, position:absolute elements don't automatically dodge the keyboard.
+   We use visualViewport to detect keyboard height and push the input card,
+   orb, and chips upward so nothing is occluded.
+──────────────────────────────────────────────────────────────────────────── */
+(function _initKeyboardAwareHero() {
+  if (!window.visualViewport) return;
+
+  var _kbOpen = false;
+
+  function _applyKbLayout() {
+    var kbHeight = Math.max(0, window.innerHeight - window.visualViewport.height);
+    var agScreen  = document.getElementById('agent-screen');
+    if (!agScreen) return;
+
+    var isActive = agScreen.classList.contains('ag-open') ||
+                   agScreen.classList.contains('ag-convo');
+    if (!isActive) return;
+
+    var inputCard = document.getElementById('agentInputCard');
+    var heroEl    = agScreen.querySelector('.ag-hero');
+    var chipsEl   = agScreen.querySelector('.ag-chips');
+
+    var kbNow = kbHeight > 80;
+
+    if (kbNow === _kbOpen && !_kbOpen) return; // nothing changed, keyboard still closed
+
+    _kbOpen = kbNow;
+
+    if (kbNow) {
+      // --- keyboard opened ---
+      // Input card: lift it clear of the keyboard
+      if (inputCard) {
+        inputCard.style.transition = 'transform 340ms var(--ease-spring)';
+        inputCard.style.transform  = 'translateY(-' + kbHeight + 'px)';
+      }
+      // Orb: shift up ~40% of keyboard height so it stays centered in remaining space
+      if (heroEl && agScreen.classList.contains('ag-open')) {
+        heroEl.style.transition = 'opacity 400ms var(--ease-out), transform 380ms var(--ease-spring)';
+        heroEl.style.transform  = 'translate(-50%, -52%) translateY(-' + Math.round(kbHeight * 0.42) + 'px)';
+      }
+      // Chips: shift up proportionally — they live above the input card
+      if (chipsEl && agScreen.classList.contains('ag-open')) {
+        chipsEl.style.transition = 'opacity 320ms var(--ease-out), transform 380ms var(--ease-spring)';
+        chipsEl.style.transform  = 'translateY(-' + Math.round(kbHeight * 0.88) + 'px)';
+      }
+    } else {
+      // --- keyboard closed / collapsed ---
+      if (inputCard) {
+        inputCard.style.transition = 'transform 340ms var(--ease-spring)';
+        inputCard.style.transform  = '';
+      }
+      if (heroEl) {
+        heroEl.style.transition = 'opacity 400ms var(--ease-out) 160ms, transform 480ms var(--ease-spring) 160ms';
+        heroEl.style.transform  = '';
+      }
+      if (chipsEl) {
+        chipsEl.style.transition = 'opacity 320ms var(--ease-out) 280ms, transform 380ms var(--ease-spring) 280ms';
+        chipsEl.style.transform  = '';
+      }
+    }
+  }
+
+  window.visualViewport.addEventListener('resize', _applyKbLayout);
+  window.visualViewport.addEventListener('scroll', _applyKbLayout);
+}());
 

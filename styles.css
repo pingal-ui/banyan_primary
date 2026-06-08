@@ -4837,8 +4837,8 @@
       /* Enable z-index elevation in the focus state */
       position: relative;
       transition:
-        transform 280ms var(--ease-spring),
-        box-shadow 280ms ease;
+        transform 420ms var(--ease-spring),
+        box-shadow 420ms ease;
     }
 
     /* ── Home AI focus state — blur everything else, lift the input ── */
@@ -4861,11 +4861,11 @@
     /* home-ai lifts above the blurred siblings */
     #home.home-ai-focused .home-ai {
       z-index: 5;
-      transform: translateY(-4px) scale(1.016);
+      transform: translateY(-10px) scale(1.028);
       box-shadow:
-        0 20px 56px rgba(0,0,0,0.22),
-        0 6px 16px rgba(0,0,0,0.10),
-        0 1px 4px rgba(0,0,0,0.06);
+        0 32px 72px rgba(0,0,0,0.28),
+        0 12px 28px rgba(0,0,0,0.14),
+        0 2px 8px rgba(0,0,0,0.08);
     }
     .home-ai-ph {
       font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400;
