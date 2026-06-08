@@ -985,6 +985,24 @@ function agentSend() {
 
   const screen = document.getElementById('agent-screen');
   const msgs   = document.getElementById('agentMsgs');
+
+  // Capture BEFORE the state flip so we can distinguish first vs subsequent
+  var isFirstMsg = !_homeAgentConvo;
+
+  // On first send: collapse the spacer so the user bubble sits at the top
+  // of the visible area, matching the Claude.ai conversation layout
+  if (isFirstMsg) {
+    var spacer = msgs.querySelector('.ag-msgs-spacer');
+    if (spacer) {
+      var spH = spacer.offsetHeight;
+      spacer.style.flex = 'none';
+      spacer.style.height = spH + 'px';
+      void spacer.offsetHeight; // force reflow before transition
+      spacer.style.transition = 'height 520ms var(--ease-spring)';
+      requestAnimationFrame(function() { spacer.style.height = '0'; });
+    }
+  }
+
   if (!_homeAgentConvo) {
     _homeAgentConvo = true;
     screen.classList.add('ag-convo');
@@ -1003,7 +1021,8 @@ function agentSend() {
   f.value = ''; f.style.height = 'auto';
   const sendBtn = document.getElementById('agentSend');
   if (sendBtn) { sendBtn.classList.remove('active'); sendBtn.setAttribute('aria-disabled', 'true'); }
-  msgs.scrollTop = msgs.scrollHeight;
+  // First message: sit at top (spacer is collapsing). Subsequent: scroll to show new bubble.
+  if (isFirstMsg) { msgs.scrollTop = 0; } else { msgs.scrollTop = msgs.scrollHeight; }
 
   // AI message container
   const aiDiv = document.createElement('div');
