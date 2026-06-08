@@ -2145,25 +2145,29 @@
     }
     .ag-step.s-active .ag-step-icon-pending { display: none; }
     .ag-step.s-done   .ag-step-icon-pending { display: none; }
-    /* Active: spinning progress ring */
+    /* Active: conic-gradient arc, fades to transparent — premium vs border spinner */
     .ag-step-icon-active {
       width: 20px; height: 20px;
       border-radius: 50%;
-      border: 2px solid rgba(70,136,43,0.18);
-      border-top-color: var(--brand-primary);
-      box-sizing: border-box;
+      background: conic-gradient(
+        var(--brand-primary) 0deg,
+        rgba(70,136,43,0.20) 200deg,
+        rgba(70,136,43,0) 300deg
+      );
+      -webkit-mask: radial-gradient(farthest-side, transparent 62%, #000 64%);
+              mask: radial-gradient(farthest-side, transparent 62%, #000 64%);
       opacity: 0;
-      animation: ag-step-spin 0.72s linear infinite;
+      animation: ag-step-spin 1s linear infinite;
       transition: opacity 180ms ease;
     }
     .ag-step.s-active .ag-step-icon-active { opacity: 1; }
     .ag-step.s-done   .ag-step-icon-active { display: none; }
     @keyframes ag-step-spin { to { transform: rotate(360deg); } }
-    /* Done: solid green circle + white check */
+    /* Done: soft tinted circle + dark-green check (not stark white-on-solid) */
     .ag-step-icon-done {
       width: 20px; height: 20px;
       border-radius: 50%;
-      background: var(--brand-primary);
+      background: rgba(70,136,43,0.13);
       display: flex; align-items: center; justify-content: center;
       opacity: 0;
       transform: scale(0.55);
@@ -2225,7 +2229,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .ag-step { transition: opacity 180ms ease; transform: none !important; }
-      .ag-step-icon-active { animation: none; opacity: 1; border-top-color: var(--brand-primary); }
+      .ag-step-icon-active { animation: none; opacity: 1; }
       .ag-step-icon-done { transition: opacity 180ms ease; transform: none !important; }
       .ag-steps-summary { transition: opacity 180ms ease; transform: none !important; }
     }
