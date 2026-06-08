@@ -1,4 +1,330 @@
 <!DOCTYPE html>
-<html><head><meta http-equiv="refresh" content="0;url=transactions.html"></head>
-<body><script>location.href='transactions.html'</script></body>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Banyan – Choose your view</title>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brand-primary: #46882B;
+      --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    }
+
+    body {
+      font-family: 'Geist', -apple-system, sans-serif;
+      background: #0a0a0a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      color: #fff;
+    }
+
+    /* ── Logo ── */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 64px;
+    }
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      background: #46882B;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-mark svg {
+      width: 20px;
+      height: 20px;
+      fill: #fff;
+    }
+    .logo-name {
+      font-size: 22px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+
+    .tagline {
+      font-size: 15px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.45);
+      margin-bottom: 48px;
+      margin-top: -40px;
+      letter-spacing: 0.01em;
+    }
+
+    /* ── Cards ── */
+    .choices {
+      display: flex;
+      gap: 20px;
+      align-items: stretch;
+    }
+
+    .choice-card {
+      width: 280px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 32px 28px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      transition: background 200ms ease, border-color 200ms ease, transform 200ms var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+
+    @media (hover: hover) and (pointer: fine) {
+      .choice-card:hover {
+        background: rgba(255, 255, 255, 0.07);
+        border-color: rgba(255, 255, 255, 0.16);
+        transform: translateY(-3px);
+      }
+      .choice-card:hover::before { opacity: 1; }
+      .choice-card:hover .choice-arrow svg { transform: translateX(3px); }
+    }
+
+    .choice-card:active { transform: scale(0.98) translateY(0); }
+
+    /* Top-right glow on hover */
+    .choice-card::before {
+      content: '';
+      position: absolute;
+      top: 0; right: 0;
+      width: 120px; height: 120px;
+      background: radial-gradient(circle, rgba(70, 136, 43, 0.15) 0%, transparent 70%);
+      opacity: 0;
+      transition: opacity 300ms ease;
+      pointer-events: none;
+    }
+
+    /* ── Preview thumbnails ── */
+    .choice-preview {
+      width: 100%;
+      height: 160px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .preview-phone {
+      width: 64px;
+      height: 110px;
+      border: 2px solid rgba(255, 255, 255, 0.20);
+      border-radius: 10px;
+      position: relative;
+      background: rgba(70, 136, 43, 0.12);
+    }
+    .preview-phone::before {
+      content: '';
+      position: absolute;
+      top: 8px; left: 50%;
+      transform: translateX(-50%);
+      width: 24px; height: 3px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+    .preview-phone-screen {
+      position: absolute;
+      inset: 18px 6px 6px;
+      background: linear-gradient(160deg, rgba(70, 136, 43, 0.3), rgba(70, 136, 43, 0.05));
+      border-radius: 4px;
+    }
+
+    .preview-desktop {
+      width: 140px;
+      height: 100px;
+      border: 2px solid rgba(255, 255, 255, 0.20);
+      border-radius: 6px;
+      background: rgba(70, 136, 43, 0.08);
+      overflow: hidden;
+    }
+    .preview-desktop-bar {
+      height: 14px;
+      background: rgba(255, 255, 255, 0.06);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 6px;
+    }
+    .preview-desktop-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
+    }
+    .preview-desktop-content {
+      padding: 8px;
+      display: flex;
+      gap: 6px;
+    }
+    .preview-desktop-sidebar {
+      width: 24px; height: 60px;
+      background: rgba(70, 136, 43, 0.3);
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+    .preview-desktop-main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .preview-desktop-row {
+      height: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
+    }
+    .preview-desktop-row:nth-child(2) { width: 70%; }
+    .preview-desktop-row:nth-child(3) { width: 50%; }
+
+    /* ── Card text ── */
+    .choice-label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .choice-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: #fff;
+    }
+    .choice-sub {
+      font-size: 13px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.45);
+      line-height: 1.5;
+    }
+
+    .choice-arrow {
+      margin-top: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #46882B;
+    }
+    .choice-arrow svg {
+      width: 14px; height: 14px;
+      stroke: #46882B;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 200ms var(--ease-out);
+    }
+
+    /* ── Badge ── */
+    .badge {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: rgba(70, 136, 43, 0.15);
+      border: 1px solid rgba(70, 136, 43, 0.3);
+      color: #46882B;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 3px 8px;
+      border-radius: 99px;
+    }
+
+    .hint {
+      margin-top: 32px;
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.25);
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .choice-card { transition: none; }
+      .choice-arrow svg { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 008 20C19 20 22 3 22 3c-1 2-8 2-8 2l3 3-2-3c0 0-1.5 1.5-1.5 5C13.5 14 17 12 17 8z"/>
+      </svg>
+    </div>
+    <span class="logo-name">Banyan</span>
+  </div>
+  <p class="tagline">Choose how you want to explore</p>
+
+  <div class="choices">
+    <!-- Mobile -->
+    <a href="transactions.html" class="choice-card">
+      <div class="choice-preview">
+        <div class="preview-phone">
+          <div class="preview-phone-screen"></div>
+        </div>
+      </div>
+      <div class="choice-label">
+        <span class="choice-title">Mobile</span>
+        <span class="choice-sub">iPhone prototype at 393×852. Touch-optimised flows and interactions.</span>
+      </div>
+      <div class="choice-arrow">
+        Open prototype
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </a>
+
+    <!-- Desktop -->
+    <a href="desktop.html" class="choice-card">
+      <span class="badge">New</span>
+      <div class="choice-preview">
+        <div class="preview-desktop">
+          <div class="preview-desktop-bar">
+            <div class="preview-desktop-dot"></div>
+            <div class="preview-desktop-dot"></div>
+            <div class="preview-desktop-dot"></div>
+          </div>
+          <div class="preview-desktop-content">
+            <div class="preview-desktop-sidebar"></div>
+            <div class="preview-desktop-main">
+              <div class="preview-desktop-row"></div>
+              <div class="preview-desktop-row"></div>
+              <div class="preview-desktop-row"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="choice-label">
+        <span class="choice-title">Desktop</span>
+        <span class="choice-sub">Full-width dashboard with sidebar navigation. Same journeys, desktop layout.</span>
+      </div>
+      <div class="choice-arrow">
+        Open prototype
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </a>
+  </div>
+
+  <p class="hint">Press Escape at any time to return here</p>
+
+  <script>
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') window.location.href = 'index.html';
+    });
+  </script>
+</body>
 </html>

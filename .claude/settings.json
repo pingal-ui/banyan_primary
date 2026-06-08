@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__Claude_Preview__preview_screenshot",
+      "mcp__Claude_Preview__preview_console_logs",
+      "mcp__Claude_Preview__preview_resize",
+      "mcp__da3936aa-138b-40bc-95bb-f5972ed552e3__use_figma",
+      "mcp__da3936aa-138b-40bc-95bb-f5972ed552e3__get_design_context",
+      "mcp__da3936aa-138b-40bc-95bb-f5972ed552e3__get_screenshot"
+    ]
+  }
+}
