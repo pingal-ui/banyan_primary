@@ -257,8 +257,8 @@ function _agRunSteps(aiDiv, steps, msgs, onComplete) {
         '<div class="ag-step-icon-pending"></div>' +
         '<div class="ag-step-icon-active"></div>' +
         '<div class="ag-step-icon-done">' +
-          '<svg width="8" height="6" viewBox="0 0 8 6" fill="none" aria-hidden="true">' +
-            '<path d="M1 3l2 2 4-4" stroke="#46882B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">' +
+            '<path d="M1 4l3 3 5-6" stroke="#fff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>' +
           '</svg>' +
         '</div>' +
       '</div>' +

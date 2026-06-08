@@ -2121,77 +2121,72 @@
     .ag-step {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 5px 0;
+      gap: 12px;
+      padding: 7px 0;
       opacity: 0;
-      transform: translateY(10px);
+      transform: translateY(8px);
       transition: opacity 300ms var(--ease-out), transform 340ms var(--ease-spring);
     }
-    .ag-step.s-in {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .ag-step.s-done .ag-step-label {
-      color: var(--text-tertiary);
-    }
-    /* Step icon — 16×16 container */
+    .ag-step.s-in { opacity: 1; transform: translateY(0); }
+
+    /* Step icon — 20×20 container, holds all three state layers */
     .ag-step-icon {
-      width: 16px; height: 16px;
+      width: 20px; height: 20px;
       flex-shrink: 0;
       position: relative;
       display: flex; align-items: center; justify-content: center;
     }
-    /* Pending: hollow circle */
+    /* Pending: medium filled grey circle */
     .ag-step-icon-pending {
-      width: 7px; height: 7px;
+      width: 20px; height: 20px;
       border-radius: 50%;
-      border: 1.5px solid rgba(0,0,0,0.18);
-      transition: opacity 200ms ease;
+      background: rgba(0,0,0,0.08);
     }
     .ag-step.s-active .ag-step-icon-pending { display: none; }
-    .ag-step.s-done  .ag-step-icon-pending  { display: none; }
-    /* Active: pulsing dot */
+    .ag-step.s-done   .ag-step-icon-pending { display: none; }
+    /* Active: spinning progress ring */
     .ag-step-icon-active {
-      width: 8px; height: 8px;
+      width: 20px; height: 20px;
       border-radius: 50%;
-      background: var(--brand-primary);
+      border: 2px solid rgba(70,136,43,0.18);
+      border-top-color: var(--brand-primary);
+      box-sizing: border-box;
       opacity: 0;
-      animation: ag-step-pulse 1.4s ease-in-out infinite;
+      animation: ag-step-spin 0.72s linear infinite;
       transition: opacity 180ms ease;
     }
     .ag-step.s-active .ag-step-icon-active { opacity: 1; }
     .ag-step.s-done   .ag-step-icon-active { display: none; }
-    @keyframes ag-step-pulse {
-      0%, 100% { transform: scale(1);    opacity: 0.9; }
-      50%      { transform: scale(1.35); opacity: 0.5; }
-    }
-    /* Done: check icon (SVG drawn as CSS) */
+    @keyframes ag-step-spin { to { transform: rotate(360deg); } }
+    /* Done: solid green circle + white check */
     .ag-step-icon-done {
-      width: 14px; height: 14px;
+      width: 20px; height: 20px;
       border-radius: 50%;
-      background: rgba(70,136,43,0.12);
+      background: var(--brand-primary);
       display: flex; align-items: center; justify-content: center;
       opacity: 0;
-      transform: scale(0.6);
-      transition: opacity 220ms var(--ease-out), transform 260ms var(--ease-spring);
+      transform: scale(0.55);
+      transition: opacity 200ms var(--ease-out), transform 260ms var(--ease-spring);
     }
     .ag-step-icon-done svg { display: block; }
-    .ag-step.s-done .ag-step-icon-done {
-      opacity: 1;
-      transform: scale(1);
-    }
+    .ag-step.s-done .ag-step-icon-done { opacity: 1; transform: scale(1); }
+
     /* Step label */
     .ag-step-label {
-      font-size: 13.5px;
+      font-size: 14px;
       font-weight: 400;
-      color: rgba(0,0,0,0.62);
-      line-height: 18px;
+      color: rgba(0,0,0,0.32);
+      line-height: 20px;
       letter-spacing: -0.1px;
-      transition: color 300ms ease;
+      transition: color 260ms ease;
     }
     .ag-step.s-active .ag-step-label {
-      color: rgba(0,0,0,0.78);
+      color: rgba(0,0,0,0.82);
       font-weight: 500;
+    }
+    .ag-step.s-done .ag-step-label {
+      color: rgba(0,0,0,0.30);
+      font-weight: 400;
     }
 
     /* Collapse summary line */
@@ -2229,7 +2224,7 @@
 
     @media (prefers-reduced-motion: reduce) {
       .ag-step { transition: opacity 180ms ease; transform: none !important; }
-      .ag-step-icon-active { animation: none; opacity: 1; }
+      .ag-step-icon-active { animation: none; opacity: 1; border-top-color: var(--brand-primary); }
       .ag-step-icon-done { transition: opacity 180ms ease; transform: none !important; }
       .ag-steps-summary { transition: opacity 180ms ease; transform: none !important; }
     }
