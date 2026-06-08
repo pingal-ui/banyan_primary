@@ -2542,6 +2542,246 @@
       .ag-receipt-check { transition: opacity 220ms ease; transform: none !important; }
     }
 
+    /* ── Steps → answer separator ── */
+    .ag-steps-done-sep {
+      height: 0.5px;
+      background: rgba(0,0,0,0.07);
+      margin: 8px 0 14px;
+      opacity: 0;
+      transition: opacity 300ms ease;
+    }
+    .ag-steps-done-sep.s-in { opacity: 1; }
+
+    /* ── Upcoming bills card ── */
+    .ag-upcoming-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 18px 10px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .ag-upcoming-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .ag-upcoming-total {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-tertiary);
+    }
+    .ag-upcoming-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 18px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.04);
+    }
+    .ag-upcoming-row:last-child { border-bottom: none; }
+    .ag-upcoming-icon {
+      width: 34px; height: 34px; border-radius: 10px;
+      background: rgba(0,0,0,0.05);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+    }
+    .ag-upcoming-info { flex: 1; min-width: 0; }
+    .ag-upcoming-name {
+      font-size: 14px; font-weight: 500;
+      color: var(--text-primary); line-height: 18px;
+    }
+    .ag-upcoming-date {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-tertiary); line-height: 16px;
+    }
+    .ag-upcoming-right { text-align: right; flex-shrink: 0; }
+    .ag-upcoming-amount {
+      font-size: 14px; font-weight: 600;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .ag-upcoming-status {
+      font-size: 11px; font-weight: 500;
+      line-height: 15px;
+    }
+    .ag-upcoming-status.due    { color: var(--semantic-warning); }
+    .ag-upcoming-status.sched  { color: var(--text-tertiary); }
+    .ag-upcoming-status.overdue { color: var(--semantic-error); }
+
+    /* ── Spending breakdown card ── */
+    .ag-spending-header {
+      padding: 16px 18px 12px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .ag-spending-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em; text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .ag-spending-period {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-tertiary);
+    }
+    .ag-spending-total-row {
+      display: flex; align-items: baseline; gap: 6px;
+      padding: 12px 18px 0;
+    }
+    .ag-spending-total-num {
+      font-size: 30px; font-weight: 700;
+      color: rgba(0,0,0,0.88); letter-spacing: -1px;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .ag-spending-total-sym {
+      font-size: 18px; font-weight: 600;
+      color: rgba(0,0,0,0.88); padding-bottom: 2px;
+    }
+    .ag-spending-total-label {
+      font-size: 12px; color: var(--text-tertiary);
+      padding-bottom: 2px;
+    }
+    .ag-spending-cats { padding: 10px 18px 16px; }
+    .ag-spending-cat-row {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 9px;
+    }
+    .ag-spending-cat-row:last-child { margin-bottom: 0; }
+    .ag-spending-cat-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+    .ag-spending-cat-info { flex: 1; min-width: 0; }
+    .ag-spending-cat-label {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-primary); line-height: 17px;
+    }
+    .ag-spending-cat-bar-wrap {
+      height: 3px; background: rgba(0,0,0,0.07); border-radius: 2px;
+      margin-top: 3px; overflow: hidden;
+    }
+    .ag-spending-cat-bar {
+      height: 100%; background: var(--brand-primary);
+      border-radius: 2px; width: 0;
+      transition: width 600ms var(--ease-out);
+    }
+    .ag-spending-cat-amount {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      flex-shrink: 0; text-align: right;
+    }
+    .ag-spending-cat-change {
+      font-size: 10.5px; font-weight: 500;
+      padding: 1px 5px; border-radius: 6px;
+      flex-shrink: 0;
+    }
+    .ag-spending-cat-change.up   { background: rgba(200,44,44,0.08); color: #b02020; }
+    .ag-spending-cat-change.down { background: rgba(50,180,80,0.10); color: #2a8a3e; }
+
+    /* ── Recipient selector card ── */
+    .ag-recip-header {
+      padding: 16px 18px 10px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .ag-recip-title {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em; text-transform: uppercase;
+    }
+    .ag-recip-sub {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-tertiary); margin-top: 2px;
+    }
+    .ag-recip-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.04);
+      cursor: pointer;
+      transition: background 150ms ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .ag-recip-row:last-child { border-bottom: none; }
+    @media (hover: hover) and (pointer: fine) {
+      .ag-recip-row:hover { background: rgba(0,0,0,0.025); }
+    }
+    .ag-recip-row:active { background: rgba(0,0,0,0.04); transform: scale(0.99); }
+    .ag-recip-av {
+      width: 38px; height: 38px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 13px; font-weight: 700; color: #fff;
+      flex-shrink: 0;
+    }
+    .ag-recip-info { flex: 1; min-width: 0; }
+    .ag-recip-name {
+      font-size: 14px; font-weight: 600;
+      color: var(--text-primary); line-height: 18px;
+    }
+    .ag-recip-bank {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-tertiary); line-height: 16px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ag-recip-arrow {
+      font-size: 13px; color: var(--text-tertiary); flex-shrink: 0;
+    }
+
+    /* ── Bill status card ── */
+    .ag-bill-body { padding: 18px 18px 16px; }
+    .ag-bill-header-row {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 14px;
+    }
+    .ag-bill-icon {
+      width: 42px; height: 42px; border-radius: 12px;
+      background: rgba(193,124,20,0.10);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .ag-bill-title {
+      font-size: 16px; font-weight: 600;
+      color: var(--text-primary); line-height: 20px;
+    }
+    .ag-bill-account {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-tertiary);
+    }
+    .ag-bill-amount-row {
+      display: flex; align-items: baseline; gap: 3px;
+      margin-bottom: 4px;
+    }
+    .ag-bill-sym { font-size: 18px; font-weight: 600; color: rgba(0,0,0,0.78); }
+    .ag-bill-amount {
+      font-size: 32px; font-weight: 700;
+      color: rgba(0,0,0,0.88); letter-spacing: -1.5px;
+      font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .ag-bill-status-row {
+      display: flex; align-items: center; gap: 6px;
+      margin-top: 6px; margin-bottom: 14px;
+    }
+    .ag-bill-status-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .ag-bill-status-dot.due     { background: var(--semantic-warning); }
+    .ag-bill-status-dot.paid    { background: var(--semantic-success); }
+    .ag-bill-status-dot.overdue { background: var(--semantic-error); }
+    .ag-bill-status-label {
+      font-size: 13px; font-weight: 500;
+    }
+    .ag-bill-status-label.due     { color: var(--semantic-warning); }
+    .ag-bill-status-label.paid    { color: var(--semantic-success); }
+    .ag-bill-status-label.overdue { color: var(--semantic-error); }
+    .ag-bill-due-date {
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .ag-bill-pay-btn {
+      display: flex; align-items: center; justify-content: center;
+      width: 100%; padding: 13px;
+      background: rgba(193,124,20,0.10);
+      border: none; border-radius: 12px;
+      font-family: 'Geist', sans-serif;
+      font-size: 14px; font-weight: 600;
+      color: var(--semantic-warning);
+      cursor: pointer;
+      transition: background 150ms ease, transform 160ms var(--ease-out);
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .ag-bill-pay-btn:hover { background: rgba(193,124,20,0.18); }
+    }
+    .ag-bill-pay-btn:active { transform: scale(0.97); }
+
     /* ── Input card ── */
     #agent-screen .ag-input-card {
       position: absolute;
@@ -9045,10 +9285,15 @@ let _prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matc
 // ── Query router ────────────────────────────────────────
 function _agRouteQuery(text) {
   var t = text.toLowerCase();
+  // Chip phrases — exact or close matches first
+  if (/due this week|what.{0,10}due|upcoming|bills?\s+(this|due)|payments? due/.test(t)) return _agScenarioUpcoming();
+  if (/recent spending|show.{0,8}spend|spending|last month|dining|categor/.test(t)) return _agScenarioSpendUI();
+  if (/beneficiar|recipient|who can i pay|pick.{0,8}receiv/.test(t)) return _agScenarioRecipientSelect();
+  if (/bescom|electricity|utility|bill status/.test(t)) return _agScenarioBillStatus();
+  // Semantic
   if (/\b(send|transfer|pay |remit|wire)\b/.test(t))    return _agScenarioTransfer(t);
   if (/\b(rate|exchange|convert|fx|corridor)\b/.test(t)) return _agScenarioRate(t);
   if (/\b(balance|how much|available|account|funds)\b/.test(t)) return _agScenarioBalance(t);
-  if (/\b(spend|spending|transactions?|last month|dining|categor)\b/.test(t)) return _agScenarioSpend(t);
   return _agScenarioDefault();
 }
 
@@ -9114,34 +9359,57 @@ function _agScenarioBalance(t) {
   };
 }
 
-function _agScenarioSpend(t) {
+function _agScenarioUpcoming() {
   return {
-    type: 'text',
+    type: 'upcoming',
+    steps: [
+      { id: 's1', label: 'Checking scheduled payments' },
+      { id: 's2', label: 'Pulling upcoming due dates' },
+    ],
+    data: {},
+  };
+}
+
+function _agScenarioSpendUI() {
+  return {
+    type: 'spending',
     steps: [
       { id: 's1', label: 'Reviewing your transactions' },
       { id: 's2', label: 'Categorising recent activity' },
       { id: 's3', label: 'Comparing month-on-month' },
     ],
-    responseText: 'Your top spend category last month was Dining at £1,240 — up 18% from March. Travel came second at £860. Total outgoing: £4,320, down slightly from £4,610 the month before.',
+    data: {},
+  };
+}
+
+function _agScenarioRecipientSelect() {
+  return {
+    type: 'recipients',
+    steps: [
+      { id: 's1', label: 'Loading your saved recipients' },
+      { id: 's2', label: 'Checking account details' },
+    ],
+    data: {},
+  };
+}
+
+function _agScenarioBillStatus() {
+  return {
+    type: 'bill',
+    steps: [
+      { id: 's1', label: 'Connecting to BESCOM portal' },
+      { id: 's2', label: 'Fetching your bill details' },
+    ],
+    data: {},
   };
 }
 
 function _agScenarioDefault() {
-  var texts = [
-    'Maya Sarini received $340 on March 12th from your USD Checking account.',
-    'You have 3 pending transactions totalling $284. The largest is $180 from Airbnb on April 2nd.',
-    'Your last transfer to Maria García was £350 on May 4th — delivered in 1 business day.',
-    'I can see 2 refunds this week — $24 from Uber and $63 from Amazon, both processed.',
-    'No unusual activity in the past 7 days across all your accounts.',
-  ];
-  return {
-    type: 'text',
-    steps: [
-      { id: 's1', label: 'Reviewing your question' },
-      { id: 's2', label: 'Looking through your accounts' },
-    ],
-    responseText: texts[_agResponseIdx % texts.length],
-  };
+  // Rotate through balance / recent activity cards, not text
+  var idx = _agResponseIdx % 3;
+  if (idx === 0) return _agScenarioBalance('');
+  if (idx === 1) return _agScenarioUpcoming();
+  return _agScenarioSpendUI();
 }
 
 // ── Step state machine ─────────────────────────────────
@@ -9197,43 +9465,15 @@ function _agRunSteps(aiDiv, steps, msgs, onComplete) {
 }
 
 function _agCollapseSteps(wrap, stepEls, count, msgs, onComplete) {
-  // Fade steps out
-  stepEls.forEach(function(el) {
-    el.style.transition = 'opacity 180ms ease, transform 200ms ease';
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(-4px)';
+  // Steps stay visible in their muted done-state — no collapse, no system text.
+  // Just add a thin separator then hand off to the answer.
+  var sep = document.createElement('div');
+  sep.className = 'ag-steps-done-sep';
+  wrap.parentNode.insertBefore(sep, wrap.nextSibling);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() { sep.classList.add('s-in'); });
   });
-  setTimeout(function() {
-    wrap.classList.add('collapsed');
-    // Summary line
-    var summary = document.createElement('div');
-    summary.className = 'ag-steps-summary';
-    summary.setAttribute('role', 'button');
-    summary.setAttribute('tabindex', '0');
-    summary.setAttribute('aria-label', 'Worked through ' + count + ' steps — tap to expand');
-    summary.innerHTML =
-      '<div class="ag-steps-summary-dot" aria-hidden="true"></div>' +
-      '<span class="ag-steps-summary-text">Worked through ' + count + ' step' + (count !== 1 ? 's' : '') + '</span>' +
-      '<span class="ag-steps-summary-toggle" aria-hidden="true">· show</span>';
-    wrap.parentNode.insertBefore(summary, wrap.nextSibling);
-    summary.addEventListener('click', function() {
-      var collapsed = wrap.classList.contains('collapsed');
-      var toggle = summary.querySelector('.ag-steps-summary-toggle');
-      if (collapsed) {
-        wrap.classList.remove('collapsed');
-        stepEls.forEach(function(el) { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; });
-        if (toggle) toggle.textContent = '· hide';
-      } else {
-        wrap.classList.add('collapsed');
-        stepEls.forEach(function(el) { el.style.opacity = '0'; el.style.transform = 'translateY(-4px)'; });
-        if (toggle) toggle.textContent = '· show';
-      }
-    });
-    requestAnimationFrame(function() {
-      requestAnimationFrame(function() { summary.classList.add('s-in'); });
-    });
-    setTimeout(onComplete, 200);
-  }, 220);
+  setTimeout(onComplete, 260);
 }
 
 // ── Count-up helpers ───────────────────────────────────
@@ -9446,6 +9686,179 @@ function _agRenderBalance(aiDiv, msgs, data) {
   });
 }
 
+// ── UPCOMING BILLS CARD ───────────────────────────────
+function _agRenderUpcoming(aiDiv, msgs) {
+  var bills = [
+    { icon: '⚡', name: 'BESCOM Electricity', date: 'Due Apr 8', amount: '₹3,420', status: 'due',    statusLabel: 'Due soon' },
+    { icon: '🏠', name: 'Rent · Priya Sharma', date: 'Apr 10',   amount: '£1,200', status: 'sched',  statusLabel: 'Scheduled' },
+    { icon: '📱', name: 'Vodafone',            date: 'Apr 12',   amount: '£28.50', status: 'sched',  statusLabel: 'Scheduled' },
+    { icon: '🎬', name: 'Netflix',             date: 'Apr 14',   amount: '£17.99', status: 'sched',  statusLabel: 'Scheduled' },
+  ];
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card';
+  var html = '<div class="ag-upcoming-header ag-stagger-item">';
+  html +=   '<span class="ag-upcoming-title">This week</span>';
+  html +=   '<span class="ag-upcoming-total">4 payments · £1,670</span>';
+  html += '</div>';
+  bills.forEach(function(b) {
+    html += '<div class="ag-upcoming-row ag-stagger-item">';
+    html +=   '<div class="ag-upcoming-icon">' + b.icon + '</div>';
+    html +=   '<div class="ag-upcoming-info">';
+    html +=     '<div class="ag-upcoming-name">' + b.name + '</div>';
+    html +=     '<div class="ag-upcoming-date">' + b.date + '</div>';
+    html +=   '</div>';
+    html +=   '<div class="ag-upcoming-right">';
+    html +=     '<div class="ag-upcoming-amount">' + b.amount + '</div>';
+    html +=     '<div class="ag-upcoming-status ' + b.status + '">' + b.statusLabel + '</div>';
+    html +=   '</div>';
+    html += '</div>';
+  });
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agStagger(card, '.ag-stagger-item', 60);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+// ── SPENDING BREAKDOWN CARD ───────────────────────────
+function _agRenderSpending(aiDiv, msgs) {
+  var cats = [
+    { icon: '🍽️',  label: 'Dining',       amount: '£1,240', pct: 100, change: '+18%', dir: 'up' },
+    { icon: '✈️',  label: 'Travel',        amount: '£860',   pct: 69,  change: null,   dir: null },
+    { icon: '🛒',  label: 'Shopping',      amount: '£620',   pct: 50,  change: null,   dir: null },
+    { icon: '📱',  label: 'Subscriptions', amount: '£84',    pct: 7,   change: '-8%',  dir: 'down' },
+  ];
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card';
+  var html = '<div class="ag-spending-header ag-stagger-item">';
+  html +=   '<div class="ag-spending-title">Spending</div>';
+  html +=   '<div class="ag-spending-period">Last 30 days</div>';
+  html += '</div>';
+  html += '<div class="ag-spending-total-row ag-stagger-item">';
+  html +=   '<span class="ag-spending-total-sym">£</span>';
+  html +=   '<span class="ag-spending-total-num" id="agSpendTotal">0</span>';
+  html +=   '<span class="ag-spending-total-label">total out</span>';
+  html += '</div>';
+  html += '<div class="ag-spending-cats">';
+  cats.forEach(function(c, i) {
+    html += '<div class="ag-spending-cat-row ag-stagger-item">';
+    html +=   '<span class="ag-spending-cat-icon">' + c.icon + '</span>';
+    html +=   '<div class="ag-spending-cat-info">';
+    html +=     '<div class="ag-spending-cat-label">' + c.label + '</div>';
+    html +=     '<div class="ag-spending-cat-bar-wrap"><div class="ag-spending-cat-bar" data-pct="' + c.pct + '"></div></div>';
+    html +=   '</div>';
+    html +=   '<span class="ag-spending-cat-amount">' + c.amount + '</span>';
+    if (c.change) {
+      html += '<span class="ag-spending-cat-change ' + c.dir + '">' + c.change + '</span>';
+    }
+    html += '</div>';
+  });
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agStagger(card, '.ag-stagger-item', 55);
+      _agCountUp(card.querySelector('#agSpendTotal'), 0, 4320, 700);
+      // Animate bars after stagger settles
+      setTimeout(function() {
+        card.querySelectorAll('.ag-spending-cat-bar').forEach(function(bar) {
+          bar.style.width = bar.getAttribute('data-pct') + '%';
+        });
+      }, 260);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+// ── RECIPIENT SELECTOR CARD ───────────────────────────
+function _agRenderRecipientSelect(aiDiv, msgs) {
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card';
+  var html = '<div class="ag-recip-header ag-stagger-item">';
+  html +=   '<div class="ag-recip-title">Recipients</div>';
+  html +=   '<div class="ag-recip-sub">Tap to start a transfer</div>';
+  html += '</div>';
+  _AG_DATA.recipients.forEach(function(r) {
+    html += '<div class="ag-recip-row ag-stagger-item" data-recip-id="' + r.id + '">';
+    html +=   '<div class="ag-recip-av" style="background:' + r.color + '">' + r.initials + '</div>';
+    html +=   '<div class="ag-recip-info">';
+    html +=     '<div class="ag-recip-name">' + _agEscape(r.name) + ' ' + r.flag + '</div>';
+    html +=     '<div class="ag-recip-bank">' + _agEscape(r.bank) + '</div>';
+    html +=   '</div>';
+    html +=   '<span class="ag-recip-arrow">→</span>';
+    html += '</div>';
+  });
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+
+  // Wire up recipient taps → trigger transfer for that recipient
+  card.querySelectorAll('.ag-recip-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var rid = row.getAttribute('data-recip-id');
+      var recip = _AG_DATA.recipients.find(function(r) { return r.id === rid; });
+      if (!recip) return;
+      // Build a transfer scenario for this recipient with default £500
+      var scenario = _agScenarioTransfer('send £500 to ' + recip.name.toLowerCase());
+      // Animate card out, then render transfer
+      card.style.transition = 'opacity 200ms ease, transform 220ms var(--ease-out)';
+      card.style.opacity = '0'; card.style.transform = 'translateY(-4px) scale(0.98)';
+      setTimeout(function() {
+        card.remove();
+        _agRenderTransfer(aiDiv, msgs, scenario.data);
+      }, 220);
+    });
+  });
+
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agStagger(card, '.ag-stagger-item', 55);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+// ── BILL STATUS CARD ──────────────────────────────────
+function _agRenderBillStatus(aiDiv, msgs) {
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card ag-bill-card';
+  var html = '<div class="ag-bill-body">';
+  html += '<div class="ag-bill-header-row ag-stagger-item">';
+  html +=   '<div class="ag-bill-icon">⚡</div>';
+  html +=   '<div>';
+  html +=     '<div class="ag-bill-title">BESCOM Electricity</div>';
+  html +=     '<div class="ag-bill-account">Account KA-562-4821-9</div>';
+  html +=   '</div>';
+  html += '</div>';
+  html += '<div class="ag-bill-amount-row ag-stagger-item">';
+  html +=   '<span class="ag-bill-sym">₹</span>';
+  html +=   '<span class="ag-bill-amount" id="agBillAmt">0</span>';
+  html += '</div>';
+  html += '<div class="ag-bill-status-row ag-stagger-item">';
+  html +=   '<div class="ag-bill-status-dot due"></div>';
+  html +=   '<span class="ag-bill-status-label due">Unpaid</span>';
+  html +=   '<span class="ag-bill-due-date">· Due Apr 8, 2026</span>';
+  html += '</div>';
+  html += '<button class="ag-bill-pay-btn ag-stagger-item" type="button" onclick="alert(\'Payment flow coming soon\')">Pay ₹3,420 now</button>';
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agStagger(card, '.ag-stagger-item', 60);
+      _agCountUp(card.querySelector('#agBillAmt'), 0, 3420, 650);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
 // ── TEXT (typewriter) ─────────────────────────────────
 function _agRenderText(aiDiv, msgs, responseText) {
   var textEl = document.createElement('div');
@@ -9650,9 +10063,13 @@ function agentSend() {
   // Thinking steps → answer handoff
   setTimeout(function() {
     _agRunSteps(aiDiv, scenario.steps, msgs, function() {
-      if (scenario.type === 'transfer')  { _agRenderTransfer(aiDiv, msgs, scenario.data); }
-      else if (scenario.type === 'fx_rate') { _agRenderFXRate(aiDiv, msgs, scenario.data); }
-      else if (scenario.type === 'balance') { _agRenderBalance(aiDiv, msgs, scenario.data); }
+      if      (scenario.type === 'transfer')   { _agRenderTransfer(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'fx_rate')   { _agRenderFXRate(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'balance')   { _agRenderBalance(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'upcoming')  { _agRenderUpcoming(aiDiv, msgs); }
+      else if (scenario.type === 'spending')  { _agRenderSpending(aiDiv, msgs); }
+      else if (scenario.type === 'recipients'){ _agRenderRecipientSelect(aiDiv, msgs); }
+      else if (scenario.type === 'bill')      { _agRenderBillStatus(aiDiv, msgs); }
       else { _agRenderText(aiDiv, msgs, scenario.responseText); }
       _agResponseIdx++;
     });
