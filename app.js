@@ -267,8 +267,13 @@ function _agRunSteps(aiDiv, steps, msgs, onComplete) {
     return el;
   });
 
-  var DWELL_BASE = 520;
-  var DWELL_JITTER = 340;
+  // Target 15 s total. Collapse takes ~580 ms (220 pause + 360 transition).
+  // Divide what's left evenly across steps; jitter is ±15 % of the per-step budget.
+  var TOTAL_TARGET  = 15000;
+  var COLLAPSE_COST = 580;
+  var perStep       = Math.floor((TOTAL_TARGET - COLLAPSE_COST) / steps.length);
+  var DWELL_BASE    = Math.floor(perStep * 0.85);
+  var DWELL_JITTER  = Math.floor(perStep * 0.30);
   var idx = 0;
 
   function runNext() {
