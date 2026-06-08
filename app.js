@@ -475,8 +475,8 @@ function _agInitSlide(track, onConfirm) {
 
 // ── TRANSFER STATUS (spec: TransferStatusBlock) ────────
 function _agRenderTransferStatus(aiDiv, msgs, td, refNum) {
-  // Confirmation beat — "Sent. Name will have it within 2 hours."
-  _agAddCtx(aiDiv, 'Sent. ' + td.recip.name + ' will have it within 2 hours.');
+  // Confirmation beat — done, outcome in human terms, what happens next
+  _agAddCtx(aiDiv, 'Done — your ' + td.fromSym + td.amount.toFixed(2) + ' is on its way to ' + td.recip.name + '. It should reach their ' + td.recip.currency + ' account within 2 hours. You\'ll get a notification the moment it\'s delivered.');
 
   var card = document.createElement('div');
   card.className = 'ag-tx-status-card';
@@ -558,10 +558,11 @@ function _agRenderReceiptV2(aiDiv, msgs, td, refNum) {
     }, 100);
     setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 60);
   }); });
-  // Post-action next steps: 2 chips, in priority order
+  // Post-action next steps: 3 chips, in priority order per spec
   _agAddFollowups(aiDiv, msgs, [
     { label: 'Send another', text: 'Send money' },
-    { label: 'View upcoming', text: 'Show upcoming transfers' }
+    { label: 'View upcoming', text: 'Show upcoming transfers' },
+    { label: 'Check balance', text: 'What is my balance?' }
   ]);
 }
 
@@ -675,9 +676,11 @@ function _agRenderTransfer(aiDiv, msgs, data) {
   })(slideWrap, { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip,
                    convertedAmt: d.convertedAmt, totalDebited: d.totalDebited, sym: d.recip.sym });
 
-  // Read-back: specific, confident, names exactly what's about to happen
-  _agAddCtx(aiDiv, 'Sending ' + fromSym + d.amount.toFixed(2) + ' to ' + d.recip.name + '.');
+  // Read-back: orient the user to what they're about to see
+  _agAddCtx(aiDiv, 'Here\'s your transfer to ' + d.recip.name + '. You\'re sending ' + fromSym + d.amount.toFixed(2) + ', and they\'ll receive it in ' + d.recip.currency + ' — take a look at the details before you confirm.');
   aiDiv.appendChild(card);
+  // Framing line: surface the rate and fee before the slide control
+  _agAddCtx(aiDiv, 'That\'s at today\'s rate of ' + rateStr + ', with a flat ' + fromSym + d.feeAmt.toFixed(2) + ' fee — no hidden charges on top.');
   aiDiv.appendChild(slideWrap);
 
   // Expand toggle
@@ -729,7 +732,7 @@ function _agRenderFXRate(aiDiv, msgs, data) {
   html +=   '<div class="ag-fx-freshness ag-stagger-item"><div class="ag-fx-fresh-dot"></div>Live rate · updated just now</div>';
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Here\'s today\'s ' + fromCode + ' → ' + toCode + ' rate.');
+  _agAddCtx(aiDiv, 'Here\'s the live ' + fromCode + ' → ' + toCode + ' rate, pulled just now — Banyan\'s 0.45% markup over mid-market is already included.');
   aiDiv.appendChild(card);
 
   requestAnimationFrame(function() {
@@ -763,7 +766,7 @@ function _agRenderBalance(aiDiv, msgs, data) {
   html += '<div class="ag-balance-chips"><span class="ag-balance-chip positive">No unusual activity</span><span class="ag-balance-chip">Just updated</span></div>';
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Your USD Checking balance:');
+  _agAddCtx(aiDiv, 'Here\'s your USD Checking balance, updated just now — no pending holds or reserved amounts.');
   aiDiv.appendChild(card);
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
@@ -805,7 +808,7 @@ function _agRenderUpcoming(aiDiv, msgs) {
     html += '</div>';
   });
   card.innerHTML = html;
-  _agAddCtx(aiDiv, statusTotal + ' upcoming payment' + (statusTotal !== 1 ? 's' : '') + '.');
+  _agAddCtx(aiDiv, 'You have ' + statusTotal + ' payment' + (statusTotal !== 1 ? 's' : '') + ' coming up. Here\'s what\'s scheduled — amounts shown are what will leave your account.');
   aiDiv.appendChild(card);
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
@@ -860,7 +863,7 @@ function _agRenderSpending(aiDiv, msgs) {
   });
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Your spending, last 30 days.');
+  _agAddCtx(aiDiv, 'Here\'s how your spending broke down over the last 30 days, across all categories.');
   aiDiv.appendChild(card);
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
@@ -905,7 +908,7 @@ function _agRenderRecipientSelect(aiDiv, msgs) {
     html += '</div>';
   });
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Your saved recipients — tap to send.');
+  _agAddCtx(aiDiv, 'Here are your saved recipients. Tap any name to start a transfer to them.');
   aiDiv.appendChild(card);
 
   // Wire up recipient taps → trigger transfer for that recipient
@@ -962,7 +965,7 @@ function _agRenderBillStatus(aiDiv, msgs) {
   html += '<button class="ag-bill-pay-btn ag-stagger-item" type="button">View transfer details</button>';
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Your BESCOM bill is pending.');
+  _agAddCtx(aiDiv, 'I found a pending wire transfer from your recent activity — here are the details.');
   aiDiv.appendChild(card);
   requestAnimationFrame(function() {
     requestAnimationFrame(function() {
