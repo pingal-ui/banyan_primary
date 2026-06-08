@@ -1940,7 +1940,6 @@
     /* In convo mode, restore scroll on the container itself */
     #agent-screen.ag-convo .ag-msgs {
       pointer-events: auto;
-      padding-top: 16px;
     }
     /* Pushes content toward the input when conversation is short;
        collapses to 0 when content overflows so normal scroll takes over */
@@ -1958,8 +1957,23 @@
     }
     /* Conversation grouping: user + AI pair share a block, gap between pairs */
     .ag-msg-user {
-      margin-bottom: 40px;
+      margin-bottom: 0;
       transform: translateY(20px);
+    }
+    /* Sticky user bubble — anchors to top of scroll area, content streams below */
+    #agent-screen.ag-convo .ag-msg-user {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      padding-top: 16px;
+      padding-bottom: 24px;
+      /* Feathered white mask so scrolling content slides under cleanly */
+      background: linear-gradient(
+        to bottom,
+        #ffffff 0%,
+        #ffffff 68%,
+        rgba(255,255,255,0) 100%
+      );
     }
     .ag-msg-ai {
       margin-bottom: 8px;
