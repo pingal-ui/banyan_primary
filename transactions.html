@@ -9247,30 +9247,64 @@ function showNav(visible) {
    Data never fabricated — pulled from _AG_DATA.
 ═══════════════════════════════════════════════════════ */
 
-// ── Mock data store (replaces API calls in prototype) ──
+// ── Data pulled from the Banyan DS (RECENT, SCHEDULED, account data) ──
+// Recipients: wire transfers from RECENT + SCHEDULED, deduplicated
 const _AG_DATA = {
+  // Matches the single account shown across the app
   accounts: [
-    { id: 'gbp', name: 'GBP Checking', balance: 8420.00, currency: 'GBP', sym: '£', flag: '🇬🇧' },
-    { id: 'usd', name: 'USD Checking', balance: 12600.00, currency: 'USD', sym: '$', flag: '🇺🇸' },
-    { id: 'eur', name: 'EUR Savings',  balance: 3250.50,  currency: 'EUR', sym: '€', flag: '🇪🇺' },
+    { id: 'usd', name: 'USD Checking', num: '••3214', balance: 137978, balanceStr: '137,978.00',
+      currency: 'USD', sym: '$', flag: '🇺🇸' },
   ],
+  // People from RECENT + SCHEDULED wire transfers
   recipients: [
-    { id: 'r1', name: 'Maria García', bank: 'BBVA · ES91 2100 0418 4502 0005 1332',
-      flag: '🇪🇸', currency: 'EUR', sym: '€', initials: 'MG',
-      color: 'linear-gradient(135deg,#E85D27,#C43A10)' },
-    { id: 'r2', name: 'James Wilson', bank: 'Barclays · GB29 NWBK 6016 1331 9268 19',
-      flag: '🇬🇧', currency: 'GBP', sym: '£', initials: 'JW',
-      color: 'linear-gradient(135deg,#2563EB,#1D4ED8)' },
-    { id: 'r3', name: 'Priya Sharma', bank: 'HDFC · IN30 2774 0111 0003 3892',
-      flag: '🇮🇳', currency: 'INR', sym: '₹', initials: 'PS',
-      color: 'linear-gradient(135deg,#9333EA,#7E22CE)' },
+    { id: 'ms', name: 'Maya Sarini',   bank: 'HDFC Bank · →7654',
+      flag: '🇮🇳', currency: 'INR', sym: '₹', initials: 'MS',
+      color: 'linear-gradient(145deg,#D85090,#962858)' },
+    { id: 'rr', name: 'Rohan Rathod',  bank: 'HDFC Bank · →7654',
+      flag: '🇮🇳', currency: 'INR', sym: '₹', initials: 'RR',
+      color: 'linear-gradient(145deg,#A050E8,#6828B8)' },
+    { id: 'ak', name: 'Aamir Khan',    bank: 'HDFC Bank · →1234',
+      flag: '🇮🇳', currency: 'INR', sym: '₹', initials: 'AK',
+      color: 'linear-gradient(145deg,#2563eb,#1d4ed8)' },
+    { id: 'sm', name: 'Sana Mirza',    bank: 'Axis Bank · →5678',
+      flag: '🇮🇳', currency: 'INR', sym: '₹', initials: 'SM',
+      color: 'linear-gradient(145deg,#db2777,#be185d)' },
+    { id: 'dp', name: 'Dev Patel',     bank: 'ICICI Bank · →9012',
+      flag: '🇮🇳', currency: 'INR', sym: '₹', initials: 'DP',
+      color: 'linear-gradient(145deg,#0d9488,#0f766e)' },
+    { id: 'aa', name: 'Ahmed Al-Farsi',bank: 'Wells Fargo · →5503',
+      flag: '🇦🇪', currency: 'USD', sym: '$', initials: 'AA',
+      color: 'linear-gradient(145deg,#E09040,#B06010)' },
+    { id: 'kw', name: 'Kenji Watanabe',bank: 'Bank of America · →0047',
+      flag: '🇯🇵', currency: 'USD', sym: '$', initials: 'KW',
+      color: 'linear-gradient(145deg,#30A890,#187060)' },
+  ],
+  // Scheduled payments from SCHEDULED array
+  upcoming: [
+    { name: 'Rohan Rathod',  av: 'linear-gradient(145deg,#A050E8,#6828B8)', ini: 'RR',
+      date: '27 Jul', amount: '$2,150.00', inr: '₹2,03,654', status: 'scheduled' },
+    { name: 'Aamir Khan',    av: 'linear-gradient(145deg,#2563eb,#1d4ed8)', ini: 'AK',
+      date: '28 Jul', amount: '$1,200.00', inr: '₹1,13,700', status: 'scheduled' },
+    { name: 'Sana Mirza',    av: 'linear-gradient(145deg,#db2777,#be185d)', ini: 'SM',
+      date: '30 Jul', amount: '$300.00',   inr: '₹28,425',   status: 'scheduled' },
+    { name: 'Dev Patel',     av: 'linear-gradient(145deg,#0d9488,#0f766e)', ini: 'DP',
+      date: '1 Aug',  amount: '$750.50',   inr: '₹71,072',   status: 'scheduled' },
+    { name: 'Maya Sarini',   av: 'linear-gradient(145deg,#D85090,#962858)', ini: 'MS',
+      date: '—',      amount: '$568.36',   inr: '₹53,878',   status: 'skipped' },
+  ],
+  // Spending from RECENT categories
+  spending: [
+    { icon: '🛒', label: 'Shopping',    amount: '$512.61', pct: 100, change: null,   dir: null },
+    { icon: '✈️', label: 'Travel',      amount: '$914.75', pct: 84,  change: null,   dir: null },
+    { icon: '🍕', label: 'Food',        amount: '$145.20', pct: 28,  change: null,   dir: null },
+    { icon: '📺', label: 'Entertainment',amount: '$15.49', pct: 3,   change: '-12%', dir: 'down' },
   ],
   rates: {
-    GBP_EUR: { rate: 1.1842, label: 'GBP → EUR', fromFlag: '🇬🇧', toFlag: '🇪🇺', change: '+0.3%', positive: true },
-    GBP_USD: { rate: 1.2634, label: 'GBP → USD', fromFlag: '🇬🇧', toFlag: '🇺🇸', change: '-0.1%', positive: false },
-    USD_EUR: { rate: 0.9372, label: 'USD → EUR', fromFlag: '🇺🇸', toFlag: '🇪🇺', change: '+0.2%', positive: true },
-    USD_GBP: { rate: 0.7915, label: 'USD → GBP', fromFlag: '🇺🇸', toFlag: '🇬🇧', change: '+0.1%', positive: true },
-    GBP_INR: { rate: 107.42, label: 'GBP → INR', fromFlag: '🇬🇧', toFlag: '🇮🇳', change: '+0.5%', positive: true },
+    USD_INR: { rate: 94.72,  label: 'USD → INR', fromFlag: '🇺🇸', toFlag: '🇮🇳', change: '+0.4%', positive: true  },
+    USD_EUR: { rate: 0.9372, label: 'USD → EUR', fromFlag: '🇺🇸', toFlag: '🇪🇺', change: '+0.2%', positive: true  },
+    USD_GBP: { rate: 0.7915, label: 'USD → GBP', fromFlag: '🇺🇸', toFlag: '🇬🇧', change: '+0.1%', positive: true  },
+    USD_AED: { rate: 3.6725, label: 'USD → AED', fromFlag: '🇺🇸', toFlag: '🇦🇪', change:  '0.0%', positive: true  },
+    USD_JPY: { rate: 156.42, label: 'USD → JPY', fromFlag: '🇺🇸', toFlag: '🇯🇵', change: '-0.2%', positive: false },
   },
 };
 
@@ -9295,27 +9329,28 @@ function _agRouteQuery(text) {
 }
 
 function _agScenarioTransfer(t) {
-  // Parse amount
   var amtMatch = t.match(/[£$€]?\s*(\d[\d,]*(?:\.\d{1,2})?)/);
   var amount = amtMatch ? parseFloat(amtMatch[1].replace(/,/g, '')) : 500;
-  // From currency
-  var fromCur = /£|gbp/.test(t) ? 'GBP' : /\$|usd/.test(t) ? 'USD' : 'GBP';
-  // Recipient
-  var recip = /priya|sharma/.test(t) ? _AG_DATA.recipients[2]
-            : /james|wilson/.test(t) ? _AG_DATA.recipients[1]
-            : _AG_DATA.recipients[0];
-  var rateKey = fromCur + '_' + recip.currency;
-  var rateInfo = _AG_DATA.rates[rateKey] || _AG_DATA.rates.GBP_EUR;
-  var feeAmt = amount < 200 ? 1.99 : amount < 1000 ? 3.49 : 4.99;
+  // Always from USD Checking (the only account in the app)
+  var fromAccount = _AG_DATA.accounts[0];
+  var fromCur = 'USD';
+  // Match recipient by name against real recipients
+  var recip = _AG_DATA.recipients[0]; // default Maya Sarini
+  _AG_DATA.recipients.forEach(function(r) {
+    if (t.indexOf(r.name.split(' ')[0].toLowerCase()) !== -1 ||
+        t.indexOf(r.name.split(' ')[1].toLowerCase()) !== -1) recip = r;
+  });
+  var rateKey = 'USD_' + recip.currency;
+  var rateInfo = _AG_DATA.rates[rateKey] || _AG_DATA.rates.USD_INR;
+  var feeAmt = amount < 200 ? 2.99 : amount < 1000 ? 4.99 : 7.99;
   var convertedAmt = (amount * rateInfo.rate).toFixed(2);
   var totalDebited = (amount + feeAmt).toFixed(2);
-  var fromAccount = _AG_DATA.accounts.find(function(a) { return a.currency === fromCur; }) || _AG_DATA.accounts[0];
   return {
     type: 'transfer',
     steps: [
       { id: 's1', label: 'Looking up your recipients' },
       { id: 's2', label: 'Fetching today\'s ' + fromCur + ' → ' + recip.currency + ' rate' },
-      { id: 's3', label: 'Checking your transfer limits' },
+      { id: 's3', label: 'Checking your USD Checking balance' },
       { id: 's4', label: 'Calculating fees and total' },
     ],
     data: { amount: amount, fromCur: fromCur, recip: recip, rateInfo: rateInfo,
@@ -9325,10 +9360,11 @@ function _agScenarioTransfer(t) {
 }
 
 function _agScenarioRate(t) {
-  var corridor = /usd.{0,4}gbp|gbp.{0,4}usd/.test(t) ? 'GBP_USD'
-               : /usd.{0,4}eur|eur.{0,4}usd/.test(t) ? 'USD_EUR'
-               : /usd.{0,4}inr|inr.{0,4}usd/.test(t) ? 'GBP_INR'
-               : 'GBP_EUR';
+  var corridor = /gbp/.test(t) ? 'USD_GBP'
+               : /eur/.test(t) ? 'USD_EUR'
+               : /aed|dirham/.test(t) ? 'USD_AED'
+               : /jpy|yen|japan/.test(t) ? 'USD_JPY'
+               : 'USD_INR';
   var ri = _AG_DATA.rates[corridor];
   return {
     type: 'fx_rate',
@@ -9342,17 +9378,14 @@ function _agScenarioRate(t) {
 }
 
 function _agScenarioBalance(t) {
-  var acct = /gbp|pound/.test(t) ? _AG_DATA.accounts[0]
-           : /usd|\$|dollar/.test(t) ? _AG_DATA.accounts[1]
-           : /eur|euro/.test(t) ? _AG_DATA.accounts[2] : null;
   return {
     type: 'balance',
     steps: [
-      { id: 's1', label: 'Connecting to your accounts' },
-      { id: 's2', label: 'Fetching latest balances' },
+      { id: 's1', label: 'Connecting to USD Checking' },
+      { id: 's2', label: 'Fetching latest balance' },
       { id: 's3', label: 'Scanning for recent activity' },
     ],
-    data: { acct: acct },
+    data: { acct: _AG_DATA.accounts[0] },
   };
 }
 
@@ -9402,11 +9435,15 @@ function _agScenarioBillStatus() {
 }
 
 function _agScenarioDefault() {
-  // Rotate through balance / recent activity cards, not text
   var idx = _agResponseIdx % 3;
   if (idx === 0) return _agScenarioBalance('');
   if (idx === 1) return _agScenarioUpcoming();
   return _agScenarioSpendUI();
+}
+
+// Transfer also needs fromAccount.flag — derive it from currency
+function _agCurrencyFlag(cur) {
+  return cur === 'USD' ? '🇺🇸' : cur === 'GBP' ? '🇬🇧' : cur === 'EUR' ? '🇪🇺' : cur === 'INR' ? '🇮🇳' : cur === 'AED' ? '🇦🇪' : cur === 'JPY' ? '🇯🇵' : '';
 }
 
 // ── Step state machine ─────────────────────────────────
@@ -9652,61 +9689,54 @@ function _agRenderFXRate(aiDiv, msgs, data) {
 
 // ── BALANCE CARD ─────────────────────────────────────
 function _agRenderBalance(aiDiv, msgs, data) {
-  var accounts = data.acct ? [data.acct] : _AG_DATA.accounts;
-  accounts.forEach(function(acct, i) {
-    var intPart = Math.floor(acct.balance);
-    var decStr = '.' + acct.balance.toFixed(2).split('.')[1];
-    var card = document.createElement('div');
-    card.className = 'ag-ui-card ag-balance-card';
-    var intId = 'agBalInt_' + i;
-    var html = '<div class="ag-balance-body">';
-    html += '<div class="ag-balance-label">' + _agEscape(acct.name) + ' ' + acct.flag + '</div>';
-    html += '<div class="ag-balance-amount-row">';
-    html +=   '<span class="ag-balance-sym">' + acct.sym + '</span>';
-    html +=   '<span class="ag-balance-int" id="' + intId + '">0</span>';
-    html +=   '<span class="ag-balance-dec">' + decStr + '</span>';
-    html += '</div>';
-    html += '<div class="ag-balance-sub">Available · no holds</div>';
-    html += '<div class="ag-balance-chips"><span class="ag-balance-chip positive">No unusual activity</span><span class="ag-balance-chip">Just updated</span></div>';
-    html += '</div>';
-    card.innerHTML = html;
-    aiDiv.appendChild(card);
-    setTimeout(function() {
-      requestAnimationFrame(function() {
-        requestAnimationFrame(function() {
-          card.classList.add('ui-in');
-          _agCountUp(document.getElementById(intId), 0, intPart, 700);
-          msgs.scrollTop = msgs.scrollHeight;
-        });
-      });
-    }, i * 90);
+  var acct = _AG_DATA.accounts[0]; // USD Checking — the only account in the app
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card ag-balance-card';
+  var html = '<div class="ag-balance-body">';
+  html += '<div class="ag-balance-label">' + _agEscape(acct.name) + ' ' + acct.flag + ' · ' + acct.num + '</div>';
+  html += '<div class="ag-balance-amount-row">';
+  html +=   '<span class="ag-balance-sym">' + acct.sym + '</span>';
+  html +=   '<span class="ag-balance-int" id="agBalInt">0</span>';
+  html +=   '<span class="ag-balance-dec">.00</span>';
+  html += '</div>';
+  html += '<div class="ag-balance-sub">Available balance · no pending holds</div>';
+  html += '<div class="ag-balance-chips"><span class="ag-balance-chip positive">No unusual activity</span><span class="ag-balance-chip">Just updated</span></div>';
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agCountUp(document.getElementById('agBalInt'), 0, acct.balance, 800);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
   });
 }
 
 // ── UPCOMING BILLS CARD ───────────────────────────────
 function _agRenderUpcoming(aiDiv, msgs) {
-  var bills = [
-    { icon: '⚡', name: 'BESCOM Electricity', date: 'Due Apr 8', amount: '₹3,420', status: 'due',    statusLabel: 'Due soon' },
-    { icon: '🏠', name: 'Rent · Priya Sharma', date: 'Apr 10',   amount: '£1,200', status: 'sched',  statusLabel: 'Scheduled' },
-    { icon: '📱', name: 'Vodafone',            date: 'Apr 12',   amount: '£28.50', status: 'sched',  statusLabel: 'Scheduled' },
-    { icon: '🎬', name: 'Netflix',             date: 'Apr 14',   amount: '£17.99', status: 'sched',  statusLabel: 'Scheduled' },
-  ];
+  var items = _AG_DATA.upcoming;
   var card = document.createElement('div');
   card.className = 'ag-ui-card';
+  var statusTotal = items.filter(function(i) { return i.status === 'scheduled'; }).length;
   var html = '<div class="ag-upcoming-header ag-stagger-item">';
-  html +=   '<span class="ag-upcoming-title">This week</span>';
-  html +=   '<span class="ag-upcoming-total">4 payments · £1,670</span>';
+  html +=   '<span class="ag-upcoming-title">Scheduled</span>';
+  html +=   '<span class="ag-upcoming-total">' + statusTotal + ' upcoming</span>';
   html += '</div>';
-  bills.forEach(function(b) {
+  items.forEach(function(b) {
+    var statusCls  = b.status === 'skipped' ? 'overdue' : 'sched';
+    var statusText = b.status === 'skipped' ? 'Skipped' : 'Scheduled';
     html += '<div class="ag-upcoming-row ag-stagger-item">';
-    html +=   '<div class="ag-upcoming-icon">' + b.icon + '</div>';
+    html +=   '<div class="ag-upcoming-icon" style="background:' + b.av + ';border-radius:50%">';
+    html +=     '<span style="font-size:12px;font-weight:700;color:#fff">' + b.ini + '</span>';
+    html +=   '</div>';
     html +=   '<div class="ag-upcoming-info">';
-    html +=     '<div class="ag-upcoming-name">' + b.name + '</div>';
+    html +=     '<div class="ag-upcoming-name">' + _agEscape(b.name) + '</div>';
     html +=     '<div class="ag-upcoming-date">' + b.date + '</div>';
     html +=   '</div>';
     html +=   '<div class="ag-upcoming-right">';
     html +=     '<div class="ag-upcoming-amount">' + b.amount + '</div>';
-    html +=     '<div class="ag-upcoming-status ' + b.status + '">' + b.statusLabel + '</div>';
+    html +=     '<div class="ag-upcoming-status ' + statusCls + '">' + statusText + '</div>';
     html +=   '</div>';
     html += '</div>';
   });
@@ -9723,12 +9753,7 @@ function _agRenderUpcoming(aiDiv, msgs) {
 
 // ── SPENDING BREAKDOWN CARD ───────────────────────────
 function _agRenderSpending(aiDiv, msgs) {
-  var cats = [
-    { icon: '🍽️',  label: 'Dining',       amount: '£1,240', pct: 100, change: '+18%', dir: 'up' },
-    { icon: '✈️',  label: 'Travel',        amount: '£860',   pct: 69,  change: null,   dir: null },
-    { icon: '🛒',  label: 'Shopping',      amount: '£620',   pct: 50,  change: null,   dir: null },
-    { icon: '📱',  label: 'Subscriptions', amount: '£84',    pct: 7,   change: '-8%',  dir: 'down' },
-  ];
+  var cats = _AG_DATA.spending;
   var card = document.createElement('div');
   card.className = 'ag-ui-card';
   var html = '<div class="ag-spending-header ag-stagger-item">';
@@ -9736,9 +9761,9 @@ function _agRenderSpending(aiDiv, msgs) {
   html +=   '<div class="ag-spending-period">Last 30 days</div>';
   html += '</div>';
   html += '<div class="ag-spending-total-row ag-stagger-item">';
-  html +=   '<span class="ag-spending-total-sym">£</span>';
+  html +=   '<span class="ag-spending-total-sym">$</span>';
   html +=   '<span class="ag-spending-total-num" id="agSpendTotal">0</span>';
-  html +=   '<span class="ag-spending-total-label">total out</span>';
+  html +=   '<span class="ag-spending-total-label">this month</span>';
   html += '</div>';
   html += '<div class="ag-spending-cats">';
   cats.forEach(function(c, i) {
@@ -9761,7 +9786,7 @@ function _agRenderSpending(aiDiv, msgs) {
     requestAnimationFrame(function() {
       card.classList.add('ui-in');
       _agStagger(card, '.ag-stagger-item', 55);
-      _agCountUp(card.querySelector('#agSpendTotal'), 0, 4320, 700);
+      _agCountUp(card.querySelector('#agSpendTotal'), 0, 1588, 700);
       // Animate bars after stagger settles
       setTimeout(function() {
         card.querySelectorAll('.ag-spending-cat-bar').forEach(function(bar) {
@@ -9821,28 +9846,31 @@ function _agRenderRecipientSelect(aiDiv, msgs) {
   });
 }
 
-// ── BILL STATUS CARD ──────────────────────────────────
+// ── BILL STATUS CARD — uses pending wire from RECENT ─
 function _agRenderBillStatus(aiDiv, msgs) {
+  // Ahmed Al-Farsi pending wire from RECENT (t3)
   var card = document.createElement('div');
   card.className = 'ag-ui-card ag-bill-card';
   var html = '<div class="ag-bill-body">';
   html += '<div class="ag-bill-header-row ag-stagger-item">';
-  html +=   '<div class="ag-bill-icon">⚡</div>';
+  html +=   '<div class="ag-bill-icon" style="background:linear-gradient(145deg,#E09040,#B06010);border-radius:12px">';
+  html +=     '<span style="font-size:15px;font-weight:700;color:#fff">AA</span>';
+  html +=   '</div>';
   html +=   '<div>';
-  html +=     '<div class="ag-bill-title">BESCOM Electricity</div>';
-  html +=     '<div class="ag-bill-account">Account KA-562-4821-9</div>';
+  html +=     '<div class="ag-bill-title">Ahmed Al-Farsi</div>';
+  html +=     '<div class="ag-bill-account">Wells Fargo · →5503 · Jun 6</div>';
   html +=   '</div>';
   html += '</div>';
   html += '<div class="ag-bill-amount-row ag-stagger-item">';
-  html +=   '<span class="ag-bill-sym">₹</span>';
+  html +=   '<span class="ag-bill-sym">$</span>';
   html +=   '<span class="ag-bill-amount" id="agBillAmt">0</span>';
   html += '</div>';
   html += '<div class="ag-bill-status-row ag-stagger-item">';
   html +=   '<div class="ag-bill-status-dot due"></div>';
-  html +=   '<span class="ag-bill-status-label due">Unpaid</span>';
-  html +=   '<span class="ag-bill-due-date">· Due Apr 8, 2026</span>';
+  html +=   '<span class="ag-bill-status-label due">Pending</span>';
+  html +=   '<span class="ag-bill-due-date">· Wire transfer · Jun 6, 2026</span>';
   html += '</div>';
-  html += '<button class="ag-bill-pay-btn ag-stagger-item" type="button" onclick="alert(\'Payment flow coming soon\')">Pay ₹3,420 now</button>';
+  html += '<button class="ag-bill-pay-btn ag-stagger-item" type="button">View transfer details</button>';
   html += '</div>';
   card.innerHTML = html;
   aiDiv.appendChild(card);
@@ -9850,7 +9878,7 @@ function _agRenderBillStatus(aiDiv, msgs) {
     requestAnimationFrame(function() {
       card.classList.add('ui-in');
       _agStagger(card, '.ag-stagger-item', 60);
-      _agCountUp(card.querySelector('#agBillAmt'), 0, 3420, 650);
+      _agCountUp(card.querySelector('#agBillAmt'), 0, 2100, 650);
       msgs.scrollTop = msgs.scrollHeight;
     });
   });
