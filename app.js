@@ -1085,9 +1085,22 @@ function _agRenderReceipt(aiDiv, msgs, td, refNum) {
 }
 
 // ── Core UI functions ─────────────────────────────────
+
+// First tap: blur rest of home, lift the input box, then open agent screen
+function focusHomeAi() {
+  var home = document.getElementById('home');
+  if (!home || home.classList.contains('home-ai-focused')) return;
+  home.classList.add('home-ai-focused');
+  // Wait for the lift + blur animation to settle, then open agent screen
+  setTimeout(openHomeAgent, 260);
+}
+
 function openHomeAgent() {
   if (_homeAgentOpen) return;
   _homeAgentOpen = true;
+  // Clear focus state — agent screen takes over the visual now
+  var home = document.getElementById('home');
+  if (home) home.classList.remove('home-ai-focused');
   const screen    = document.getElementById('agent-screen');
   const inputCard = document.getElementById('agentInputCard');
   const homeAiEl  = document.querySelector('#home .home-ai');
@@ -1150,6 +1163,8 @@ function openHomeAgent() {
 function closeHomeAgent() {
   if (!_homeAgentOpen) return;
   _homeAgentOpen = false; _homeAgentConvo = false;
+  var home = document.getElementById('home');
+  if (home) home.classList.remove('home-ai-focused');
   const screen = document.getElementById('agent-screen');
   screen.classList.remove('ag-open', 'ag-convo');
   screen.setAttribute('aria-hidden', 'true');

@@ -4834,6 +4834,38 @@
       border: 0.5px solid #fff; border-radius: 20px; padding: 20px;
       box-sizing: border-box; display: flex; flex-direction: column;
       gap: 12px; height: 146px;
+      /* Enable z-index elevation in the focus state */
+      position: relative;
+      transition:
+        transform 280ms var(--ease-spring),
+        box-shadow 280ms ease;
+    }
+
+    /* ── Home AI focus state — blur everything else, lift the input ── */
+    /* Siblings of home-hero inside the stack */
+    #home.home-ai-focused .home-stack > *:not(.home-hero) {
+      filter: blur(5px) brightness(0.72);
+      transition: filter 280ms ease;
+    }
+    /* Inside the hero: dim the bg photo + top bar */
+    #home.home-ai-focused .home-hero-bg,
+    #home.home-ai-focused .home-hero-bar {
+      filter: blur(5px) brightness(0.72);
+      transition: filter 280ms ease;
+    }
+    /* Inside the center: dim the greeting text */
+    #home.home-ai-focused .home-greeting {
+      filter: blur(4px) opacity(0.45);
+      transition: filter 280ms ease, opacity 280ms ease;
+    }
+    /* home-ai lifts above the blurred siblings */
+    #home.home-ai-focused .home-ai {
+      z-index: 5;
+      transform: translateY(-4px) scale(1.016);
+      box-shadow:
+        0 20px 56px rgba(0,0,0,0.22),
+        0 6px 16px rgba(0,0,0,0.10),
+        0 1px 4px rgba(0,0,0,0.06);
     }
     .home-ai-ph {
       font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400;
