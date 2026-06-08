@@ -378,6 +378,185 @@ function _agAddFollowups(aiDiv, msgs, chips) {
   }, 320);
 }
 
+// ── SLIDE-TO-CONFIRM ──────────────────────────────────
+// Wires touch + mouse drag on the slide track. Calls onConfirm() at ≥85% travel.
+function _agInitSlide(track, onConfirm) {
+  var fill  = track.querySelector('.ag-slide-fill');
+  var thumb = track.querySelector('.ag-slide-thumb');
+  var label = track.querySelector('.ag-slide-label');
+  var THUMB_W = 46, PAD = 5;
+
+  var dragging = false, startClientX = 0, curX = 0, maxX = 0;
+
+  function calcMax() { maxX = track.offsetWidth - THUMB_W - PAD * 2; }
+  calcMax();
+
+  function setPos(x) {
+    x = Math.max(0, Math.min(x, maxX));
+    curX = x;
+    thumb.style.transform = 'translateX(' + x + 'px)';
+    fill.style.width = (x + THUMB_W + PAD) + 'px';
+    var pct = maxX > 0 ? x / maxX : 0;
+    label.style.opacity = Math.max(0, 1 - pct * 2.2).toString();
+    if (pct >= 0.85) { doConfirm(); }
+  }
+
+  function doConfirm() {
+    if (track.classList.contains('track-confirmed')) return;
+    track.classList.add('track-confirmed');
+    // Snap thumb to end
+    thumb.style.transition = 'transform 280ms var(--ease-spring)';
+    thumb.style.transform = 'translateX(' + maxX + 'px)';
+    fill.style.transition = 'width 280ms var(--ease-spring)';
+    fill.style.width = track.offsetWidth + 'px';
+    // Morph arrow → checkmark
+    var icon = thumb.querySelector('.ag-slide-thumb-icon');
+    if (icon) {
+      icon.style.opacity = '0';
+      setTimeout(function() {
+        icon.innerHTML = '<svg width="14" height="11" viewBox="0 0 14 11" fill="none" aria-hidden="true"><path d="M1.5 5.5l4 4 7-8" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+        icon.style.opacity = '1';
+      }, 140);
+    }
+    setTimeout(onConfirm, 340);
+  }
+
+  function onStart(clientX) {
+    calcMax();
+    dragging = true;
+    startClientX = clientX - curX;
+    thumb.style.transition = 'none';
+    fill.style.transition = 'none';
+    track.classList.add('grabbing');
+  }
+  function onMove(clientX) {
+    if (!dragging) return;
+    setPos(clientX - startClientX);
+  }
+  function onEnd() {
+    if (!dragging) return;
+    dragging = false;
+    track.classList.remove('grabbing');
+    if (!track.classList.contains('track-confirmed')) {
+      // Snap back with spring
+      thumb.style.transition = 'transform 380ms var(--ease-spring)';
+      fill.style.transition   = 'width 380ms var(--ease-spring)';
+      setPos(0);
+      label.style.opacity = '1';
+      setTimeout(function() { thumb.style.transition = 'none'; fill.style.transition = 'none'; }, 380);
+    }
+  }
+
+  track.addEventListener('touchstart', function(e) { onStart(e.touches[0].clientX); }, { passive: true });
+  track.addEventListener('touchmove',  function(e) { e.preventDefault(); onMove(e.touches[0].clientX); }, { passive: false });
+  track.addEventListener('touchend',   onEnd);
+  track.addEventListener('mousedown',  function(e) { e.preventDefault(); onStart(e.clientX); });
+  document.addEventListener('mousemove', onMove.bind(null, window._agSlideClientX = 0));
+  // Use a closure to capture per-instance move/up
+  var _onDocMove = function(e) { if (dragging) onMove(e.clientX); };
+  var _onDocUp   = function()  { onEnd(); };
+  document.addEventListener('mousemove', _onDocMove);
+  document.addEventListener('mouseup',   _onDocUp);
+  // Cleanup when track is removed
+  var obs = new MutationObserver(function(_, o) {
+    if (!document.contains(track)) {
+      document.removeEventListener('mousemove', _onDocMove);
+      document.removeEventListener('mouseup',   _onDocUp);
+      o.disconnect();
+    }
+  });
+  obs.observe(document.body, { childList: true, subtree: true });
+}
+
+// ── TRANSFER STATUS (spec: TransferStatusBlock) ────────
+function _agRenderTransferStatus(aiDiv, msgs, td, refNum) {
+  var card = document.createElement('div');
+  card.className = 'ag-tx-status-card';
+  var stages = [
+    { key: 'submitted',  label: 'Transfer submitted',             sub: 'Reference ' + refNum,                            status: 'done'    },
+    { key: 'processing', label: 'Processing',                     sub: 'Deducting from your ' + td.fromCur + ' account', status: 'active'  },
+    { key: 'in_transit', label: 'In transit',                     sub: 'Usually within 2 hours',                         status: 'pending' },
+    { key: 'delivered',  label: 'Delivered to ' + td.recip.name,  sub: td.recip.currency + ' ' + td.convertedAmt + ' · ' + td.recip.flag, status: 'pending' },
+  ];
+  var html = '<div class="ag-tx-status-header">Transfer status</div><div class="ag-tx-stage-list">';
+  stages.forEach(function(s) {
+    var cls = s.status === 'done' ? 'st-done' : s.status === 'active' ? 'st-active' : 'st-pending';
+    var iconInner = '';
+    if (s.status === 'done') {
+      iconInner = '<svg width="11" height="8" viewBox="0 0 11 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 6-6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else if (s.status === 'active') {
+      iconInner = '<div style="width:8px;height:8px;border-radius:50%;background:var(--brand-primary)"></div>';
+    }
+    html += '<div class="ag-tx-stage ' + cls + '">';
+    html +=   '<div class="ag-tx-stage-icon">' + iconInner + '</div>';
+    html +=   '<div class="ag-tx-stage-text">';
+    html +=     '<div class="ag-tx-stage-label">' + _agEscape(s.label) + '</div>';
+    html +=     '<div class="ag-tx-stage-sub">' + _agEscape(s.sub) + '</div>';
+    html +=   '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    card.classList.add('ui-in');
+    card.querySelectorAll('.ag-tx-stage').forEach(function(el, i) {
+      setTimeout(function() { el.classList.add('st-in'); }, 60 + i * 70);
+    });
+    setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 60);
+  }); });
+  // Progress "processing → in_transit" after 1.8s, then fire receipt
+  setTimeout(function() {
+    var stageEls = card.querySelectorAll('.ag-tx-stage');
+    var activeEl = stageEls[1], nextEl = stageEls[2];
+    if (activeEl) {
+      activeEl.classList.remove('st-active');
+      activeEl.classList.add('st-done');
+      var prev = activeEl.previousElementSibling;
+      if (prev) prev.style.setProperty('--line-color', 'var(--brand-primary)');
+      // Update connector color inline since it's a ::after pseudo
+      activeEl.style.setProperty('--conn', 'var(--brand-primary)');
+    }
+    if (nextEl) { nextEl.classList.remove('st-pending'); nextEl.classList.add('st-active'); }
+    msgs.scrollTop = msgs.scrollHeight;
+    setTimeout(function() { _agRenderReceiptV2(aiDiv, msgs, td, refNum); }, 800);
+  }, 1800);
+}
+
+// ── RECEIPT (spec: ReceiptBlock) ───────────────────────
+function _agRenderReceiptV2(aiDiv, msgs, td, refNum) {
+  var card = document.createElement('div');
+  card.className = 'ag-receipt-card-v2';
+  var html = '<div class="ag-receipt-v2-head">';
+  html += '<div class="ag-receipt-v2-circle" id="agRcCircle">';
+  html +=   '<svg width="20" height="15" viewBox="0 0 20 15" fill="none" aria-hidden="true"><path d="M2 7.5l5.5 5.5L18 2" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  html += '</div>';
+  html += '<div class="ag-receipt-v2-sent">Sent</div>';
+  html += '<div class="ag-receipt-v2-amount">' + td.fromSym + td.amount.toFixed(2) + '</div>';
+  html += '</div>';
+  html += '<div class="ag-receipt-v2-body">';
+  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Recipient</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.recip.name) + ' ' + td.recip.flag + '</span></div>';
+  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">They receive</span><span class="ag-receipt-v2-row-val">' + (td.sym || td.recip.sym) + td.convertedAmt + '</span></div>';
+  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Arrival</span><span class="ag-receipt-v2-row-val">Within 2 hours</span></div>';
+  html +=   '<div class="ag-receipt-v2-ref"><span class="ag-receipt-v2-ref-label">Reference</span><span class="ag-receipt-v2-ref-val">' + _agEscape(refNum) + '</span></div>';
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() { requestAnimationFrame(function() {
+    card.classList.add('ui-in');
+    setTimeout(function() {
+      var circ = card.querySelector('#agRcCircle');
+      if (circ) circ.classList.add('rc-in');
+    }, 100);
+    setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 60);
+  }); });
+  _agAddFollowups(aiDiv, msgs, [
+    { label: 'Send again', text: 'Send money' },
+    { label: 'Check balance', text: 'What is my balance?' },
+    { label: 'View upcoming', text: 'Show upcoming transfers' }
+  ]);
+}
+
 // ── TRANSFER SUMMARY CARD ─────────────────────────────
 function _agRenderTransfer(aiDiv, msgs, data) {
   var d = data;
@@ -439,26 +618,43 @@ function _agRenderTransfer(aiDiv, msgs, data) {
 
   card.innerHTML = html;
 
-  // Confirm button
-  var confirmWrap = document.createElement('div');
-  confirmWrap.className = 'ag-stagger-item';
-  confirmWrap.style.margin = '0 0 4px';
-  var confirmBtn = document.createElement('button');
-  confirmBtn.className = 'ag-confirm-btn';
-  confirmBtn.setAttribute('type', 'button');
-  confirmBtn.setAttribute('aria-label', 'Confirm and send ' + fromSym + d.amount.toFixed(2) + ' to ' + d.recip.name);
-  confirmBtn.innerHTML = '<span style="font-size:17px;line-height:1" aria-hidden="true">→</span>' +
-    '<span class="ag-confirm-label">Confirm · Send ' + fromSym + d.amount.toFixed(2) + '</span>' +
-    '<div class="ag-confirm-spinner" aria-hidden="true"></div>';
-  // Capture transfer data in closure
-  (function(btn, transferData) {
-    btn.addEventListener('click', function() { _agConfirmTransfer(btn, transferData, aiDiv, msgs); });
-  })(confirmBtn, { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip, convertedAmt: d.convertedAmt, totalDebited: d.totalDebited });
-  confirmWrap.appendChild(confirmBtn);
+  // Slide-to-confirm
+  var slideWrap = document.createElement('div');
+  slideWrap.className = 'ag-slide-wrap';
+  slideWrap.innerHTML =
+    '<div class="ag-slide-freshness">Rate locked for 60 seconds</div>' +
+    '<div class="ag-slide-track" role="button" aria-label="Slide to send ' + fromSym + d.amount.toFixed(2) + ' to ' + d.recip.name + '">' +
+      '<div class="ag-slide-fill"></div>' +
+      '<div class="ag-slide-thumb">' +
+        '<span class="ag-slide-thumb-icon">' +
+          '<svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">' +
+            '<path d="M3 6h10M10 2l4 4-4 4" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '</svg>' +
+        '</span>' +
+      '</div>' +
+      '<span class="ag-slide-label">Slide to send ' + fromSym + d.amount.toFixed(2) + '</span>' +
+    '</div>';
+
+  // Capture transfer data in closure and wire up the slide
+  (function(wrap, td) {
+    var track = wrap.querySelector('.ag-slide-track');
+    _agInitSlide(track, function() {
+      setTimeout(function() {
+        wrap.style.transition = 'opacity 180ms ease-out';
+        wrap.style.opacity = '0';
+        setTimeout(function() {
+          wrap.remove();
+          var refNum = 'BNY-' + (10000 + Math.floor(Math.random() * 90000 % 90000));
+          _agRenderTransferStatus(aiDiv, msgs, td, refNum);
+        }, 200);
+      }, 80);
+    });
+  })(slideWrap, { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip,
+                   convertedAmt: d.convertedAmt, totalDebited: d.totalDebited, sym: d.recip.sym });
 
   _agAddCtx(aiDiv, 'Ready to send — rate locked for 60 seconds. Review details below.');
   aiDiv.appendChild(card);
-  aiDiv.appendChild(confirmWrap);
+  aiDiv.appendChild(slideWrap);
 
   // Expand toggle
   var toggleBtn = card.querySelector('#agTxToggle');
@@ -477,7 +673,7 @@ function _agRenderTransfer(aiDiv, msgs, data) {
     requestAnimationFrame(function() {
       card.classList.add('ui-in');
       _agStagger(card, '.ag-stagger-item', 80);
-      setTimeout(function() { confirmWrap.classList.add('s-in'); }, 80 + 4 * 55 + 40);
+      setTimeout(function() { slideWrap.classList.add('s-in'); }, 80 + 4 * 55 + 40);
       _agCountUp(card.querySelector('#agTxInt'), 0, intPart, 650);
       msgs.scrollTop = msgs.scrollHeight;
     });
