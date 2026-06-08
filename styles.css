@@ -2461,6 +2461,38 @@
       margin-bottom: 10px;
       letter-spacing: 0.01em;
     }
+    /* Alternative actions — Edit amount · Change recipient */
+    .ag-slide-alts {
+      display: flex; gap: 8px;
+      margin-top: 10px;
+    }
+    .ag-slide-alt-chip {
+      flex: 1;
+      padding: 9px 10px;
+      background: transparent;
+      border: 0.5px solid rgba(0,0,0,0.10);
+      border-radius: 20px;
+      font-family: 'Geist', sans-serif;
+      font-size: 12.5px; font-weight: 500;
+      color: rgba(0,0,0,0.50);
+      text-align: center;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      transition:
+        background 120ms ease,
+        color 120ms ease,
+        transform 160ms var(--ease-out);
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .ag-slide-alt-chip:hover {
+        background: rgba(0,0,0,0.04);
+        color: rgba(0,0,0,0.72);
+      }
+    }
+    .ag-slide-alt-chip:active { transform: scale(0.96); }
+    @media (prefers-reduced-motion: reduce) {
+      .ag-slide-alt-chip { transition: background 100ms ease; }
+    }
     .ag-slide-track {
       position: relative;
       height: 56px;
