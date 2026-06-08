@@ -1967,81 +1967,7 @@
       letter-spacing: -0.1px;
     }
 
-    /* ── Thinking indicator — sonar-ping orb ── */
-    .ag-thinking {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 4px 0 6px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
-      min-height: 44px; /* accessible touch target */
-    }
-    /* The pulsing orb */
-    .ag-thinking-orb {
-      position: relative;
-      width: 20px; height: 20px;
-      flex-shrink: 0;
-    }
-    .ag-thinking-core {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      background: var(--brand-primary);
-      animation: ag-core-breathe 2.4s ease-in-out infinite;
-    }
-    @keyframes ag-core-breathe {
-      0%, 100% { transform: scale(0.88); opacity: 0.85; }
-      50%       { transform: scale(1.08); opacity: 1; }
-    }
-    /* Three expanding rings */
-    .ag-thinking-ring {
-      position: absolute;
-      inset: 0;
-      border-radius: 50%;
-      border: 1.5px solid var(--brand-primary);
-      animation: ag-ring-expand 2.4s ease-out infinite;
-    }
-    .ag-thinking-ring:nth-child(2) { animation-delay: 0.8s; }
-    .ag-thinking-ring:nth-child(3) { animation-delay: 1.6s; }
-    @keyframes ag-ring-expand {
-      0%   { transform: scale(1);   opacity: 0.65; }
-      100% { transform: scale(3.8); opacity: 0; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .ag-thinking-core { animation: none; opacity: 1; }
-      .ag-thinking-ring { animation: none; opacity: 0; }
-      .ag-thinking-ring:nth-child(2) { opacity: 0.4; transform: scale(2); }
-    }
-    /* "Thinking" label next to the orb */
-    .ag-thinking-label {
-      font-family: 'Geist', sans-serif;
-      font-size: 14px; font-weight: 400;
-      color: rgba(0,0,0,0.36);
-      letter-spacing: 0;
-      animation: ag-thinking-fade 2.4s ease-in-out infinite;
-    }
-    @keyframes ag-thinking-fade {
-      0%, 100% { opacity: 0.50; }
-      50%       { opacity: 0.85; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .ag-thinking-label { animation: none; opacity: 0.6; }
-    }
-    /* Tap hint — only visible on hover on desktop */
-    .ag-thinking-hint {
-      font-family: 'Geist', sans-serif;
-      font-size: 12px; font-weight: 400;
-      color: rgba(0,0,0,0.22);
-      margin-left: auto;
-      opacity: 0;
-      transition: opacity 200ms ease;
-    }
-    @media (hover: hover) and (pointer: fine) {
-      .ag-thinking:hover .ag-thinking-hint { opacity: 1; }
-      .ag-thinking:hover .ag-thinking-label { opacity: 1; animation: none; }
-    }
+    /* Sonar-orb replaced by step state machine — CSS lives in the Thinking Surface block below */
 
     /* Typewriter cursor */
     .ag-cursor {
@@ -2058,6 +1984,562 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .ag-cursor { animation: none; opacity: 1; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       AGENT — THINKING SURFACE (step state machine)
+    ═══════════════════════════════════════════════════════ */
+
+    /* Container */
+    .ag-steps-wrap {
+      margin: 4px 0 12px;
+      overflow: hidden;
+    }
+    /* Each step row */
+    .ag-step {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px 0;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 300ms var(--ease-out), transform 340ms var(--ease-spring);
+    }
+    .ag-step.s-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .ag-step.s-done .ag-step-label {
+      color: var(--text-tertiary);
+    }
+    /* Step icon — 16×16 container */
+    .ag-step-icon {
+      width: 16px; height: 16px;
+      flex-shrink: 0;
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Pending: hollow circle */
+    .ag-step-icon-pending {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(0,0,0,0.18);
+      transition: opacity 200ms ease;
+    }
+    .ag-step.s-active .ag-step-icon-pending { display: none; }
+    .ag-step.s-done  .ag-step-icon-pending  { display: none; }
+    /* Active: pulsing dot */
+    .ag-step-icon-active {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--brand-primary);
+      opacity: 0;
+      animation: ag-step-pulse 1.4s ease-in-out infinite;
+      transition: opacity 180ms ease;
+    }
+    .ag-step.s-active .ag-step-icon-active { opacity: 1; }
+    .ag-step.s-done   .ag-step-icon-active { display: none; }
+    @keyframes ag-step-pulse {
+      0%, 100% { transform: scale(1);    opacity: 0.9; }
+      50%      { transform: scale(1.35); opacity: 0.5; }
+    }
+    /* Done: check icon (SVG drawn as CSS) */
+    .ag-step-icon-done {
+      width: 14px; height: 14px;
+      border-radius: 50%;
+      background: rgba(70,136,43,0.12);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0;
+      transform: scale(0.6);
+      transition: opacity 220ms var(--ease-out), transform 260ms var(--ease-spring);
+    }
+    .ag-step-icon-done svg { display: block; }
+    .ag-step.s-done .ag-step-icon-done {
+      opacity: 1;
+      transform: scale(1);
+    }
+    /* Step label */
+    .ag-step-label {
+      font-size: 13.5px;
+      font-weight: 400;
+      color: rgba(0,0,0,0.62);
+      line-height: 18px;
+      letter-spacing: -0.1px;
+      transition: color 300ms ease;
+    }
+    .ag-step.s-active .ag-step-label {
+      color: rgba(0,0,0,0.78);
+      font-weight: 500;
+    }
+
+    /* Collapse summary line */
+    .ag-steps-summary {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 3px 0 2px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      opacity: 0;
+      transform: translateY(4px);
+      transition: opacity 280ms var(--ease-out), transform 300ms var(--ease-spring);
+    }
+    .ag-steps-summary.s-in {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    .ag-steps-summary-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: rgba(70,136,43,0.45); flex-shrink: 0;
+    }
+    .ag-steps-summary-text {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-tertiary);
+      letter-spacing: 0;
+    }
+    .ag-steps-summary-toggle {
+      font-size: 11px; color: var(--brand-primary);
+      opacity: 0.7; margin-left: 2px;
+    }
+    /* Expand re-shows steps */
+    .ag-steps-wrap.expanded .ag-step { display: flex; }
+    .ag-steps-wrap.collapsed .ag-step { display: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ag-step { transition: opacity 180ms ease; transform: none !important; }
+      .ag-step-icon-active { animation: none; opacity: 1; }
+      .ag-step-icon-done { transition: opacity 180ms ease; transform: none !important; }
+      .ag-steps-summary { transition: opacity 180ms ease; transform: none !important; }
+    }
+
+    /* ═══════════════════════════════════════════════════════
+       AGENT — GENERATIVE UI COMPONENTS
+    ═══════════════════════════════════════════════════════ */
+
+    /* Base card wrapper */
+    .ag-ui-card {
+      background: rgba(255,255,255,0.96);
+      border-radius: 20px;
+      border: 0.5px solid rgba(0,0,0,0.07);
+      box-shadow:
+        0 2px 16px rgba(0,0,0,0.08),
+        0 1px 3px rgba(0,0,0,0.05);
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(12px) scale(0.985);
+      transition:
+        opacity 380ms var(--ease-out),
+        transform 420ms var(--ease-spring);
+      margin-bottom: 4px;
+    }
+    .ag-ui-card.ui-in {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* ── Transfer Summary Card ── */
+    .ag-transfer-card {}
+    .ag-transfer-header {
+      padding: 18px 18px 14px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.06);
+    }
+    .ag-transfer-flag-row {
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 12px;
+    }
+    .ag-transfer-flag {
+      font-size: 18px; line-height: 1;
+    }
+    .ag-transfer-corridor {
+      font-size: 12px; font-weight: 500;
+      color: var(--text-secondary);
+      letter-spacing: 0.02em;
+    }
+    .ag-transfer-amount-row {
+      display: flex; align-items: baseline; gap: 4px;
+      margin-bottom: 4px;
+    }
+    .ag-transfer-currency-sym {
+      font-size: 22px; font-weight: 600;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+    .ag-transfer-amount-int {
+      font-size: 40px; font-weight: 700;
+      color: rgba(0,0,0,0.88);
+      letter-spacing: -2px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .ag-transfer-amount-dec {
+      font-size: 22px; font-weight: 600;
+      color: rgba(0,0,0,0.88);
+      letter-spacing: -0.5px;
+      align-self: flex-end;
+      padding-bottom: 3px;
+    }
+    .ag-transfer-subline {
+      font-size: 13px; font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 18px;
+    }
+    .ag-transfer-subline strong {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Recipient row */
+    .ag-transfer-recipient {
+      display: flex; align-items: center; gap: 12px;
+      padding: 12px 18px;
+      border-bottom: 0.5px solid rgba(0,0,0,0.05);
+    }
+    .ag-transfer-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 15px; font-weight: 700;
+      color: #fff; flex-shrink: 0;
+    }
+    .ag-transfer-recip-info { flex: 1; min-width: 0; }
+    .ag-transfer-recip-name {
+      font-size: 14px; font-weight: 600;
+      color: var(--text-primary);
+      line-height: 18px;
+    }
+    .ag-transfer-recip-bank {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 16px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .ag-transfer-recip-change {
+      font-size: 12px; font-weight: 500;
+      color: var(--brand-primary);
+    }
+
+    /* Fee breakdown */
+    .ag-transfer-breakdown {
+      padding: 12px 18px 2px;
+    }
+    .ag-transfer-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 5px 0;
+    }
+    .ag-transfer-row-label {
+      font-size: 13px; font-weight: 400;
+      color: var(--text-secondary);
+    }
+    .ag-transfer-row-value {
+      font-size: 13px; font-weight: 500;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+    .ag-transfer-row-value.rate-badge {
+      background: rgba(70,136,43,0.10);
+      color: var(--brand-primary);
+      font-size: 11.5px; font-weight: 600;
+      padding: 2px 7px; border-radius: 8px;
+    }
+    .ag-transfer-divider {
+      height: 0.5px; background: rgba(0,0,0,0.07);
+      margin: 5px 0;
+    }
+    .ag-transfer-row.total .ag-transfer-row-label {
+      font-size: 14px; font-weight: 600; color: var(--text-primary);
+    }
+    .ag-transfer-row.total .ag-transfer-row-value {
+      font-size: 14px; font-weight: 700; color: rgba(0,0,0,0.88);
+    }
+    .ag-transfer-freshness {
+      font-size: 11px; color: var(--text-tertiary);
+      padding: 2px 18px 10px;
+    }
+    /* Expand/collapse rows */
+    .ag-transfer-more-rows {
+      max-height: 0; overflow: hidden;
+      transition: max-height 300ms var(--ease-out);
+    }
+    .ag-transfer-more-rows.open { max-height: 200px; }
+    .ag-transfer-toggle {
+      display: flex; align-items: center; gap: 4px;
+      font-size: 12px; font-weight: 500;
+      color: var(--brand-primary); opacity: 0.85;
+      padding: 0 18px 14px; cursor: pointer;
+      background: none; border: none;
+      font-family: 'Geist', sans-serif;
+    }
+    .ag-transfer-toggle-arrow {
+      display: inline-block;
+      transition: transform 200ms var(--ease-out);
+      font-size: 10px;
+    }
+    .ag-transfer-toggle.open .ag-transfer-toggle-arrow { transform: rotate(180deg); }
+
+    /* Confirm button */
+    .ag-confirm-btn {
+      display: flex; align-items: center; justify-content: center;
+      gap: 8px;
+      margin: 0 18px 18px;
+      padding: 15px 20px;
+      background: var(--brand-primary);
+      border: none; border-radius: 14px;
+      cursor: pointer;
+      font-family: 'Geist', sans-serif;
+      font-size: 15px; font-weight: 600;
+      color: #fff;
+      letter-spacing: -0.1px;
+      transition:
+        transform 160ms var(--ease-out),
+        background 160ms ease,
+        box-shadow 160ms ease;
+      box-shadow: 0 4px 16px rgba(70,136,43,0.32);
+      -webkit-tap-highlight-color: transparent;
+    }
+    @media (hover: hover) and (pointer: fine) {
+      .ag-confirm-btn:hover {
+        background: #3a7020;
+        box-shadow: 0 6px 20px rgba(70,136,43,0.40);
+      }
+    }
+    .ag-confirm-btn:active { transform: scale(0.97); }
+    .ag-confirm-btn.loading {
+      pointer-events: none;
+      background: rgba(70,136,43,0.60);
+    }
+    .ag-confirm-btn.loading .ag-confirm-label { opacity: 0; }
+    .ag-confirm-spinner {
+      position: absolute;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: ag-spin 0.7s linear infinite;
+      display: none;
+    }
+    .ag-confirm-btn.loading .ag-confirm-spinner { display: block; }
+    @keyframes ag-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .ag-confirm-btn { transition: background 100ms ease; }
+      .ag-confirm-spinner { animation: none; border-color: rgba(255,255,255,0.6); }
+    }
+
+    /* ── FX Rate Card ── */
+    .ag-fx-card {}
+    .ag-fx-body {
+      padding: 18px 18px 16px;
+    }
+    .ag-fx-corridor {
+      display: flex; align-items: center; gap: 8px;
+      margin-bottom: 14px;
+    }
+    .ag-fx-flag { font-size: 20px; line-height: 1; }
+    .ag-fx-arrow {
+      font-size: 13px; color: var(--text-tertiary); flex-shrink: 0;
+    }
+    .ag-fx-corridor-label {
+      font-size: 13px; font-weight: 500; color: var(--text-secondary);
+      letter-spacing: 0.04em;
+    }
+    .ag-fx-rate-row {
+      display: flex; align-items: baseline; gap: 6px;
+      margin-bottom: 4px;
+    }
+    .ag-fx-rate-num {
+      font-size: 36px; font-weight: 700;
+      color: rgba(0,0,0,0.88);
+      letter-spacing: -1.5px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+    }
+    .ag-fx-rate-code {
+      font-size: 16px; font-weight: 500;
+      color: var(--text-secondary);
+      padding-bottom: 3px;
+    }
+    .ag-fx-subline {
+      font-size: 12.5px; font-weight: 400;
+      color: var(--text-secondary);
+      line-height: 17px;
+    }
+    .ag-fx-badge {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(70,136,43,0.10);
+      color: var(--brand-primary);
+      font-size: 11.5px; font-weight: 600;
+      padding: 2px 8px; border-radius: 8px;
+      margin-left: 6px;
+    }
+    .ag-fx-freshness {
+      font-size: 11px; color: var(--text-tertiary);
+      margin-top: 10px; padding-top: 10px;
+      border-top: 0.5px solid rgba(0,0,0,0.06);
+      display: flex; align-items: center; gap: 5px;
+    }
+    .ag-fx-fresh-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: var(--semantic-success); flex-shrink: 0;
+    }
+
+    /* ── Status Timeline ── */
+    .ag-timeline-card {}
+    .ag-timeline-body { padding: 16px 18px 18px; }
+    .ag-timeline-header {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+    .ag-timeline-step {
+      display: flex; align-items: flex-start; gap: 12px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 300ms var(--ease-out), transform 340ms var(--ease-spring);
+    }
+    .ag-timeline-step.tl-in { opacity: 1; transform: translateY(0); }
+    .ag-timeline-left {
+      display: flex; flex-direction: column; align-items: center;
+      flex-shrink: 0; width: 20px;
+    }
+    .ag-timeline-dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      border: 2px solid rgba(0,0,0,0.15);
+      background: #fff;
+      flex-shrink: 0; margin-top: 4px;
+      transition: background 300ms ease, border-color 300ms ease;
+    }
+    .ag-timeline-step.tl-done .ag-timeline-dot {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+    }
+    .ag-timeline-step.tl-active .ag-timeline-dot {
+      background: var(--brand-primary);
+      border-color: var(--brand-primary);
+      animation: ag-step-pulse 1.4s ease-in-out infinite;
+    }
+    .ag-timeline-line {
+      width: 1.5px; flex: 1; min-height: 20px;
+      background: rgba(0,0,0,0.10);
+      margin-top: 2px;
+    }
+    .ag-timeline-step.tl-done .ag-timeline-line { background: var(--brand-primary); opacity: 0.35; }
+    .ag-timeline-content { padding-bottom: 18px; }
+    .ag-timeline-step:last-child .ag-timeline-content { padding-bottom: 0; }
+    .ag-timeline-step:last-child .ag-timeline-line { display: none; }
+    .ag-timeline-step-label {
+      font-size: 14px; font-weight: 500;
+      color: rgba(0,0,0,0.80); line-height: 19px;
+    }
+    .ag-timeline-step.tl-pending .ag-timeline-step-label { color: var(--text-tertiary); }
+    .ag-timeline-step-sub {
+      font-size: 12px; font-weight: 400;
+      color: var(--text-tertiary); margin-top: 2px; line-height: 16px;
+    }
+
+    /* ── Receipt Card ── */
+    .ag-receipt-card {}
+    .ag-receipt-body {
+      padding: 20px 18px 18px;
+      text-align: center;
+    }
+    .ag-receipt-check {
+      width: 48px; height: 48px; border-radius: 50%;
+      background: rgba(70,136,43,0.10);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 12px;
+      opacity: 0; transform: scale(0.5);
+      transition: opacity 320ms var(--ease-out) 80ms, transform 380ms var(--ease-spring) 80ms;
+    }
+    .ag-receipt-check.ri-in { opacity: 1; transform: scale(1); }
+    .ag-receipt-check svg { display: block; }
+    .ag-receipt-label {
+      font-size: 13px; font-weight: 500;
+      color: var(--brand-primary); opacity: 0.85;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+    .ag-receipt-amount {
+      font-size: 28px; font-weight: 700;
+      color: rgba(0,0,0,0.88); letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+    .ag-receipt-sub {
+      font-size: 13px; font-weight: 400;
+      color: var(--text-secondary); line-height: 18px;
+      margin-bottom: 16px;
+    }
+    .ag-receipt-ref-box {
+      background: rgba(0,0,0,0.04);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .ag-receipt-ref-label {
+      font-size: 11.5px; font-weight: 500;
+      color: var(--text-tertiary); letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .ag-receipt-ref-num {
+      font-size: 13px; font-weight: 600;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.02em;
+    }
+
+    /* ── Balance / Account Card ── */
+    .ag-balance-card {}
+    .ag-balance-body { padding: 18px 18px 16px; }
+    .ag-balance-label {
+      font-size: 12px; font-weight: 500; color: var(--text-tertiary);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .ag-balance-amount-row {
+      display: flex; align-items: baseline; gap: 3px;
+      margin-bottom: 6px;
+    }
+    .ag-balance-sym {
+      font-size: 20px; font-weight: 600; color: rgba(0,0,0,0.78);
+    }
+    .ag-balance-int {
+      font-size: 38px; font-weight: 700; color: rgba(0,0,0,0.88);
+      letter-spacing: -2px; font-variant-numeric: tabular-nums; line-height: 1;
+    }
+    .ag-balance-dec {
+      font-size: 20px; font-weight: 600; color: rgba(0,0,0,0.88);
+      padding-bottom: 2px;
+    }
+    .ag-balance-sub {
+      font-size: 13px; color: var(--text-secondary);
+    }
+    .ag-balance-chips {
+      display: flex; gap: 6px; margin-top: 14px; flex-wrap: wrap;
+    }
+    .ag-balance-chip {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(0,0,0,0.05); border-radius: 9999px;
+      padding: 4px 10px;
+      font-size: 12px; font-weight: 500; color: var(--text-secondary);
+    }
+    .ag-balance-chip.positive { background: rgba(50,180,80,0.10); color: #2a8a3e; }
+    .ag-balance-chip.negative { background: rgba(200,44,44,0.08); color: #b02020; }
+
+    /* ── Count-up animation ── */
+    .ag-countup { font-variant-numeric: tabular-nums; }
+
+    /* ── Staggered list entrance ── */
+    .ag-stagger-item {
+      opacity: 0; transform: translateY(8px);
+      transition: opacity 280ms var(--ease-out), transform 320ms var(--ease-spring);
+    }
+    .ag-stagger-item.s-in { opacity: 1; transform: translateY(0); }
+    @media (prefers-reduced-motion: reduce) {
+      .ag-stagger-item { transition: opacity 180ms ease; transform: none !important; }
+      .ag-timeline-step { transition: opacity 180ms ease; transform: none !important; }
+      .ag-ui-card { transition: opacity 280ms ease; transform: none !important; }
+      .ag-receipt-check { transition: opacity 220ms ease; transform: none !important; }
     }
 
     /* ── Input card ── */
@@ -8522,60 +9004,581 @@ function showNav(visible) {
    HOME AGENT EXPERIENCE
 ══════════════════════════════════════════════════════ */
 
-const _AG_RESPONSES = [
-  "I found it! Maya Sarini received $340 on March 12th from your USD Checking account.",
-  "Looking at your last 30 days, your top category is Dining at $1,240 — up 18% from last month.",
-  "You have 3 pending transactions totalling $284. The largest is a $180 charge from Airbnb on April 2nd.",
-  "Your USD Checking balance is $12,600. No unusual activity detected in the past 7 days.",
-  "I can see 2 refunds this week — $24 from Uber and $63 from Amazon, both processed.",
-];
-let _agResponseIdx = 0;
-let _homeAgentOpen = false;
-let _homeAgentConvo = false;
+/* ═══════════════════════════════════════════════════════
+   HOME AGENT — GENERATIVE UI SYSTEM
+   All money movement requires explicit confirm.
+   Data never fabricated — pulled from _AG_DATA.
+═══════════════════════════════════════════════════════ */
 
+// ── Mock data store (replaces API calls in prototype) ──
+const _AG_DATA = {
+  accounts: [
+    { id: 'gbp', name: 'GBP Checking', balance: 8420.00, currency: 'GBP', sym: '£', flag: '🇬🇧' },
+    { id: 'usd', name: 'USD Checking', balance: 12600.00, currency: 'USD', sym: '$', flag: '🇺🇸' },
+    { id: 'eur', name: 'EUR Savings',  balance: 3250.50,  currency: 'EUR', sym: '€', flag: '🇪🇺' },
+  ],
+  recipients: [
+    { id: 'r1', name: 'Maria García', bank: 'BBVA · ES91 2100 0418 4502 0005 1332',
+      flag: '🇪🇸', currency: 'EUR', sym: '€', initials: 'MG',
+      color: 'linear-gradient(135deg,#E85D27,#C43A10)' },
+    { id: 'r2', name: 'James Wilson', bank: 'Barclays · GB29 NWBK 6016 1331 9268 19',
+      flag: '🇬🇧', currency: 'GBP', sym: '£', initials: 'JW',
+      color: 'linear-gradient(135deg,#2563EB,#1D4ED8)' },
+    { id: 'r3', name: 'Priya Sharma', bank: 'HDFC · IN30 2774 0111 0003 3892',
+      flag: '🇮🇳', currency: 'INR', sym: '₹', initials: 'PS',
+      color: 'linear-gradient(135deg,#9333EA,#7E22CE)' },
+  ],
+  rates: {
+    GBP_EUR: { rate: 1.1842, label: 'GBP → EUR', fromFlag: '🇬🇧', toFlag: '🇪🇺', change: '+0.3%', positive: true },
+    GBP_USD: { rate: 1.2634, label: 'GBP → USD', fromFlag: '🇬🇧', toFlag: '🇺🇸', change: '-0.1%', positive: false },
+    USD_EUR: { rate: 0.9372, label: 'USD → EUR', fromFlag: '🇺🇸', toFlag: '🇪🇺', change: '+0.2%', positive: true },
+    USD_GBP: { rate: 0.7915, label: 'USD → GBP', fromFlag: '🇺🇸', toFlag: '🇬🇧', change: '+0.1%', positive: true },
+    GBP_INR: { rate: 107.42, label: 'GBP → INR', fromFlag: '🇬🇧', toFlag: '🇮🇳', change: '+0.5%', positive: true },
+  },
+};
+
+let _agResponseIdx = 0;
+let _homeAgentOpen  = false;
+let _homeAgentConvo = false;
+let _prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+// ── Query router ────────────────────────────────────────
+function _agRouteQuery(text) {
+  var t = text.toLowerCase();
+  if (/\b(send|transfer|pay |remit|wire)\b/.test(t))    return _agScenarioTransfer(t);
+  if (/\b(rate|exchange|convert|fx|corridor)\b/.test(t)) return _agScenarioRate(t);
+  if (/\b(balance|how much|available|account|funds)\b/.test(t)) return _agScenarioBalance(t);
+  if (/\b(spend|spending|transactions?|last month|dining|categor)\b/.test(t)) return _agScenarioSpend(t);
+  return _agScenarioDefault();
+}
+
+function _agScenarioTransfer(t) {
+  // Parse amount
+  var amtMatch = t.match(/[£$€]?\s*(\d[\d,]*(?:\.\d{1,2})?)/);
+  var amount = amtMatch ? parseFloat(amtMatch[1].replace(/,/g, '')) : 500;
+  // From currency
+  var fromCur = /£|gbp/.test(t) ? 'GBP' : /\$|usd/.test(t) ? 'USD' : 'GBP';
+  // Recipient
+  var recip = /priya|sharma/.test(t) ? _AG_DATA.recipients[2]
+            : /james|wilson/.test(t) ? _AG_DATA.recipients[1]
+            : _AG_DATA.recipients[0];
+  var rateKey = fromCur + '_' + recip.currency;
+  var rateInfo = _AG_DATA.rates[rateKey] || _AG_DATA.rates.GBP_EUR;
+  var feeAmt = amount < 200 ? 1.99 : amount < 1000 ? 3.49 : 4.99;
+  var convertedAmt = (amount * rateInfo.rate).toFixed(2);
+  var totalDebited = (amount + feeAmt).toFixed(2);
+  var fromAccount = _AG_DATA.accounts.find(function(a) { return a.currency === fromCur; }) || _AG_DATA.accounts[0];
+  return {
+    type: 'transfer',
+    steps: [
+      { id: 's1', label: 'Looking up your recipients' },
+      { id: 's2', label: 'Fetching today\'s ' + fromCur + ' → ' + recip.currency + ' rate' },
+      { id: 's3', label: 'Checking your transfer limits' },
+      { id: 's4', label: 'Calculating fees and total' },
+    ],
+    data: { amount: amount, fromCur: fromCur, recip: recip, rateInfo: rateInfo,
+            feeAmt: feeAmt, convertedAmt: convertedAmt, totalDebited: totalDebited,
+            fromAccount: fromAccount },
+  };
+}
+
+function _agScenarioRate(t) {
+  var corridor = /usd.{0,4}gbp|gbp.{0,4}usd/.test(t) ? 'GBP_USD'
+               : /usd.{0,4}eur|eur.{0,4}usd/.test(t) ? 'USD_EUR'
+               : /usd.{0,4}inr|inr.{0,4}usd/.test(t) ? 'GBP_INR'
+               : 'GBP_EUR';
+  var ri = _AG_DATA.rates[corridor];
+  return {
+    type: 'fx_rate',
+    steps: [
+      { id: 's1', label: 'Connecting to live market feeds' },
+      { id: 's2', label: 'Pulling ' + ri.label + ' data' },
+      { id: 's3', label: 'Verifying mid-market spread' },
+    ],
+    data: { corridor: corridor },
+  };
+}
+
+function _agScenarioBalance(t) {
+  var acct = /gbp|pound/.test(t) ? _AG_DATA.accounts[0]
+           : /usd|\$|dollar/.test(t) ? _AG_DATA.accounts[1]
+           : /eur|euro/.test(t) ? _AG_DATA.accounts[2] : null;
+  return {
+    type: 'balance',
+    steps: [
+      { id: 's1', label: 'Connecting to your accounts' },
+      { id: 's2', label: 'Fetching latest balances' },
+      { id: 's3', label: 'Scanning for recent activity' },
+    ],
+    data: { acct: acct },
+  };
+}
+
+function _agScenarioSpend(t) {
+  return {
+    type: 'text',
+    steps: [
+      { id: 's1', label: 'Reviewing your transactions' },
+      { id: 's2', label: 'Categorising recent activity' },
+      { id: 's3', label: 'Comparing month-on-month' },
+    ],
+    responseText: 'Your top spend category last month was Dining at £1,240 — up 18% from March. Travel came second at £860. Total outgoing: £4,320, down slightly from £4,610 the month before.',
+  };
+}
+
+function _agScenarioDefault() {
+  var texts = [
+    'Maya Sarini received $340 on March 12th from your USD Checking account.',
+    'You have 3 pending transactions totalling $284. The largest is $180 from Airbnb on April 2nd.',
+    'Your last transfer to Maria García was £350 on May 4th — delivered in 1 business day.',
+    'I can see 2 refunds this week — $24 from Uber and $63 from Amazon, both processed.',
+    'No unusual activity in the past 7 days across all your accounts.',
+  ];
+  return {
+    type: 'text',
+    steps: [
+      { id: 's1', label: 'Reviewing your question' },
+      { id: 's2', label: 'Looking through your accounts' },
+    ],
+    responseText: texts[_agResponseIdx % texts.length],
+  };
+}
+
+// ── Step state machine ─────────────────────────────────
+// steps: [{ id, label }]
+// onComplete fires after collapse animation
+function _agRunSteps(aiDiv, steps, msgs, onComplete) {
+  var wrap = document.createElement('div');
+  wrap.className = 'ag-steps-wrap';
+  aiDiv.appendChild(wrap);
+
+  var stepEls = steps.map(function(s) {
+    var el = document.createElement('div');
+    el.className = 'ag-step';
+    el.innerHTML =
+      '<div class="ag-step-icon" aria-hidden="true">' +
+        '<div class="ag-step-icon-pending"></div>' +
+        '<div class="ag-step-icon-active"></div>' +
+        '<div class="ag-step-icon-done">' +
+          '<svg width="8" height="6" viewBox="0 0 8 6" fill="none" aria-hidden="true">' +
+            '<path d="M1 3l2 2 4-4" stroke="#46882B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '</svg>' +
+        '</div>' +
+      '</div>' +
+      '<span class="ag-step-label">' + _agEscape(s.label) + '</span>';
+    wrap.appendChild(el);
+    return el;
+  });
+
+  var DWELL_BASE = 520;
+  var DWELL_JITTER = 340;
+  var idx = 0;
+
+  function runNext() {
+    if (idx >= stepEls.length) {
+      _agCollapseSteps(wrap, stepEls, steps.length, msgs, onComplete);
+      return;
+    }
+    var el = stepEls[idx];
+    var delay = idx === 0 ? 80 : 40;
+    setTimeout(function() {
+      el.classList.add('s-in', 's-active');
+      msgs.scrollTop = msgs.scrollHeight;
+    }, delay);
+    var dwell = DWELL_BASE + Math.floor(Math.random() * DWELL_JITTER);
+    setTimeout(function() {
+      el.classList.remove('s-active');
+      el.classList.add('s-done');
+      idx++;
+      setTimeout(runNext, 60);
+    }, delay + dwell);
+  }
+  runNext();
+}
+
+function _agCollapseSteps(wrap, stepEls, count, msgs, onComplete) {
+  // Fade steps out
+  stepEls.forEach(function(el) {
+    el.style.transition = 'opacity 180ms ease, transform 200ms ease';
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(-4px)';
+  });
+  setTimeout(function() {
+    wrap.classList.add('collapsed');
+    // Summary line
+    var summary = document.createElement('div');
+    summary.className = 'ag-steps-summary';
+    summary.setAttribute('role', 'button');
+    summary.setAttribute('tabindex', '0');
+    summary.setAttribute('aria-label', 'Worked through ' + count + ' steps — tap to expand');
+    summary.innerHTML =
+      '<div class="ag-steps-summary-dot" aria-hidden="true"></div>' +
+      '<span class="ag-steps-summary-text">Worked through ' + count + ' step' + (count !== 1 ? 's' : '') + '</span>' +
+      '<span class="ag-steps-summary-toggle" aria-hidden="true">· show</span>';
+    wrap.parentNode.insertBefore(summary, wrap.nextSibling);
+    summary.addEventListener('click', function() {
+      var collapsed = wrap.classList.contains('collapsed');
+      var toggle = summary.querySelector('.ag-steps-summary-toggle');
+      if (collapsed) {
+        wrap.classList.remove('collapsed');
+        stepEls.forEach(function(el) { el.style.opacity = '1'; el.style.transform = 'translateY(0)'; });
+        if (toggle) toggle.textContent = '· hide';
+      } else {
+        wrap.classList.add('collapsed');
+        stepEls.forEach(function(el) { el.style.opacity = '0'; el.style.transform = 'translateY(-4px)'; });
+        if (toggle) toggle.textContent = '· show';
+      }
+    });
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() { summary.classList.add('s-in'); });
+    });
+    setTimeout(onComplete, 200);
+  }, 220);
+}
+
+// ── Count-up helpers ───────────────────────────────────
+function _agCountUp(el, from, to, duration) {
+  if (!el) return;
+  if (_prefersReduced) { el.textContent = to; return; }
+  var start = performance.now();
+  function tick(now) {
+    var p = Math.min((now - start) / duration, 1);
+    var e = 1 - Math.pow(1 - p, 3);
+    el.textContent = Math.round(from + (to - from) * e);
+    if (p < 1) requestAnimationFrame(tick); else el.textContent = to;
+  }
+  requestAnimationFrame(tick);
+}
+function _agCountUpDec(el, from, to, duration, decimals) {
+  if (!el) return;
+  decimals = decimals || 4;
+  if (_prefersReduced) { el.textContent = to.toFixed(decimals); return; }
+  var start = performance.now();
+  function tick(now) {
+    var p = Math.min((now - start) / duration, 1);
+    var e = 1 - Math.pow(1 - p, 3);
+    el.textContent = (from + (to - from) * e).toFixed(decimals);
+    if (p < 1) requestAnimationFrame(tick); else el.textContent = to.toFixed(decimals);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ── Stagger animate children ───────────────────────────
+function _agStagger(parent, selector, baseDelay) {
+  var items = parent.querySelectorAll(selector);
+  items.forEach(function(el, i) {
+    setTimeout(function() { el.classList.add('s-in'); }, (baseDelay || 60) + i * 55);
+  });
+}
+
+// ── TRANSFER SUMMARY CARD ─────────────────────────────
+function _agRenderTransfer(aiDiv, msgs, data) {
+  var d = data;
+  var fromSym = d.fromAccount.sym;
+  var intPart = Math.floor(d.amount);
+  var decStr  = '.' + d.amount.toFixed(2).split('.')[1];
+  var toSym   = d.recip.sym;
+  var rateStr = d.rateInfo.rate.toFixed(4);
+  var fromFrom = d.fromAccount.flag;
+
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card ag-transfer-card';
+
+  var html = '<div class="ag-transfer-header">';
+  html +=   '<div class="ag-transfer-flag-row">';
+  html +=     '<span class="ag-transfer-flag">' + fromFrom + '</span>';
+  html +=     '<span class="ag-transfer-corridor">Sending · ' + d.fromCur + ' to ' + d.recip.currency + '</span>';
+  html +=   '</div>';
+  html +=   '<div class="ag-transfer-amount-row">';
+  html +=     '<span class="ag-transfer-currency-sym">' + fromSym + '</span>';
+  html +=     '<span class="ag-transfer-amount-int" id="agTxInt">0</span>';
+  html +=     '<span class="ag-transfer-amount-dec">' + decStr + '</span>';
+  html +=   '</div>';
+  html +=   '<div class="ag-transfer-subline">Recipient gets <strong>' + toSym + d.convertedAmt + '</strong></div>';
+  html += '</div>';
+
+  html += '<div class="ag-transfer-recipient ag-stagger-item">';
+  html +=   '<div class="ag-transfer-avatar" style="background:' + d.recip.color + '" aria-hidden="true">' + d.recip.initials + '</div>';
+  html +=   '<div class="ag-transfer-recip-info">';
+  html +=     '<div class="ag-transfer-recip-name">' + _agEscape(d.recip.name) + ' ' + d.recip.flag + '</div>';
+  html +=     '<div class="ag-transfer-recip-bank">' + _agEscape(d.recip.bank) + '</div>';
+  html +=   '</div>';
+  html +=   '<span class="ag-transfer-recip-change">Change</span>';
+  html += '</div>';
+
+  html += '<div class="ag-transfer-breakdown">';
+  html +=   '<div class="ag-transfer-row ag-stagger-item">';
+  html +=     '<span class="ag-transfer-row-label">Exchange rate</span>';
+  html +=     '<span class="ag-transfer-row-value rate-badge">1 ' + d.fromCur + ' = ' + rateStr + ' ' + d.recip.currency + '</span>';
+  html +=   '</div>';
+  html +=   '<div class="ag-transfer-row ag-stagger-item">';
+  html +=     '<span class="ag-transfer-row-label">Transfer fee</span>';
+  html +=     '<span class="ag-transfer-row-value">' + fromSym + d.feeAmt.toFixed(2) + '</span>';
+  html +=   '</div>';
+  // Expandable details
+  html +=   '<div class="ag-transfer-more-rows" id="agTxMore">';
+  html +=     '<div class="ag-transfer-row"><span class="ag-transfer-row-label">Mid-market rate</span><span class="ag-transfer-row-value">1 ' + d.fromCur + ' = ' + (d.rateInfo.rate + 0.0012).toFixed(4) + ' ' + d.recip.currency + '</span></div>';
+  html +=     '<div class="ag-transfer-row"><span class="ag-transfer-row-label">Banyan markup</span><span class="ag-transfer-row-value">0.45%</span></div>';
+  html +=     '<div class="ag-transfer-row"><span class="ag-transfer-row-label">Estimated arrival</span><span class="ag-transfer-row-value">1 business day</span></div>';
+  html +=   '</div>';
+  html +=   '<div class="ag-transfer-divider"></div>';
+  html +=   '<div class="ag-transfer-row total ag-stagger-item">';
+  html +=     '<span class="ag-transfer-row-label">Total debited</span>';
+  html +=     '<span class="ag-transfer-row-value">' + fromSym + d.totalDebited + '</span>';
+  html +=   '</div>';
+  html += '</div>';
+  html += '<div class="ag-transfer-freshness">Rate as of just now · refreshes every 60s</div>';
+  html += '<button class="ag-transfer-toggle" id="agTxToggle" type="button">Show full breakdown <span class="ag-transfer-toggle-arrow">▾</span></button>';
+
+  card.innerHTML = html;
+
+  // Confirm button
+  var confirmWrap = document.createElement('div');
+  confirmWrap.className = 'ag-stagger-item';
+  confirmWrap.style.margin = '0 0 4px';
+  var confirmBtn = document.createElement('button');
+  confirmBtn.className = 'ag-confirm-btn';
+  confirmBtn.setAttribute('type', 'button');
+  confirmBtn.setAttribute('aria-label', 'Confirm and send ' + fromSym + d.amount.toFixed(2) + ' to ' + d.recip.name);
+  confirmBtn.innerHTML = '<span style="font-size:17px;line-height:1" aria-hidden="true">→</span>' +
+    '<span class="ag-confirm-label">Confirm · Send ' + fromSym + d.amount.toFixed(2) + '</span>' +
+    '<div class="ag-confirm-spinner" aria-hidden="true"></div>';
+  // Capture transfer data in closure
+  (function(btn, transferData) {
+    btn.addEventListener('click', function() { _agConfirmTransfer(btn, transferData, aiDiv, msgs); });
+  })(confirmBtn, { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip, convertedAmt: d.convertedAmt, totalDebited: d.totalDebited });
+  confirmWrap.appendChild(confirmBtn);
+
+  aiDiv.appendChild(card);
+  aiDiv.appendChild(confirmWrap);
+
+  // Expand toggle
+  var toggleBtn = card.querySelector('#agTxToggle');
+  var moreEl = card.querySelector('#agTxMore');
+  if (toggleBtn && moreEl) {
+    toggleBtn.addEventListener('click', function() {
+      var open = moreEl.classList.toggle('open');
+      toggleBtn.classList.toggle('open', open);
+      var arrow = toggleBtn.querySelector('.ag-transfer-toggle-arrow');
+      if (arrow) arrow.textContent = open ? '▴' : '▾';
+    });
+  }
+
+  // Animate in
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agStagger(card, '.ag-stagger-item', 80);
+      setTimeout(function() { confirmWrap.classList.add('s-in'); }, 80 + 4 * 55 + 40);
+      _agCountUp(card.querySelector('#agTxInt'), 0, intPart, 650);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+// ── FX RATE CARD ──────────────────────────────────────
+function _agRenderFXRate(aiDiv, msgs, data) {
+  var ri = _AG_DATA.rates[data.corridor];
+  var fromCode = ri.label.split(' → ')[0];
+  var toCode   = ri.label.split(' → ')[1];
+  var changeClass = ri.positive ? 'positive' : 'negative';
+
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card ag-fx-card';
+  var html = '<div class="ag-fx-body">';
+  html +=   '<div class="ag-fx-corridor ag-stagger-item">';
+  html +=     '<span class="ag-fx-flag">' + ri.fromFlag + '</span>';
+  html +=     '<span class="ag-fx-arrow">→</span>';
+  html +=     '<span class="ag-fx-flag">' + ri.toFlag + '</span>';
+  html +=     '<span class="ag-fx-corridor-label">' + ri.label + '</span>';
+  html +=     '<span class="ag-fx-badge ag-balance-chip ' + changeClass + '">' + ri.change + '</span>';
+  html +=   '</div>';
+  html +=   '<div class="ag-fx-rate-row ag-stagger-item">';
+  html +=     '<span class="ag-fx-rate-num" id="agFxNum">1.0000</span>';
+  html +=     '<span class="ag-fx-rate-code">' + toCode + '</span>';
+  html +=   '</div>';
+  html +=   '<div class="ag-fx-subline ag-stagger-item">Per 1 ' + fromCode + ' · includes 0.45% Banyan markup</div>';
+  html +=   '<div class="ag-fx-freshness ag-stagger-item"><div class="ag-fx-fresh-dot"></div>Live rate · updated just now</div>';
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agStagger(card, '.ag-stagger-item', 60);
+      _agCountUpDec(card.querySelector('#agFxNum'), 1.0, ri.rate, 700, 4);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+// ── BALANCE CARD ─────────────────────────────────────
+function _agRenderBalance(aiDiv, msgs, data) {
+  var accounts = data.acct ? [data.acct] : _AG_DATA.accounts;
+  accounts.forEach(function(acct, i) {
+    var intPart = Math.floor(acct.balance);
+    var decStr = '.' + acct.balance.toFixed(2).split('.')[1];
+    var card = document.createElement('div');
+    card.className = 'ag-ui-card ag-balance-card';
+    var intId = 'agBalInt_' + i;
+    var html = '<div class="ag-balance-body">';
+    html += '<div class="ag-balance-label">' + _agEscape(acct.name) + ' ' + acct.flag + '</div>';
+    html += '<div class="ag-balance-amount-row">';
+    html +=   '<span class="ag-balance-sym">' + acct.sym + '</span>';
+    html +=   '<span class="ag-balance-int" id="' + intId + '">0</span>';
+    html +=   '<span class="ag-balance-dec">' + decStr + '</span>';
+    html += '</div>';
+    html += '<div class="ag-balance-sub">Available · no holds</div>';
+    html += '<div class="ag-balance-chips"><span class="ag-balance-chip positive">No unusual activity</span><span class="ag-balance-chip">Just updated</span></div>';
+    html += '</div>';
+    card.innerHTML = html;
+    aiDiv.appendChild(card);
+    setTimeout(function() {
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agCountUp(document.getElementById(intId), 0, intPart, 700);
+          msgs.scrollTop = msgs.scrollHeight;
+        });
+      });
+    }, i * 90);
+  });
+}
+
+// ── TEXT (typewriter) ─────────────────────────────────
+function _agRenderText(aiDiv, msgs, responseText) {
+  var textEl = document.createElement('div');
+  textEl.className = 'ag-msg-ai-text';
+  textEl.innerHTML = '<span class="ag-cursor"></span>';
+  aiDiv.appendChild(textEl);
+  var chars = responseText.split('');
+  var i = 0;
+  var cursor = textEl.querySelector('.ag-cursor');
+  function typeChar() {
+    if (i < chars.length) {
+      cursor.insertAdjacentText('beforebegin', chars[i]);
+      i++;
+      msgs.scrollTop = msgs.scrollHeight;
+      setTimeout(typeChar, 16 + Math.floor(Math.random() * 12));
+    } else {
+      cursor.style.transition = 'opacity 400ms ease';
+      cursor.style.opacity = '0';
+      setTimeout(function() { if (cursor.parentNode) cursor.remove(); }, 420);
+    }
+  }
+  setTimeout(typeChar, 60);
+}
+
+// ── CONFIRM + STATUS TIMELINE + RECEIPT ───────────────
+function _agConfirmTransfer(btn, transferData, aiDiv, msgs) {
+  btn.classList.add('loading');
+  btn.setAttribute('aria-label', 'Processing…');
+  setTimeout(function() {
+    var wrap = btn.parentNode;
+    if (wrap) wrap.remove();
+    _agRenderTimeline(aiDiv, msgs, transferData);
+  }, 1600);
+}
+
+function _agRenderTimeline(aiDiv, msgs, td) {
+  var refNum = 'BNY-' + (Math.floor(Math.random() * 90000) + 10000);
+  var steps = [
+    { label: 'Transfer submitted', sub: 'Reference ' + refNum, status: 'done' },
+    { label: 'Processing', sub: 'Funds deducted from your account', status: 'active' },
+    { label: 'In transit', sub: 'Usually within 2 hours', status: 'pending' },
+    { label: 'Delivered to ' + td.recip.name, sub: td.recip.currency + ' ' + td.convertedAmt + ' · ' + td.recip.flag, status: 'pending' },
+  ];
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card ag-timeline-card';
+  var html = '<div class="ag-timeline-body"><div class="ag-timeline-header">Transfer status</div>';
+  steps.forEach(function(s) {
+    var cls = s.status === 'done' ? 'tl-done' : s.status === 'active' ? 'tl-active' : 'tl-pending';
+    html += '<div class="ag-timeline-step ' + cls + '">';
+    html +=   '<div class="ag-timeline-left"><div class="ag-timeline-dot"></div><div class="ag-timeline-line"></div></div>';
+    html +=   '<div class="ag-timeline-content">';
+    html +=     '<div class="ag-timeline-step-label">' + _agEscape(s.label) + '</div>';
+    html +=     '<div class="ag-timeline-step-sub">' + _agEscape(s.sub) + '</div>';
+    html +=   '</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      card.querySelectorAll('.ag-timeline-step').forEach(function(el, i) {
+        setTimeout(function() { el.classList.add('tl-in'); }, 80 + i * 80);
+      });
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+  setTimeout(function() { _agRenderReceipt(aiDiv, msgs, td, refNum); }, 700);
+}
+
+function _agRenderReceipt(aiDiv, msgs, td, refNum) {
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card ag-receipt-card';
+  var html = '<div class="ag-receipt-body">';
+  html += '<div class="ag-receipt-check" id="agReceiptCheck">';
+  html +=   '<svg width="22" height="17" viewBox="0 0 22 17" fill="none" aria-hidden="true">';
+  html +=     '<path d="M2 8.5l6 6L20 2" stroke="#46882B" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>';
+  html +=   '</svg>';
+  html += '</div>';
+  html += '<div class="ag-receipt-label">Sent</div>';
+  html += '<div class="ag-receipt-amount">' + td.fromSym + td.amount.toFixed(2) + '</div>';
+  html += '<div class="ag-receipt-sub">To ' + _agEscape(td.recip.name) + ' ' + td.recip.flag + '<br>Processing now</div>';
+  html += '<div class="ag-receipt-ref-box">';
+  html +=   '<span class="ag-receipt-ref-label">Reference</span>';
+  html +=   '<span class="ag-receipt-ref-num">' + _agEscape(refNum) + '</span>';
+  html += '</div>';
+  html += '</div>';
+  card.innerHTML = html;
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      setTimeout(function() {
+        var check = card.querySelector('#agReceiptCheck');
+        if (check) check.classList.add('ri-in');
+      }, 120);
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+// ── Core UI functions (unchanged) ─────────────────────
 function openHomeAgent() {
   if (_homeAgentOpen) return;
   _homeAgentOpen = true;
   const screen = document.getElementById('agent-screen');
   screen.classList.add('ag-open');
   screen.removeAttribute('aria-hidden');
-  // Hide global nav
   const nav = document.getElementById('globalNav');
   if (nav) {
     nav.style.transition = 'opacity 250ms ease, transform 300ms var(--ease-spring)';
-    nav.style.opacity = '0';
-    nav.style.transform = 'translateY(12px)';
-    nav.style.pointerEvents = 'none';
+    nav.style.opacity = '0'; nav.style.transform = 'translateY(12px)'; nav.style.pointerEvents = 'none';
   }
-  // Focus input after animation
-  setTimeout(function() {
-    const f = document.getElementById('agentField');
-    if (f) f.focus();
-  }, 480);
+  setTimeout(function() { const f = document.getElementById('agentField'); if (f) f.focus(); }, 480);
 }
 
 function closeHomeAgent() {
   if (!_homeAgentOpen) return;
-  _homeAgentOpen = false;
-  _homeAgentConvo = false;
+  _homeAgentOpen = false; _homeAgentConvo = false;
   const screen = document.getElementById('agent-screen');
   screen.classList.remove('ag-open', 'ag-convo');
   screen.setAttribute('aria-hidden', 'true');
-  // Clear messages
   const msgs = document.getElementById('agentMsgs');
   if (msgs) msgs.innerHTML = '';
-  // Clear input
   const f = document.getElementById('agentField');
   const s = document.getElementById('agentSend');
   if (f) { f.value = ''; f.style.height = 'auto'; }
-  if (s) s.classList.remove('active');
-  // Restore nav
+  if (s) { s.classList.remove('active'); s.setAttribute('aria-disabled', 'true'); }
   const nav = document.getElementById('globalNav');
   if (nav) {
     nav.style.transition = 'opacity 300ms var(--ease-out), transform 360ms var(--ease-spring)';
-    nav.style.opacity = '1';
-    nav.style.transform = 'translateY(0)';
-    nav.style.pointerEvents = '';
+    nav.style.opacity = '1'; nav.style.transform = 'translateY(0)'; nav.style.pointerEvents = '';
   }
   _agResponseIdx = 0;
 }
@@ -8591,10 +9594,7 @@ function agentOnInput(input) {
 }
 
 function agentKeydown(e) {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    agentSend();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); agentSend(); }
 }
 
 function agentChip(el) {
@@ -8602,13 +9602,12 @@ function agentChip(el) {
   if (!text) return;
   const f = document.getElementById('agentField');
   if (!f) return;
-  f.value = text;
-  agentOnInput(f);
-  // Brief visual pulse on chip
+  f.value = text; agentOnInput(f);
   el.style.transform = 'scale(0.94)';
-  setTimeout(() => { el.style.transform = ''; agentSend(); }, 100);
+  setTimeout(function() { el.style.transform = ''; agentSend(); }, 100);
 }
 
+// ── Main send ─────────────────────────────────────────
 function agentSend() {
   const f = document.getElementById('agentField');
   if (!f) return;
@@ -8616,108 +9615,55 @@ function agentSend() {
   if (!text) return;
 
   const screen = document.getElementById('agent-screen');
-  const msgs = document.getElementById('agentMsgs');
-  const isFirstMsg = !_homeAgentConvo;
+  const msgs   = document.getElementById('agentMsgs');
+  if (!_homeAgentConvo) { _homeAgentConvo = true; screen.classList.add('ag-convo'); }
 
-  // Transition to conversation mode on first send
-  if (isFirstMsg) {
-    _homeAgentConvo = true;
-    screen.classList.add('ag-convo');
-  }
+  // Route first — no rendering yet
+  const scenario = _agRouteQuery(text);
 
   // User bubble
   const userDiv = document.createElement('div');
   userDiv.className = 'ag-msg-user';
   userDiv.innerHTML = '<div class="ag-msg-user-bubble">' + _agEscape(text) + '</div>';
   msgs.appendChild(userDiv);
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() { userDiv.classList.add('visible'); });
-  });
+  requestAnimationFrame(function() { requestAnimationFrame(function() { userDiv.classList.add('visible'); }); });
 
-  // Clear input
   f.value = ''; f.style.height = 'auto';
   const sendBtn = document.getElementById('agentSend');
-  if (sendBtn) sendBtn.classList.remove('active');
-
+  if (sendBtn) { sendBtn.classList.remove('active'); sendBtn.setAttribute('aria-disabled', 'true'); }
   msgs.scrollTop = msgs.scrollHeight;
 
-  // Pre-compute response before showing thinking state
-  const responseText = _AG_RESPONSES[_agResponseIdx % _AG_RESPONSES.length];
-  _agResponseIdx++;
-
-  // AI thinking — sonar-ping orb (click to reveal)
-  const typingDiv = document.createElement('div');
-  typingDiv.className = 'ag-msg-ai';
-  typingDiv.innerHTML =
-    '<div class="ag-msg-ai-label">' +
+  // AI message container
+  const aiDiv = document.createElement('div');
+  aiDiv.className = 'ag-msg-ai';
+  aiDiv.innerHTML =
+    '<div class="ag-msg-ai-label" aria-hidden="true">' +
       '<div class="ag-msg-ai-dot"></div>' +
       '<span class="ag-msg-ai-name">Banyan</span>' +
-    '</div>' +
-    '<div class="ag-thinking" role="button" tabindex="0" aria-label="Banyan is thinking — tap to reveal response">' +
-      '<div class="ag-thinking-orb" aria-hidden="true">' +
-        '<div class="ag-thinking-ring"></div>' +
-        '<div class="ag-thinking-ring"></div>' +
-        '<div class="ag-thinking-ring"></div>' +
-        '<div class="ag-thinking-core"></div>' +
-      '</div>' +
-      '<span class="ag-thinking-label">Thinking…</span>' +
-      '<span class="ag-thinking-hint">Tap to reveal</span>' +
     '</div>';
-  msgs.appendChild(typingDiv);
+  msgs.appendChild(aiDiv);
   setTimeout(function() {
-    requestAnimationFrame(function() { typingDiv.classList.add('visible'); });
+    requestAnimationFrame(function() { aiDiv.classList.add('visible'); });
     msgs.scrollTop = msgs.scrollHeight;
-  }, 80);
+  }, 50);
 
-  // Reveal handler — click or Enter/Space on the thinking block
-  function revealResponse() {
-    const thinkEl = typingDiv.querySelector('.ag-thinking');
-    if (!thinkEl) return;
-    thinkEl.removeEventListener('click', revealResponse);
-    thinkEl.removeEventListener('keydown', revealKeydown);
-
-    // Swap thinking → typewriter text
-    const textEl = document.createElement('div');
-    textEl.className = 'ag-msg-ai-text';
-    textEl.innerHTML = '<span class="ag-cursor"></span>';
-    thinkEl.replaceWith(textEl);
-
-    const chars = responseText.split('');
-    let i = 0;
-    const cursor = textEl.querySelector('.ag-cursor');
-    function typeChar() {
-      if (i < chars.length) {
-        cursor.insertAdjacentText('beforebegin', chars[i]);
-        i++;
-        msgs.scrollTop = msgs.scrollHeight;
-        setTimeout(typeChar, 18 + Math.random() * 12);
-      } else {
-        cursor.style.transition = 'opacity 400ms ease';
-        cursor.style.opacity = '0';
-        setTimeout(function() { cursor.remove(); }, 420);
-      }
-    }
-    typeChar();
-  }
-
-  function revealKeydown(e) {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); revealResponse(); }
-  }
-
+  // Thinking steps → answer handoff
   setTimeout(function() {
-    const thinkEl = typingDiv.querySelector('.ag-thinking');
-    if (thinkEl) {
-      thinkEl.addEventListener('click', revealResponse);
-      thinkEl.addEventListener('keydown', revealKeydown);
-    }
-  }, 120);
+    _agRunSteps(aiDiv, scenario.steps, msgs, function() {
+      if (scenario.type === 'transfer')  { _agRenderTransfer(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'fx_rate') { _agRenderFXRate(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'balance') { _agRenderBalance(aiDiv, msgs, scenario.data); }
+      else { _agRenderText(aiDiv, msgs, scenario.responseText); }
+      _agResponseIdx++;
+    });
+  }, 90);
 
-  // Refocus
-  setTimeout(function() { if (f) f.focus(); }, 120);
+  setTimeout(function() { f.focus(); }, 130);
 }
 
 function _agEscape(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 /* ── AI Agent ───────────────────────────────────────── */
