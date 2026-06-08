@@ -51,6 +51,12 @@
       --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
     }
 
+    .visually-hidden {
+      position: absolute; width: 1px; height: 1px;
+      padding: 0; margin: -1px; overflow: hidden;
+      clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+    }
+
     body { font-family:'Geist',-apple-system,sans-serif; background:#111; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
 
     .phone { width:393px; height:852px; background:#fff; border-radius:16px; overflow:hidden; position:relative; box-shadow:0 40px 100px rgba(0,0,0,0.65),inset 0 0 0 1px rgba(255,255,255,0.08); flex-shrink:0; overscroll-behavior:none; }
@@ -1862,6 +1868,8 @@
       padding: 10px 12px;
       display: flex; align-items: center; gap: 8px;
       cursor: pointer;
+      font-family: inherit;
+      text-align: left;
       transition: background 150ms ease, transform 140ms var(--ease-out);
       -webkit-tap-highlight-color: transparent;
       /* stagger handled via inline style */
@@ -8040,26 +8048,30 @@
   <!-- ══════════════════════════════════════
        HOME AGENT SCREEN
   ══════════════════════════════════════ -->
-  <div id="agent-screen">
+  <div id="agent-screen"
+       role="dialog"
+       aria-modal="true"
+       aria-label="Banyan AI assistant"
+       aria-hidden="true">
 
-    <!-- Background layers -->
-    <div class="ag-bg">
+    <!-- Background layers — decorative, hidden from AT -->
+    <div class="ag-bg" aria-hidden="true">
       <img src="assets/home-bg.webp" alt="">
       <div class="ag-bg-blur"></div>
       <div class="ag-bg-white"></div>
     </div>
 
-    <!-- Glow orbs -->
-    <div class="ag-glow"></div>
-    <div class="ag-glow-inner"></div>
+    <!-- Glow orbs — decorative -->
+    <div class="ag-glow" aria-hidden="true"></div>
+    <div class="ag-glow-inner" aria-hidden="true"></div>
 
     <!-- Back button -->
-    <button class="ag-back-btn" onclick="closeHomeAgent()" aria-label="Back">
-      <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:15px;color:rgba(255,255,255,0.88)"></span>
+    <button class="ag-back-btn" onclick="closeHomeAgent()" aria-label="Close Banyan AI">
+      <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:15px;color:rgba(255,255,255,0.88)" aria-hidden="true"></span>
     </button>
 
-    <!-- Identity hero — visible in empty state -->
-    <div class="ag-hero" id="agHero">
+    <!-- Identity hero — decorative, not read by AT -->
+    <div class="ag-hero" id="agHero" aria-hidden="true">
       <div class="ag-hero-orb">
         <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
       </div>
@@ -8067,39 +8079,44 @@
       <span class="ag-hero-sub">Ask me anything about<br>your accounts</span>
     </div>
 
-    <!-- Suggestion chips — visible in empty state -->
-    <div class="ag-chips" id="agChips">
-      <div class="ag-chip" style="transition-delay:240ms" onclick="agentChip(this)" data-text="What's due this week?">
-        <div class="ag-chip-icon">
+    <!-- Suggestion chips -->
+    <div class="ag-chips" id="agChips" role="group" aria-label="Suggested questions">
+      <button class="ag-chip" style="transition-delay:240ms" onclick="agentChip(this)" data-text="What's due this week?">
+        <div class="ag-chip-icon" aria-hidden="true">
           <span class="ico ol" style="--ico:url('Icons/CalendarCheck.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
         </div>
         <span class="ag-chip-label">What's due<br>this week?</span>
-      </div>
-      <div class="ag-chip" style="transition-delay:300ms" onclick="agentChip(this)" data-text="Show recent spending">
-        <div class="ag-chip-icon">
+      </button>
+      <button class="ag-chip" style="transition-delay:300ms" onclick="agentChip(this)" data-text="Show recent spending">
+        <div class="ag-chip-icon" aria-hidden="true">
           <span class="ico ol" style="--ico:url('Icons/ChartLine.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
         </div>
         <span class="ag-chip-label">Recent<br>spending</span>
-      </div>
-      <div class="ag-chip" style="transition-delay:360ms" onclick="agentChip(this)" data-text="Send money to a beneficiary">
-        <div class="ag-chip-icon">
+      </button>
+      <button class="ag-chip" style="transition-delay:360ms" onclick="agentChip(this)" data-text="Send money to a beneficiary">
+        <div class="ag-chip-icon" aria-hidden="true">
           <span class="ico ol" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
         </div>
         <span class="ag-chip-label">Send<br>money</span>
-      </div>
-      <div class="ag-chip" style="transition-delay:420ms" onclick="agentChip(this)" data-text="Check my BESCOM bill status">
-        <div class="ag-chip-icon">
+      </button>
+      <button class="ag-chip" style="transition-delay:420ms" onclick="agentChip(this)" data-text="Check my BESCOM bill status">
+        <div class="ag-chip-icon" aria-hidden="true">
           <span class="ico ol" style="--ico:url('Icons/Receipt.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
         </div>
         <span class="ag-chip-label">BESCOM<br>bill</span>
-      </div>
+      </button>
     </div>
 
-    <!-- Messages area -->
-    <div class="ag-msgs" id="agentMsgs"></div>
+    <!-- Messages — live region so screen readers announce new content -->
+    <div class="ag-msgs" id="agentMsgs"
+         role="log"
+         aria-live="polite"
+         aria-relevant="additions"
+         aria-label="Conversation with Banyan"></div>
 
     <!-- Input card -->
     <div class="ag-input-card" id="agentInputCard">
+      <label for="agentField" class="visually-hidden">Message Banyan</label>
       <textarea
         id="agentField"
         placeholder="Ask Banyan..."
@@ -8107,19 +8124,20 @@
         autocomplete="off"
         autocorrect="off"
         spellcheck="false"
+        aria-label="Message Banyan"
         oninput="agentOnInput(this)"
         onkeydown="agentKeydown(event)"
       ></textarea>
-      <div class="ag-input-actions">
-        <button class="ag-input-btn" aria-label="Attach">
-          <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.45)"></span>
+      <div class="ag-input-actions" role="group" aria-label="Message actions">
+        <button class="ag-input-btn" aria-label="Attach file">
+          <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.45)" aria-hidden="true"></span>
         </button>
         <div class="ag-input-btns-r">
-          <button class="ag-input-btn" aria-label="Voice">
-            <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:12px;color:rgba(0,0,0,0.45)"></span>
+          <button class="ag-input-btn" aria-label="Voice input">
+            <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:12px;color:rgba(0,0,0,0.45)" aria-hidden="true"></span>
           </button>
-          <button class="ag-input-btn ag-send" id="agentSend" aria-label="Send" onclick="agentSend()">
-            <span class="ico ol" style="--ico:url('Icons/ArrowUp.svg');--sz:12px;color:rgba(0,0,0,0.35)"></span>
+          <button class="ag-input-btn ag-send" id="agentSend" aria-label="Send message" aria-disabled="true" onclick="agentSend()">
+            <span class="ico ol" style="--ico:url('Icons/ArrowUp.svg');--sz:12px;color:rgba(0,0,0,0.35)" aria-hidden="true"></span>
           </button>
         </div>
       </div>
@@ -8469,6 +8487,7 @@ function openHomeAgent() {
   _homeAgentOpen = true;
   const screen = document.getElementById('agent-screen');
   screen.classList.add('ag-open');
+  screen.removeAttribute('aria-hidden');
   // Hide global nav
   const nav = document.getElementById('globalNav');
   if (nav) {
@@ -8490,6 +8509,7 @@ function closeHomeAgent() {
   _homeAgentConvo = false;
   const screen = document.getElementById('agent-screen');
   screen.classList.remove('ag-open', 'ag-convo');
+  screen.setAttribute('aria-hidden', 'true');
   // Clear messages
   const msgs = document.getElementById('agentMsgs');
   if (msgs) msgs.innerHTML = '';
@@ -8515,8 +8535,8 @@ function agentOnInput(input) {
   const sendBtn = document.getElementById('agentSend');
   if (!sendBtn) return;
   const hasText = input.value.trim().length > 0;
-  if (hasText) sendBtn.classList.add('active');
-  else sendBtn.classList.remove('active');
+  if (hasText) { sendBtn.classList.add('active'); sendBtn.removeAttribute('aria-disabled'); }
+  else { sendBtn.classList.remove('active'); sendBtn.setAttribute('aria-disabled', 'true'); }
 }
 
 function agentKeydown(e) {
