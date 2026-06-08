@@ -1653,27 +1653,27 @@
       transform: scale(1.1);
       transform-origin: center 40%;
     }
+    /* Persistent light wash — always on so bg image reads pale, not dark green */
+    #agent-screen .ag-bg img {
+      opacity: 0.35;
+    }
     #agent-screen .ag-bg-blur {
       position: absolute; inset: 0;
-      backdrop-filter: blur(28px);
-      -webkit-backdrop-filter: blur(28px);
-      background: linear-gradient(
-        180deg,
-        rgba(0,0,0,0.18) 0%,
-        rgba(0,0,0,0.04) 45%,
-        rgba(0,0,0,0.0) 100%
-      );
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      /* Light overlay — lifts the bg toward white, no dark tint */
+      background: rgba(240,244,238,0.72);
       opacity: 0;
       transition: opacity 380ms var(--ease-out);
     }
-    /* Conversation wash — a soft warm-white veil over the blurred bg, not a flat replacement */
+    /* Conversation wash */
     #agent-screen .ag-bg-white {
       position: absolute; inset: 0;
       background: linear-gradient(
         180deg,
-        rgba(248,248,247,0.92) 0%,
-        rgba(246,247,245,0.88) 60%,
-        rgba(242,246,240,0.82) 100%
+        rgba(248,248,246,0.94) 0%,
+        rgba(245,247,243,0.90) 60%,
+        rgba(241,246,239,0.86) 100%
       );
       opacity: 0;
       transition: opacity 700ms var(--ease-out);
@@ -1716,17 +1716,17 @@
       pointer-events: none;
     }
     #agent-screen.ag-open .ag-glow {
-      opacity: 0.52;
+      opacity: 0.28;
       transform: translateX(-50%) translateY(0);
       animation: ag-glow-breathe 4s ease-in-out 1s infinite;
     }
     #agent-screen.ag-open .ag-glow-inner {
-      opacity: 0.55;
+      opacity: 0.22;
       transform: translateX(-50%) translateY(0);
     }
-    /* In convo mode glow doesn't vanish — it retreats to a whisper */
+    /* In convo mode glow retreats to a whisper */
     #agent-screen.ag-convo .ag-glow {
-      opacity: 0.11 !important;
+      opacity: 0.08 !important;
       animation: none;
       transform: translateX(-50%) translateY(20px) !important;
     }
@@ -1738,11 +1738,10 @@
       top: 52px; left: 16px;
       width: 44px; height: 44px;
       border-radius: 999px;
-      background: rgba(255,255,255,0.16);
+      background: rgba(255,255,255,0.52);
       backdrop-filter: blur(10px);
       -webkit-backdrop-filter: blur(10px);
-      border: none;
-      border: 0.5px solid rgba(255,255,255,0.30);
+      border: 0.5px solid rgba(0,0,0,0.07);
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; padding: 0;
       opacity: 0;
@@ -1754,16 +1753,18 @@
     }
     .ag-back-btn:active { transform: scale(0.93) !important; }
     @media (hover: hover) and (pointer: fine) {
-      .ag-back-btn:hover { background: rgba(255,255,255,0.26); }
+      .ag-back-btn:hover { background: rgba(255,255,255,0.72); }
     }
     #agent-screen.ag-open .ag-back-btn {
       opacity: 1; transform: scale(1);
     }
     #agent-screen.ag-convo .ag-back-btn {
-      background: #f1f1f1;
-      border-color: #fff;
-      backdrop-filter: none; -webkit-backdrop-filter: none;
+      background: rgba(255,255,255,0.80);
+      border-color: rgba(0,0,0,0.06);
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
     }
+    /* Icon always dark */
+    .ag-back-btn .ico { color: rgba(0,0,0,0.62) !important; }
     #agent-screen.ag-convo .ag-back-btn .ico { color: rgba(0,0,0,0.70) !important; }
 
     /* ── Identity hero (empty state) ── */
@@ -1822,18 +1823,16 @@
     .ag-hero-name {
       font-family: 'Geist', sans-serif;
       font-size: 17px; font-weight: 600;
-      color: #fff;
-      text-shadow: 0 1px 8px rgba(0,0,0,0.25);
+      color: rgba(0,0,0,0.82);
       letter-spacing: -0.2px;
     }
     .ag-hero-sub {
       font-family: 'Geist', sans-serif;
       font-size: 13px; font-weight: 400;
-      color: rgba(255,255,255,0.65);
+      color: rgba(0,0,0,0.42);
       text-align: center;
       max-width: 220px;
       line-height: 18px;
-      text-shadow: 0 1px 6px rgba(0,0,0,0.2);
     }
 
     /* ── Suggestion chips ── */
@@ -1860,10 +1859,10 @@
       transition-delay: 0ms;
     }
     .ag-chip {
-      background: rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.62);
       backdrop-filter: blur(12px);
       -webkit-backdrop-filter: blur(12px);
-      border: 0.5px solid rgba(255,255,255,0.32);
+      border: 0.5px solid rgba(0,0,0,0.07);
       border-radius: 14px;
       padding: 10px 12px;
       display: flex; align-items: center; gap: 8px;
@@ -1872,24 +1871,22 @@
       text-align: left;
       transition: background 150ms ease, transform 140ms var(--ease-out);
       -webkit-tap-highlight-color: transparent;
-      /* stagger handled via inline style */
     }
-    .ag-chip:active { transform: scale(0.96); background: rgba(255,255,255,0.26); }
+    .ag-chip:active { transform: scale(0.96); background: rgba(255,255,255,0.80); }
     @media (hover: hover) and (pointer: fine) {
-      .ag-chip:hover { background: rgba(255,255,255,0.24); }
+      .ag-chip:hover { background: rgba(255,255,255,0.76); }
     }
     .ag-chip-icon {
       width: 28px; height: 28px; flex-shrink: 0;
       border-radius: 8px;
-      background: rgba(255,255,255,0.20);
+      background: rgba(70,136,43,0.10);
       display: flex; align-items: center; justify-content: center;
     }
     .ag-chip-label {
       font-family: 'Geist', sans-serif;
       font-size: 13px; font-weight: 500;
-      color: rgba(255,255,255,0.92);
+      color: rgba(0,0,0,0.72);
       line-height: 16px;
-      text-shadow: 0 1px 4px rgba(0,0,0,0.15);
     }
 
     /* ── Messages scroll area ── */
@@ -8856,25 +8853,25 @@
     <div class="ag-chips" id="agChips" role="group" aria-label="Suggested questions">
       <button class="ag-chip" style="transition-delay:240ms" onclick="agentChip(this)" data-text="What's due this week?">
         <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/CalendarCheck.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
+          <span class="ico ol" style="--ico:url('Icons/CalendarCheck.svg');--sz:14px;color:rgba(70,136,43,0.80)"></span>
         </div>
         <span class="ag-chip-label">What's due<br>this week?</span>
       </button>
       <button class="ag-chip" style="transition-delay:300ms" onclick="agentChip(this)" data-text="Show recent spending">
         <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/ChartLine.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
+          <span class="ico ol" style="--ico:url('Icons/ChartLine.svg');--sz:14px;color:rgba(70,136,43,0.80)"></span>
         </div>
         <span class="ag-chip-label">Recent<br>spending</span>
       </button>
       <button class="ag-chip" style="transition-delay:360ms" onclick="agentChip(this)" data-text="Send money to a beneficiary">
         <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
+          <span class="ico ol" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:14px;color:rgba(70,136,43,0.80)"></span>
         </div>
         <span class="ag-chip-label">Send<br>money</span>
       </button>
       <button class="ag-chip" style="transition-delay:420ms" onclick="agentChip(this)" data-text="Check my BESCOM bill status">
         <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/Receipt.svg');--sz:14px;color:rgba(255,255,255,0.80)"></span>
+          <span class="ico ol" style="--ico:url('Icons/Receipt.svg');--sz:14px;color:rgba(70,136,43,0.80)"></span>
         </div>
         <span class="ag-chip-label">BESCOM<br>bill</span>
       </button>
