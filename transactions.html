@@ -2465,14 +2465,22 @@
       <div class="ag-bg-white"></div>
     </div>
 
+    <!-- Top gradient + blur band — sits above bg layers, below all UI -->
+    <div class="ag-top-fade" aria-hidden="true"></div>
+
     <!-- Glow orbs — decorative -->
     <div class="ag-glow" aria-hidden="true"></div>
     <div class="ag-glow-inner" aria-hidden="true"></div>
 
-    <!-- Back button -->
-    <button class="ag-back-btn" onclick="closeHomeAgent()" aria-label="Close Banyan AI">
-      <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:15px;color:rgba(255,255,255,0.88)" aria-hidden="true"></span>
-    </button>
+    <!-- Top nav bar -->
+    <nav class="ag-nav" aria-label="Agent navigation">
+      <button class="ag-nav-btn ag-nav-menu" aria-label="Menu">
+        <span class="ico ol" style="--ico:url('Icons/List.svg');--sz:18px" aria-hidden="true"></span>
+      </button>
+      <button class="ag-nav-btn ag-nav-close" onclick="closeHomeAgent()" aria-label="Close">
+        <span class="ico ol" style="--ico:url('Icons/X.svg');--sz:14px" aria-hidden="true"></span>
+      </button>
+    </nav>
 
     <!-- Identity hero — decorative, not read by AT -->
     <div class="ag-hero" id="agHero" aria-hidden="true">

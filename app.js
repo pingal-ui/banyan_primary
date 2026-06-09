@@ -242,55 +242,62 @@ function _agCurrencyFlag(cur) {
 }
 
 // ── Step state machine ─────────────────────────────────
-// steps: [{ id, label }]
-// onComplete fires after collapse animation
+// ── Thinking block (replaces old step list) ──────────────────────────────────
+// Renders: spinner + shimmer "Banyan is thinking" + Xs timer
+//          scrolling card with step text auto-advancing
+// On complete: rolls up, fires onComplete
 function _agRunSteps(aiDiv, steps, msgs, onComplete) {
-  var wrap = document.createElement('div');
-  wrap.className = 'ag-steps-wrap';
-  aiDiv.appendChild(wrap);
+  // ── Build the block ──────────────────────────────────────────────────────
+  var block = document.createElement('div');
+  block.className = 'ag-think-block';
 
-  var stepEls = steps.map(function(s) {
-    var el = document.createElement('div');
-    el.className = 'ag-step';
-    el.innerHTML =
-      '<div class="ag-step-icon" aria-hidden="true">' +
-        '<div class="ag-step-icon-pending"></div>' +
-        '<div class="ag-step-icon-active"></div>' +
-        '<div class="ag-step-icon-done">' +
-          '<svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden="true">' +
-            '<path d="M1 4l3 3 5-6" stroke="#2d6e18" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>' +
-          '</svg>' +
-        '</div>' +
-      '</div>' +
-      '<span class="ag-step-label">' + _agEscape(s.label) + '</span>';
-    wrap.appendChild(el);
-    return el;
-  });
+  // Header: spinner + shimmer label + timer
+  block.innerHTML =
+    '<div class="ag-think-header">' +
+      '<div class="ag-think-spinner" aria-hidden="true"></div>' +
+      '<span class="ag-think-label">Banyan is thinking</span>' +
+      '<span class="ag-think-timer">0s</span>' +
+    '</div>';
 
-  // Target 15 s total. Collapse takes ~580 ms (220 pause + 360 transition).
-  // Divide what's left evenly across steps; jitter is ±15 % of the per-step budget.
-  var TOTAL_TARGET  = 15000;
-  var COLLAPSE_COST = 580;
+  aiDiv.appendChild(block);
+
+  var timerEl  = block.querySelector('.ag-think-timer');
+  var labelEl  = block.querySelector('.ag-think-label');
+
+  // ── Timer ────────────────────────────────────────────────────────────────
+  var elapsed = 0;
+  var timerInterval = setInterval(function() {
+    elapsed++;
+    timerEl.textContent = elapsed + 's';
+  }, 1000);
+
+  // ── Step sequencing ──────────────────────────────────────────────────────
+  var TOTAL_TARGET  = 10000;
+  var COLLAPSE_COST = 600;
   var perStep       = Math.floor((TOTAL_TARGET - COLLAPSE_COST) / steps.length);
   var DWELL_BASE    = Math.floor(perStep * 0.85);
   var DWELL_JITTER  = Math.floor(perStep * 0.30);
   var idx = 0;
 
+  // Swap the shimmer label to the current step text
+  function appendStep(label) {
+    labelEl.textContent = label;
+  }
+
   function runNext() {
-    if (idx >= stepEls.length) {
-      _agCollapseSteps(wrap, stepEls, steps.length, msgs, onComplete);
+    if (idx >= steps.length) {
+      // All steps done — roll up
+      clearInterval(timerInterval);
+      _agCollapseThink(block, onComplete);
       return;
     }
-    var el = stepEls[idx];
+    var label = steps[idx].label;
     var delay = idx === 0 ? 80 : 40;
     setTimeout(function() {
-      el.classList.add('s-in', 's-active');
-      msgs.scrollTop = msgs.scrollHeight;
+      appendStep(label);
     }, delay);
     var dwell = DWELL_BASE + Math.floor(Math.random() * DWELL_JITTER);
     setTimeout(function() {
-      el.classList.remove('s-active');
-      el.classList.add('s-done');
       idx++;
       setTimeout(runNext, 60);
     }, delay + dwell);
@@ -298,17 +305,56 @@ function _agRunSteps(aiDiv, steps, msgs, onComplete) {
   runNext();
 }
 
-function _agCollapseSteps(wrap, stepEls, count, msgs, onComplete) {
-  // Snapshot current height so the CSS transition has a from-value
-  wrap.style.maxHeight = wrap.scrollHeight + 'px';
-  // Brief pause so the last step's done-tick is visible, then roll up
+function _agCollapseThink(block, onComplete) {
+  var aiDiv   = block.parentElement;
+  var label   = block.querySelector('.ag-think-label');
+  var timer   = block.querySelector('.ag-think-timer');
+  var spinner = block.querySelector('.ag-think-spinner');
+
+  // 1. Fade out text + timer only
+  label.style.transition = 'opacity 200ms ease';
+  timer.style.transition = 'opacity 200ms ease';
+  label.style.opacity    = '0';
+  timer.style.opacity    = '0';
+
   setTimeout(function() {
-    wrap.classList.add('collapsing');
-    // After collapse animation, hide completely and fire onComplete
+    // 2. Detach spinner before collapsing block
+    var trail = document.createElement('div');
+    trail.className = 'ag-think-trail';
+    trail.appendChild(spinner);
+    aiDiv.appendChild(trail);
+
+    // 3. Collapse the now-empty block
+    block.style.maxHeight = block.scrollHeight + 'px';
+    block.classList.add('ag-think-collapsing');
+
     setTimeout(function() {
-      wrap.style.display = 'none';
+      block.style.display = 'none';
+
+      // 4. MutationObserver keeps trail pinned to the bottom of aiDiv
+      //    as onComplete() progressively adds content children.
+      var obs = new MutationObserver(function() {
+        // If trail has been removed externally, stop observing
+        if (!trail.parentNode) { obs.disconnect(); return; }
+        // Re-append trail to bottom only if it is not already the last child
+        if (aiDiv.lastChild !== trail) {
+          aiDiv.appendChild(trail);
+        }
+      });
+      obs.observe(aiDiv, { childList: true });
+
+      // 5. Fire content render
       onComplete();
-    }, 360);
+
+      // 6. After content fully settles, fade spinner out
+      //    Allow enough time for longest ctx stream (~2.5s) + card animation
+      setTimeout(function() {
+        obs.disconnect();
+        trail.style.transition = 'opacity 500ms ease';
+        trail.style.opacity    = '0';
+        setTimeout(function() { trail.remove(); }, 500);
+      }, 3200);
+    }, 400);
   }, 220);
 }
 
@@ -349,36 +395,63 @@ function _agStagger(parent, selector, baseDelay) {
 }
 
 // ── REPLY HELPERS ─────────────────────────────────────
-// Part 1: context line (what was found/understood)
-function _agAddCtx(aiDiv, text) {
+// Part 1: context line — streams text character by character, calls onDone when finished
+function _agAddCtx(aiDiv, text, onDone) {
   var el = document.createElement('div');
   el.className = 'ag-reply-ctx';
-  el.textContent = text;
+  el.innerHTML = '<span class="ag-cursor"></span>';
   aiDiv.appendChild(el);
   requestAnimationFrame(function() {
     requestAnimationFrame(function() { el.classList.add('s-in'); });
   });
+  var cursor = el.querySelector('.ag-cursor');
+  var chars = text.split('');
+  var i = 0;
+  function typeChar() {
+    if (i < chars.length) {
+      cursor.insertAdjacentText('beforebegin', chars[i]);
+      i++;
+      // Slightly faster than body text (12–18ms per char)
+      setTimeout(typeChar, 12 + Math.floor(Math.random() * 10));
+    } else {
+      cursor.style.transition = 'opacity 300ms ease';
+      cursor.style.opacity = '0';
+      setTimeout(function() {
+        if (cursor.parentNode) cursor.remove();
+        if (onDone) onDone();
+      }, 320);
+    }
+  }
+  setTimeout(typeChar, 40);
   return el;
 }
-// Part 3: follow-up chips (next actions)
+// Part 3: follow-up list (next actions)
 function _agAddFollowups(aiDiv, msgs, chips) {
   var wrap = document.createElement('div');
   wrap.className = 'ag-followup-wrap';
+  var header = document.createElement('div');
+  header.className = 'ag-followup-header';
+  header.textContent = 'Follow-ups';
+  wrap.appendChild(header);
+  var list = document.createElement('div');
+  list.className = 'ag-followup-list';
   chips.forEach(function(c) {
     var btn = document.createElement('button');
-    btn.className = 'ag-followup-chip';
-    btn.textContent = c.label;
+    btn.className = 'ag-followup-row';
     btn.setAttribute('data-text', c.text || c.label);
+    btn.innerHTML =
+      '<span class="ag-followup-arrow" aria-hidden="true">↳</span>' +
+      '<span class="ag-followup-label">' + c.label + '</span>';
     btn.addEventListener('click', function() {
       agentSendText(btn.getAttribute('data-text'));
     });
-    wrap.appendChild(btn);
+    list.appendChild(btn);
   });
+  wrap.appendChild(list);
   aiDiv.appendChild(wrap);
   setTimeout(function() {
     requestAnimationFrame(function() {
       wrap.classList.add('s-in');
-      msgs.scrollTop = msgs.scrollHeight;
     });
   }, 320);
 }
@@ -475,9 +548,6 @@ function _agInitSlide(track, onConfirm) {
 
 // ── TRANSFER STATUS (spec: TransferStatusBlock) ────────
 function _agRenderTransferStatus(aiDiv, msgs, td, refNum) {
-  // Confirmation beat — done, outcome in human terms, what happens next
-  _agAddCtx(aiDiv, 'Done — your ' + td.fromSym + td.amount.toFixed(2) + ' is on its way to ' + td.recip.name + '. It should reach their ' + td.recip.currency + ' account within 2 hours. You\'ll get a notification the moment it\'s delivered.');
-
   var card = document.createElement('div');
   card.className = 'ag-tx-status-card';
   var stages = [
@@ -505,14 +575,18 @@ function _agRenderTransferStatus(aiDiv, msgs, td, refNum) {
   });
   html += '</div>';
   card.innerHTML = html;
-  aiDiv.appendChild(card);
-  requestAnimationFrame(function() { requestAnimationFrame(function() {
-    card.classList.add('ui-in');
-    card.querySelectorAll('.ag-tx-stage').forEach(function(el, i) {
-      setTimeout(function() { el.classList.add('st-in'); }, 60 + i * 70);
-    });
-    setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 60);
-  }); });
+  // Stream ctx first, then slide card in
+  _agAddCtx(aiDiv, 'Done — your ' + td.fromSym + td.amount.toFixed(2) + ' is on its way to ' + td.recip.name + '. It should reach their ' + td.recip.currency + ' account within 2 hours. You\'ll get a notification the moment it\'s delivered.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() { requestAnimationFrame(function() {
+        card.classList.add('ui-in');
+        card.querySelectorAll('.ag-tx-stage').forEach(function(el, i) {
+          setTimeout(function() { el.classList.add('st-in'); }, 60 + i * 70);
+        });
+      }); });
+    }, 120);
+  });
   // Progress "processing → in_transit" after 1.8s, then fire receipt
   setTimeout(function() {
     var stageEls = card.querySelectorAll('.ag-tx-stage');
@@ -526,7 +600,6 @@ function _agRenderTransferStatus(aiDiv, msgs, td, refNum) {
       activeEl.style.setProperty('--conn', 'var(--brand-primary)');
     }
     if (nextEl) { nextEl.classList.remove('st-pending'); nextEl.classList.add('st-active'); }
-    msgs.scrollTop = msgs.scrollHeight;
     setTimeout(function() { _agRenderReceiptV2(aiDiv, msgs, td, refNum); }, 800);
   }, 1800);
 }
@@ -556,7 +629,7 @@ function _agRenderReceiptV2(aiDiv, msgs, td, refNum) {
       var circ = card.querySelector('#agRcCircle');
       if (circ) circ.classList.add('rc-in');
     }, 100);
-    setTimeout(function() { msgs.scrollTop = msgs.scrollHeight; }, 60);
+    
   }); });
   // Post-action next steps: 3 chips, in priority order per spec
   _agAddFollowups(aiDiv, msgs, [
@@ -676,13 +749,6 @@ function _agRenderTransfer(aiDiv, msgs, data) {
   })(slideWrap, { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip,
                    convertedAmt: d.convertedAmt, totalDebited: d.totalDebited, sym: d.recip.sym });
 
-  // Read-back: orient the user to what they're about to see
-  _agAddCtx(aiDiv, 'Here\'s your transfer to ' + d.recip.name + '. You\'re sending ' + fromSym + d.amount.toFixed(2) + ', and they\'ll receive it in ' + d.recip.currency + ' — take a look at the details before you confirm.');
-  aiDiv.appendChild(card);
-  // Framing line: surface the rate and fee before the slide control
-  _agAddCtx(aiDiv, 'That\'s at today\'s rate of ' + rateStr + ', with a flat ' + fromSym + d.feeAmt.toFixed(2) + ' fee — no hidden charges on top.');
-  aiDiv.appendChild(slideWrap);
-
   // Expand toggle
   var toggleBtn = card.querySelector('#agTxToggle');
   var moreEl = card.querySelector('#agTxMore');
@@ -695,15 +761,26 @@ function _agRenderTransfer(aiDiv, msgs, data) {
     });
   }
 
-  // Animate in
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      card.classList.add('ui-in');
-      _agStagger(card, '.ag-stagger-item', 80);
-      setTimeout(function() { slideWrap.classList.add('s-in'); }, 80 + 4 * 55 + 40);
-      _agCountUp(card.querySelector('#agTxInt'), 0, intPart, 650);
-      msgs.scrollTop = msgs.scrollHeight;
-    });
+  // Stream ctx → card slides in → second ctx streams → slide control appears
+  _agAddCtx(aiDiv, 'Here\'s your transfer to ' + d.recip.name + '. You\'re sending ' + fromSym + d.amount.toFixed(2) + ', and they\'ll receive it in ' + d.recip.currency + ' — take a look at the details before you confirm.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agStagger(card, '.ag-stagger-item', 80);
+          _agCountUp(card.querySelector('#agTxInt'), 0, intPart, 650);
+        });
+      });
+      setTimeout(function() {
+        _agAddCtx(aiDiv, 'That\'s at today\'s rate of ' + rateStr + ', with a flat ' + fromSym + d.feeAmt.toFixed(2) + ' fee — no hidden charges on top.', function() {
+          setTimeout(function() {
+            aiDiv.appendChild(slideWrap);
+            setTimeout(function() { slideWrap.classList.add('s-in'); }, 40);
+          }, 80);
+        });
+      }, 300);
+    }, 120);
   });
 }
 
@@ -732,22 +809,25 @@ function _agRenderFXRate(aiDiv, msgs, data) {
   html +=   '<div class="ag-fx-freshness ag-stagger-item"><div class="ag-fx-fresh-dot"></div>Live rate · updated just now</div>';
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Here\'s the live ' + fromCode + ' → ' + toCode + ' rate, pulled just now — Banyan\'s 0.45% markup over mid-market is already included.');
-  aiDiv.appendChild(card);
-
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      card.classList.add('ui-in');
-      _agStagger(card, '.ag-stagger-item', 60);
-      _agCountUpDec(card.querySelector('#agFxNum'), 1.0, ri.rate, 700, 4);
-      msgs.scrollTop = msgs.scrollHeight;
-    });
+  _agAddCtx(aiDiv, 'Here\'s the live ' + fromCode + ' → ' + toCode + ' rate, pulled just now — Banyan\'s 0.45% markup over mid-market is already included.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agStagger(card, '.ag-stagger-item', 60);
+          _agCountUpDec(card.querySelector('#agFxNum'), 1.0, ri.rate, 700, 4);
+        });
+      });
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Send money', text: 'Send money' },
+          { label: 'Check balance', text: 'What is my balance?' },
+          { label: 'View upcoming', text: 'Show upcoming transfers' }
+        ]);
+      }, 400);
+    }, 120);
   });
-  _agAddFollowups(aiDiv, msgs, [
-    { label: 'Send money', text: 'Send money' },
-    { label: 'Check balance', text: 'What is my balance?' },
-    { label: 'View upcoming', text: 'Show upcoming transfers' }
-  ]);
 }
 
 // ── BALANCE CARD ─────────────────────────────────────
@@ -766,19 +846,23 @@ function _agRenderBalance(aiDiv, msgs, data) {
   html += '<div class="ag-balance-chips"><span class="ag-balance-chip positive">No unusual activity</span><span class="ag-balance-chip">Just updated</span></div>';
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Here\'s your USD Checking balance, updated just now — no pending holds or reserved amounts.');
-  aiDiv.appendChild(card);
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      card.classList.add('ui-in');
-      _agCountUp(document.getElementById('agBalInt'), 0, acct.balance, 800, true);
-      msgs.scrollTop = msgs.scrollHeight;
-    });
+  _agAddCtx(aiDiv, 'Here\'s your USD Checking balance, updated just now — no pending holds or reserved amounts.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agCountUp(document.getElementById('agBalInt'), 0, acct.balance, 800, true);
+        });
+      });
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Send money', text: 'Send money' },
+          { label: 'View upcoming', text: 'Show upcoming transfers' }
+        ]);
+      }, 400);
+    }, 120);
   });
-  _agAddFollowups(aiDiv, msgs, [
-    { label: 'Send money', text: 'Send money' },
-    { label: 'View upcoming', text: 'Show upcoming transfers' }
-  ]);
 }
 
 // ── UPCOMING BILLS CARD ───────────────────────────────
@@ -808,20 +892,26 @@ function _agRenderUpcoming(aiDiv, msgs) {
     html += '</div>';
   });
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'You have ' + statusTotal + ' payment' + (statusTotal !== 1 ? 's' : '') + ' coming up. Here\'s what\'s scheduled — amounts shown are what will leave your account.');
-  aiDiv.appendChild(card);
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      card.classList.add('ui-in');
-      _agStagger(card, '.ag-stagger-item', 60);
-      msgs.scrollTop = msgs.scrollHeight;
-    });
+  _agAddCtx(aiDiv, 'You have ' + statusTotal + ' payment' + (statusTotal !== 1 ? 's' : '') + ' coming up. Here\'s what\'s scheduled — amounts shown are what will leave your account.', function() {
+    // Card slides in after ctx finishes streaming
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agStagger(card, '.ag-stagger-item', 60);
+        });
+      });
+      // Follow-ups after card has time to settle
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Send money', text: 'Send money' },
+          { label: 'Check balance', text: 'What is my balance?' },
+          { label: 'Recent spending', text: 'Show recent spending' }
+        ]);
+      }, 400);
+    }, 120);
   });
-  _agAddFollowups(aiDiv, msgs, [
-    { label: 'Send money', text: 'Send money' },
-    { label: 'Check balance', text: 'What is my balance?' },
-    { label: 'Recent spending', text: 'Show recent spending' }
-  ]);
 }
 
 // ── SPENDING BREAKDOWN CARD ───────────────────────────
@@ -863,29 +953,32 @@ function _agRenderSpending(aiDiv, msgs) {
   });
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Here\'s how your spending broke down over the last 30 days, across all categories.');
-  aiDiv.appendChild(card);
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      card.classList.add('ui-in');
-      _agStagger(card, '.ag-stagger-item', 55);
-      _agCountUp(card.querySelector('#agSpendTotal'), 0, 1588, 700, true);
-      // Animate bars after stagger settles
-      setTimeout(function() {
-        card.querySelectorAll('.ag-spending-cat-bar').forEach(function(bar) {
-          bar.style.width = bar.getAttribute('data-pct') + '%';
-          var col = bar.getAttribute('data-color');
-          if (col) bar.style.background = col;
+  _agAddCtx(aiDiv, 'Here\'s how your spending broke down over the last 30 days, across all categories.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agStagger(card, '.ag-stagger-item', 55);
+          _agCountUp(card.querySelector('#agSpendTotal'), 0, 1588, 700, true);
+          setTimeout(function() {
+            card.querySelectorAll('.ag-spending-cat-bar').forEach(function(bar) {
+              bar.style.width = bar.getAttribute('data-pct') + '%';
+              var col = bar.getAttribute('data-color');
+              if (col) bar.style.background = col;
+            });
+          }, 260);
         });
-      }, 260);
-      msgs.scrollTop = msgs.scrollHeight;
-    });
+      });
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Send money', text: 'Send money' },
+          { label: 'Check balance', text: 'What is my balance?' },
+          { label: 'View upcoming', text: 'Show upcoming transfers' }
+        ]);
+      }, 400);
+    }, 120);
   });
-  _agAddFollowups(aiDiv, msgs, [
-    { label: 'Send money', text: 'Send money' },
-    { label: 'Check balance', text: 'What is my balance?' },
-    { label: 'View upcoming', text: 'Show upcoming transfers' }
-  ]);
 }
 
 // ── RECIPIENT SELECTOR CARD ───────────────────────────
@@ -908,8 +1001,6 @@ function _agRenderRecipientSelect(aiDiv, msgs) {
     html += '</div>';
   });
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'Here are your saved recipients. Tap any name to start a transfer to them.');
-  aiDiv.appendChild(card);
 
   // Wire up recipient taps → trigger transfer for that recipient
   card.querySelectorAll('.ag-recip-row').forEach(function(row) {
@@ -929,12 +1020,16 @@ function _agRenderRecipientSelect(aiDiv, msgs) {
     });
   });
 
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      card.classList.add('ui-in');
-      _agStagger(card, '.ag-stagger-item', 55);
-      msgs.scrollTop = msgs.scrollHeight;
-    });
+  _agAddCtx(aiDiv, 'Here are your saved recipients. Tap any name to start a transfer to them.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agStagger(card, '.ag-stagger-item', 55);
+        });
+      });
+    }, 120);
   });
 }
 
@@ -965,21 +1060,25 @@ function _agRenderBillStatus(aiDiv, msgs) {
   html += '<button class="ag-bill-pay-btn ag-stagger-item" type="button">View transfer details</button>';
   html += '</div>';
   card.innerHTML = html;
-  _agAddCtx(aiDiv, 'I found a pending wire transfer from your recent activity — here are the details.');
-  aiDiv.appendChild(card);
-  requestAnimationFrame(function() {
-    requestAnimationFrame(function() {
-      card.classList.add('ui-in');
-      _agStagger(card, '.ag-stagger-item', 60);
-      _agCountUp(card.querySelector('#agBillAmt'), 0, 2100, 650);
-      msgs.scrollTop = msgs.scrollHeight;
-    });
+  _agAddCtx(aiDiv, 'I found a pending wire transfer from your recent activity — here are the details.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          card.classList.add('ui-in');
+          _agStagger(card, '.ag-stagger-item', 60);
+          _agCountUp(card.querySelector('#agBillAmt'), 0, 2100, 650);
+        });
+      });
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Check balance', text: 'What is my balance?' },
+          { label: 'View upcoming', text: 'Show upcoming transfers' },
+          { label: 'Recent spending', text: 'Show recent spending' }
+        ]);
+      }, 400);
+    }, 120);
   });
-  _agAddFollowups(aiDiv, msgs, [
-    { label: 'Check balance', text: 'What is my balance?' },
-    { label: 'View upcoming', text: 'Show upcoming transfers' },
-    { label: 'Recent spending', text: 'Show recent spending' }
-  ]);
 }
 
 // ── TEXT (typewriter) ─────────────────────────────────
@@ -995,7 +1094,6 @@ function _agRenderText(aiDiv, msgs, responseText) {
     if (i < chars.length) {
       cursor.insertAdjacentText('beforebegin', chars[i]);
       i++;
-      msgs.scrollTop = msgs.scrollHeight;
       setTimeout(typeChar, 16 + Math.floor(Math.random() * 12));
     } else {
       cursor.style.transition = 'opacity 400ms ease';
@@ -1047,7 +1145,6 @@ function _agRenderTimeline(aiDiv, msgs, td) {
       card.querySelectorAll('.ag-timeline-step').forEach(function(el, i) {
         setTimeout(function() { el.classList.add('tl-in'); }, 80 + i * 80);
       });
-      msgs.scrollTop = msgs.scrollHeight;
     });
   });
   setTimeout(function() { _agRenderReceipt(aiDiv, msgs, td, refNum); }, 700);
@@ -1079,7 +1176,6 @@ function _agRenderReceipt(aiDiv, msgs, td, refNum) {
         var check = card.querySelector('#agReceiptCheck');
         if (check) check.classList.add('ri-in');
       }, 120);
-      msgs.scrollTop = msgs.scrollHeight;
     });
   });
 }
@@ -1276,13 +1372,16 @@ function agentSend() {
   aiDiv.className = 'ag-msg-ai';
   aiDiv.innerHTML =
     '<div class="ag-msg-ai-label" aria-hidden="true">' +
-      '<div class="ag-msg-ai-dot"></div>' +
+      '<div class="ag-msg-ai-dot-wrap"><div class="ag-msg-ai-dot"></div></div>' +
       '<span class="ag-msg-ai-name">Banyan</span>' +
     '</div>';
   msgs.appendChild(aiDiv);
   setTimeout(function() {
-    requestAnimationFrame(function() { aiDiv.classList.add('visible'); });
-    msgs.scrollTop = msgs.scrollHeight;
+    requestAnimationFrame(function() {
+      aiDiv.classList.add('visible');
+      // Anchor view to the top of the AI response — don't chase the bottom as content grows
+      msgs.scrollTop = aiDiv.offsetTop - 16;
+    });
   }, 50);
 
   // Thinking steps → answer handoff
