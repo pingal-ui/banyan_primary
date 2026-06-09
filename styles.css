@@ -4772,7 +4772,8 @@
       width: 377px;
       border-radius: 24px; overflow: hidden;
       background: #a1b1a0; flex-shrink: 0;
-      padding: 78px 16px 28px;
+      /* Bottom padding reserves visual space for the input card (146px) + 4px gap from edge */
+      padding: 78px 16px 150px;
       box-sizing: border-box;
     }
     .home-hero-bg {
@@ -4836,12 +4837,15 @@
       border: 0.5px solid #fff; border-radius: 20px; padding: 20px;
       box-sizing: border-box; display: flex; flex-direction: column;
       gap: 12px; height: 146px;
-      /* Enable z-index elevation in the focus state */
+      /* Structurally outside .home-hero but visually overlapping it.
+         -(height 146 + hero-bottom-gap 4 + stack-gap 8) = -158px */
+      margin-top: -158px;
       position: relative;
+      z-index: 2;
       will-change: transform;
       transition:
-        transform 280ms var(--ease-spring),
-        box-shadow 280ms ease;
+        transform 420ms var(--ease-spring),
+        box-shadow 420ms ease;
     }
 
     /* ── Home AI focus state ── */
