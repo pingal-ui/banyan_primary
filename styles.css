@@ -4761,15 +4761,17 @@
     .home-scroll::-webkit-scrollbar { display: none; }
     .home-stack {
       display: flex; flex-direction: column;
-      align-items: center;
+      align-items: stretch;
       gap: 8px;
       padding: 44px 8px 0;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     /* ── Hero card ── */
     .home-hero {
       position: relative;
-      width: 377px;
+      width: 100%;
       border-radius: 24px; overflow: hidden;
       background: #a1b1a0; flex-shrink: 0;
       /* Bottom padding reserves visual space for the input card (146px) + 4px gap from edge + 32px extra */
@@ -4832,7 +4834,7 @@
       color: rgba(0,0,0,0.80); letter-spacing: -1.2px; line-height: 1.2;
     }
     .home-ai {
-      width: 361px; background: rgba(255,255,255,0.80);
+      width: calc(100% - 16px); align-self: center; background: rgba(255,255,255,0.80);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 0.5px solid #fff; border-radius: 20px; padding: 20px;
       box-sizing: border-box; display: flex; flex-direction: column;
@@ -4889,7 +4891,7 @@
 
     /* ── Key Actions ── */
     .home-ka {
-      width: 377px;
+      width: 100%;
       background: linear-gradient(180deg, #ffffff 0%, #ffb9ab 257.81%);
       border: 0.5px solid rgba(170,112,101,0.4);
       border-radius: 20px; padding: 20px; box-sizing: border-box;
@@ -4919,7 +4921,7 @@
 
     /* ── Balance ── */
     .home-bal {
-      width: 377px; height: 158px;
+      width: 100%; height: 158px;
       border: 1px solid rgba(255,255,255,0.8);
       border-radius: 24px; overflow: hidden;
       position: relative; flex-shrink: 0;
@@ -4994,7 +4996,7 @@
 
     /* ── Transactions ── */
     .home-tx {
-      width: 377px;
+      width: 100%;
       flex-shrink: 0;
     }
     /* ─── Embedded transaction section (Figma 1058-21511) ─── */
@@ -5627,7 +5629,7 @@
 
     /* ── Cards section ── */
     .home-cards {
-      width: 377px; background: var(--surface-overlay);
+      width: 100%; background: var(--surface-overlay);
       border: 1px solid rgba(255,255,255,0.8);
       border-radius: 24px; padding: 16px 8px 0;
       box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;
