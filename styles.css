@@ -4857,10 +4857,10 @@
       filter: blur(40px) brightness(0.55);
       transition: filter 380ms ease;
     }
-    /* Inside the center: dim the greeting text */
+    /* Inside the center: fade the greeting out — no blur so it doesn't bleed onto .home-ai */
     #home.home-ai-focused .home-greeting {
-      filter: blur(40px) opacity(0.25);
-      transition: filter 380ms ease, opacity 380ms ease;
+      opacity: 0;
+      transition: opacity 300ms ease;
     }
     /* home-ai lifts above the blurred siblings */
     #home.home-ai-focused .home-ai {
