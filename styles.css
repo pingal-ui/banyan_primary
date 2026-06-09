@@ -2987,64 +2987,50 @@
     }
 
     /* ── Upcoming bills card ── */
+    /* Upcoming rows — mirrors tx-row exactly */
     .ag-upcoming-row {
       display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px;
+      padding: 8px 16px;
       border-bottom: 0.5px solid var(--divider);
+      cursor: default;
     }
     .ag-upcoming-row:last-child { border-bottom: none; }
     .ag-upcoming-av {
       width: 40px; height: 40px; flex-shrink: 0;
-      border-radius: var(--r-md);
+      border-radius: 12px;
       display: flex; align-items: center; justify-content: center;
-      font-size: var(--body-xs); font-weight: 700; color: var(--text-inverse);
+      font-size: 13px; font-weight: 700; color: #fff;
       letter-spacing: 0.2px;
     }
     .ag-upcoming-info { flex: 1; min-width: 0; }
     .ag-upcoming-name {
-      font-size: var(--body-m); font-weight: 500; /* Body/M Emphasized */
-      color: var(--text-primary); line-height: var(--line-m);
+      font-size: 15px; font-weight: 400;
+      color: var(--text-primary);
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .ag-upcoming-date {
-      font-size: var(--body-xs); font-weight: 400; /* Body/XS */
-      color: var(--text-tertiary); line-height: var(--line-xs);
-      margin-top: 1px;
+      font-size: 11px; font-weight: 500;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+      white-space: nowrap;
     }
     .ag-upcoming-right {
       text-align: right; flex-shrink: 0;
-      display: flex; flex-direction: column; align-items: flex-end; gap: 4px;
     }
     .ag-upcoming-amount {
-      font-size: var(--body-m); font-weight: 600; /* Body/M Emphasized */
+      font-size: 15px; font-weight: 400;
       color: var(--text-primary);
-      font-variant-numeric: tabular-nums; line-height: var(--line-m);
-      letter-spacing: -0.2px;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
     .ag-upcoming-status {
-      font-size: var(--body-xs); font-weight: 600; /* Body/XS Emphasized */
-      letter-spacing: 0.1px;
-      padding: 2px 7px;
-      border-radius: var(--r-sm);
-      line-height: var(--line-xs);
-      display: inline-block;
+      font-size: 11px; font-weight: 500;
+      margin-top: 2px;
     }
-    .ag-upcoming-status.sched {
-      background: var(--brand-primary-subtle);
-      color: var(--brand-primary);
-    }
-    .ag-upcoming-status.skipped {
-      background: var(--surface-subtle);
-      color: var(--text-tertiary);
-    }
-    .ag-upcoming-status.due {
-      background: rgba(193,124,20,0.10);
-      color: var(--semantic-warning);
-    }
-    .ag-upcoming-status.overdue {
-      background: rgba(200,44,44,0.08);
-      color: var(--semantic-error);
-    }
+    .ag-upcoming-status.sched { color: var(--brand-primary); }
+    .ag-upcoming-status.skipped { color: var(--text-tertiary); }
+    .ag-upcoming-status.due { color: var(--semantic-warning); }
+    .ag-upcoming-status.overdue { color: var(--semantic-error); }
 
     /* ── Spending breakdown card ── */
     .ag-spending-total-row {
