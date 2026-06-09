@@ -1095,49 +1095,59 @@ function focusHomeAi() {
   setTimeout(openHomeAgent, 580);
 }
 
+// Shared ref so the keyboard listener can cancel the FLIP cleanup timeout
+var _flipCleanupTimer = null;
+
 function openHomeAgent() {
   if (_homeAgentOpen) return;
   _homeAgentOpen = true;
-  // Clear focus state — agent screen takes over the visual now
-  var home = document.getElementById('home');
-  if (home) home.classList.remove('home-ai-focused');
-  const screen    = document.getElementById('agent-screen');
-  const inputCard = document.getElementById('agentInputCard');
-  const homeAiEl  = document.querySelector('#home .home-ai');
-  const nav       = document.getElementById('globalNav');
+
+  var home     = document.getElementById('home');
+  var screen   = document.getElementById('agent-screen');
+  var inputCard= document.getElementById('agentInputCard');
+  var homeAiEl = document.querySelector('#home .home-ai');
+  var nav      = document.getElementById('globalNav');
+  var reduced  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   screen.removeAttribute('aria-hidden');
 
-  // Nav out
+  // ── Step 1: Measure BEFORE any class/style changes ────────────────────────
+  // The home-ai is still at its lifted position. getBoundingClientRect() here
+  // gives the correct visual origin for the FLIP animation.
+  var startDelta = 0;
+  var doFlip = !reduced && homeAiEl && inputCard;
+  if (doFlip) {
+    var homeRect   = homeAiEl.getBoundingClientRect();
+    var screenRect = screen.getBoundingClientRect();
+    var cardH      = inputCard.offsetHeight || 116;
+    var cardNatTop = screenRect.height - 16 - cardH;
+    startDelta = (homeRect.top - screenRect.top) - cardNatTop;
+
+    // Pre-position the card at the home-ai's current visual location
+    inputCard.style.transition = 'none';
+    inputCard.style.transform  = 'translateY(' + startDelta + 'px)';
+    inputCard.style.opacity    = '1';
+    void inputCard.offsetHeight; // flush so the pre-position commits
+  }
+
+  // ── Step 2: Nav out ────────────────────────────────────────────────────────
   if (nav) {
     nav.style.transition = 'opacity 220ms ease, transform 280ms var(--ease-spring)';
     nav.style.opacity = '0'; nav.style.transform = 'translateY(10px)'; nav.style.pointerEvents = 'none';
   }
 
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // ── Step 3: Reveal agent screen (instant, solid bg — no bleed-through) ─────
+  screen.style.transition = 'none';
+  screen.style.opacity    = '1';
+  screen.classList.add('ag-open');
+  void screen.offsetHeight;
+  screen.style.transition = '';
 
-  if (!reduced && homeAiEl && inputCard) {
-    // Compute Y delta: card starts at the home-ai bar's visual position
-    const homeRect   = homeAiEl.getBoundingClientRect();
-    const screenRect = screen.getBoundingClientRect();
-    const cardH      = inputCard.offsetHeight || 116;
-    const cardNatTop = screenRect.height - 16 - cardH; // natural top (bottom:16px)
-    const startDelta = (homeRect.top - screenRect.top) - cardNatTop;
+  // ── Step 4: NOW safe to remove the focus class (it's hidden under the screen)
+  if (home) home.classList.remove('home-ai-focused');
 
-    // Pre-position card at home-ai bar (before screen becomes visible)
-    inputCard.style.transition = 'none';
-    inputCard.style.transform  = 'translateY(' + startDelta + 'px)';
-    inputCard.style.opacity    = '1';
-    void inputCard.offsetHeight;
-
-    // Reveal agent screen INSTANTLY (no fade) — solid bg gradient prevents bleed-through
-    screen.style.transition = 'none';
-    screen.style.opacity    = '1';
-    screen.classList.add('ag-open');
-    void screen.offsetHeight;
-    screen.style.transition = '';  // restore CSS transition for future use
-
-    // Card springs to its natural resting position
+  // ── Step 5: Spring the card to its natural resting position ───────────────
+  if (doFlip) {
     requestAnimationFrame(function() {
       requestAnimationFrame(function() {
         inputCard.style.transition = 'transform 540ms var(--ease-spring), opacity 220ms var(--ease-out)';
@@ -1146,18 +1156,18 @@ function openHomeAgent() {
       });
     });
 
-    // Clear inline overrides once card settles — CSS rule takes over
-    setTimeout(function() {
+    // Clear inline overrides once the spring settles so CSS rule takes over.
+    // Use a ref so the keyboard listener can cancel this if it fires before 680ms.
+    if (_flipCleanupTimer) clearTimeout(_flipCleanupTimer);
+    _flipCleanupTimer = setTimeout(function() {
+      _flipCleanupTimer = null;
       inputCard.style.transition = '';
       inputCard.style.transform  = '';
       inputCard.style.opacity    = '';
     }, 680);
-
-  } else {
-    screen.classList.add('ag-open');
   }
 
-  setTimeout(function() { const f = document.getElementById('agentField'); if (f) f.focus(); }, 500);
+  setTimeout(function() { var f = document.getElementById('agentField'); if (f) f.focus(); }, 500);
 }
 
 function closeHomeAgent() {
@@ -5968,12 +5978,14 @@ function benOpenAdd() {}
 
     var kbNow = kbHeight > 80;
 
-    if (kbNow === _kbOpen && !_kbOpen) return; // nothing changed, keyboard still closed
+    if (kbNow === _kbOpen) return; // state unchanged — don't re-apply
 
     _kbOpen = kbNow;
 
     if (kbNow) {
       // --- keyboard opened ---
+      // Cancel any in-flight FLIP cleanup timer so it doesn't stomp the kb transform
+      if (_flipCleanupTimer) { clearTimeout(_flipCleanupTimer); _flipCleanupTimer = null; }
       // Input card: lift it clear of the keyboard
       if (inputCard) {
         inputCard.style.transition = 'transform 340ms var(--ease-spring)';
