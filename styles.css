@@ -2987,50 +2987,7 @@
     }
 
     /* ── Upcoming bills card ── */
-    /* Upcoming rows — mirrors tx-row exactly */
-    .ag-upcoming-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 8px 16px;
-      border-bottom: 0.5px solid var(--divider);
-      cursor: default;
-    }
-    .ag-upcoming-row:last-child { border-bottom: none; }
-    .ag-upcoming-av {
-      width: 40px; height: 40px; flex-shrink: 0;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 13px; font-weight: 700; color: #fff;
-      letter-spacing: 0.2px;
-    }
-    .ag-upcoming-info { flex: 1; min-width: 0; }
-    .ag-upcoming-name {
-      font-size: 15px; font-weight: 400;
-      color: var(--text-primary);
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .ag-upcoming-date {
-      font-size: 11px; font-weight: 500;
-      color: var(--text-tertiary);
-      margin-top: 2px;
-      white-space: nowrap;
-    }
-    .ag-upcoming-right {
-      text-align: right; flex-shrink: 0;
-    }
-    .ag-upcoming-amount {
-      font-size: 15px; font-weight: 400;
-      color: var(--text-primary);
-      font-variant-numeric: tabular-nums;
-      white-space: nowrap;
-    }
-    .ag-upcoming-status {
-      font-size: 11px; font-weight: 500;
-      margin-top: 2px;
-    }
-    .ag-upcoming-status.sched { color: var(--brand-primary); }
-    .ag-upcoming-status.skipped { color: var(--text-tertiary); }
-    .ag-upcoming-status.due { color: var(--semantic-warning); }
-    .ag-upcoming-status.overdue { color: var(--semantic-error); }
+    /* Upcoming card uses tx-row directly — no custom ag-upcoming-* rules needed */
 
     /* ── Spending breakdown card ── */
     .ag-spending-total-row {

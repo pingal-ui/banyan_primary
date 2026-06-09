@@ -877,21 +877,29 @@ function _agRenderUpcoming(aiDiv, msgs) {
   html +=   '<span class="ag-card-header-meta">' + statusTotal + ' upcoming</span>';
   html += '</div>';
   items.forEach(function(b) {
-    var statusCls  = b.status === 'skipped' ? 'skipped' : 'sched';
-    var statusText = b.status === 'skipped' ? 'Skipped' : 'Scheduled';
-    html += '<div class="ag-upcoming-row ag-stagger-item">';
-    html +=   '<div class="ag-upcoming-av" style="background:' + b.av + '">' + b.ini + '</div>';
-    html +=   '<div class="ag-upcoming-info">';
-    html +=     '<div class="ag-upcoming-name">' + _agEscape(b.name) + '</div>';
-    html +=     '<div class="ag-upcoming-date">' + b.date + '</div>';
+    var statusColor = b.status === 'skipped' ? 'color:var(--text-tertiary)' : 'color:var(--brand-primary)';
+    var statusText  = b.status === 'skipped' ? 'Skipped' : 'Scheduled';
+    // Exact tx-row markup — same structure as the transaction list
+    html += '<div class="tx-row ag-stagger-item" style="border-bottom:0.5px solid var(--divider)">';
+    html +=   '<div class="av-container">';
+    html +=     '<div class="av-wrap" style="-webkit-mask-image:none;mask-image:none">';
+    html +=       '<div class="av-inner ini" style="background:' + b.av + '">' + b.ini + '</div>';
+    html +=     '</div>';
     html +=   '</div>';
-    html +=   '<div class="ag-upcoming-right">';
-    html +=     '<div class="ag-upcoming-amount">' + b.amount + '</div>';
-    html +=     '<div class="ag-upcoming-status ' + statusCls + '">' + statusText + '</div>';
+    html +=   '<div class="tx-mid">';
+    html +=     '<div class="tx-name">' + _agEscape(b.name) + '</div>';
+    html +=     '<div class="tx-sub" style="' + statusColor + '">' + statusText + ' · ' + b.date + '</div>';
+    html +=   '</div>';
+    html +=   '<div class="tx-right">';
+    html +=     '<div class="tx-amount">−' + b.amount + '</div>';
+    html +=     '<div class="tx-inr">' + b.inr + '</div>';
     html +=   '</div>';
     html += '</div>';
   });
+  // Remove border from last row
   card.innerHTML = html;
+  var rows = card.querySelectorAll('.tx-row');
+  if (rows.length) rows[rows.length - 1].style.borderBottom = 'none';
   _agAddCtx(aiDiv, 'You have ' + statusTotal + ' payment' + (statusTotal !== 1 ? 's' : '') + ' coming up. Here\'s what\'s scheduled — amounts shown are what will leave your account.', function() {
     // Card slides in after ctx finishes streaming
     setTimeout(function() {
