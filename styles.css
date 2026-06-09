@@ -4865,7 +4865,7 @@
     /* home-ai lifts above the blurred siblings */
     #home.home-ai-focused .home-ai {
       z-index: 5;
-      transform: translateY(-10px) scale(1.028);
+      transform: translateY(-10px);
       box-shadow:
         0 32px 72px rgba(0,0,0,0.28),
         0 12px 28px rgba(0,0,0,0.14),
