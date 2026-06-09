@@ -4851,11 +4851,15 @@
       filter: blur(40px) brightness(0.55);
       transition: filter 380ms ease;
     }
-    /* Inside the hero: dim the bg photo + top bar */
-    #home.home-ai-focused .home-hero-bg,
-    #home.home-ai-focused .home-hero-bar {
+    /* Background photo: blur + dim, clipped by overflow:hidden on .home-hero */
+    #home.home-ai-focused .home-hero-bg {
       filter: blur(40px) brightness(0.55);
       transition: filter 380ms ease;
+    }
+    /* Top bar: dim only — no blur so it doesn't bleed down over the hero center */
+    #home.home-ai-focused .home-hero-bar {
+      opacity: 0.35;
+      transition: opacity 300ms ease;
     }
     /* Inside the center: fade the greeting out — no blur so it doesn't bleed onto .home-ai */
     #home.home-ai-focused .home-greeting {
