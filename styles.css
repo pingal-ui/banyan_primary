@@ -1847,21 +1847,21 @@
       transition: opacity 200ms ease, transform 260ms var(--ease-out);
     }
     .ag-hero-orb {
-      width: 96px; height: 96px;
+      width: 68px; height: 68px;
       border-radius: 50%;
       background: #4fa62c;
       overflow: visible;
       position: relative;
       /* Multi-layer ring system */
       box-shadow:
-        0 0 0 12px rgba(79,166,44,0.11),
-        0 0 0 24px rgba(79,166,44,0.055),
-        0 0 0 40px rgba(79,166,44,0.02),
-        0 20px 48px rgba(0,0,0,0.22),
-        0 4px 12px rgba(0,0,0,0.14);
+        0 0 0 8px rgba(79,166,44,0.11),
+        0 0 0 17px rgba(79,166,44,0.055),
+        0 0 0 28px rgba(79,166,44,0.02),
+        0 14px 36px rgba(0,0,0,0.22),
+        0 3px 8px rgba(0,0,0,0.14);
     }
     .ag-hero-orb-inner {
-      width: 96px; height: 96px;
+      width: 68px; height: 68px;
       border-radius: 50%;
       overflow: hidden;
       position: relative;
