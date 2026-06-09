@@ -4840,6 +4840,7 @@
       /* Structurally outside .home-hero but visually overlapping it.
          -(height 146 + hero-bottom-gap 4 + stack-gap 8) = -158px */
       margin-top: -166px;
+      margin-bottom: 12px;
       position: relative;
       z-index: 2;
       will-change: transform;
