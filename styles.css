@@ -4772,8 +4772,7 @@
       width: 377px;
       border-radius: 24px; overflow: hidden;
       background: #a1b1a0; flex-shrink: 0;
-      /* Height driven by content — top padding matches bar height, bottom = side margin (4px) */
-      padding: 78px 4px 4px;
+      padding: 78px 16px 28px;
       box-sizing: border-box;
     }
     .home-hero-bg {
@@ -4832,7 +4831,7 @@
       color: rgba(0,0,0,0.80); letter-spacing: -1.2px; line-height: 1.2;
     }
     .home-ai {
-      width: 100%; background: rgba(255,255,255,0.80);
+      width: 377px; background: rgba(255,255,255,0.80);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 0.5px solid #fff; border-radius: 20px; padding: 20px;
       box-sizing: border-box; display: flex; flex-direction: column;
@@ -4845,28 +4844,13 @@
         box-shadow 280ms ease;
     }
 
-    /* ── Home AI focus state — blur everything else, lift the input ── */
-    /* Siblings of home-hero inside the stack */
-    #home.home-ai-focused .home-stack > *:not(.home-hero) {
-      filter: blur(40px) brightness(0.55);
-      transition: filter 280ms ease;
+    /* ── Home AI focus state ── */
+    /* Blur every stack child uniformly — hero and sections get identical treatment */
+    #home.home-ai-focused .home-stack > *:not(.home-ai) {
+      filter: blur(40px) brightness(0.82);
+      transition: filter 380ms ease;
     }
-    /* Background photo: same blur + dim as the cards below */
-    #home.home-ai-focused .home-hero-bg {
-      filter: blur(40px) brightness(0.55);
-      transition: filter 280ms ease;
-    }
-    /* Top bar: same treatment as the rest */
-    #home.home-ai-focused .home-hero-bar {
-      filter: blur(40px) brightness(0.55);
-      transition: filter 280ms ease;
-    }
-    /* Inside the center: fade the greeting out — no blur so it doesn't bleed onto .home-ai */
-    #home.home-ai-focused .home-greeting {
-      opacity: 0;
-      transition: opacity 240ms ease;
-    }
-    /* home-ai lifts above the blurred siblings */
+    /* Input lifts forward, stays crisp */
     #home.home-ai-focused .home-ai {
       z-index: 5;
       transform: translateY(-10px);

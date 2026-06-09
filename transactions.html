@@ -53,30 +53,32 @@
             </button>
           </div>
 
-          <!-- Center: greeting + AI input -->
+          <!-- Center: greeting only -->
           <div class="home-hero-center">
             <div class="home-greeting">
               <span class="home-greeting-hi">Good to see you, Satya</span>
               <span class="home-greeting-ask">What can we take<br>care of today?</span>
             </div>
-            <div class="home-ai" onclick="focusHomeAi()" style="cursor:pointer;">
-              <div class="home-ai-ph">Ask Banyan...</div>
-              <div class="home-ai-row">
-                <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
-                  <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
-                </button>
-                <div class="home-ai-row-r">
-                  <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
-                    <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
-                  </button>
-                  <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
-                    <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
-                  </button>
-                </div>
-              </div>
-            </div>
           </div>
         </div><!-- /.home-hero -->
+
+        <!-- AI input — sibling of hero so it blurs independently -->
+        <div class="home-ai" onclick="focusHomeAi()" style="cursor:pointer;">
+          <div class="home-ai-ph">Ask Banyan...</div>
+          <div class="home-ai-row">
+            <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
+              <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
+            </button>
+            <div class="home-ai-row-r">
+              <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
+                <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
+              </button>
+              <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
+                <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
+              </button>
+            </div>
+          </div>
+        </div>
 
         <!-- ── Key Actions ── -->
         <div class="home-ka">
