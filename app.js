@@ -6051,81 +6051,75 @@ function benPay() {
 function benOpenAdd() {}
 
 /* ── Keyboard-aware agent input ────────────────────────────────────────────
-   On iOS/Android, when the software keyboard opens the visual viewport
-   shrinks and can also scroll (visualViewport.offsetTop > 0).
-   Using translateY against window.innerHeight - vv.height alone double-counts
-   when offsetTop shifts, causing the input to overshoot and disappear.
-
-   Fix: track keyboard offset continuously as:
-     kbOffset = innerHeight - vv.height - vv.offsetTop   (clamped ≥ 0)
-   Then set `bottom` directly on the input card so it always sits 16px
-   above the keyboard — no transform, no binary state flip.
+   Strategy: track the visual viewport in real-time with NO transition
+   while the keyboard is moving, so the input card appears glued to the
+   top of the keyboard. Only animate when the keyboard fully dismisses
+   (smooth ease-out back to bottom:16px). This prevents the double-jump
+   caused by the entrance animation + a spring transition fighting each other.
 ──────────────────────────────────────────────────────────────────────────── */
 (function _initKeyboardAwareHero() {
   if (!window.visualViewport) return;
 
-  var _lastKbOffset = 0;
+  var _lastKbOffset  = 0;
+  var _kbSettleTimer = null;
 
   function _applyKbLayout() {
     var vv = window.visualViewport;
-    // True keyboard height, correcting for any viewport scroll on iOS
     var kbOffset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
 
     var agScreen = document.getElementById('agent-screen');
     if (!agScreen) return;
     var isActive = agScreen.classList.contains('ag-open') ||
                    agScreen.classList.contains('ag-convo');
-    if (!isActive) return;
+    if (!isActive) { _lastKbOffset = 0; return; }
 
     var inputCard = document.getElementById('agentInputCard');
     var heroEl    = agScreen.querySelector('.ag-hero');
     var chipsEl   = agScreen.querySelector('.ag-chips');
     var msgsEl    = document.getElementById('agentMsgs');
 
-    var opening = kbOffset > 80 && _lastKbOffset <= 80;
-    var closing  = kbOffset <= 80 && _lastKbOffset > 80;
+    var wasOpen = _lastKbOffset > 80;
+    var isOpen  = kbOffset > 80;
     _lastKbOffset = kbOffset;
 
-    if (opening) {
+    // Cancel any pending settle timer — keyboard is still moving
+    if (_kbSettleTimer) { clearTimeout(_kbSettleTimer); _kbSettleTimer = null; }
+
+    if (isOpen) {
+      // Keyboard present: track position with NO transition (glued to keyboard top)
       if (_flipCleanupTimer) { clearTimeout(_flipCleanupTimer); _flipCleanupTimer = null; }
-    }
 
-    // Input card — pin it 16px above the keyboard using bottom directly
-    if (inputCard) {
-      var targetBottom = kbOffset > 80 ? kbOffset + 16 : 16;
-      inputCard.style.transition = kbOffset > 80
-        ? 'bottom 320ms var(--ease-spring)'
-        : 'bottom 380ms var(--ease-spring)';
-      inputCard.style.bottom = targetBottom + 'px';
-    }
-
-    // Hero orb — lift proportionally while in ag-open (pre-convo) state
-    if (heroEl && agScreen.classList.contains('ag-open') && !agScreen.classList.contains('ag-convo')) {
-      if (kbOffset > 80) {
-        heroEl.style.transition = 'opacity 300ms var(--ease-out), transform 340ms var(--ease-spring)';
+      if (inputCard) {
+        inputCard.style.transition = 'none';
+        inputCard.style.bottom     = (kbOffset + 16) + 'px';
+      }
+      if (heroEl && !agScreen.classList.contains('ag-convo')) {
+        heroEl.style.transition = 'none';
         heroEl.style.transform  = 'translate(-50%, -52%) translateY(-' + Math.round(kbOffset * 0.38) + 'px)';
-      } else {
-        heroEl.style.transition = 'opacity 400ms var(--ease-out) 160ms, transform 420ms var(--ease-spring) 160ms';
-        heroEl.style.transform  = '';
       }
-    }
-
-    // Chips — lift with input card
-    if (chipsEl && agScreen.classList.contains('ag-open') && !agScreen.classList.contains('ag-convo')) {
-      if (kbOffset > 80) {
-        chipsEl.style.transition = 'opacity 280ms var(--ease-out), transform 340ms var(--ease-spring)';
+      if (chipsEl && !agScreen.classList.contains('ag-convo')) {
+        chipsEl.style.transition = 'none';
         chipsEl.style.transform  = 'translateY(-' + Math.round(kbOffset * 0.85) + 'px)';
-      } else {
-        chipsEl.style.transition = 'opacity 320ms var(--ease-out) 240ms, transform 380ms var(--ease-spring) 240ms';
-        chipsEl.style.transform  = '';
       }
-    }
+      if (msgsEl) msgsEl.style.paddingBottom = (kbOffset + 80) + 'px';
 
-    // Msgs scroll area — shrink bottom padding to stay above raised input
-    if (msgsEl && kbOffset > 80) {
-      msgsEl.style.paddingBottom = (kbOffset + 80) + 'px';
-    } else if (msgsEl) {
-      msgsEl.style.paddingBottom = '';
+    } else {
+      // Keyboard gone: restore with a short ease-out so the snap-back feels intentional
+      _kbSettleTimer = setTimeout(function() {
+        if (inputCard) {
+          inputCard.style.transition = 'bottom 280ms var(--ease-out)';
+          inputCard.style.bottom     = '16px';
+        }
+        if (heroEl) {
+          heroEl.style.transition = 'opacity 320ms var(--ease-out) 80ms, transform 320ms var(--ease-out) 80ms';
+          heroEl.style.transform  = '';
+        }
+        if (chipsEl) {
+          chipsEl.style.transition = 'opacity 280ms var(--ease-out) 160ms, transform 280ms var(--ease-out) 160ms';
+          chipsEl.style.transform  = '';
+        }
+        if (msgsEl) msgsEl.style.paddingBottom = '';
+      }, 30); // small debounce so final resize event has settled
     }
   }
 
