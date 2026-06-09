@@ -431,7 +431,7 @@ function _agAddFollowups(aiDiv, msgs, chips) {
   wrap.className = 'ag-followup-wrap';
   var header = document.createElement('div');
   header.className = 'ag-followup-header';
-  header.textContent = 'Follow-ups';
+  header.textContent = "Here's what you can do next";
   wrap.appendChild(header);
   var list = document.createElement('div');
   list.className = 'ag-followup-list';
@@ -998,20 +998,36 @@ function _agRenderRecipientSelect(aiDiv, msgs) {
   html +=   '<div class="ag-card-header-line"></div>';
   html +=   '<span class="ag-card-header-meta">Tap to pay</span>';
   html += '</div>';
+  var _blobMap = {
+    'ms': 'assets/blob-purple-v2.png',
+    'rr': 'assets/blob-purple-v2.png',
+    'ak': 'assets/blob-purple-v2.png',
+    'sm': 'assets/blob-orange-v2.png',
+    'dp': 'assets/blob-green-v2.png',
+    'aa': 'assets/blob-orange-v2.png',
+    'kw': 'assets/blob-green-v2.png',
+  };
   _AG_DATA.recipients.forEach(function(r) {
-    html += '<div class="ag-recip-row ag-stagger-item" data-recip-id="' + r.id + '">';
-    html +=   '<div class="ag-recip-av" style="background:' + r.color + '">' + r.initials + '</div>';
-    html +=   '<div class="ag-recip-info">';
-    html +=     '<div class="ag-recip-name">' + _agEscape(r.name) + ' ' + r.flag + '</div>';
-    html +=     '<div class="ag-recip-bank">' + _agEscape(r.bank) + '</div>';
+    var blob = _blobMap[r.id] || 'assets/blob-purple-v2.png';
+    html += '<div class="ben-row ag-stagger-item" data-recip-id="' + r.id + '" style="padding:10px 20px;cursor:pointer;">';
+    html +=   '<div class="ben-row-left">';
+    html +=     '<div class="sm-l-av" style="width:32px;height:32px;background:rgba(255,255,255,0.12);border-radius:999px;flex-shrink:0">';
+    html +=       '<img class="sm-l-av-photo" src="' + blob + '">';
+    html +=       '<div class="sm-l-av-glass" style="inset:2px;background:rgba(255,255,255,0.1);border:0.3px solid white;backdrop-filter:blur(24px)"></div>';
+    html +=       '<span class="sm-l-av-txt" style="font-size:10px;letter-spacing:-0.5px;font-weight:600;line-height:13px">' + r.initials + '</span>';
+    html +=     '</div>';
+    html +=     '<div class="ben-row-info">';
+    html +=       '<span class="ben-row-name">' + _agEscape(r.name) + ' ' + r.flag + '</span>';
+    html +=       '<span class="ben-row-sub">' + _agEscape(r.bank) + '</span>';
+    html +=     '</div>';
     html +=   '</div>';
-    html +=   '<div class="ag-recip-arrow">›</div>';
+    html +=   '<button class="ben-pay-pill">Pay</button>';
     html += '</div>';
   });
   card.innerHTML = html;
 
   // Wire up recipient taps → trigger transfer for that recipient
-  card.querySelectorAll('.ag-recip-row').forEach(function(row) {
+  card.querySelectorAll('.ben-row').forEach(function(row) {
     row.addEventListener('click', function() {
       var rid = row.getAttribute('data-recip-id');
       var recip = _AG_DATA.recipients.find(function(r) { return r.id === rid; });

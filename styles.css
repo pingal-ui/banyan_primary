@@ -2167,22 +2167,22 @@
     .ag-followup-wrap.s-in { opacity: 1; transform: translateY(0); }
     .ag-followup-header {
       font-family: 'Geist', sans-serif;
-      font-size: var(--body-xs); font-weight: 600; /* Body/XS Emphasized */
+      font-size: var(--body-xs); font-weight: 600;
       color: var(--text-tertiary);
       letter-spacing: 0.1px;
-      padding: 0 20px 10px;
+      padding: 0 20px 8px;
     }
     .ag-followup-list {
-      border-top: 0.5px solid var(--divider);
+      /* no dividers */
     }
     .ag-followup-row {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       width: 100%;
-      padding: 13px 20px;
+      padding: 8px 20px;
       border: none;
-      border-bottom: 0.5px solid var(--divider);
+      border-bottom: none;
       background: transparent;
       text-align: left;
       cursor: pointer;
