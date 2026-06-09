@@ -4854,7 +4854,7 @@
     /* Inside the hero: dim the bg photo + top bar */
     #home.home-ai-focused .home-hero-bg,
     #home.home-ai-focused .home-hero-bar {
-      filter: blur(40px) brightness(0.50);
+      filter: blur(40px) brightness(0.55);
       transition: filter 380ms ease;
     }
     /* Inside the center: dim the greeting text */
