@@ -1917,16 +1917,22 @@
     /* ── Suggestion chips ── */
     .ag-chips {
       position: absolute;
-      bottom: 162px; left: 16px; right: 16px;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      bottom: 162px; left: 0; right: 0;
+      display: flex;
+      flex-direction: row;
+      gap: 8px;
+      padding: 0 16px;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
       opacity: 0;
       transform: translateY(14px);
       will-change: transform, opacity;
       transition: opacity 320ms var(--ease-out), transform 380ms var(--ease-spring);
       z-index: 2;
     }
+    .ag-chips::-webkit-scrollbar { display: none; }
     #agent-screen.ag-open .ag-chips {
       opacity: 1; transform: translateY(0);
       transition-delay: 280ms;
@@ -1940,48 +1946,48 @@
     }
     .ag-chip {
       background: #ffffff;
-      border: 0.5px solid rgba(0,0,0,0.06);
+      border: 0.5px solid rgba(0,0,0,0.07);
       box-shadow:
         0 1px 0 rgba(255,255,255,0.9) inset,
-        0 2px 8px rgba(0,0,0,0.06),
-        0 4px 16px rgba(0,0,0,0.05);
-      border-radius: 20px;
-      padding: 16px 15px 14px;
+        0 1px 4px rgba(0,0,0,0.07);
+      border-radius: 999px;
+      padding: 0 14px 0 10px;
+      height: 36px;
       display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      gap: 11px;
+      flex-direction: row;
+      align-items: center;
+      gap: 7px;
       cursor: pointer;
       font-family: inherit;
       text-align: left;
-      min-height: 88px;
-      transition: background 150ms ease, transform 140ms var(--ease-out), box-shadow 150ms ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 130ms ease, transform 120ms var(--ease-out), box-shadow 130ms ease;
       -webkit-tap-highlight-color: transparent;
     }
     .ag-chip:active {
-      transform: scale(0.97);
-      background: #f7f7f7;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.04) inset;
+      transform: scale(0.96);
+      background: #f5f5f5;
     }
     @media (hover: hover) and (pointer: fine) {
       .ag-chip:hover {
         box-shadow:
           0 1px 0 rgba(255,255,255,0.9) inset,
-          0 4px 20px rgba(0,0,0,0.09),
-          0 2px 6px rgba(0,0,0,0.05);
+          0 2px 10px rgba(0,0,0,0.09);
       }
     }
     .ag-chip-icon {
-      width: 34px; height: 34px; flex-shrink: 0;
-      border-radius: 10px;
+      width: 22px; height: 22px; flex-shrink: 0;
+      border-radius: 6px;
       background: rgba(70,136,43,0.10);
       display: flex; align-items: center; justify-content: center;
     }
     .ag-chip-label {
       font-family: 'Geist', sans-serif;
-      font-size: var(--body-s); font-weight: 600;
+      font-size: var(--body-s); font-weight: 500;
       color: var(--text-primary);
-      line-height: var(--line-s);
+      line-height: 1;
+      white-space: nowrap;
     }
 
     /* ── Messages scroll area ── */
