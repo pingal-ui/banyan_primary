@@ -4848,19 +4848,19 @@
     /* ── Home AI focus state — blur everything else, lift the input ── */
     /* Siblings of home-hero inside the stack */
     #home.home-ai-focused .home-stack > *:not(.home-hero) {
-      filter: blur(5px) brightness(0.72);
-      transition: filter 280ms ease;
+      filter: blur(12px) brightness(0.55);
+      transition: filter 380ms ease;
     }
     /* Inside the hero: dim the bg photo + top bar */
     #home.home-ai-focused .home-hero-bg,
     #home.home-ai-focused .home-hero-bar {
-      filter: blur(5px) brightness(0.72);
-      transition: filter 280ms ease;
+      filter: blur(14px) brightness(0.50);
+      transition: filter 380ms ease;
     }
     /* Inside the center: dim the greeting text */
     #home.home-ai-focused .home-greeting {
-      filter: blur(4px) opacity(0.45);
-      transition: filter 280ms ease, opacity 280ms ease;
+      filter: blur(10px) opacity(0.25);
+      transition: filter 380ms ease, opacity 380ms ease;
     }
     /* home-ai lifts above the blurred siblings */
     #home.home-ai-focused .home-ai {
