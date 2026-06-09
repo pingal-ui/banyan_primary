@@ -4832,14 +4832,14 @@
       color: rgba(0,0,0,0.80); letter-spacing: -1.2px; line-height: 1.2;
     }
     .home-ai {
-      width: 377px; background: rgba(255,255,255,0.80);
+      width: 361px; background: rgba(255,255,255,0.80);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       border: 0.5px solid #fff; border-radius: 20px; padding: 20px;
       box-sizing: border-box; display: flex; flex-direction: column;
       gap: 12px; height: 146px;
       /* Structurally outside .home-hero but visually overlapping it.
          -(height 146 + hero-bottom-gap 4 + stack-gap 8) = -158px */
-      margin-top: -158px;
+      margin-top: -134px;
       position: relative;
       z-index: 2;
       will-change: transform;
