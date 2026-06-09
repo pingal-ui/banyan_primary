@@ -4841,30 +4841,30 @@
       position: relative;
       will-change: transform;
       transition:
-        transform 420ms var(--ease-spring),
-        box-shadow 420ms ease;
+        transform 30s var(--ease-spring),
+        box-shadow 30s ease;
     }
 
     /* ── Home AI focus state — blur everything else, lift the input ── */
     /* Siblings of home-hero inside the stack */
     #home.home-ai-focused .home-stack > *:not(.home-hero) {
       filter: blur(40px) brightness(0.55);
-      transition: filter 380ms ease;
+      transition: filter 30s ease;
     }
     /* Background photo: blur + dim, clipped by overflow:hidden on .home-hero */
     #home.home-ai-focused .home-hero-bg {
       filter: blur(40px);
-      transition: filter 380ms ease;
+      transition: filter 30s ease;
     }
     /* Top bar: dim only — no blur so it doesn't bleed down over the hero center */
     #home.home-ai-focused .home-hero-bar {
       opacity: 0.35;
-      transition: opacity 300ms ease;
+      transition: opacity 30s ease;
     }
     /* Inside the center: fade the greeting out — no blur so it doesn't bleed onto .home-ai */
     #home.home-ai-focused .home-greeting {
       opacity: 0;
-      transition: opacity 300ms ease;
+      transition: opacity 30s ease;
     }
     /* home-ai lifts above the blurred siblings */
     #home.home-ai-focused .home-ai {
