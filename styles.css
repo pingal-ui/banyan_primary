@@ -4772,8 +4772,8 @@
       width: 377px;
       border-radius: 24px; overflow: hidden;
       background: #a1b1a0; flex-shrink: 0;
-      /* Bottom padding reserves visual space for the input card (146px) + 4px gap from edge */
-      padding: 78px 16px 150px;
+      /* Bottom padding reserves visual space for the input card (146px) + 4px gap from edge + 32px extra */
+      padding: 78px 16px 182px;
       box-sizing: border-box;
     }
     .home-hero-bg {
