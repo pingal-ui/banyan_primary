@@ -4853,7 +4853,7 @@
     }
     /* Background photo: blur + dim, clipped by overflow:hidden on .home-hero */
     #home.home-ai-focused .home-hero-bg {
-      filter: blur(40px) brightness(0.82);
+      filter: blur(40px);
       transition: filter 380ms ease;
     }
     /* Top bar: dim only — no blur so it doesn't bleed down over the hero center */
