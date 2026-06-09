@@ -1091,8 +1091,8 @@ function focusHomeAi() {
   var home = document.getElementById('home');
   if (!home || home.classList.contains('home-ai-focused')) return;
   home.classList.add('home-ai-focused');
-  // Let the lift + blur animation peak (420ms spring) and hold for a beat, then open
-  setTimeout(openHomeAgent, 580);
+  // Let the lift + blur animation peak then open the agent screen
+  setTimeout(openHomeAgent, 320);
 }
 
 // Shared ref so the keyboard listener can cancel the FLIP cleanup timeout
