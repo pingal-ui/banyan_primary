@@ -1310,6 +1310,7 @@ function closeHomeAgent() {
     nav.style.opacity = '1'; nav.style.transform = 'translateY(0)'; nav.style.pointerEvents = '';
   }
   _agResponseIdx = 0;
+  if (typeof showHome === 'function') showHome();
 }
 
 function agentOnInput(input) {
