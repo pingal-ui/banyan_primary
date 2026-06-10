@@ -4134,7 +4134,7 @@
     .smp-card { backdrop-filter: blur(48px); -webkit-backdrop-filter: blur(48px); background: linear-gradient(180deg, rgba(0,0,0,0) 80%, rgba(0,0,0,0.1) 100%), rgba(255,255,255,0.8); border-top: 2px solid rgba(255,255,255,0.8); border-bottom: 2px solid rgba(255,255,255,0.8); border-left: none; border-right: none; border-radius: 32px; padding: 4px; box-shadow: 0 16px 40px rgba(3,20,13,0.1); }
 
     /* Hero area inside card */
-    .smp-hero { height: 238px; border-radius: 28px; overflow: hidden; position: relative; background: transparent; }
+    .smp-hero { height: 222px; border-radius: 28px; overflow: hidden; position: relative; background: transparent; }
     /* Hero bg layers — blue slides up, green slides down */
     .smp-hero-bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: transform 0.7s var(--ease-drawer); will-change: transform; }
     .smp-hero-bg-blue  { background-image: url('assets/bg-progress-blue.png'); transform: translateY(0); }
