@@ -4812,10 +4812,10 @@ function smpShowResult(type) {
   var coin = document.getElementById('smpCoin');
   var icon = document.getElementById('smpResultIcon');
   if (!coin || !icon) return;
-  // Spin out the coin
+  // Scale the coin away — no rotation, so the running flip can't fight it
   coin.style.animation = 'none';
-  coin.style.transition = 'transform 0.28s var(--ease-spring), opacity 0.22s ease';
-  coin.style.transform = 'rotateY(90deg) scale(0.6)';
+  coin.style.transition = 'transform 0.26s var(--ease-out), opacity 0.20s ease';
+  coin.style.transform = 'scale(0.7)';
   coin.style.opacity = '0';
   // Show result icon
   setTimeout(function() {
@@ -4843,7 +4843,7 @@ function smpSimulateSuccess() {
     s1.style.opacity = '0'; s1.style.transform = 'translateY(-6px)'; s1.style.pointerEvents = 'none';
     s2.style.opacity = '1'; s2.style.transform = 'translateY(0)'; s2.style.pointerEvents = 'all';
     s2.classList.add('smp-state-active');
-  }, 800);
+  }, 700);
 
   // State 2→3: step 3 done, step 4 final (funds arrived)
   setTimeout(function() {
@@ -4853,24 +4853,32 @@ function smpSimulateSuccess() {
     s2.style.opacity = '0'; s2.style.transform = 'translateY(-6px)'; s2.style.pointerEvents = 'none';
     s3.style.opacity = '1'; s3.style.transform = 'translateY(0)'; s3.style.pointerEvents = 'all';
     s3.classList.add('smp-state-active');
-  }, 1600);
+  }, 1500);
 
-  // Coin → check (only after all steps complete)
-  setTimeout(function() { smpShowResult('success'); }, 2400);
+  // Coin → check, once all steps have landed
+  setTimeout(function() { smpShowResult('success'); }, 2150);
 
-  // Animate hero: blue slides UP, green slides DOWN — after coin shows
+  // Hero wipes green just as the check settles, label crossfades after
   setTimeout(function() {
     var hero = document.getElementById('smpHero');
     if (hero) hero.classList.add('success-anim');
-    // Update text after bg transition
-    setTimeout(function() {
-      var lbl = document.querySelector('#sm-progress .smp-hero-lbl');
-      if (lbl) { lbl.style.color = 'var(--brand-primary)'; lbl.textContent = 'Successfully transferred'; }
-    }, 600);
+    var lbl = document.querySelector('#sm-progress .smp-hero-lbl');
+    if (lbl) {
+      setTimeout(function() {
+        lbl.style.transition = 'opacity 0.18s ease';
+        lbl.style.opacity = '0';
+        setTimeout(function() {
+          lbl.style.color = 'var(--brand-primary)';
+          lbl.textContent = 'Successfully transferred';
+          lbl.style.transition = 'opacity 0.28s ease';
+          lbl.style.opacity = '1';
+        }, 200);
+      }, 350);
+    }
     var doneBtn = document.querySelector('#smpBottom .smp-done-btn');
     if (doneBtn) doneBtn.onclick = function() { smDone(); };
     document.querySelectorAll('.smp-sim-btn').forEach(function(b) { b.style.display = 'none'; });
-  }, 3200);
+  }, 2650);
 }
 
 /* ── Simulate failure ── */
@@ -4909,6 +4917,17 @@ function smGoToProgress() {
   document.getElementById('smProgressRecip').textContent     = smRecipient.name;
   document.getElementById('smProgressAcct').textContent      = smRecipient.account || '••7654 · HDFC Bank';
   document.getElementById('smProgressRecipStep').textContent = 'Funds in ' + firstName + "'s account";
+  // Personalize every stepper label — the template HTML hardcodes Rohan/HDFC.
+  // Tokenize each label once (data-tpl), then fill from the live recipient.
+  var bankName = ((smRecipient.account || '').split('·')[1] || 'HDFC Bank').trim();
+  document.querySelectorAll('#sm-progress .smp-step-name, #sm-progress .smp-step-sub').forEach(function(el) {
+    if (!el.dataset.tpl) {
+      el.dataset.tpl = el.textContent.replace(/Rohan/g, '{N}').replace(/HDFC Bank/g, '{B}');
+    }
+    if (el.dataset.tpl.indexOf('{') !== -1) {
+      el.textContent = el.dataset.tpl.replace(/\{N\}/g, firstName).replace(/\{B\}/g, bankName);
+    }
+  });
   // Reset progress screen: step-1 state, collapse txn details, restore coin
   document.getElementById('smAccTxn').classList.remove('smp-acc-open');
   var s1 = document.querySelector('#sm-progress .smp-stepper-s1');
@@ -4936,7 +4955,7 @@ function smGoToProgress() {
   var hero = document.getElementById('smpHero');
   if (hero) { hero.style.transition = 'none'; hero.classList.remove('success-anim'); }
   var lbl = document.querySelector('#sm-progress .smp-hero-lbl');
-  if (lbl) { lbl.style.color = ''; lbl.textContent = 'Transfer in progress'; }
+  if (lbl) { lbl.style.cssText = ''; lbl.textContent = 'Transfer in progress'; }
   var doneBtn = document.querySelector('#smpBottom .smp-done-btn');
   if (doneBtn) doneBtn.onclick = function() { smGoToSuccess(); };
 
@@ -4946,49 +4965,46 @@ function smGoToProgress() {
   var prgCard    = document.querySelector('#sm-progress .smp-card');
   var spring     = 'cubic-bezier(0.16,1,0.3,1)';
 
-  // Snap progress on top; card frame instantly visible (same glass appearance)
+  // FLIP: measure the review card's position before any visual change
+  var revRect = revCard.getBoundingClientRect();
+
+  // Snap progress on top; the shared botanical bg keeps the scene continuous
   progressEl.style.cssText = 'transition:none;opacity:1;z-index:3';
   progressEl.className = 'screen on';
+  var dy = revRect.top - prgCard.getBoundingClientRect().top;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) dy = 0;
   revCard.style.cssText = 'transition:none;opacity:0';
 
-  // Hide progress card content — reveal after review content fades
-  var prgInner = prgCard; // smp-card children are direct
-  if (prgInner) {
-    Array.from(prgInner.children).forEach(function(c) {
-      c.style.cssText = 'transition:none;opacity:0;transform:translateY(20px)';
-    });
-  }
+  // Card frame starts where the review card was, contents hidden inside it
+  prgCard.style.cssText = 'transition:none;transform:translateY(' + dy + 'px)';
+  Array.from(prgCard.children).forEach(function(c) {
+    c.style.cssText = 'transition:none;opacity:0;transform:translateY(10px)';
+  });
   var prgBottom = progressEl.querySelector('.smp-bottom');
-  if (prgBottom) prgBottom.style.cssText = 'transition:none;opacity:0;transform:translateY(40px)';
+  if (prgBottom) prgBottom.style.cssText = 'transition:none;opacity:0;transform:translateY(32px)';
 
   requestAnimationFrame(function() { requestAnimationFrame(function() {
-    // Fade review card contents out
-    var revInner = revCard ? revCard.querySelector('.smr-card-inner') : revCard;
-    if (revInner) Array.from(revInner.children).forEach(function(c) {
-      c.style.cssText = 'transition:opacity 0.16s ease;opacity:0';
+    // Frame glides up from the review position to its resting spot
+    prgCard.style.cssText = 'transition:transform 0.55s ' + spring + ';transform:translateY(0)';
+    // Contents fade up inside the moving frame, lightly staggered
+    Array.from(prgCard.children).forEach(function(c, i) {
+      var d = (0.12 + i * 0.07).toFixed(2) + 's';
+      c.style.cssText = 'transition:opacity 0.32s ease '+d+',transform 0.44s '+spring+' '+d+';opacity:1;transform:translateY(0)';
     });
-
-    // Slide in progress card contents
-    if (prgInner) {
-      Array.from(prgInner.children).forEach(function(c, i) {
-        var d = (0.10 + i * 0.06).toFixed(2) + 's';
-        c.style.cssText = 'transition:opacity 0.28s ease '+d+',transform 0.36s '+spring+' '+d+';opacity:1;transform:translateY(0)';
-      });
-    }
-    if (prgBottom) prgBottom.style.cssText = 'transition:opacity 0.28s ease 0.22s,transform 0.38s '+spring+' 0.22s;opacity:1;transform:translateY(0)';
+    if (prgBottom) prgBottom.style.cssText = 'transition:opacity 0.30s ease 0.26s,transform 0.42s '+spring+' 0.26s;opacity:1;transform:translateY(0)';
   }); });
 
   // Clean up: park review off-screen
   setTimeout(function() {
     progressEl.style.cssText = '';
-    progressEl.style.zIndex  = '';
     reviewEl.style.transition = 'none';
     reviewEl.className = 'screen hl';
     if (revCard) revCard.style.cssText = '';
-    if (prgInner) Array.from(prgInner.children).forEach(function(c) { c.style.cssText = ''; });
+    prgCard.style.cssText = '';
+    Array.from(prgCard.children).forEach(function(c) { c.style.cssText = ''; });
     if (prgBottom) prgBottom.style.cssText = '';
     requestAnimationFrame(function() { reviewEl.style.transition = ''; });
-  }, 600);
+  }, 750);
 }
 
 function smGoToSuccess() {
