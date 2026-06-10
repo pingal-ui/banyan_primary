@@ -4871,7 +4871,7 @@
       flex: 1; min-height: 1px; overflow: hidden;
       display: flex; align-items: flex-start;
     }
-    .home-ai-ph-static { white-space: nowrap; flex-shrink: 0; margin-right: 4px; }
+    .home-ai-ph-static { white-space: nowrap; flex-shrink: 0; margin-right: 0; }
     .home-ai-ph-suffix { white-space: nowrap; }
     .home-ai-ph-cursor {
       display: inline-block;
