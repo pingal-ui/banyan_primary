@@ -6152,9 +6152,9 @@ function benOpenAdd() {}
 }());
 
 
-/* ── Home AI placeholder roller ────────────────────────────────────────────
-   "Ask Banyan" stays fixed; the suffix cycles through prompts with a
-   slot-machine translateY scroll. Pauses if the user has focused the card.
+/* ── Home AI placeholder rollback ───────────────────────────────────────────
+   "Ask Banyan " stays fixed. The suffix types in, holds, deletes, then the
+   next phrase types in. Pauses when the input card is tapped.
 ──────────────────────────────────────────────────────────────────────────── */
 (function _initAiPhRoller() {
   var SUFFIXES = [
@@ -6167,60 +6167,66 @@ function benOpenAdd() {}
     'to explain where my money went',
     'to protect my account',
   ];
-  var ITEM_H   = 20;   // px — must match line-height in CSS
-  var HOLD_MS  = 2800; // how long each phrase stays visible
-  var idx      = 0;
-  var timer    = null;
+  var TYPE_MS  = 42;   // ms per character typed
+  var DELETE_MS = 28;  // ms per character deleted
+  var HOLD_MS  = 2600; // ms to hold before deleting
+  var PAUSE_MS = 320;  // ms pause between delete and next type
 
-  var track = document.querySelector('.home-ai-ph-track');
-  if (!track) return;
+  var suffix = document.querySelector('.home-ai-ph-suffix');
+  if (!suffix) return;
 
-  // Build the item nodes — duplicate first at end for seamless wrap
-  SUFFIXES.concat([SUFFIXES[0]]).forEach(function(text) {
-    var el = document.createElement('span');
-    el.className = 'home-ai-ph-item';
-    el.textContent = text;
-    track.appendChild(el);
-  });
+  var idx     = 0;
+  var paused  = false;
+  var running = false;
 
-  function advance() {
-    idx++;
-    track.style.transform = 'translateY(-' + (idx * ITEM_H) + 'px)';
-
-    // When we land on the cloned first item, silently reset to real first
-    if (idx === SUFFIXES.length) {
-      setTimeout(function() {
-        track.style.transition = 'none';
-        track.style.transform  = 'translateY(0)';
-        idx = 0;
-        // Re-enable transition on next frame
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() {
-            track.style.transition = '';
-          });
-        });
-      }, 490); // after the 480ms transition completes
+  function typeIn(text, done) {
+    var i = 0;
+    function step() {
+      if (paused) { setTimeout(step, 100); return; }
+      suffix.textContent += text[i];
+      i++;
+      if (i < text.length) setTimeout(step, TYPE_MS);
+      else done();
     }
+    setTimeout(step, TYPE_MS);
   }
 
-  function start() {
-    if (timer) return;
-    timer = setInterval(advance, HOLD_MS);
+  function deleteAll(done) {
+    function step() {
+      if (paused) { setTimeout(step, 100); return; }
+      var t = suffix.textContent;
+      if (t.length === 0) { done(); return; }
+      suffix.textContent = t.slice(0, -1);
+      setTimeout(step, DELETE_MS);
+    }
+    setTimeout(step, DELETE_MS);
   }
 
-  function stop() {
-    clearInterval(timer);
-    timer = null;
+  function cycle() {
+    if (paused) { setTimeout(cycle, 200); return; }
+    var text = SUFFIXES[idx % SUFFIXES.length];
+    idx++;
+    typeIn(text, function() {
+      setTimeout(function() {
+        deleteAll(function() {
+          setTimeout(cycle, PAUSE_MS);
+        });
+      }, HOLD_MS);
+    });
   }
 
   // Pause while the input card is focused/expanded
   var homeAi = document.querySelector('.home-ai');
   if (homeAi) {
-    homeAi.addEventListener('click', stop);
-    // Resume when agent screen closes — hook into the existing back flow
-    document.addEventListener('ag-closed', start);
+    homeAi.addEventListener('click', function() { paused = true; });
+    document.addEventListener('ag-closed', function() {
+      paused = false;
+      suffix.textContent = '';
+      if (!running) { running = true; cycle(); }
+    });
   }
 
-  // Kick off after a brief delay so it doesn't fire on first paint
-  setTimeout(start, HOLD_MS);
+  // Start after first hold so the user sees the static state briefly
+  running = true;
+  setTimeout(cycle, 1200);
 }());
