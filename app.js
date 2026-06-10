@@ -1310,6 +1310,11 @@ function closeHomeAgent() {
   if (nav) {
     nav.style.transition = 'opacity 300ms var(--ease-out), transform 360ms var(--ease-spring)';
     nav.style.opacity = '1'; nav.style.transform = 'translateY(0)'; nav.style.pointerEvents = '';
+    setTimeout(function() {
+      nav.style.transition = '';
+      nav.style.opacity    = '';
+      nav.style.transform  = '';
+    }, 360);
   }
   _agResponseIdx = 0;
   if (typeof showHome === 'function') showHome();
