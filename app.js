@@ -6151,3 +6151,76 @@ function benOpenAdd() {}
   window.visualViewport.addEventListener('scroll', _applyKbLayout);
 }());
 
+
+/* ── Home AI placeholder roller ────────────────────────────────────────────
+   "Ask Banyan" stays fixed; the suffix cycles through prompts with a
+   slot-machine translateY scroll. Pauses if the user has focused the card.
+──────────────────────────────────────────────────────────────────────────── */
+(function _initAiPhRoller() {
+  var SUFFIXES = [
+    'to send money',
+    'to watch for unusual charges',
+    'to set aside money automatically',
+    'to manage my cards',
+    'to track family spending',
+    'to organize my bills',
+    'to explain where my money went',
+    'to protect my account',
+  ];
+  var ITEM_H   = 20;   // px — must match line-height in CSS
+  var HOLD_MS  = 2800; // how long each phrase stays visible
+  var idx      = 0;
+  var timer    = null;
+
+  var track = document.querySelector('.home-ai-ph-track');
+  if (!track) return;
+
+  // Build the item nodes — duplicate first at end for seamless wrap
+  SUFFIXES.concat([SUFFIXES[0]]).forEach(function(text) {
+    var el = document.createElement('span');
+    el.className = 'home-ai-ph-item';
+    el.textContent = text;
+    track.appendChild(el);
+  });
+
+  function advance() {
+    idx++;
+    track.style.transform = 'translateY(-' + (idx * ITEM_H) + 'px)';
+
+    // When we land on the cloned first item, silently reset to real first
+    if (idx === SUFFIXES.length) {
+      setTimeout(function() {
+        track.style.transition = 'none';
+        track.style.transform  = 'translateY(0)';
+        idx = 0;
+        // Re-enable transition on next frame
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            track.style.transition = '';
+          });
+        });
+      }, 490); // after the 480ms transition completes
+    }
+  }
+
+  function start() {
+    if (timer) return;
+    timer = setInterval(advance, HOLD_MS);
+  }
+
+  function stop() {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  // Pause while the input card is focused/expanded
+  var homeAi = document.querySelector('.home-ai');
+  if (homeAi) {
+    homeAi.addEventListener('click', stop);
+    // Resume when agent screen closes — hook into the existing back flow
+    document.addEventListener('ag-closed', start);
+  }
+
+  // Kick off after a brief delay so it doesn't fire on first paint
+  setTimeout(start, HOLD_MS);
+}());

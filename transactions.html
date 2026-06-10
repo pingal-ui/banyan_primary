@@ -64,7 +64,9 @@
 
         <!-- AI input — sibling of hero so it blurs independently -->
         <div class="home-ai" onclick="focusHomeAi()" style="cursor:pointer;">
-          <div class="home-ai-ph">Ask Banyan...</div>
+          <div class="home-ai-ph">
+            <span class="home-ai-ph-static">Ask Banyan</span><span class="home-ai-ph-roll"><span class="home-ai-ph-track"></span></span>
+          </div>
           <div class="home-ai-row">
             <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
               <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
@@ -2848,6 +2850,6 @@
 
 </div>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
