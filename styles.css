@@ -4879,7 +4879,7 @@
       height: 14px;
       background: rgba(0,0,0,0.45);
       border-radius: 1px;
-      vertical-align: middle;
+      vertical-align: -4px;
       margin-left: 1px;
       animation: ph-blink 1s step-end infinite;
     }
