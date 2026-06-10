@@ -1296,6 +1296,8 @@ function closeHomeAgent() {
   var home = document.getElementById('home');
   if (home) home.classList.remove('home-ai-focused');
   const screen = document.getElementById('agent-screen');
+  screen.style.transition = 'opacity 220ms var(--ease-out)';
+  screen.style.opacity    = '';
   screen.classList.remove('ag-open', 'ag-convo');
   screen.setAttribute('aria-hidden', 'true');
   const msgs = document.getElementById('agentMsgs');
