@@ -4128,7 +4128,7 @@
     .smp-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 100px; display: flex; flex-direction: column; }
     .smp-scroll::-webkit-scrollbar { display: none; }
 
-    .smp-card-wrap { padding: 0 20px; display: flex; flex-direction: column; gap: 4px; }
+    .smp-card-wrap { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
 
     /* Main glass card */
     .smp-card { backdrop-filter: blur(48px); -webkit-backdrop-filter: blur(48px); background: linear-gradient(180deg, rgba(0,0,0,0) 80%, rgba(0,0,0,0.1) 100%), rgba(255,255,255,0.8); border-top: 2px solid rgba(255,255,255,0.8); border-bottom: 2px solid rgba(255,255,255,0.8); border-left: none; border-right: none; border-radius: 32px; padding: 4px; box-shadow: 0 16px 40px rgba(3,20,13,0.1); }
