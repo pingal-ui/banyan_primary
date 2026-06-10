@@ -4150,33 +4150,37 @@
       animation: smpCoinSpin 2.4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
       transition: transform 0.4s var(--ease-spring), opacity 0.3s ease;
     }
-    /* Cartoon gold coin — flat amber face, inner ring, embossed symbol */
+    /* Antique gold coin — matte ochre face, flat outer rim, beaded inner ring,
+       sculpted emboss (after the classical-coin reference) */
     .smp-coin-face {
       position: absolute; inset: 0; border-radius: 50%;
       backface-visibility: hidden; display: flex; align-items: center; justify-content: center;
       overflow: hidden;
-      background: radial-gradient(circle at 38% 30%, #f2c64a 0%, #e8b22e 48%, #d6961f 100%);
+      /* Outer rim reads slightly lighter than the sunken face */
+      background: radial-gradient(circle at 40% 32%, #e3b54a 0%, #d2a02e 46%, #aa7912 100%);
       box-shadow:
-        inset 0 3px 2px rgba(250,226,150,0.75),
-        inset 0 -5px 0 rgba(178,110,8,0.45),
-        0 6px 18px rgba(186,124,16,0.35);
+        inset 0 0 0 5px rgba(226,182,80,0.55),     /* flat raised rim band */
+        inset 0 0 0 6px rgba(120,76,4,0.35),       /* rim's inner cut line */
+        inset 0 4px 3px rgba(244,214,130,0.55),
+        inset 0 -6px 8px rgba(104,64,2,0.45),
+        0 6px 18px rgba(120,80,8,0.40);
     }
-    /* Raised inner ring, like the struck rim of the reference coin */
+    /* Beaded dot ring just inside the rim, like the reference */
     .smp-coin-face::after {
       content: '';
-      position: absolute; inset: 7px; border-radius: 50%;
-      border: 2.5px solid rgba(186,118,8,0.50);
-      box-shadow: inset 0 2px 1px rgba(250,224,140,0.50);
+      position: absolute; inset: 8px; border-radius: 50%;
+      border: 2.5px dotted rgba(122,76,4,0.55);
+      box-shadow: inset 0 2px 2px rgba(244,216,140,0.40);
       pointer-events: none;
     }
     .smp-coin-back { transform: rotateY(180deg); }
     .smp-coin-sym {
       font-family: 'Geist', sans-serif; font-size: 30px; font-weight: 800;
-      color: #eab63a;
+      color: #dcab38;
       line-height: 1; user-select: none; position: relative; z-index: 1;
       text-shadow:
-        0 -1px 0 rgba(250,232,170,0.85),
-        0 2px 3px rgba(155,92,2,0.55);
+        0 -1.5px 0 rgba(246,222,150,0.95),
+        0 2px 3px rgba(86,52,0,0.75);
     }
     @keyframes smpCoinSpin {
       0%    { transform: rotateY(0deg); }
