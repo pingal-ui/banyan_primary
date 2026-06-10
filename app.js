@@ -4866,15 +4866,6 @@ function smpSimulateSuccess() {
     setTimeout(function() {
       var lbl = document.querySelector('#sm-progress .smp-hero-lbl');
       if (lbl) { lbl.style.color = 'var(--brand-primary)'; lbl.textContent = 'Successfully transferred'; }
-      var eta = document.querySelector('#sm-progress .smp-hero-eta');
-      if (eta) {
-        eta.style.opacity = '0';
-        setTimeout(function() {
-          eta.innerHTML = '<span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:12px;color:var(--brand-primary)"></span><span class="smp-hero-eta-txt" style="color:var(--brand-primary)">Completed</span>';
-          eta.style.transition = 'opacity 0.3s ease';
-          eta.style.opacity = '1';
-        }, 200);
-      }
     }, 600);
     var doneBtn = document.querySelector('#smpBottom .smp-done-btn');
     if (doneBtn) doneBtn.onclick = function() { smDone(); };
@@ -4946,8 +4937,6 @@ function smGoToProgress() {
   if (hero) { hero.style.transition = 'none'; hero.classList.remove('success-anim'); }
   var lbl = document.querySelector('#sm-progress .smp-hero-lbl');
   if (lbl) { lbl.style.color = ''; lbl.textContent = 'Transfer in progress'; }
-  var eta = document.querySelector('#sm-progress .smp-hero-eta');
-  if (eta) { eta.style.opacity = ''; eta.style.transition = ''; }
   var doneBtn = document.querySelector('#smpBottom .smp-done-btn');
   if (doneBtn) doneBtn.onclick = function() { smGoToSuccess(); };
 
