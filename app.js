@@ -3610,6 +3610,155 @@ function closeCrSheets() {
   const ov = document.getElementById('crOverlay');
   if (ov) ov.classList.remove('visible');
 }
+/* ── Card Controls Sheet ── */
+var _ccsDirty = false;
+
+function ccsMark() {
+  if (!_ccsDirty) {
+    _ccsDirty = true;
+    const bar = document.getElementById('ccsSaveBar');
+    if (bar) { bar.classList.add('visible'); }
+  }
+}
+
+function ccsDiscard() {
+  _ccsDirty = false;
+  document.getElementById('ccsSaveBar').classList.remove('visible');
+  // restore placeholder UI (no real state)
+  showToast('Changes discarded');
+}
+
+function ccsSave() {
+  _ccsDirty = false;
+  document.getElementById('ccsSaveBar').classList.remove('visible');
+  showToast('Controls saved');
+}
+
+function ccsToggleLimit(type, toggleEl) {
+  toggleEl.classList.toggle('on');
+  const isOn = toggleEl.classList.contains('on');
+  const fieldMap = { perTx: 'ccsPerTxField', monthly: 'ccsMonthlyField', budget: 'ccsBudgetField' };
+  const field = document.getElementById(fieldMap[type]);
+  if (field) field.style.display = isOn ? '' : 'none';
+  ccsMark();
+}
+
+function ccsToggleSection(type, toggleEl) {
+  toggleEl.classList.toggle('on');
+  const isOn = toggleEl.classList.contains('on');
+  const fieldMap = { country: 'ccsCountryField', velocity: 'ccsVelocityField', lock: 'ccsLockField' };
+  const field = document.getElementById(fieldMap[type]);
+  if (field) field.style.display = isOn ? '' : 'none';
+}
+
+function ccsToggleCat(toggleEl) {
+  toggleEl.classList.toggle('on');
+}
+
+function ccsSetMode(mode, btn) {
+  btn.closest('.ccs-mode-row').querySelectorAll('.ccs-mode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ccsMark();
+}
+
+function ccsToggleChip(chip) {
+  chip.classList.toggle('ccs-chip--active');
+}
+
+function ccsPeriod(btn, _p) {
+  btn.closest('.ccs-period-seg').querySelectorAll('.ccs-period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  ccsMark();
+}
+
+function ccsMerchantUpdate() {
+  const val = (document.getElementById('ccsMerchantInput').value || '').trim();
+  const note = document.getElementById('ccsMerchantNote');
+  if (!note) return;
+  if (val) {
+    note.textContent = 'This card will attempt to only authorize charges from ' + val + '. If exact merchant matching isn\'t available, category, amount, and country controls will be used as a fallback.';
+  } else {
+    note.textContent = 'This card works at any merchant allowed by your category and limit settings.';
+  }
+}
+
+function ccsLockPreview() {
+  const d = document.getElementById('ccsLockDate').value;
+  const t = document.getElementById('ccsLockTime').value;
+  const prev = document.getElementById('ccsLockPreview');
+  if (!prev) return;
+  if (d) {
+    const dt = new Date(d + 'T' + (t || '23:59'));
+    const fmt = dt.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    const tfmt = dt.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    prev.style.display = '';
+    prev.textContent = 'This card will be automatically frozen on ' + fmt + ' at ' + tfmt + '. You can edit or cancel this anytime.';
+  } else {
+    prev.style.display = 'none';
+  }
+}
+
+function ccsAddCountry() {
+  showToast('Country picker coming soon');
+}
+
+function ccsFreezeCard() {
+  const badge = document.getElementById('ccsStatusBadge');
+  const label = document.getElementById('ccsStatusLabel');
+  const desc = document.getElementById('ccsStatusDesc');
+  const freezeBtn = document.getElementById('ccsFreezeBtn');
+  const unfreezeBtn = document.getElementById('ccsUnfreezeBtn');
+  const banner = document.getElementById('ccsBannerFrozen');
+  badge.className = 'ccs-status-badge frozen';
+  label.textContent = 'Frozen';
+  desc.textContent = 'New charges are paused';
+  freezeBtn.style.display = 'none';
+  unfreezeBtn.style.display = '';
+  banner.style.display = 'flex';
+  showToast('Card frozen');
+}
+
+function ccsUnfreezeCard() {
+  const badge = document.getElementById('ccsStatusBadge');
+  const label = document.getElementById('ccsStatusLabel');
+  const desc = document.getElementById('ccsStatusDesc');
+  const freezeBtn = document.getElementById('ccsFreezeBtn');
+  const unfreezeBtn = document.getElementById('ccsUnfreezeBtn');
+  const banner = document.getElementById('ccsBannerFrozen');
+  badge.className = 'ccs-status-badge';
+  label.textContent = 'Active';
+  desc.textContent = 'All transactions enabled';
+  freezeBtn.style.display = '';
+  unfreezeBtn.style.display = 'none';
+  banner.style.display = 'none';
+  showToast('Card unfrozen');
+}
+
+function ccsCloseCardConfirm() {
+  const overlay = document.getElementById('ccsCloseConfirm');
+  overlay.style.display = overlay.style.display === 'none' ? 'flex' : 'none';
+}
+
+function ccsCloseCardExecute() {
+  document.getElementById('ccsCloseConfirm').style.display = 'none';
+  const badge = document.getElementById('ccsStatusBadge');
+  const label = document.getElementById('ccsStatusLabel');
+  const desc = document.getElementById('ccsStatusDesc');
+  const banner = document.getElementById('ccsBannerClosed');
+  badge.className = 'ccs-status-badge closed';
+  label.textContent = 'Closed';
+  desc.textContent = 'Card permanently closed';
+  document.getElementById('ccsFreezeBtn').style.display = 'none';
+  document.getElementById('ccsUnfreezeBtn').style.display = 'none';
+  document.getElementById('ccsCloseCardBtn').style.display = 'none';
+  document.getElementById('ccsBannerFrozen').style.display = 'none';
+  banner.style.display = 'flex';
+  // make scroll readonly
+  document.getElementById('ccsScroll').style.pointerEvents = 'none';
+  document.getElementById('ccsScroll').style.opacity = '0.65';
+  showToast('Card closed');
+}
+
 /* ── Create Card sheet ── */
 function openCcSheet() {
   document.getElementById('ccOverlay').classList.add('open');
