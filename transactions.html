@@ -6,7 +6,7 @@
   <title>Banyan – Transactions</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=7">
+  <link rel="stylesheet" href="styles.css?v=8">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -2692,354 +2692,244 @@
       </button>
     </div>
 
-    <!-- Read-only banner (shown when card is frozen/closed or user is added-user) -->
+    <!-- Agent input -->
+    <div class="ccs-agent-wrap">
+      <div class="ccs-agent-bar" id="ccsAgentBar">
+        <span class="ico ol ccs-agent-ico" style="--ico:url('Icons/Sparkle.svg');--sz:15px"></span>
+        <input class="ccs-agent-input" id="ccsAgentInput" type="text"
+          placeholder="e.g. limit to $200/month, block dining…"
+          autocomplete="off"
+          oninput="ccsAgentTyping()"
+          onkeydown="if(event.key==='Enter')ccsAgentSubmit()">
+        <button class="ccs-agent-send" id="ccsAgentSend" onclick="ccsAgentSubmit()" style="display:none">
+          <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:14px;color:white"></span>
+        </button>
+      </div>
+      <!-- Response bubble -->
+      <div class="ccs-agent-resp" id="ccsAgentResp" style="display:none"></div>
+    </div>
+
+    <!-- Status banner -->
     <div class="ccs-banner ccs-banner--frozen" id="ccsBannerFrozen" style="display:none">
-      <span class="ico ol" style="--ico:url('Icons/Lock.svg');--sz:14px;color:inherit;flex-shrink:0"></span>
-      <span>This card is frozen. Unfreeze it to make changes.</span>
+      <span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:14px;color:inherit;flex-shrink:0"></span>
+      <span>Card is frozen. New charges are paused.</span>
+      <button class="ccs-banner-action" onclick="ccsUnfreezeCard()">Unfreeze</button>
     </div>
     <div class="ccs-banner ccs-banner--closed" id="ccsBannerClosed" style="display:none">
       <span class="ico ol" style="--ico:url('Icons/ProhibitInset.svg');--sz:14px;color:inherit;flex-shrink:0"></span>
       <span>This card has been permanently closed.</span>
     </div>
-    <div class="ccs-banner ccs-banner--readonly" id="ccsBannerReadonly" style="display:none">
-      <span class="ico ol" style="--ico:url('Icons/Eye.svg');--sz:14px;color:inherit;flex-shrink:0"></span>
-      <span>Only the account owner can change these controls.</span>
-    </div>
 
     <!-- Scrollable body -->
     <div class="ccs-scroll" id="ccsScroll">
 
-      <!-- ── 1. SPEND LIMITS ── -->
-      <div class="ccs-section">
-        <div class="ccs-section-hdr">Spend limits</div>
-        <div class="cr-settings-card">
-
-          <!-- Per-transaction -->
-          <div class="ccs-limit-row" id="ccsPerTxRow">
-            <div class="ccs-limit-top">
-              <div class="ccs-limit-meta">
-                <span class="ccs-limit-name">Per transaction</span>
-                <span class="ccs-limit-desc">Max amount for a single charge</span>
-              </div>
-              <div class="ccs-limit-right">
-                <span class="ccs-limit-val" id="ccsPerTxVal" style="display:none">$250</span>
-                <div class="cr-toggle on" id="ccsPerTxToggle" onclick="ccsToggleLimit('perTx',this)"></div>
-              </div>
-            </div>
-            <div class="ccs-limit-field" id="ccsPerTxField">
-              <div class="ccs-amount-input-wrap">
-                <span class="ccs-currency">$</span>
-                <input class="ccs-amount-input" id="ccsPerTxInput" type="number" inputmode="decimal" placeholder="0" value="250" oninput="ccsMark()">
-              </div>
-            </div>
-          </div>
-
-          <div class="ccs-divider"></div>
-
-          <!-- Monthly limit -->
-          <div class="ccs-limit-row" id="ccsMonthlyRow">
-            <div class="ccs-limit-top">
-              <div class="ccs-limit-meta">
-                <span class="ccs-limit-name">Monthly limit</span>
-                <span class="ccs-limit-desc">Recurring cap · resets each month</span>
-              </div>
-              <div class="ccs-limit-right">
-                <span class="ccs-limit-val" id="ccsMonthlyVal" style="display:none">$1,000</span>
-                <div class="cr-toggle on" id="ccsMonthlyToggle" onclick="ccsToggleLimit('monthly',this)"></div>
-              </div>
-            </div>
-            <div class="ccs-limit-field" id="ccsMonthlyField">
-              <div class="ccs-amount-input-wrap">
-                <span class="ccs-currency">$</span>
-                <input class="ccs-amount-input" id="ccsMonthlyInput" type="number" inputmode="decimal" placeholder="0" value="1000" oninput="ccsMark()">
-              </div>
-              <div class="ccs-progress-wrap">
-                <div class="ccs-progress-bar">
-                  <div class="ccs-progress-fill" id="ccsMonthlyBar" style="width:62%"></div>
-                </div>
-                <span class="ccs-progress-lbl">$620 of $1,000 used this month</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="ccs-divider"></div>
-
-          <!-- All-time budget -->
-          <div class="ccs-limit-row" id="ccsBudgetRow">
-            <div class="ccs-limit-top">
-              <div class="ccs-limit-meta">
-                <span class="ccs-limit-name">All-time budget</span>
-                <span class="ccs-limit-desc">Total lifetime cap for this card</span>
-              </div>
-              <div class="ccs-limit-right">
-                <span class="ccs-limit-val" id="ccsBudgetVal" style="display:none"></span>
-                <div class="cr-toggle" id="ccsBudgetToggle" onclick="ccsToggleLimit('budget',this)"></div>
-              </div>
-            </div>
-            <div class="ccs-limit-field" id="ccsBudgetField" style="display:none">
-              <div class="ccs-amount-input-wrap">
-                <span class="ccs-currency">$</span>
-                <input class="ccs-amount-input" id="ccsBudgetInput" type="number" inputmode="decimal" placeholder="0" oninput="ccsMark()">
-              </div>
-              <div class="ccs-progress-wrap" id="ccsBudgetProgressWrap" style="display:none">
-                <div class="ccs-progress-bar">
-                  <div class="ccs-progress-fill" id="ccsBudgetBar" style="width:0%"></div>
-                </div>
-                <span class="ccs-progress-lbl" id="ccsBudgetProgressLbl"></span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-        <p class="ccs-note">Transactions that exceed a limit will be declined.</p>
-      </div>
-
-      <!-- ── 2. CATEGORY CONTROLS ── -->
-      <div class="ccs-section">
-        <div class="ccs-section-hdr">Category controls</div>
-        <div class="cr-settings-card" style="margin-bottom:8px">
-          <!-- Mode selector -->
-          <div class="ccs-mode-row">
-            <button class="ccs-mode-btn active" id="ccsModeAllow" onclick="ccsSetMode('allow',this)">Allow only these</button>
-            <button class="ccs-mode-btn" id="ccsModeBlock" onclick="ccsSetMode('block',this)">Block these</button>
-          </div>
-        </div>
-        <div class="cr-settings-card">
-          <!-- 13 categories -->
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Groceries &amp; Essentials</span>
-              <span class="ccs-cat-desc">Supermarkets, convenience stores, bakeries</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Dining &amp; Drinks</span>
-              <span class="ccs-cat-desc">Restaurants, cafes, bars, delivery apps</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Shopping &amp; Retail</span>
-              <span class="ccs-cat-desc">Clothing, electronics, department stores</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Digital Subscriptions &amp; Software</span>
-              <span class="ccs-cat-desc">Streaming, SaaS, app stores, cloud storage</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Travel &amp; Transport</span>
-              <span class="ccs-cat-desc">Airlines, hotels, ride-hailing, trains</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Fuel &amp; Auto</span>
-              <span class="ccs-cat-desc">Gas stations, parking, car services</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Home &amp; Utilities</span>
-              <span class="ccs-cat-desc">Electricity, water, internet, home goods</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Health &amp; Pharmacy</span>
-              <span class="ccs-cat-desc">Doctors, pharmacies, labs, hospitals</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Kids &amp; Education</span>
-              <span class="ccs-cat-desc">Schools, tutoring, children's stores</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Entertainment &amp; Hobbies</span>
-              <span class="ccs-cat-desc">Cinemas, games, sports, events, concerts</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Personal Care</span>
-              <span class="ccs-cat-desc">Salons, spas, gyms, wellness</span>
-            </div>
-            <div class="cr-toggle on" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Cash &amp; Financial Transfers</span>
-              <span class="ccs-cat-desc">ATM withdrawals, wire transfers, money orders</span>
-            </div>
-            <div class="cr-toggle" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-          <div class="ccs-divider"></div>
-          <div class="ccs-cat-row">
-            <div class="ccs-cat-body">
-              <span class="ccs-cat-name">Restricted categories</span>
-              <span class="ccs-cat-desc">Gambling, alcohol, adult content, firearms</span>
-            </div>
-            <div class="cr-toggle" onclick="ccsToggleCat(this);ccsMark()"></div>
-          </div>
-        </div>
-        <p class="ccs-note">Merchant networks classify merchants imperfectly. Some controls are best-effort.</p>
-      </div>
-
-      <!-- ── 3. MERCHANT CONTROL ── -->
-      <div class="ccs-section">
-        <div class="ccs-section-hdr">Merchant</div>
-        <div class="cr-settings-card">
-          <div class="ccs-merchant-row">
-            <span class="ico ol" style="--ico:url('Icons/Storefront.svg');--sz:16px;color:rgba(0,0,0,0.4);flex-shrink:0"></span>
-            <input class="ccs-merchant-input" id="ccsMerchantInput" type="text" placeholder="Restrict to a specific merchant" oninput="ccsMerchantUpdate();ccsMark()">
-          </div>
-        </div>
-        <p class="ccs-note" id="ccsMerchantNote">This card works at any merchant allowed by your category and limit settings.</p>
-      </div>
-
-      <!-- ── 4. COUNTRY / REGION ── -->
-      <div class="ccs-section">
-        <div class="ccs-section-hdr">Countries</div>
-        <div class="cr-settings-card">
-          <div class="ccs-toggle-row">
-            <div class="ccs-toggle-meta">
-              <span class="ccs-toggle-name">Restrict to specific countries</span>
-              <span class="ccs-toggle-desc">Block charges from other regions</span>
-            </div>
-            <div class="cr-toggle" id="ccsCountryToggle" onclick="ccsToggleSection('country',this);ccsMark()"></div>
-          </div>
-          <div class="ccs-collapsible" id="ccsCountryField" style="display:none">
-            <div class="ccs-divider"></div>
-            <div class="ccs-country-chips" id="ccsCountryChips">
-              <button class="ccs-chip ccs-chip--active" onclick="ccsToggleChip(this);ccsMark()">🇺🇸 United States</button>
-              <button class="ccs-chip ccs-chip--active" onclick="ccsToggleChip(this);ccsMark()">🇮🇳 India</button>
-              <button class="ccs-chip ccs-chip--active" onclick="ccsToggleChip(this);ccsMark()">🇬🇧 United Kingdom</button>
-              <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇦🇪 UAE</button>
-              <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇸🇬 Singapore</button>
-              <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇪🇺 Eurozone</button>
-              <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇯🇵 Japan</button>
-              <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇦🇺 Australia</button>
-              <button class="ccs-chip ccs-chip--add" onclick="ccsAddCountry()">+ Add</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── 5. VELOCITY RULE ── -->
-      <div class="ccs-section">
-        <div class="ccs-section-hdr">Transaction frequency</div>
-        <div class="cr-settings-card">
-          <div class="ccs-toggle-row">
-            <div class="ccs-toggle-meta">
-              <span class="ccs-toggle-name">Limit number of transactions</span>
-              <span class="ccs-toggle-desc">e.g. 10 transactions per month</span>
-            </div>
-            <div class="cr-toggle" id="ccsVelocityToggle" onclick="ccsToggleSection('velocity',this);ccsMark()"></div>
-          </div>
-          <div class="ccs-collapsible" id="ccsVelocityField" style="display:none">
-            <div class="ccs-divider"></div>
-            <div class="ccs-velocity-inputs">
-              <div class="ccs-velocity-count-wrap">
-                <input class="ccs-velocity-input" id="ccsVelocityCount" type="number" inputmode="numeric" placeholder="10" min="1" oninput="ccsMark()">
-                <span class="ccs-velocity-label">transactions</span>
-              </div>
-              <div class="ccs-period-seg">
-                <button class="ccs-period-btn active" onclick="ccsPeriod(this,'day')">Per day</button>
-                <button class="ccs-period-btn" onclick="ccsPeriod(this,'week')">Per week</button>
-                <button class="ccs-period-btn" onclick="ccsPeriod(this,'month')">Per month</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── 6. SCHEDULED LOCK ── -->
-      <div class="ccs-section">
-        <div class="ccs-section-hdr">Auto-lock</div>
-        <div class="cr-settings-card">
-          <div class="ccs-toggle-row">
-            <div class="ccs-toggle-meta">
-              <span class="ccs-toggle-name">Lock this card on a future date</span>
-              <span class="ccs-toggle-desc">Card will freeze automatically</span>
-            </div>
-            <div class="cr-toggle" id="ccsLockToggle" onclick="ccsToggleSection('lock',this);ccsMark()"></div>
-          </div>
-          <div class="ccs-collapsible" id="ccsLockField" style="display:none">
-            <div class="ccs-divider"></div>
-            <div class="ccs-lock-datetime">
-              <div class="ccs-datetime-row">
-                <span class="ico ol" style="--ico:url('Icons/CalendarBlank.svg');--sz:16px;color:rgba(0,0,0,0.4);flex-shrink:0"></span>
-                <input class="ccs-datetime-input" id="ccsLockDate" type="date" oninput="ccsLockPreview();ccsMark()">
-              </div>
-              <div class="ccs-datetime-row">
-                <span class="ico ol" style="--ico:url('Icons/Clock.svg');--sz:16px;color:rgba(0,0,0,0.4);flex-shrink:0"></span>
-                <input class="ccs-datetime-input" id="ccsLockTime" type="time" value="23:59" oninput="ccsLockPreview();ccsMark()">
-              </div>
-            </div>
-            <p class="ccs-lock-preview" id="ccsLockPreview" style="display:none"></p>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── 7. CARD STATUS ── -->
-      <div class="ccs-section" style="padding-bottom:8px">
-        <div class="ccs-section-hdr">Card status</div>
+      <!-- ── 1. STATUS + FREEZE ── -->
+      <div class="ccs-section ccs-section--first">
         <div class="cr-settings-card">
           <div class="ccs-status-row">
             <div class="ccs-status-badge" id="ccsStatusBadge">
               <div class="ccs-status-dot"></div>
               <span id="ccsStatusLabel">Active</span>
             </div>
-            <span class="ccs-status-desc" id="ccsStatusDesc">All transactions enabled</span>
+            <div class="ccs-status-actions">
+              <button class="ccs-freeze-pill" id="ccsFreezeBtn" onclick="ccsFreezeCard()">
+                <span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:13px;color:inherit"></span>
+                Freeze
+              </button>
+              <button class="ccs-freeze-pill ccs-freeze-pill--unfreeze" id="ccsUnfreezeBtn" onclick="ccsUnfreezeCard()" style="display:none">
+                <span class="ico ol" style="--ico:url('Icons/SunHorizon.svg');--sz:13px;color:inherit"></span>
+                Unfreeze
+              </button>
+              <button class="ccs-close-pill" id="ccsCloseCardBtn" onclick="ccsCloseCardConfirm()">
+                Close card
+              </button>
+            </div>
           </div>
         </div>
-        <div class="ccs-action-btns">
-          <button class="ccs-action-btn ccs-action-btn--freeze" id="ccsFreezeBtn" onclick="ccsFreezeCard()">
-            <span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:16px;color:inherit"></span>
-            Freeze card
-          </button>
-          <button class="ccs-action-btn ccs-action-btn--unfreeze" id="ccsUnfreezeBtn" onclick="ccsUnfreezeCard()" style="display:none">
-            <span class="ico ol" style="--ico:url('Icons/SunHorizon.svg');--sz:16px;color:inherit"></span>
-            Unfreeze card
-          </button>
-          <button class="ccs-action-btn ccs-action-btn--close" id="ccsCloseCardBtn" onclick="ccsCloseCardConfirm()">
-            <span class="ico ol" style="--ico:url('Icons/ProhibitInset.svg');--sz:16px;color:inherit"></span>
-            Close card
-          </button>
-        </div>
-        <p class="ccs-note" style="text-align:center;margin-top:4px">Closing a card is permanent and cannot be undone.</p>
       </div>
 
-      <!-- bottom spacer -->
-      <div style="height:100px"></div>
+      <!-- ── 2. SPEND LIMITS ── -->
+      <div class="ccs-section">
+        <div class="ccs-section-hdr">Spend limits</div>
+        <div class="cr-settings-card">
+
+          <!-- Monthly — hero row with progress -->
+          <div class="ccs-limit-row">
+            <div class="ccs-limit-top">
+              <div class="ccs-limit-meta">
+                <span class="ccs-limit-name">Monthly</span>
+                <span class="ccs-limit-desc" id="ccsMonthlyDesc">$620 used · resets Jun 30</span>
+              </div>
+              <div class="ccs-limit-right">
+                <div class="ccs-amount-inline-wrap" id="ccsMonthlyAmtWrap">
+                  <span class="ccs-currency-sm">$</span>
+                  <input class="ccs-amount-inline" id="ccsMonthlyInput" type="number" inputmode="decimal" value="1000" oninput="ccsUpdateBar('monthly');ccsMark()">
+                </div>
+                <div class="cr-toggle on" id="ccsMonthlyToggle" onclick="ccsToggleLimit('monthly',this)"></div>
+              </div>
+            </div>
+            <div class="ccs-progress-wrap" id="ccsMonthlyProgress">
+              <div class="ccs-progress-bar">
+                <div class="ccs-progress-fill" id="ccsMonthlyBar" style="width:62%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ccs-divider"></div>
+
+          <!-- Per-transaction — compact secondary row -->
+          <div class="ccs-limit-row">
+            <div class="ccs-limit-top">
+              <div class="ccs-limit-meta">
+                <span class="ccs-limit-name">Per transaction</span>
+              </div>
+              <div class="ccs-limit-right">
+                <div class="ccs-amount-inline-wrap" id="ccsPerTxAmtWrap">
+                  <span class="ccs-currency-sm">$</span>
+                  <input class="ccs-amount-inline" id="ccsPerTxInput" type="number" inputmode="decimal" value="250" oninput="ccsMark()">
+                </div>
+                <div class="cr-toggle on" id="ccsPerTxToggle" onclick="ccsToggleLimit('perTx',this)"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="ccs-divider"></div>
+
+          <!-- All-time budget — collapsed by default -->
+          <div class="ccs-limit-row">
+            <div class="ccs-limit-top">
+              <div class="ccs-limit-meta">
+                <span class="ccs-limit-name">All-time budget</span>
+                <span class="ccs-limit-desc">Total lifetime cap</span>
+              </div>
+              <div class="ccs-limit-right">
+                <div class="ccs-amount-inline-wrap" id="ccsBudgetAmtWrap" style="display:none">
+                  <span class="ccs-currency-sm">$</span>
+                  <input class="ccs-amount-inline" id="ccsBudgetInput" type="number" inputmode="decimal" placeholder="0" oninput="ccsMark()">
+                </div>
+                <div class="cr-toggle" id="ccsBudgetToggle" onclick="ccsToggleLimit('budget',this)"></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <p class="ccs-note">Transactions exceeding a limit will be declined.</p>
+      </div>
+
+      <!-- ── 3. WHERE IT WORKS ── -->
+      <div class="ccs-section">
+        <div class="ccs-section-hdr-row">
+          <span class="ccs-section-hdr" style="margin:0;padding:0">Where it works</span>
+          <div class="ccs-mode-seg" id="ccsModeSegWrap">
+            <button class="ccs-mode-seg-btn active" id="ccsModeAllow" onclick="ccsSetMode('allow',this)">Allow</button>
+            <button class="ccs-mode-seg-btn" id="ccsModeBlock" onclick="ccsSetMode('block',this)">Block</button>
+          </div>
+        </div>
+
+        <!-- Category chips -->
+        <div class="ccs-cat-chips" id="ccsCatChips">
+          <button class="ccs-cat-chip active" data-cat="groceries" onclick="ccsCatChipToggle(this)">🛒 Groceries</button>
+          <button class="ccs-cat-chip active" data-cat="dining" onclick="ccsCatChipToggle(this)">🍽 Dining</button>
+          <button class="ccs-cat-chip active" data-cat="shopping" onclick="ccsCatChipToggle(this)">🛍 Shopping</button>
+          <button class="ccs-cat-chip active" data-cat="subscriptions" onclick="ccsCatChipToggle(this)">📱 Subscriptions</button>
+          <button class="ccs-cat-chip active" data-cat="travel" onclick="ccsCatChipToggle(this)">✈️ Travel</button>
+          <button class="ccs-cat-chip active" data-cat="fuel" onclick="ccsCatChipToggle(this)">⛽️ Fuel</button>
+          <button class="ccs-cat-chip active" data-cat="home" onclick="ccsCatChipToggle(this)">🏠 Home</button>
+          <button class="ccs-cat-chip active" data-cat="health" onclick="ccsCatChipToggle(this)">💊 Health</button>
+          <button class="ccs-cat-chip active" data-cat="education" onclick="ccsCatChipToggle(this)">📚 Education</button>
+          <button class="ccs-cat-chip active" data-cat="entertainment" onclick="ccsCatChipToggle(this)">🎬 Entertainment</button>
+          <button class="ccs-cat-chip active" data-cat="personalcare" onclick="ccsCatChipToggle(this)">💆 Personal care</button>
+          <button class="ccs-cat-chip" data-cat="cash" onclick="ccsCatChipToggle(this)">💸 Cash &amp; transfers</button>
+          <button class="ccs-cat-chip" data-cat="restricted" onclick="ccsCatChipToggle(this)">🔞 Restricted</button>
+        </div>
+        <p class="ccs-note" style="margin-top:4px">Merchant classification is best-effort. Some edge cases may slip through.</p>
+
+        <!-- Merchant + Advanced — collapsed group -->
+        <div class="cr-settings-card" style="margin-top:10px">
+          <div class="ccs-merchant-row">
+            <span class="ico ol" style="--ico:url('Icons/Storefront.svg');--sz:15px;color:rgba(0,0,0,0.35);flex-shrink:0"></span>
+            <input class="ccs-merchant-input" id="ccsMerchantInput" type="text"
+              placeholder="Restrict to one merchant (optional)"
+              oninput="ccsMerchantUpdate();ccsMark()">
+          </div>
+          <div class="ccs-divider"></div>
+          <!-- Advanced row — expands inline -->
+          <div class="ccs-adv-toggle-row" onclick="ccsToggleAdvanced()">
+            <span class="ccs-adv-label">Advanced rules</span>
+            <div class="ccs-adv-right">
+              <span class="ccs-adv-summary" id="ccsAdvSummary">Countries, frequency, auto-lock</span>
+              <span class="ico ol ccs-adv-caret" id="ccsAdvCaret" style="--ico:url('Icons/CaretDown.svg');--sz:13px;color:rgba(0,0,0,0.3)"></span>
+            </div>
+          </div>
+          <div class="ccs-adv-body" id="ccsAdvBody" style="display:none">
+            <div class="ccs-divider"></div>
+            <!-- Countries -->
+            <div class="ccs-adv-row">
+              <div class="ccs-toggle-meta">
+                <span class="ccs-toggle-name">Restrict to countries</span>
+              </div>
+              <div class="cr-toggle" id="ccsCountryToggle" onclick="ccsToggleSection('country',this);ccsMark()"></div>
+            </div>
+            <div class="ccs-collapsible" id="ccsCountryField" style="display:none">
+              <div class="ccs-country-chips" id="ccsCountryChips">
+                <button class="ccs-chip ccs-chip--active" onclick="ccsToggleChip(this);ccsMark()">🇺🇸 US</button>
+                <button class="ccs-chip ccs-chip--active" onclick="ccsToggleChip(this);ccsMark()">🇮🇳 India</button>
+                <button class="ccs-chip ccs-chip--active" onclick="ccsToggleChip(this);ccsMark()">🇬🇧 UK</button>
+                <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇦🇪 UAE</button>
+                <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇸🇬 SG</button>
+                <button class="ccs-chip" onclick="ccsToggleChip(this);ccsMark()">🇪🇺 EU</button>
+                <button class="ccs-chip ccs-chip--add" onclick="ccsAddCountry()">+ Add</button>
+              </div>
+            </div>
+            <div class="ccs-divider"></div>
+            <!-- Velocity -->
+            <div class="ccs-adv-row">
+              <div class="ccs-toggle-meta">
+                <span class="ccs-toggle-name">Limit transactions</span>
+                <span class="ccs-toggle-desc">Max number per period</span>
+              </div>
+              <div class="cr-toggle" id="ccsVelocityToggle" onclick="ccsToggleSection('velocity',this);ccsMark()"></div>
+            </div>
+            <div class="ccs-collapsible" id="ccsVelocityField" style="display:none">
+              <div class="ccs-velocity-inputs">
+                <div class="ccs-velocity-count-wrap">
+                  <input class="ccs-velocity-input" id="ccsVelocityCount" type="number" inputmode="numeric" placeholder="10" min="1" oninput="ccsMark()">
+                  <span class="ccs-velocity-label">transactions</span>
+                </div>
+                <div class="ccs-period-seg">
+                  <button class="ccs-period-btn active" onclick="ccsPeriod(this,'day')">Per day</button>
+                  <button class="ccs-period-btn" onclick="ccsPeriod(this,'week')">Per week</button>
+                  <button class="ccs-period-btn" onclick="ccsPeriod(this,'month')">Per month</button>
+                </div>
+              </div>
+            </div>
+            <div class="ccs-divider"></div>
+            <!-- Auto-lock -->
+            <div class="ccs-adv-row">
+              <div class="ccs-toggle-meta">
+                <span class="ccs-toggle-name">Auto-lock on date</span>
+                <span class="ccs-toggle-desc">Card freezes automatically</span>
+              </div>
+              <div class="cr-toggle" id="ccsLockToggle" onclick="ccsToggleSection('lock',this);ccsMark()"></div>
+            </div>
+            <div class="ccs-collapsible" id="ccsLockField" style="display:none">
+              <div class="ccs-lock-datetime">
+                <div class="ccs-datetime-row">
+                  <span class="ico ol" style="--ico:url('Icons/CalendarBlank.svg');--sz:15px;color:rgba(0,0,0,0.35);flex-shrink:0"></span>
+                  <input class="ccs-datetime-input" id="ccsLockDate" type="date" oninput="ccsLockPreview();ccsMark()">
+                </div>
+                <div class="ccs-datetime-row">
+                  <span class="ico ol" style="--ico:url('Icons/Clock.svg');--sz:15px;color:rgba(0,0,0,0.35);flex-shrink:0"></span>
+                  <input class="ccs-datetime-input" id="ccsLockTime" type="time" value="23:59" oninput="ccsLockPreview();ccsMark()">
+                </div>
+              </div>
+              <p class="ccs-lock-preview" id="ccsLockPreview" style="display:none"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="height:110px"></div>
     </div><!-- /.ccs-scroll -->
 
     <!-- Save bar (appears when unsaved changes exist) -->
@@ -3250,6 +3140,6 @@
 
 </div>
 
-  <script src="app.js?v=4"></script>
+  <script src="app.js?v=5"></script>
 </body>
 </html>

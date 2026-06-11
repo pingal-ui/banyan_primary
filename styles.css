@@ -5470,7 +5470,7 @@
     }
 
     /* ══════════════════════════════════════
-       CARD CONTROLS SHEET COMPONENTS
+       CARD CONTROLS SHEET
        ══════════════════════════════════════ */
     .cr-sheet--controls {
       max-height: 94%;
@@ -5478,38 +5478,118 @@
     }
     .cr-sheet--controls.open { display: flex; }
 
-    /* status banners */
+    /* banners */
     .ccs-banner {
       display: flex; align-items: center; gap: 8px;
-      margin: 0 16px 0; padding: 10px 12px; border-radius: 10px;
+      margin: 0 16px 8px; padding: 10px 12px; border-radius: 10px;
       font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; line-height: 18px;
     }
-    .ccs-banner--frozen { background: rgba(99,125,255,0.10); color: rgba(60,80,200,0.9); }
+    .ccs-banner--frozen { background: rgba(90,100,220,0.09); color: rgba(60,70,200,0.9); }
     .ccs-banner--closed { background: rgba(200,44,44,0.08); color: #b02020; }
-    .ccs-banner--readonly { background: rgba(0,0,0,0.05); color: rgba(0,0,0,0.6); }
-
-    /* scroll area */
-    .ccs-scroll {
-      flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    .ccs-banner-action {
+      margin-left: auto; border: none; background: none; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600;
+      color: inherit; text-decoration: underline; text-underline-offset: 2px; flex-shrink: 0;
     }
+
+    /* agent input */
+    .ccs-agent-wrap { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 8px; }
+    .ccs-agent-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,0.7); border: 0.5px solid rgba(255,255,255,0.9);
+      border-radius: 12px; padding: 0 12px; height: 44px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .ccs-agent-ico { flex-shrink: 0; color: var(--brand-primary); opacity: 0.7; }
+    .ccs-agent-input {
+      flex: 1; border: none; background: transparent; outline: none;
+      font-family: 'Geist', sans-serif; font-size: 14px; color: var(--text-primary);
+    }
+    .ccs-agent-input::placeholder { color: rgba(0,0,0,0.3); }
+    .ccs-agent-send {
+      width: 26px; height: 26px; border-radius: 999px; border: none; cursor: pointer;
+      background: var(--brand-primary); flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform 160ms ease-out;
+    }
+    .ccs-agent-send:active { transform: scale(0.9); }
+    .ccs-agent-resp {
+      background: rgba(70,136,43,0.08); border: 0.5px solid rgba(70,136,43,0.15);
+      border-radius: 10px; padding: 10px 12px;
+      font-family: 'Geist', sans-serif; font-size: 13px; line-height: 18px;
+      color: rgba(0,0,0,0.7);
+      animation: ccsRespIn 0.2s var(--ease-out);
+    }
+    @keyframes ccsRespIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* scroll */
+    .ccs-scroll { flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch; }
     .ccs-scroll::-webkit-scrollbar { display: none; }
 
-    /* section */
-    .ccs-section { padding: 20px 16px 8px; }
+    /* sections */
+    .ccs-section { padding: 0 16px 12px; }
+    .ccs-section--first { padding-top: 4px; }
     .ccs-section-hdr {
       font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 600;
       letter-spacing: 1px; text-transform: uppercase;
-      color: var(--text-tertiary); padding: 0 4px 10px;
+      color: var(--text-tertiary); padding: 12px 4px 8px;
+    }
+    .ccs-section-hdr-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 4px 8px;
     }
     .ccs-note {
       font-family: 'Geist', sans-serif; font-size: 12px; line-height: 16px;
-      color: rgba(0,0,0,0.35); padding: 8px 4px 0; margin: 0;
+      color: rgba(0,0,0,0.32); padding: 6px 4px 0; margin: 0;
     }
-    .ccs-divider { height: 0.5px; background: rgba(0,0,0,0.06); margin: 0; }
+    .ccs-divider { height: 0.5px; background: rgba(0,0,0,0.06); }
 
-    /* spend limit rows */
-    .ccs-limit-row { padding: 14px 16px; }
-    .ccs-limit-top { display: flex; align-items: center; gap: 12px; }
+    /* status row */
+    .ccs-status-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px;
+    }
+    .ccs-status-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 4px 10px; border-radius: 999px;
+      background: rgba(70,136,43,0.10); border: 0.5px solid rgba(70,136,43,0.2);
+    }
+    .ccs-status-badge.frozen { background: rgba(90,100,220,0.09); border-color: rgba(90,100,220,0.2); }
+    .ccs-status-badge.frozen .ccs-status-dot { background: #6366f1; }
+    .ccs-status-badge.frozen span { color: #5b5ef6; }
+    .ccs-status-badge.closed { background: rgba(200,44,44,0.08); border-color: rgba(200,44,44,0.2); }
+    .ccs-status-badge.closed .ccs-status-dot { background: #dc2626; }
+    .ccs-status-badge.closed span { color: #c53030; }
+    .ccs-status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--brand-primary); }
+    .ccs-status-badge span {
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--brand-primary);
+    }
+    .ccs-status-actions { display: flex; align-items: center; gap: 6px; }
+    .ccs-freeze-pill {
+      display: inline-flex; align-items: center; gap: 5px;
+      height: 32px; padding: 0 12px; border-radius: 999px; border: none; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600;
+      background: rgba(90,100,220,0.09); color: #5b5ef6;
+      transition: transform 160ms ease-out;
+    }
+    .ccs-freeze-pill--unfreeze { background: rgba(70,136,43,0.09); color: var(--brand-primary); }
+    .ccs-freeze-pill:active { transform: scale(0.95); }
+    .ccs-close-pill {
+      height: 32px; padding: 0 12px; border-radius: 999px; cursor: pointer;
+      border: 0.5px solid rgba(200,44,44,0.2);
+      background: rgba(200,44,44,0.07); color: #c53030;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600;
+      transition: transform 160ms ease-out;
+    }
+    .ccs-close-pill:active { transform: scale(0.95); }
+
+    /* limit rows */
+    .ccs-limit-row { padding: 12px 16px; }
+    .ccs-limit-top { display: flex; align-items: center; gap: 8px; }
     .ccs-limit-meta { flex: 1; min-width: 0; }
     .ccs-limit-name {
       display: block; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 500;
@@ -5517,142 +5597,151 @@
     }
     .ccs-limit-desc {
       display: block; font-family: 'Geist', sans-serif; font-size: 12px;
-      color: rgba(0,0,0,0.4); line-height: 16px; margin-top: 2px;
+      color: rgba(0,0,0,0.38); line-height: 16px; margin-top: 1px;
     }
     .ccs-limit-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
-    .ccs-limit-val {
-      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
-      color: var(--brand-primary);
+    .ccs-amount-inline-wrap {
+      display: flex; align-items: center; gap: 2px;
+      background: var(--surface-subtle); border-radius: 8px;
+      padding: 0 8px; height: 32px; border: 0.5px solid rgba(0,0,0,0.08);
     }
-    .ccs-limit-field { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
-    .ccs-amount-input-wrap {
-      display: flex; align-items: center;
-      background: var(--surface-subtle); border-radius: 10px;
-      padding: 0 12px; height: 44px; gap: 4px;
-      border: 0.5px solid rgba(0,0,0,0.08);
+    .ccs-currency-sm {
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
+      color: rgba(0,0,0,0.4);
     }
-    .ccs-currency {
-      font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 500;
-      color: rgba(0,0,0,0.5);
+    .ccs-amount-inline {
+      width: 52px; border: none; background: transparent; outline: none;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600;
+      color: var(--text-primary); text-align: right;
     }
-    .ccs-amount-input {
-      flex: 1; border: none; background: transparent; outline: none;
-      font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 500;
-      color: var(--text-primary);
-    }
-    .ccs-amount-input::placeholder { color: rgba(0,0,0,0.25); }
+    .ccs-amount-inline:disabled { opacity: 0.4; }
 
-    /* progress bars */
-    .ccs-progress-wrap { display: flex; flex-direction: column; gap: 5px; }
+    /* progress */
+    .ccs-progress-wrap { margin-top: 8px; }
     .ccs-progress-bar {
-      height: 4px; background: rgba(0,0,0,0.08); border-radius: 2px; overflow: hidden;
+      height: 3px; background: rgba(0,0,0,0.07); border-radius: 2px; overflow: hidden;
     }
     .ccs-progress-fill {
-      height: 100%; border-radius: 2px;
-      background: var(--brand-primary);
+      height: 100%; border-radius: 2px; background: var(--brand-primary);
       transition: width 0.4s var(--ease-out), background 0.3s ease;
     }
     .ccs-progress-fill.warn { background: #d97706; }
     .ccs-progress-fill.danger { background: #dc2626; }
-    .ccs-progress-lbl {
-      font-family: 'Geist', sans-serif; font-size: 11px; color: rgba(0,0,0,0.4);
-    }
 
-    /* category mode toggle */
-    .ccs-mode-row {
-      display: flex; padding: 4px; gap: 0;
+    /* mode seg (allow/block) */
+    .ccs-mode-seg {
+      display: flex; background: rgba(0,0,0,0.06); border-radius: 8px;
+      padding: 2px; gap: 2px;
     }
-    .ccs-mode-btn {
-      flex: 1; height: 36px; border: none; border-radius: 8px;
-      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
-      color: rgba(0,0,0,0.4); background: transparent; cursor: pointer;
-      transition: background 0.15s, color 0.15s;
+    .ccs-mode-seg-btn {
+      height: 26px; padding: 0 10px; border: none; border-radius: 6px; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 500;
+      color: rgba(0,0,0,0.4); background: transparent;
+      transition: background 0.15s, color 0.15s, box-shadow 0.15s;
     }
-    .ccs-mode-btn.active {
+    .ccs-mode-seg-btn.active {
       background: white; color: var(--text-primary);
       box-shadow: 0 1px 3px rgba(0,0,0,0.10);
     }
 
-    /* category rows */
-    .ccs-cat-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 12px 16px;
+    /* category chips */
+    .ccs-cat-chips {
+      display: flex; flex-wrap: wrap; gap: 7px; padding: 2px 0 2px;
     }
-    .ccs-cat-body { flex: 1; min-width: 0; }
-    .ccs-cat-name {
-      display: block; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
-      color: var(--text-primary); line-height: 19px;
+    .ccs-cat-chip {
+      display: inline-flex; align-items: center; height: 34px; padding: 0 12px;
+      border-radius: 999px; border: 0.5px solid rgba(0,0,0,0.1);
+      background: rgba(0,0,0,0.04); cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
+      color: rgba(0,0,0,0.4);
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
     }
-    .ccs-cat-desc {
-      display: block; font-family: 'Geist', sans-serif; font-size: 11px;
-      color: rgba(0,0,0,0.4); line-height: 15px; margin-top: 2px;
+    .ccs-cat-chip.active {
+      background: white; border-color: rgba(70,136,43,0.3);
+      color: var(--text-primary);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     }
 
-    /* merchant */
+    /* merchant row */
     .ccs-merchant-row {
-      display: flex; align-items: center; gap: 10px; padding: 0 16px; height: 52px;
+      display: flex; align-items: center; gap: 10px;
+      padding: 0 16px; height: 48px;
     }
     .ccs-merchant-input {
       flex: 1; border: none; background: transparent; outline: none;
-      font-family: 'Geist', sans-serif; font-size: 15px; color: var(--text-primary);
+      font-family: 'Geist', sans-serif; font-size: 14px; color: var(--text-primary);
     }
-    .ccs-merchant-input::placeholder { color: rgba(0,0,0,0.3); }
+    .ccs-merchant-input::placeholder { color: rgba(0,0,0,0.28); }
 
-    /* toggle rows (country, velocity, lock) */
-    .ccs-toggle-row {
-      display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+    /* advanced toggle row */
+    .ccs-adv-toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 13px 16px; cursor: pointer;
+    }
+    .ccs-adv-label {
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text-primary);
+    }
+    .ccs-adv-right { display: flex; align-items: center; gap: 6px; }
+    .ccs-adv-summary {
+      font-family: 'Geist', sans-serif; font-size: 12px; color: rgba(0,0,0,0.35);
+    }
+    .ccs-adv-caret { transition: transform 0.2s var(--ease-out); }
+    .ccs-adv-caret.open { transform: rotate(180deg); }
+    .ccs-adv-body { padding-bottom: 4px; }
+    .ccs-adv-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
     }
     .ccs-toggle-meta { flex: 1; }
     .ccs-toggle-name {
-      display: block; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 500;
-      color: var(--text-primary); line-height: 20px;
+      display: block; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
+      color: var(--text-primary); line-height: 19px;
     }
     .ccs-toggle-desc {
       display: block; font-family: 'Geist', sans-serif; font-size: 12px;
-      color: rgba(0,0,0,0.4); line-height: 16px; margin-top: 2px;
+      color: rgba(0,0,0,0.38); line-height: 16px;
     }
     .ccs-collapsible { overflow: hidden; }
 
     /* country chips */
     .ccs-country-chips {
-      display: flex; flex-wrap: wrap; gap: 8px; padding: 12px 16px;
+      display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px;
     }
     .ccs-chip {
-      display: inline-flex; align-items: center; height: 32px; padding: 0 12px;
-      border-radius: 999px; border: 0.5px solid rgba(0,0,0,0.12);
+      display: inline-flex; align-items: center; height: 30px; padding: 0 10px;
+      border-radius: 999px; border: 0.5px solid rgba(0,0,0,0.10);
       background: var(--surface-subtle); cursor: pointer;
-      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500;
-      color: rgba(0,0,0,0.5); transition: background 0.15s, color 0.15s, border-color 0.15s;
+      font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 500;
+      color: rgba(0,0,0,0.45);
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
     }
     .ccs-chip--active {
       background: rgba(70,136,43,0.08); border-color: rgba(70,136,43,0.25);
       color: var(--brand-primary);
     }
-    .ccs-chip--add {
-      border-style: dashed; color: rgba(0,0,0,0.35);
-    }
+    .ccs-chip--add { border-style: dashed; color: rgba(0,0,0,0.3); }
 
     /* velocity */
-    .ccs-velocity-inputs { padding: 12px 16px; display: flex; flex-direction: column; gap: 10px; }
+    .ccs-velocity-inputs { padding: 10px 16px 12px; display: flex; flex-direction: column; gap: 8px; }
     .ccs-velocity-count-wrap {
       display: flex; align-items: center; gap: 8px;
       background: var(--surface-subtle); border-radius: 10px; padding: 0 12px;
-      height: 44px; border: 0.5px solid rgba(0,0,0,0.08);
+      height: 42px; border: 0.5px solid rgba(0,0,0,0.08);
     }
     .ccs-velocity-input {
-      width: 56px; border: none; background: transparent; outline: none;
-      font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 500; color: var(--text-primary);
+      width: 48px; border: none; background: transparent; outline: none;
+      font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 600; color: var(--text-primary);
     }
     .ccs-velocity-label {
-      font-family: 'Geist', sans-serif; font-size: 14px; color: rgba(0,0,0,0.4);
+      font-family: 'Geist', sans-serif; font-size: 13px; color: rgba(0,0,0,0.38);
     }
     .ccs-period-seg {
-      display: flex; background: rgba(0,0,0,0.05); border-radius: 8px; padding: 2px; gap: 0;
+      display: flex; background: rgba(0,0,0,0.05); border-radius: 8px; padding: 2px;
     }
     .ccs-period-btn {
-      flex: 1; height: 32px; border: none; border-radius: 6px;
+      flex: 1; height: 30px; border: none; border-radius: 6px;
       font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 500;
-      color: rgba(0,0,0,0.4); background: transparent; cursor: pointer;
+      color: rgba(0,0,0,0.38); background: transparent; cursor: pointer;
       transition: background 0.15s, color 0.15s;
     }
     .ccs-period-btn.active {
@@ -5660,118 +5749,68 @@
       box-shadow: 0 1px 3px rgba(0,0,0,0.10);
     }
 
-    /* scheduled lock */
-    .ccs-lock-datetime { padding: 12px 16px; display: flex; flex-direction: column; gap: 8px; }
+    /* lock datetime */
+    .ccs-lock-datetime { padding: 10px 16px 4px; display: flex; flex-direction: column; gap: 6px; }
     .ccs-datetime-row {
       display: flex; align-items: center; gap: 10px;
-      background: var(--surface-subtle); border-radius: 10px; padding: 0 12px;
-      height: 44px; border: 0.5px solid rgba(0,0,0,0.08);
+      background: var(--surface-subtle); border-radius: 9px; padding: 0 12px;
+      height: 42px; border: 0.5px solid rgba(0,0,0,0.08);
     }
     .ccs-datetime-input {
       flex: 1; border: none; background: transparent; outline: none;
-      font-family: 'Geist', sans-serif; font-size: 15px; color: var(--text-primary);
+      font-family: 'Geist', sans-serif; font-size: 14px; color: var(--text-primary);
     }
     .ccs-lock-preview {
-      margin: 0 0 4px; padding: 8px 12px;
+      margin: 4px 16px 10px; padding: 8px 12px;
       font-family: 'Geist', sans-serif; font-size: 12px; line-height: 16px;
       color: rgba(0,0,0,0.5); background: rgba(70,136,43,0.07);
-      border-radius: 8px; margin: 4px 16px 12px;
-    }
-
-    /* card status */
-    .ccs-status-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px;
-    }
-    .ccs-status-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 4px 10px; border-radius: 999px;
-      background: rgba(70,136,43,0.10); border: 0.5px solid rgba(70,136,43,0.2);
-    }
-    .ccs-status-badge.frozen {
-      background: rgba(99,125,255,0.10); border-color: rgba(99,125,255,0.25);
-    }
-    .ccs-status-badge.frozen .ccs-status-dot { background: #6366f1; }
-    .ccs-status-badge.closed { background: rgba(200,44,44,0.08); border-color: rgba(200,44,44,0.2); }
-    .ccs-status-badge.closed .ccs-status-dot { background: #dc2626; }
-    .ccs-status-dot {
-      width: 7px; height: 7px; border-radius: 50%; background: var(--brand-primary);
-    }
-    .ccs-status-badge span {
-      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600;
-      color: var(--brand-primary);
-    }
-    .ccs-status-badge.frozen span { color: #5b5ef6; }
-    .ccs-status-badge.closed span { color: #c53030; }
-    .ccs-status-desc {
-      font-family: 'Geist', sans-serif; font-size: 13px; color: rgba(0,0,0,0.4);
-    }
-    .ccs-action-btns { display: flex; flex-direction: column; gap: 8px; padding: 4px 16px 0; }
-    .ccs-action-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      height: 48px; border-radius: 12px; border: 0.5px solid transparent;
-      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer;
-      transition: transform 160ms ease-out, filter 160ms ease-out;
-    }
-    .ccs-action-btn:active { transform: scale(0.98); }
-    .ccs-action-btn--freeze {
-      background: rgba(99,125,255,0.08); border-color: rgba(99,125,255,0.18);
-      color: #5b5ef6;
-    }
-    .ccs-action-btn--unfreeze {
-      background: rgba(70,136,43,0.08); border-color: rgba(70,136,43,0.2);
-      color: var(--brand-primary);
-    }
-    .ccs-action-btn--close {
-      background: rgba(200,44,44,0.07); border-color: rgba(200,44,44,0.15);
-      color: #c53030;
+      border-radius: 8px;
     }
 
     /* save bar */
     .ccs-save-bar {
       position: absolute; bottom: 0; left: 0; right: 0;
-      display: flex; gap: 8px; padding: 12px 16px 28px;
-      background: linear-gradient(to top, rgba(247,247,247,1) 60%, rgba(247,247,247,0));
+      display: flex; gap: 8px; padding: 10px 16px 28px;
+      background: linear-gradient(to top, rgba(247,247,247,1) 55%, rgba(247,247,247,0));
       transform: translateY(100%);
       transition: transform 0.28s var(--ease-drawer);
+      pointer-events: none;
     }
-    .ccs-save-bar.visible { transform: translateY(0); }
+    .ccs-save-bar.visible { transform: translateY(0); pointer-events: all; }
     .ccs-save-discard {
-      height: 52px; padding: 0 20px; border-radius: 12px;
+      height: 50px; padding: 0 18px; border-radius: 12px;
       border: 0.5px solid rgba(0,0,0,0.12); background: white;
-      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
-      color: rgba(0,0,0,0.5); cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600;
+      color: rgba(0,0,0,0.45); cursor: pointer;
       transition: transform 160ms ease-out;
     }
     .ccs-save-discard:active { transform: scale(0.97); }
     .ccs-save-btn {
-      flex: 1; height: 52px; border-radius: 12px;
+      flex: 1; height: 50px; border-radius: 12px;
       border: none; border-bottom: 1px solid rgba(255,255,255,0.3);
       background: var(--brand-primary);
-      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
-      color: white; cursor: pointer;
-      box-shadow: 0 8px 16px -8px rgba(70,136,43,0.4);
-      transition: transform 160ms ease-out, filter 160ms ease-out;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: white;
+      cursor: pointer; box-shadow: 0 8px 16px -8px rgba(70,136,43,0.4);
+      transition: transform 160ms ease-out;
     }
     .ccs-save-btn:active { transform: scale(0.97); }
 
-    /* close confirm overlay (inside sheet) */
+    /* close confirm */
     .ccs-confirm-overlay {
       position: absolute; inset: 0;
-      background: rgba(247,247,247,0.9);
+      background: rgba(247,247,247,0.92);
       backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
       display: flex; align-items: center; justify-content: center; padding: 24px;
     }
     .ccs-confirm-card {
-      background: white; border-radius: 20px;
-      padding: 28px 20px 20px; text-align: center;
-      box-shadow: 0 24px 48px rgba(0,0,0,0.12);
+      background: white; border-radius: 20px; padding: 28px 20px 20px;
+      text-align: center; box-shadow: 0 24px 48px rgba(0,0,0,0.12);
       display: flex; flex-direction: column; align-items: center; gap: 12px;
-      width: 100%; max-width: 320px;
+      width: 100%;
     }
     .ccs-confirm-icon {
       width: 56px; height: 56px; border-radius: 999px;
-      background: rgba(200,44,44,0.08); border: 0.5px solid rgba(200,44,44,0.15);
+      background: rgba(200,44,44,0.08);
       display: flex; align-items: center; justify-content: center;
     }
     .ccs-confirm-title {
@@ -5780,28 +5819,28 @@
     }
     .ccs-confirm-body {
       font-family: 'Geist', sans-serif; font-size: 14px; line-height: 20px;
-      color: rgba(0,0,0,0.5); margin: 0;
+      color: rgba(0,0,0,0.45); margin: 0;
     }
     .ccs-confirm-danger {
-      width: 100%; height: 52px; border-radius: 12px; border: none; cursor: pointer;
+      width: 100%; height: 50px; border-radius: 12px; border: none; cursor: pointer;
       background: #dc2626; color: white;
       font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
       transition: transform 160ms ease-out;
     }
     .ccs-confirm-danger:active { transform: scale(0.97); }
     .ccs-confirm-cancel {
-      width: 100%; height: 44px; border-radius: 12px;
+      width: 100%; height: 42px; border-radius: 12px;
       border: 0.5px solid rgba(0,0,0,0.1); background: transparent;
-      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 500;
-      color: rgba(0,0,0,0.5); cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500;
+      color: rgba(0,0,0,0.45); cursor: pointer;
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .ccs-save-bar { transition: none; }
+      .ccs-save-bar, .ccs-agent-resp { transition: none; animation: none; }
       .ccs-progress-fill { transition: none; }
     }
 
-    /* ── Limit-setter sub-sheet ── */
+        /* ── Limit-setter sub-sheet ── */
     .cr-limit-sheet {
       position: relative;
       background: #f7f7f7;
