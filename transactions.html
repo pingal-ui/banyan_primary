@@ -6,7 +6,7 @@
   <title>Banyan – Transactions</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=4">
+  <link rel="stylesheet" href="styles.css?v=6">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -499,7 +499,7 @@
             <div class="cr-carousel-item">
               <img src="assets/card-back.webp" alt="Card 2 – Virtual">
             </div>
-            <div class="cr-carousel-item cr-carousel-add">
+            <div class="cr-carousel-item cr-carousel-add" onclick="openCcSheet()">
               <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:16px;color:var(--text-secondary)"></span>
               <span class="cr-add-lbl">Create a new card</span>
             </div>
@@ -2841,11 +2841,117 @@
 
   </div><!-- /#crOverlay -->
 
+  <!-- ══════════════════════════════════════════════════════
+       CREATE CARD — bottom sheet overlay
+       ══════════════════════════════════════════════════════ -->
+  <div class="cc-overlay" id="ccOverlay" onclick="closeCcSheet()">
+    <div class="cc-sheet" id="ccSheet" onclick="event.stopPropagation()">
+
+      <!-- Top bar: back + title -->
+      <div class="cc-topbar">
+        <button class="cc-back-btn" onclick="closeCcSheet()">
+          <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:var(--text-primary)"></span>
+        </button>
+        <span class="cc-title">Create a new card</span>
+      </div>
+
+      <!-- Card preview + Virtual/Physical toggle -->
+      <div class="cc-card-area">
+        <div class="cc-card-preview">
+          <img src="assets/card-create-preview.webp" alt="Card preview" class="cc-card-img">
+        </div>
+        <div class="cc-seg-wrap">
+          <div class="cc-seg" id="ccSeg">
+            <button class="cc-seg-opt active" onclick="ccSetSeg(this,'virtual')">Virtual</button>
+            <button class="cc-seg-opt" onclick="ccSetSeg(this,'physical')">Physical</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrollable form body -->
+      <div class="cc-body">
+
+        <!-- Card type radio group -->
+        <div class="cc-section">
+          <span class="cc-section-label">Card type</span>
+          <label class="cc-radio" onclick="ccSelectRadio(this)">
+            <span class="cc-radio-ctrl selected"></span>
+            <span class="cc-radio-text">
+              <span class="cc-radio-name">Regular</span>
+              <span class="cc-radio-sub">Standard card for everyday use</span>
+            </span>
+          </label>
+          <label class="cc-radio" onclick="ccSelectRadio(this)">
+            <span class="cc-radio-ctrl"></span>
+            <span class="cc-radio-text">
+              <span class="cc-radio-name">One-time</span>
+              <span class="cc-radio-sub">Expires after a single payment</span>
+            </span>
+          </label>
+          <label class="cc-radio" onclick="ccSelectRadio(this)">
+            <span class="cc-radio-ctrl"></span>
+            <span class="cc-radio-text">
+              <span class="cc-radio-name">Burner</span>
+              <span class="cc-radio-sub">Can be used for a single transaction only</span>
+            </span>
+          </label>
+        </div>
+
+        <!-- Card nickname input -->
+        <div class="cc-input-row">
+          <input class="cc-input" type="text" placeholder="Card nickname">
+        </div>
+
+        <!-- Account selector -->
+        <div class="cc-input-row cc-input-row--icon">
+          <div class="cc-acct-icon">
+            <img src="assets/card-create-bank-icon.webp" alt="">
+          </div>
+          <div class="cc-input-stack">
+            <span class="cc-input-label">Choose where to create the card</span>
+            <span class="cc-input-value">USD Checking (·· 7654)</span>
+          </div>
+          <span class="ico ol cc-input-chevron" style="--ico:url('Icons/CaretDown.svg');--sz:14px;color:var(--text-secondary)"></span>
+        </div>
+
+        <!-- Expiry date -->
+        <div class="cc-input-row cc-input-row--icon">
+          <span class="ico ol" style="--ico:url('Icons/CalendarDots.svg');--sz:20px;color:var(--text-secondary);flex-shrink:0"></span>
+          <div class="cc-input-stack">
+            <span class="cc-input-label">Expiry date</span>
+            <span class="cc-input-value">31/05/2036</span>
+          </div>
+        </div>
+
+        <!-- Spend limits row -->
+        <div class="cc-limits-row">
+          <div class="cc-limits-text">
+            <span class="cc-limits-title">Spend limits</span>
+            <span class="cc-limits-sub">Limits and transaction types</span>
+          </div>
+          <button class="cc-limits-btn">
+            <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:var(--text-primary)"></span>
+          </button>
+        </div>
+
+      </div><!-- /.cc-body -->
+
+      <!-- CTA -->
+      <div class="cc-cta-bar">
+        <button class="cc-cta-btn" onclick="closeCcSheet()">
+          Create card
+          <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:20px;color:#fff"></span>
+        </button>
+      </div>
+
+    </div><!-- /.cc-sheet -->
+  </div><!-- /#ccOverlay -->
+
   <!-- Toast notification -->
   <div id="toastNotif" class="toast-notif"><span id="toastText"></span></div>
 
 </div>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>

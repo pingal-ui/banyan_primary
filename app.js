@@ -3610,6 +3610,24 @@ function closeCrSheets() {
   const ov = document.getElementById('crOverlay');
   if (ov) ov.classList.remove('visible');
 }
+/* ── Create Card sheet ── */
+function openCcSheet() {
+  document.getElementById('ccOverlay').classList.add('open');
+  showNav(false);
+}
+function closeCcSheet() {
+  document.getElementById('ccOverlay').classList.remove('open');
+  showNav(true);
+}
+function ccSetSeg(btn, _type) {
+  btn.closest('.cc-seg').querySelectorAll('.cc-seg-opt').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function ccSelectRadio(label) {
+  label.closest('.cc-section').querySelectorAll('.cc-radio-ctrl').forEach(c => c.classList.remove('selected'));
+  label.querySelector('.cc-radio-ctrl').classList.add('selected');
+}
+
 function crToggle(row) {
   row.querySelector('.cr-toggle').classList.toggle('on');
 }
@@ -4945,8 +4963,8 @@ function smGoToProgress() {
   });
   // Re-enable sim buttons, restore coin, reset hero
   document.querySelectorAll('.smp-sim-btn').forEach(function(b) { b.disabled = false; b.style.display = ''; });
-  document.querySelector('.smp-sim-btn:not(.fail)') && (document.querySelector('.smp-sim-btn:not(.fail)').textContent = 'Simulate success');
-  document.querySelector('.smp-sim-btn.fail') && (document.querySelector('.smp-sim-btn.fail').textContent = 'Simulate failure');
+  document.querySelector('.smp-sim-btn:not(.fail)') && (document.querySelector('.smp-sim-btn:not(.fail)').innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,12 9,17 20,7"/></svg>');
+  document.querySelector('.smp-sim-btn.fail') && (document.querySelector('.smp-sim-btn.fail').innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>');
   var coin = document.getElementById('smpCoin');
   var icon = document.getElementById('smpResultIcon');
   if (coin) { coin.style.cssText = ''; }
