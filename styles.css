@@ -118,11 +118,16 @@
     .sb-icons svg { width:16px; height:16px; }
 
     /* Screens fill the full phone — status bar (transparent) overlays on top */
-    .screen { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; background:#fff; z-index:1; overflow:hidden; transition:transform 0.28s var(--ease-drawer), opacity 0.26s ease; }
+    .screen { position:absolute; top:0; left:0; right:0; bottom:0; display:flex; flex-direction:column; background:#fff; z-index:1; overflow:hidden; transition:none; }
     .screen.hl { transform:translateY(-100%); opacity:0; pointer-events:none; }
     .screen.hr { transform:translateY(100%);  opacity:0; pointer-events:none; }
     .screen.hb { transform:translateY(100%);  opacity:0; pointer-events:none; }
     .screen.on { transform:translateY(0);      opacity:1; }
+    /* Pay flow screens keep the slide transition */
+    #sm-landing, #sm-amount, #sm-review, #sm-progress, #sm-success,
+    #smw-amount, #smw-us-progress, #smw-us-success, #beneficiaries {
+      transition: transform 0.28s var(--ease-drawer), opacity 0.26s ease;
+    }
 
     /* ══════════════════════════════════════
        LIST SCREEN  (Figma 624-57599)
