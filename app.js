@@ -6542,3 +6542,75 @@ function benOpenAdd() {}
   running = true;
   setTimeout(cycle, 1200);
 }());
+
+/* ── Liquid glass nav interactions ───────────────────── */
+(function() {
+  function init() {
+    var pill  = document.getElementById('bnavPill');
+    var aiBtn = document.querySelector('.bnav-ai');
+    if (!pill || typeof Motion === 'undefined') return;
+
+    var springSnap = { easing: Motion.spring({ stiffness: 450, damping: 16, mass: 0.7 }) };
+    var springAI   = { easing: Motion.spring({ stiffness: 380, damping: 14, mass: 0.85 }) };
+
+    /* ── specular flash at touch point ── */
+    var wrap = pill.closest('.bnav-wrap') || pill.parentElement;
+    function specular(e) {
+      var wRect = wrap.getBoundingClientRect();
+      var x = e.clientX - wRect.left;
+      var y = e.clientY - wRect.top;
+      var el = document.createElement('div');
+      el.style.cssText = 'position:absolute;pointer-events:none;z-index:20;border-radius:50%;' +
+        'width:72px;height:72px;' +
+        'left:' + (x - 36) + 'px;top:' + (y - 36) + 'px;' +
+        'background:radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 65%);' +
+        'mix-blend-mode:screen;';
+      wrap.appendChild(el);
+      Motion.animate(el,
+        { opacity: [0, 1, 0], scale: [0.3, 1.8] },
+        { duration: 0.40, easing: [0.2, 0.9, 0.4, 1] }
+      ).finished.then(function() { el.remove(); });
+    }
+
+    /* ── pill tab press ── */
+    pill.addEventListener('pointerdown', function(e) {
+      var tab = e.target.closest('.bnav-tab');
+      if (!tab) return;
+      Motion.animate(tab,  { scale: [1, 0.88] }, { duration: 0.09, easing: [0.25, 0, 0.4, 1] });
+      Motion.animate(pill, { scale: [1, 0.974] }, { duration: 0.09, easing: [0.25, 0, 0.4, 1] });
+      specular(e);
+    });
+
+    function pillRelease(e) {
+      var tab = e && e.target && e.target.closest ? e.target.closest('.bnav-tab') : null;
+      if (tab) Motion.animate(tab, { scale: 1 }, springSnap);
+      else pill.querySelectorAll('.bnav-tab').forEach(function(t) {
+        Motion.animate(t, { scale: 1 }, { duration: 0.18 });
+      });
+      Motion.animate(pill, { scale: 1 }, springSnap);
+    }
+    pill.addEventListener('pointerup',     pillRelease);
+    pill.addEventListener('pointercancel', pillRelease);
+
+    /* ── AI button press ── */
+    if (aiBtn) {
+      var inner = aiBtn.querySelector('.bnav-ai-inner');
+      aiBtn.addEventListener('pointerdown', function() {
+        Motion.animate(aiBtn,  { scale: [1, 0.90] }, { duration: 0.09, easing: [0.25, 0, 0.4, 1] });
+        if (inner) Motion.animate(inner, { scale: [1, 0.95] }, { duration: 0.09 });
+      });
+      function aiRelease() {
+        Motion.animate(aiBtn,  { scale: 1 }, springAI);
+        if (inner) Motion.animate(inner, { scale: 1 }, springAI);
+      }
+      aiBtn.addEventListener('pointerup',     aiRelease);
+      aiBtn.addEventListener('pointercancel', aiRelease);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+}());
