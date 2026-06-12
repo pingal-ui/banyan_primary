@@ -6550,44 +6550,52 @@ function benOpenAdd() {}
     var aiBtn = document.querySelector('.bnav-ai');
     if (!pill || typeof Motion === 'undefined') return;
 
-    var springSnap = { easing: Motion.spring({ stiffness: 450, damping: 16, mass: 0.7 }) };
-    var springAI   = { easing: Motion.spring({ stiffness: 380, damping: 14, mass: 0.85 }) };
+    // Apple liquid glass spring: high stiffness, underdamped for a single clean overshoot
+    var LG_SPRING = { easing: Motion.spring({ stiffness: 800, damping: 24, mass: 0.55 }) };
+    var LG_DOWN   = { duration: 0.065, easing: [0.3, 0, 0.5, 1] };
 
-    /* ── specular flash at touch point ── */
-    var wrap = pill.closest('.bnav-wrap') || pill.parentElement;
-    function specular(e) {
-      var wRect = wrap.getBoundingClientRect();
-      var x = e.clientX - wRect.left;
-      var y = e.clientY - wRect.top;
-      var el = document.createElement('div');
-      el.style.cssText = 'position:absolute;pointer-events:none;z-index:20;border-radius:50%;' +
-        'width:72px;height:72px;' +
-        'left:' + (x - 36) + 'px;top:' + (y - 36) + 'px;' +
-        'background:radial-gradient(circle, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 65%);' +
-        'mix-blend-mode:screen;';
-      wrap.appendChild(el);
-      Motion.animate(el,
-        { opacity: [0, 1, 0], scale: [0.3, 1.8] },
-        { duration: 0.40, easing: [0.2, 0.9, 0.4, 1] }
-      ).finished.then(function() { el.remove(); });
+    /* ── Glass dent overlay ─────────────────────────────
+       The signature Apple look: when glass is pressed, the surface
+       visually indents — dark center, bright refraction ring at edge.
+       This sits on the pressed element at the touch-local position.   */
+    function addDent(el, e) {
+      var r   = el.getBoundingClientRect();
+      var cx  = e ? Math.round((e.clientX - r.left) / r.width  * 100) : 50;
+      var cy  = e ? Math.round((e.clientY - r.top)  / r.height * 100) : 50;
+      var d   = document.createElement('div');
+      d.style.cssText =
+        'position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:10;opacity:0;' +
+        'background:radial-gradient(circle at ' + cx + '% ' + cy + '%,' +
+          'rgba(0,0,0,0.12) 0%,rgba(0,0,0,0.06) 30%,transparent 55%,' +
+          'rgba(255,255,255,0.32) 68%,rgba(255,255,255,0.08) 80%,transparent 92%);';
+      el.style.position = 'relative';
+      el.appendChild(d);
+      Motion.animate(d, { opacity: [0, 1] }, { duration: 0.055 });
+      return d;
     }
 
-    /* ── pill tab press ── */
+    function removeDent(d) {
+      if (!d) return;
+      Motion.animate(d, { opacity: [null, 0] }, { duration: 0.22, easing: 'ease-out' })
+        .finished.then(function() { if (d.parentNode) d.parentNode.removeChild(d); });
+    }
+
+    /* ── Tab press ── */
+    var _pressedTab = null, _tabDent = null;
+
     pill.addEventListener('pointerdown', function(e) {
       var tab = e.target.closest('.bnav-tab');
       if (!tab) return;
-      Motion.animate(tab,  { scale: [1, 0.88] }, { duration: 0.09, easing: [0.25, 0, 0.4, 1] });
-      Motion.animate(pill, { scale: [1, 0.974] }, { duration: 0.09, easing: [0.25, 0, 0.4, 1] });
-      specular(e);
+      _pressedTab = tab;
+      Motion.animate(tab,  { scale: [1, 0.93] }, LG_DOWN);
+      Motion.animate(pill, { scale: [1, 0.976] }, LG_DOWN);
+      _tabDent = addDent(tab, e);
     });
 
-    function pillRelease(e) {
-      var tab = e && e.target && e.target.closest ? e.target.closest('.bnav-tab') : null;
-      if (tab) Motion.animate(tab, { scale: 1 }, springSnap);
-      else pill.querySelectorAll('.bnav-tab').forEach(function(t) {
-        Motion.animate(t, { scale: 1 }, { duration: 0.18 });
-      });
-      Motion.animate(pill, { scale: 1 }, springSnap);
+    function pillRelease() {
+      removeDent(_tabDent); _tabDent = null;
+      if (_pressedTab) { Motion.animate(_pressedTab, { scale: 1 }, LG_SPRING); _pressedTab = null; }
+      Motion.animate(pill, { scale: 1 }, LG_SPRING);
     }
     pill.addEventListener('pointerup',     pillRelease);
     pill.addEventListener('pointercancel', pillRelease);
@@ -6595,13 +6603,14 @@ function benOpenAdd() {}
     /* ── AI button press ── */
     if (aiBtn) {
       var inner = aiBtn.querySelector('.bnav-ai-inner');
-      aiBtn.addEventListener('pointerdown', function() {
-        Motion.animate(aiBtn,  { scale: [1, 0.90] }, { duration: 0.09, easing: [0.25, 0, 0.4, 1] });
-        if (inner) Motion.animate(inner, { scale: [1, 0.95] }, { duration: 0.09 });
+      var _aiDent = null;
+      aiBtn.addEventListener('pointerdown', function(e) {
+        Motion.animate(aiBtn, { scale: [1, 0.91] }, LG_DOWN);
+        _aiDent = addDent(inner || aiBtn, e);
       });
       function aiRelease() {
-        Motion.animate(aiBtn,  { scale: 1 }, springAI);
-        if (inner) Motion.animate(inner, { scale: 1 }, springAI);
+        removeDent(_aiDent); _aiDent = null;
+        Motion.animate(aiBtn, { scale: 1 }, LG_SPRING);
       }
       aiBtn.addEventListener('pointerup',     aiRelease);
       aiBtn.addEventListener('pointercancel', aiRelease);
