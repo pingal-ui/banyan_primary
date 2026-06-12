@@ -12,10 +12,24 @@ function _activeScreen() {
 }
 function goBack() {
   const prev = _navStack.pop();
-  if (!prev || prev === 'home')     { showHome(); return; }
-  if (prev === 'explore')           { showExplore(); return; }
-  if (prev === 'accounts')          { showAccounts(); return; }
-  if (prev === 'list')              { showList(); return; }
+  if (!prev || prev === 'home')    { showHome(); return; }
+  if (prev === 'explore')          { showExplore(); return; }
+  if (prev === 'accounts')         { showAccounts(); return; }
+  // Direct DOM restore for screens that would re-push themselves if called via showX()
+  var cur = document.querySelector('.screen.on');
+  if (cur) cur.className = 'screen hr';
+  if (prev === 'account-detail') {
+    document.getElementById('account-detail').className = 'screen on';
+    showNav(false); setSbLight(false); return;
+  }
+  if (prev === 'cards') {
+    document.getElementById('cards').className = 'screen on';
+    showNav(false); setSbLight(false); return;
+  }
+  if (prev === 'list') {
+    document.getElementById('list').className = 'screen on';
+    showNav(false); setSbLight(false); return;
+  }
   showHome();
 }
 
@@ -3122,8 +3136,9 @@ function setSbLight(on) {
 }
 function showList() {
   _navStack.push(_activeScreen());
-  document.getElementById('explore').className = 'screen hl';
-  document.getElementById('home').className    = 'screen hl';
+  ['home','explore','accounts','account-detail','cards'].forEach(function(id) {
+    var el = document.getElementById(id); if (el) el.className = 'screen hl';
+  });
   document.getElementById('list').className    = 'screen on';
   setSbLight(false);
   showNav(false);
