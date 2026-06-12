@@ -1435,14 +1435,6 @@
       padding: 48px 20px 20px;
       box-sizing: border-box;
     }
-    .bnav-wrap::before {
-      content: '';
-      position: absolute; inset: 0;
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 55%, black 100%);
-      mask-image: linear-gradient(to bottom, transparent 0%, black 55%, black 100%);
-      pointer-events: none;
-    }
     .bnav-pill {
       position: relative;
       display: flex; align-items: center;
