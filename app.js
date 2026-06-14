@@ -34,11 +34,46 @@ function goBack() {
 }
 
 function setNavActive(tabIndex) {
+  var prev = _currentNavTab;
   _currentNavTab = tabIndex;
-  for (let i = 0; i < 4; i++) {
-    const t = document.getElementById('bnav' + i);
+  for (var i = 0; i < 4; i++) {
+    var t = document.getElementById('bnav' + i);
     if (t) t.classList.toggle('active', i === tabIndex);
   }
+  _morphIndicator(prev, tabIndex);
+}
+
+/* ── Indicator morphing ─────────────────────────────────
+   The indicator stretches like a water droplet between tabs:
+   1. Extend toward the target (elongate the "neck")
+   2. Spring-contract to the new tab position               */
+function _morphIndicator(fromIndex, toIndex) {
+  var indicator = document.getElementById('bnavIndicator');
+  var pill = document.getElementById('bnavPill');
+  if (!indicator || !pill || typeof Motion === 'undefined') return;
+  if (fromIndex === toIndex) return;
+
+  var fromTab = document.getElementById('bnav' + fromIndex);
+  var toTab   = document.getElementById('bnav' + toIndex);
+  if (!fromTab || !toTab) return;
+
+  var TAB_W = 68;
+  var fromX = fromTab.offsetLeft;
+  var toX   = toTab.offsetLeft;
+  var goRight = toX > fromX;
+
+  // Stretch: elongate toward the target
+  var stretchLeft  = goRight ? fromX : toX;
+  var stretchWidth = Math.abs(toX - fromX) + TAB_W;
+
+  var STRETCH = { duration: 0.12, easing: [0.3, 0, 0.6, 1] };
+  var CONTRACT = { easing: Motion.spring({ stiffness: 480, damping: 22, mass: 0.6 }) };
+
+  // Droplet physics: squash vertically as it elongates, spring back as it lands
+  Motion.animate(indicator, { x: stretchLeft, width: stretchWidth, scaleY: 0.88 }, STRETCH)
+    .finished.then(function() {
+      Motion.animate(indicator, { x: toX, width: TAB_W, scaleY: 1 }, CONTRACT);
+    });
 }
 
 function showNav(visible) {
@@ -1305,11 +1340,11 @@ function openHomeAgent() {
 }
 
 function closeHomeAgent() {
-  if (!_homeAgentOpen) return;
+  var screen = document.getElementById('agent-screen');
+  if (!_homeAgentOpen && (!screen || !screen.classList.contains('ag-open'))) return;
   _homeAgentOpen = false; _homeAgentConvo = false;
   var home = document.getElementById('home');
   if (home) home.classList.remove('home-ai-focused');
-  const screen = document.getElementById('agent-screen');
   screen.style.transition = 'opacity 220ms var(--ease-out)';
   screen.style.opacity    = '';
   screen.classList.remove('ag-open', 'ag-convo');
@@ -3375,11 +3410,7 @@ function renderEmbeddedTxSection(containerId, spaceTxns) {
 }
 
 const _HOME_GREETINGS = [
-  { hi: 'Good to see you, Satya',         ask: 'What can we take\ncare of today?' },
-  { hi: 'Hey Satya, you\'re all set',     ask: 'Everything\'s running\nsmoothly.' },
-  { hi: 'Hey Satya',                      ask: 'Ready when you are.' },
-  { hi: 'It\'s evening in Mumbai, Satya', ask: 'Everything back home\nis on track.' },
-  { hi: 'Hello again, Satya',             ask: 'Anything need\nyour attention?' },
+  { hi: 'Hello, Satya', ask: 'What brings you\nto Banyan today?' },
 ];
 let _greetingIdx = parseInt(localStorage.getItem('_greetingIdx') || '0', 10);
 let _greetingSet = false;
@@ -3390,7 +3421,14 @@ function showHome() {
   document.getElementById('list').className     = 'screen hr';
   document.getElementById('home').className     = 'screen on';
   document.querySelector('#home .home-scroll').scrollTop = 0;
-  setSbLight(false);
+  var _hhw = document.getElementById('homeHeroBgWrap'); if (_hhw) _hhw.style.transform = 'translateY(0) scale(1.35)';
+  var _hhx = document.getElementById('homeHeroFixed'); if (_hhx) { _hhx.style.transform = 'translateY(0)'; _hhx.style.height = '583px'; _hhx.style.setProperty('--bp', '0'); }
+  var _hbs = document.getElementById('homeHeroBlurScroll'); if (_hbs) _hbs.style.opacity = '0';
+  var _hai = document.querySelector('#home .home-ai'); if (_hai) _hai.style.setProperty('--ai-bg-op', '0.60');
+  var _hgh = document.getElementById('homeGreetingHalo'); if (_hgh) _hgh.style.opacity = '1';
+  var _bas = document.getElementById('bnavAiSlot'); if (_bas) _bas.classList.remove('visible');
+  document.querySelector('#home .home-scroll').classList.remove('home-fade-top');
+  setSbLight(true); // white status-bar text over the hero photo
   showNav(true);
   setNavActive(0);
   _smOrigin = 'home';
@@ -3422,9 +3460,17 @@ function showExplore() {
 /* ── Send Money flow ─────────────────────────────────── */
 const SM_SCREENS = ['sm-landing','sm-amount','sm-review','sm-progress','sm-success'];
 const SM_EXRATE  = 91.78;
-let smCents = 100000; // pre-filled $1,000.00
+let smCents = 0; // starts at $0
 let smCurrencyFlipped = false;
 let smInrPaise = 0;
+
+// Dollar-first input state
+let smDollarInt = 0;   // whole dollars typed
+let smCentStr   = '';  // 0-2 cent digit chars
+let smInCents   = false; // has user pressed '.'?
+let smInrRupeeInt = 0;
+let smInrPaisaStr = '';
+let smInrInCents  = false;
 
 let smRecipient = {
   name:'Rohan Rathod', initials:'RR',
@@ -3579,7 +3625,6 @@ function showCards(filter) {
 
   updateCardsFilter(_cardsFilter);
   _embTab['crTxSection'] = 'recent';
-  renderCrTxSection();
 
   // Slide in from right; hide all other screens
   ['home','explore','accounts','account-detail','list'].forEach(id => {
@@ -3592,6 +3637,78 @@ function showCards(filter) {
 
   setSbLight(false);
   showNav(false);
+
+  _crPlayEntry(cardsEl);
+}
+
+/* Entry sequence: the primary card flips in at screen centre, holds a beat,
+   glides into its carousel slot, then the rest of the page fades up. */
+var _crLoadTimer = null;
+var _crRevealTimer = null;
+
+function _crPlayEntry(cardsEl) {
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // Real content renders immediately — it's just hidden during the intro
+  renderCrTxSection();
+
+  // Clean up any in-flight intro from a previous entry
+  clearTimeout(_crLoadTimer);
+  clearTimeout(_crRevealTimer);
+  cardsEl.classList.remove('cr-intro', 'cr-reveal');
+  var prev = cardsEl.querySelector('.cr-flip-hero');
+  if (prev) prev.classList.remove('cr-flip-hero');
+
+  if (reduce) return;
+
+  var item = cardsEl.querySelector('.cr-carousel-item');
+  if (!item) return;
+
+  // Measure how far the card's slot is from the screen centre,
+  // so the flip can start there and settle home
+  var r = item.getBoundingClientRect();
+  var f = cardsEl.getBoundingClientRect();
+  var dx = (f.left + f.width / 2) - (r.left + r.width / 2);
+  var dy = (f.top + f.height / 2) - (r.top + r.height / 2);
+  item.style.setProperty('--cr-dx', dx.toFixed(1) + 'px');
+  item.style.setProperty('--cr-dy', dy.toFixed(1) + 'px');
+
+  cardsEl.classList.add('cr-intro');
+  void item.offsetWidth;
+  item.classList.add('cr-flip-hero');
+
+  _crLoadTimer = setTimeout(function () {
+    cardsEl.classList.remove('cr-intro');
+    cardsEl.classList.add('cr-reveal');
+
+    // Spend amount rolls up to its value as it appears
+    var intEl = document.getElementById('crSpendInt');
+    if (intEl) {
+      var target = parseFloat(intEl.textContent.replace(/,/g, ''));
+      if (target > 0) _crCountUp(intEl, target, 900);
+    }
+
+    // Keep .cr-flip-hero on the settled card through the reveal — removing it
+    // now would make it match the reveal selector and re-fade (visible flicker)
+    _crRevealTimer = setTimeout(function () {
+      cardsEl.classList.remove('cr-reveal');
+      item.classList.remove('cr-flip-hero');
+      item.style.removeProperty('--cr-dx');
+      item.style.removeProperty('--cr-dy');
+    }, 950);
+  }, 3400);
+}
+
+function _crCountUp(el, target, dur) {
+  var start = null;
+  function tick(ts) {
+    if (start === null) start = ts;
+    var p = Math.min((ts - start) / dur, 1);
+    var eased = 1 - Math.pow(1 - p, 4); // ease-out-quart
+    el.textContent = Math.round(target * eased).toLocaleString('en-US');
+    if (p < 1) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
 }
 
 function showCardsBack() {
@@ -3603,6 +3720,448 @@ function showCardsBack() {
     showNav(false); setSbLight(false); return;
   }
   showHome();
+}
+
+/* ── Create card journey ────────────────────────── */
+
+var _ctplStep = 1; // 1 = picker, 2 = setup
+var _ctplSelected = null;
+var _ctplAcctId = 'usd';
+
+var _CTPL_ACCTS = [
+  { id: 'usd',      label: 'USD Checking',    sub: '·· 7654',  img: 'assets/space-usd-checking.webp' },
+  { id: 'thailand', label: 'Thailand holiday', sub: 'Space',    img: 'assets/space-thailand.webp' },
+  { id: 'moms',     label: "Mom's expenses",   sub: 'Space',    img: 'assets/space-moms.webp' },
+  { id: 'wedding',  label: 'Wedding',          sub: 'Space',    img: 'assets/space-wedding.webp' },
+];
+
+function openCtplAcctPicker() {
+  var list = document.getElementById('ctplAcctList');
+  list.innerHTML = _CTPL_ACCTS.map(function(a) {
+    return '<div class="ctpl-acct-opt' + (a.id === _ctplAcctId ? ' selected' : '') + '" onclick="selectCtplAcct(\'' + a.id + '\')">' +
+      '<img src="' + a.img + '" class="ctpl-acct-opt-img" alt="">' +
+      '<div class="ctpl-acct-opt-text">' +
+        '<div class="ctpl-acct-opt-name">' + a.label + '</div>' +
+        '<div class="ctpl-acct-opt-sub">' + a.sub + '</div>' +
+      '</div>' +
+      '<div class="ctpl-acct-opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5L4.5 8.5L9.5 2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('ctplAcctOverlay').classList.add('open');
+  document.getElementById('ctplAcctSheet').classList.add('open');
+}
+
+function closeCtplAcctPicker() {
+  document.getElementById('ctplAcctOverlay').classList.remove('open');
+  document.getElementById('ctplAcctSheet').classList.remove('open');
+}
+
+function selectCtplAcct(id) {
+  _ctplAcctId = id;
+  var acct = _CTPL_ACCTS.find(function(a) { return a.id === id; });
+  if (!acct) return;
+  document.getElementById('ctplAcctIcon').src = acct.img;
+  var sub = acct.sub && acct.sub !== 'Space' ? ' ' + acct.sub : '';
+  document.getElementById('ctplAcctLabel').textContent = acct.label + sub;
+  closeCtplAcctPicker();
+}
+
+var _ctplMerchantId   = null;
+var _ctplMerchantName = '';
+
+var _CTPL_MERCHANTS = [
+  { id: 'amazon',    name: 'Amazon',      color: '#FF9900', abbr: 'Am' },
+  { id: 'netflix',   name: 'Netflix',     color: '#E50914', abbr: 'Nf' },
+  { id: 'spotify',   name: 'Spotify',     color: '#1DB954', abbr: 'Sp' },
+  { id: 'apple',     name: 'Apple',       color: '#555555', abbr: 'Ap' },
+  { id: 'google',    name: 'Google',      color: '#4285F4', abbr: 'Go' },
+  { id: 'uber',      name: 'Uber',        color: '#000000', abbr: 'Ub' },
+  { id: 'doordash',  name: 'DoorDash',    color: '#FF3008', abbr: 'DD' },
+  { id: 'airbnb',    name: 'Airbnb',      color: '#FF5A5F', abbr: 'Ab' },
+  { id: 'costco',    name: 'Costco',      color: '#005DAA', abbr: 'Co' },
+  { id: 'walmart',   name: 'Walmart',     color: '#0071CE', abbr: 'Wm' },
+  { id: 'target',    name: 'Target',      color: '#CC0000', abbr: 'Tg' },
+  { id: 'instacart', name: 'Instacart',   color: '#43B02A', abbr: 'Ic' },
+  { id: 'microsoft', name: 'Microsoft',   color: '#00A4EF', abbr: 'Ms' },
+  { id: 'adobe',     name: 'Adobe',       color: '#FF0000', abbr: 'Ad' },
+  { id: 'hulu',      name: 'Hulu',        color: '#1CE783', abbr: 'Hu' },
+];
+
+function _ctplMerchantAvatarHtml(m, sizeCls) {
+  return '<div class="' + sizeCls + '" style="background:' + m.color + '">' + m.abbr + '</div>';
+}
+
+function _renderMerchantList(filter) {
+  var q = (filter || '').toLowerCase().trim();
+  var items = q ? _CTPL_MERCHANTS.filter(function(m) {
+    return m.name.toLowerCase().indexOf(q) !== -1;
+  }) : _CTPL_MERCHANTS;
+
+  var list = document.getElementById('ctplMerchantList');
+  list.innerHTML = items.map(function(m) {
+    var sel = m.id === _ctplMerchantId;
+    return '<div class="ctpl-acct-opt' + (sel ? ' selected' : '') + '" onclick="selectCtplMerchant(\'' + m.id + '\')">' +
+      _ctplMerchantAvatarHtml(m, 'ctpl-merchant-avatar-lg') +
+      '<div class="ctpl-acct-opt-text">' +
+        '<div class="ctpl-acct-opt-name">' + m.name + '</div>' +
+      '</div>' +
+      '<div class="ctpl-acct-opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5L4.5 8.5L9.5 2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+    '</div>';
+  }).join('');
+
+  // Show custom option when query doesn't exactly match a known merchant
+  var exactMatch = q && _CTPL_MERCHANTS.some(function(m) {
+    return m.name.toLowerCase() === q;
+  });
+  var customWrap = document.getElementById('ctplMerchantCustom');
+  if (q && !exactMatch) {
+    var label = filter.trim();
+    var abbr  = label.slice(0, 2).toUpperCase();
+    var hue   = label.split('').reduce(function(a, c) { return a + c.charCodeAt(0); }, 0) % 360;
+    var color = 'hsl(' + hue + ',55%,42%)';
+    document.getElementById('ctplMerchantCustomAvatar').textContent = abbr;
+    document.getElementById('ctplMerchantCustomAvatar').style.background = color;
+    document.getElementById('ctplMerchantCustomName').textContent = label;
+    customWrap.style.display = '';
+  } else {
+    customWrap.style.display = 'none';
+  }
+}
+
+function openCtplMerchantPicker() {
+  document.getElementById('ctplMerchantSearch').value = '';
+  _renderMerchantList('');
+  document.getElementById('ctplMerchantOverlay').classList.add('open');
+  document.getElementById('ctplMerchantSheet').classList.add('open');
+  setTimeout(function() {
+    document.getElementById('ctplMerchantSearch').focus();
+  }, 280);
+}
+
+function closeCtplMerchantPicker() {
+  document.getElementById('ctplMerchantOverlay').classList.remove('open');
+  document.getElementById('ctplMerchantSheet').classList.remove('open');
+}
+
+function filterCtplMerchants(val) {
+  _renderMerchantList(val);
+}
+
+function _applyMerchantToRow(name, abbr, color) {
+  _ctplMerchantName = name;
+  var avatarEl = document.getElementById('ctplMerchantAvatar');
+  if (avatarEl) {
+    avatarEl.textContent = abbr;
+    avatarEl.style.background = color;
+  }
+  var labelEl = document.getElementById('ctplMerchantLabel');
+  if (labelEl) labelEl.textContent = name;
+}
+
+function selectCtplMerchant(id) {
+  var m = _CTPL_MERCHANTS.find(function(x) { return x.id === id; });
+  if (!m) return;
+  _ctplMerchantId = id;
+  _applyMerchantToRow(m.name, m.abbr, m.color);
+  closeCtplMerchantPicker();
+}
+
+function selectCtplMerchantCustom() {
+  var label = document.getElementById('ctplMerchantSearch').value.trim();
+  if (!label) return;
+  _ctplMerchantId = null;
+  var abbr  = label.slice(0, 2).toUpperCase();
+  var hue   = label.split('').reduce(function(a, c) { return a + c.charCodeAt(0); }, 0) % 360;
+  var color = 'hsl(' + hue + ',55%,42%)';
+  _applyMerchantToRow(label, abbr, color);
+  closeCtplMerchantPicker();
+}
+
+/* ── Limit type picker ── */
+var _CTPL_LIMIT_TYPES = ['Monthly', 'All time', 'Per transaction', 'One time'];
+var _ctplLimitType = 'Monthly';
+
+function openCtplLimitPicker() {
+  var list = document.getElementById('ctplLimitList');
+  list.innerHTML = _CTPL_LIMIT_TYPES.map(function(t) {
+    var sel = t === _ctplLimitType;
+    return '<div class="ctpl-acct-opt' + (sel ? ' selected' : '') + '" onclick="selectCtplLimitType(\'' + t.replace(/'/g, "\\'") + '\')">' +
+      '<div class="ctpl-acct-opt-text"><div class="ctpl-acct-opt-name">' + t + '</div></div>' +
+      '<div class="ctpl-acct-opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5L4.5 8.5L9.5 2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+    '</div>';
+  }).join('');
+  document.getElementById('ctplLimitOverlay').classList.add('open');
+  document.getElementById('ctplLimitSheet').classList.add('open');
+}
+
+function closeCtplLimitPicker() {
+  document.getElementById('ctplLimitOverlay').classList.remove('open');
+  document.getElementById('ctplLimitSheet').classList.remove('open');
+}
+
+function selectCtplLimitType(type) {
+  _ctplLimitType = type;
+  var el = document.getElementById('ctplLimitTypeVal');
+  if (el) el.textContent = type;
+  closeCtplLimitPicker();
+}
+
+/* ── Manual controls toggle ── */
+function ctplToggleManual() {
+  var body  = document.getElementById('ctplManualBody');
+  var caret = document.getElementById('ctplManualCaret');
+  if (!body) return;
+  body.classList.toggle('open');
+  if (caret) caret.classList.toggle('open');
+}
+
+var CTPL_CONFIG = {
+  subscriptions: {
+    name: 'Subscriptions',
+    subtext: 'Set a monthly cap and cancel without affecting your other cards.',
+    nickname: 'Subscription card',
+    amount: 50,
+    limitType: 'Monthly',
+    tint: 'rgba(222,185,150,0.35)',
+    features: ['Monthly cap', 'Separate card for recurring charges', 'Easy to freeze or close']
+  },
+  merchant: {
+    name: 'Merchant',
+    subtext: 'Keep spending with one merchant separate, controlled, and easy to freeze.',
+    nickname: 'Merchant card',
+    amount: 300,
+    limitType: 'Monthly',
+    tint: 'rgba(150,222,220,0.35)',
+    features: ['Merchant-focused spending', 'Monthly limit', 'Freeze independently']
+  },
+  trial: {
+    name: 'Trial',
+    subtext: 'Protect yourself with a low-limit card for signups and unfamiliar checkouts.',
+    nickname: 'Trial card',
+    amount: 25,
+    limitType: 'All time',
+    tint: 'rgba(150,222,221,0.35)',
+    features: ['Low-limit protection', 'Safer online checkout', 'Close anytime']
+  },
+  event: {
+    name: 'Event',
+    subtext: 'Give a temporary budget its own card so event costs stay under control.',
+    nickname: 'Event card',
+    amount: 1000,
+    limitType: 'All time',
+    tint: 'rgba(222,221,150,0.35)',
+    features: ['Event budget', 'Temporary spending control', 'Close after use']
+  },
+  household: {
+    name: 'Household',
+    subtext: 'Make shared spending simpler while keeping limits and visibility in your hands.',
+    nickname: 'Household spending',
+    amount: 600,
+    limitType: 'Monthly',
+    tint: 'rgba(204,150,222,0.35)',
+    features: ['Shared spending', 'Monthly limit', 'Owner visibility']
+  },
+  travel: {
+    name: 'Travel',
+    subtext: 'Keep trip spending contained without mixing it into everyday expenses.',
+    nickname: 'Travel card',
+    amount: 1500,
+    limitType: 'All time',
+    tint: 'rgba(150,190,222,0.35)',
+    features: ['Trip budget', 'Separate travel spending', 'Freeze after trip']
+  },
+  onetimebuy: {
+    name: 'One-time buy',
+    subtext: 'Put a cap on a single purchase and close the card when you\'re done.',
+    nickname: 'One-time purchase',
+    amount: 250,
+    limitType: 'All time',
+    tint: 'rgba(186,222,150,0.35)',
+    features: ['All-time cap', 'Safer checkout', 'Close after use']
+  },
+  childteen: {
+    name: 'Child / Teen',
+    subtext: 'Give supervised spending access with clear limits and safer boundaries.',
+    nickname: 'Child card',
+    amount: 100,
+    limitType: 'Monthly',
+    tint: 'rgba(222,150,171,0.35)',
+    features: ['Allowance limit', 'Parent controls', 'Spend alerts']
+  },
+  custom: {
+    name: 'Custom',
+    subtext: 'Start with a blank card and shape it around your own spending rules.',
+    nickname: '',
+    amount: null,
+    limitType: null,
+    tint: 'transparent',
+    features: ['Flexible setup', 'Choose your own limit', 'Add controls if needed']
+  }
+};
+
+function showCreateCard() {
+  var el = document.getElementById('create-card');
+  if (!el) return;
+  _ctplStep = 1;
+  _ctplSelected = null;
+  // Reset to picker view
+  var picker = document.getElementById('ctplPickerPanel');
+  var setup  = document.getElementById('ctplSetupPanel');
+  if (picker) picker.classList.remove('ctpl-exit');
+  if (setup)  setup.classList.remove('ctpl-active');
+  // Reset header
+  var lbl = document.querySelector('.ctpl-sheet-lbl');
+  var step = document.querySelector('.ctpl-sheet-step');
+  if (lbl)  lbl.textContent = 'Select a template to get started';
+  if (step) step.textContent = '1/3';
+  // Reset tint
+  var tint = document.getElementById('ctplCardTint');
+  if (tint) tint.style.background = 'transparent';
+
+  ['home','explore','accounts','account-detail','cards'].forEach(function(id) {
+    var s = document.getElementById(id);
+    if (s) s.className = 'screen hr';
+  });
+  el.className = 'screen on';
+  setSbLight(false);
+  showNav(false);
+}
+
+function goBackCreateCard() {
+  if (_ctplStep === 2) {
+    // Go back to picker — preserve selection
+    _ctplStep = 1;
+    var picker = document.getElementById('ctplPickerPanel');
+    var setup  = document.getElementById('ctplSetupPanel');
+    if (setup)  { setup.classList.remove('ctpl-active'); }
+    if (picker) {
+      picker.style.transition = 'none';
+      picker.style.transform  = 'translateX(-28px)';
+      picker.style.opacity    = '0';
+      picker.classList.remove('ctpl-exit');
+      requestAnimationFrame(function() {
+        picker.style.transition = '';
+        picker.style.transform  = '';
+        picker.style.opacity    = '';
+      });
+    }
+    var lbl = document.querySelector('.ctpl-sheet-lbl');
+    var step = document.querySelector('.ctpl-sheet-step');
+    if (lbl)  lbl.textContent = 'Select a template to get started';
+    if (step) step.textContent = '1/3';
+    var tint = document.getElementById('ctplCardTint');
+    if (tint) tint.style.background = 'transparent';
+    var sheet = document.querySelector('.ctpl-sheet');
+    if (sheet) sheet.classList.remove('ctpl-step2');
+  } else {
+    closeCreateCard();
+  }
+}
+
+function closeCreateCard() {
+  var el = document.getElementById('create-card');
+  if (el) el.className = 'screen hr';
+  var cards = document.getElementById('cards');
+  if (cards) { cards.className = 'screen on'; showNav(false); }
+}
+
+function selectCardTemplate(template) {
+  var cfg = CTPL_CONFIG[template];
+  if (!cfg) return;
+  _ctplSelected = template;
+  _ctplStep = 2;
+
+  // Populate header
+  document.getElementById('ctplSetupName').textContent = cfg.name;
+  document.getElementById('ctplSetupSub').textContent  = cfg.subtext;
+
+  // Nickname
+  var nick = document.getElementById('ctplNickname');
+  if (nick) { nick.value = cfg.nickname || ''; nick.placeholder = cfg.nickname || 'e.g. My card'; }
+
+  // Amount
+  var amt = document.getElementById('ctplAmount');
+  if (amt) { amt.value = cfg.amount !== null ? cfg.amount : ''; }
+
+  // Limit type dropdown
+  _ctplLimitType = cfg.limitType || 'Monthly';
+  var ltv = document.getElementById('ctplLimitTypeVal');
+  if (ltv) ltv.textContent = _ctplLimitType;
+
+  // AI sub: show template-relevant controls hint
+  var aiSub = document.getElementById('ctplAiSub');
+  if (aiSub) {
+    var hints = { subscriptions: 'Billing date · Retry rules', merchant: 'Merchant lock · Category', trial: 'Country · Auto-close', event: 'Date range · Category', household: 'Members · Categories', travel: 'Countries · Airlines', onetimebuy: 'Merchant · Auto-close', childteen: 'Categories · Time limits', custom: 'Controls · Limits' };
+    aiSub.textContent = hints[template] || 'Country · Businesses';
+  }
+
+  // Reset manual section
+  var manualBody  = document.getElementById('ctplManualBody');
+  var manualCaret = document.getElementById('ctplManualCaret');
+  if (manualBody)  manualBody.classList.remove('open');
+  if (manualCaret) manualCaret.classList.remove('open');
+
+  // Card tint
+  var tint = document.getElementById('ctplCardTint');
+  if (tint) tint.style.background = cfg.tint;
+
+  // Hide top sheet-row strip on step 2
+  var sheet = document.querySelector('.ctpl-sheet');
+  if (sheet) sheet.classList.add('ctpl-step2');
+
+  // Merchant row (merchant template only)
+  var merchantRow = document.getElementById('ctplMerchantRow');
+  var merchantSep = document.getElementById('ctplMerchantSep');
+  var isMerchant = template === 'merchant';
+  if (merchantRow) merchantRow.style.display = isMerchant ? '' : 'none';
+  if (merchantSep) merchantSep.style.display = isMerchant ? '' : 'none';
+  if (isMerchant) {
+    _ctplMerchantId = null; _ctplMerchantName = '';
+    var av = document.getElementById('ctplMerchantAvatar');
+    if (av) { av.textContent = ''; av.style.background = 'rgba(0,0,0,0.12)'; }
+    var lb = document.getElementById('ctplMerchantLabel');
+    if (lb) lb.textContent = 'Select merchant';
+  }
+
+  // Scroll setup to top
+  var scroll = document.querySelector('.ctpl-setup-scroll');
+  if (scroll) scroll.scrollTop = 0;
+
+  // Animate: picker slides left out, setup slides in from right
+  var picker = document.getElementById('ctplPickerPanel');
+  var setupPanel = document.getElementById('ctplSetupPanel');
+  if (picker) picker.classList.add('ctpl-exit');
+  if (setupPanel) {
+    requestAnimationFrame(function() {
+      setupPanel.classList.add('ctpl-active');
+    });
+  }
+}
+
+function ctplSelectLimit(btn) {
+  var opts = document.querySelectorAll('.ctpl-seg-opt');
+  opts.forEach(function(o) { o.classList.remove('active'); });
+  btn.classList.add('active');
+}
+
+function ctplToggleCustomize() {
+  var body  = document.getElementById('ctplCustomizeBody');
+  var caret = document.getElementById('ctplCustomizeCaret');
+  if (!body) return;
+  var open = body.classList.toggle('open');
+  if (caret) caret.classList.toggle('open', open);
+}
+
+function ctplToggleSwitch(el) {
+  el.classList.toggle('ctpl-toggle--on');
+}
+
+function createCardFromTemplate() {
+  // Placeholder: collect values and proceed to step 3
+  var nickname  = document.getElementById('ctplNickname')  ? document.getElementById('ctplNickname').value  : '';
+  var amount    = document.getElementById('ctplAmount')     ? document.getElementById('ctplAmount').value     : '';
+  var limitType = (document.querySelector('.ctpl-seg-opt.active') || {}).dataset || {};
+  console.log('Create card:', _ctplSelected, nickname, amount, limitType.val);
 }
 
 /* ── Card action sheets ────────────────────────── */
@@ -3893,8 +4452,7 @@ function ccsParseIntent(text) {
 /* ── Create Card sheet ── */
 /* ── Create Card sheet ── */
 function openCcSheet() {
-  document.getElementById('ccOverlay').classList.add('open');
-  showNav(false);
+  openCardAgent();
 }
 function closeCcSheet() {
   document.getElementById('ccOverlay').classList.remove('open');
@@ -4192,6 +4750,7 @@ function showAccountDetail(acct) {
 
   // Populate shared fields (same for all modes)
   document.getElementById('adAcctName').textContent = acct.name;
+  document.getElementById('adNavTitle').textContent = acct.name;
   document.getElementById('adAcctNum').textContent  = acct.num;
   document.getElementById('adBalInt').textContent   = acct.balInt;
   var ACCT_ICON = {
@@ -4243,8 +4802,14 @@ function showAccountDetail(acct) {
 
   // Render tx section (same component as home page, filtered list)
   renderEmbeddedTxSection('adTxList', spaceTxns);
-  // Scroll to top
+  // Scroll to top + reset pinned-nav title, hero fade, content mask
   document.getElementById('adScroll').scrollTop = 0;
+  document.getElementById('adHeaderNav').classList.remove('show-title');
+  document.getElementById('adScroll').classList.remove('ad-fade-top');
+  document.getElementById('adMainCard').style.opacity = '';
+  var _hw = document.getElementById('adHeroBgWrap'); if (_hw) _hw.style.transform = 'scale(1.25)';
+  var _hb = document.getElementById('adHeroBlurTop'); if (_hb) _hb.style.opacity = '0';
+  document.getElementById('adScroll').style.setProperty('--ad-sheet-op', '0.4');
   // Slide in
   _navStack.push(_activeScreen());
   document.getElementById('accounts').className       = 'screen hl';
@@ -4571,9 +5136,11 @@ function animateHeroBlob(blobEl, destAvatarId, doTransition, destOpts) {
 
 function smGoToAmount(name, initials, bg, account, blobEl) {
   smRecipient = { name, initials, bg: bg||'linear-gradient(135deg,#46882b,#2d5a16)', account: account||'••7654 · HDFC Bank' };
-  smCents = 100000; // pre-fill $1,000.00
+  smCents = 0;
   smCurrencyFlipped = false;
   smInrPaise = 0;
+  smDollarInt = 0; smCentStr = ''; smInCents = false;
+  smInrRupeeInt = 0; smInrPaisaStr = ''; smInrInCents = false;
   document.getElementById('sm-amount').querySelector('.sm2-amount-section').classList.remove('flipped');
   const switchBtn = document.getElementById('smSwitchBtn');
   if (switchBtn) switchBtn.classList.remove('flipped');
@@ -4689,20 +5256,46 @@ function smUpdateAmount() {
 function smKey(k) {
   if (smCurrencyFlipped) {
     if (k === 'del') {
-      smInrPaise = Math.floor(smInrPaise / 10);
-    } else if (k !== '.') {
-      if (smInrPaise < 1000000000) { // cap at ₹1 crore
-        smInrPaise = smInrPaise * 10 + parseInt(k);
+      if (smInrInCents && smInrPaisaStr.length > 0) {
+        smInrPaisaStr = smInrPaisaStr.slice(0, -1);
+      } else if (smInrInCents) {
+        smInrInCents = false;
+      } else {
+        smInrRupeeInt = Math.floor(smInrRupeeInt / 10);
+      }
+    } else if (k === '.') {
+      if (!smInrInCents) smInrInCents = true;
+    } else {
+      if (smInrInCents) {
+        if (smInrPaisaStr.length < 2) smInrPaisaStr += k;
+      } else {
+        if (smInrRupeeInt < 10000000) smInrRupeeInt = smInrRupeeInt * 10 + parseInt(k);
       }
     }
+    const paisa = parseInt((smInrPaisaStr + '00').slice(0, 2));
+    smInrPaise = smInrRupeeInt * 100 + paisa;
+    smCents = Math.round((smInrPaise / 100) / SM_EXRATE * 100);
   } else {
     if (k === 'del') {
-      smCents = Math.floor(smCents / 10);
-    } else if (k !== '.') {
-      if (smCents < 10000000) { // cap at $100,000
-        smCents = smCents * 10 + parseInt(k);
+      if (smInCents && smCentStr.length > 0) {
+        smCentStr = smCentStr.slice(0, -1);
+      } else if (smInCents) {
+        smInCents = false;
+      } else {
+        smDollarInt = Math.floor(smDollarInt / 10);
+      }
+    } else if (k === '.') {
+      if (!smInCents) smInCents = true;
+    } else {
+      if (smInCents) {
+        if (smCentStr.length < 2) smCentStr += k;
+      } else {
+        if (smDollarInt < 100000) smDollarInt = smDollarInt * 10 + parseInt(k);
       }
     }
+    const cents = parseInt((smCentStr + '00').slice(0, 2));
+    smCents = smDollarInt * 100 + cents;
+    smInrPaise = Math.round((smCents / 100) * SM_EXRATE * 100);
   }
   smUpdateAmount();
 }
@@ -4722,11 +5315,17 @@ function smSwitchCurrency() {
 
   smCurrencyFlipped = !smCurrencyFlipped;
 
-  // Sync the non-input variable so amounts stay consistent
+  // Sync amounts and reset input state for the new primary currency
   if (smCurrencyFlipped) {
     smInrPaise = Math.round((smCents / 100) * SM_EXRATE * 100);
+    smInrRupeeInt = Math.floor(smInrPaise / 100);
+    smInrPaisaStr = String(smInrPaise % 100).padStart(2, '0').replace(/0+$/, '');
+    smInrInCents = smInrPaisaStr.length > 0;
   } else {
     smCents = Math.round((smInrPaise / 100) / SM_EXRATE * 100);
+    smDollarInt = Math.floor(smCents / 100);
+    smCentStr = String(smCents % 100).padStart(2, '0').replace(/0+$/, '');
+    smInCents = smCentStr.length > 0;
   }
 
   // Rotate the switch arrow immediately (animates during the exit phase)
@@ -5786,31 +6385,84 @@ renderEmbeddedTxSection('homeTxList');
 // ── Hero background organic drift ──────────────────────────────
 // Two overlapping sine waves per axis at irrational frequency ratios →
 // path never repeats, velocity is always continuous, zero keyframe stops
-(function heroBgDrift() {
-  const img = document.querySelector('.home-hero-bg');
-  if (!img) return;
-  const t0 = performance.now();
-  function tick(now) {
-    const t = (now - t0) / 1000;
-    const x = Math.sin(t * 0.29) * 11 + Math.sin(t * 0.13) * 7;
-    const y = Math.cos(t * 0.21) * 9  + Math.cos(t * 0.09) * 6;
-    const s = 1.18 + Math.sin(t * 0.17) * 0.01;
-    img.style.transform = `scale(${s}) translate(${x}px, ${y}px)`;
-    requestAnimationFrame(tick);
-  }
-  requestAnimationFrame(tick);
+/* ── Home: status-bar blur + hero zoom-out & progressive blur on scroll ── */
+(function() {
+  var scroll = document.querySelector('.home-scroll');
+  if (!scroll) return;
+  var heroWrap = document.getElementById('homeHeroBgWrap');
+  var heroFixed = document.getElementById('homeHeroFixed');
+  var heroBlurScroll = document.getElementById('homeHeroBlurScroll');
+  var homeAi = document.querySelector('#home .home-ai');
+  var homeHero = document.querySelector('#home .home-hero');
+  var homeGreetingHalo = document.getElementById('homeGreetingHalo');
+  var bnavAiSlot = document.getElementById('bnavAiSlot');
+  var ticking = false;
+  scroll.addEventListener('scroll', function() {
+    var st = scroll.scrollTop;
+    var scrolled = st > 8;
+    // Hard-cut the scroll area into a rounded box 16px below the header buttons
+    scroll.classList.toggle('home-fade-top', scrolled);
+    // White text over the hero photo at the top; dark once content scrolls under
+    if (document.getElementById('home').classList.contains('on')) setSbLight(!scrolled);
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      var s = Math.max(scroll.scrollTop, 0);
+      var p = Math.min(s / 320, 1); // 0 at top → 1 by 320px
+      // Photo fills the hero at rest, then shrinks to fit the device width (scale 1.0) on scroll
+      if (heroWrap) heroWrap.style.transform = 'translateY(' + (-40 * p).toFixed(1) + 'px) scale(' + (1.35 - p * 0.35).toFixed(4) + ')';
+      // Move the whole header space up by 40px and shrink its height to 212px as scrolling happens
+      if (heroFixed) {
+        heroFixed.style.transform = 'translateY(' + (-40 * p).toFixed(1) + 'px)';
+        heroFixed.style.height = (583 - 371 * p).toFixed(0) + 'px';
+        heroFixed.style.setProperty('--bp', p.toFixed(3));
+      }
+      // Deepen the image blur as you scroll up
+      if (heroBlurScroll) heroBlurScroll.style.opacity = (p * 0.35).toFixed(3);
+      // Jump input field opacity to 0.80 the moment scrolling starts
+      if (homeAi) homeAi.style.setProperty('--ai-bg-op', s > 0 ? '0.80' : '0.60');
+      // Fade greeting halo — starts at 60px scroll, gone by 240px
+      if (homeGreetingHalo) homeGreetingHalo.style.opacity = Math.max(0, 1 - Math.max(0, s - 60) / 180).toFixed(3);
+      // Show AI orb in nav once greeting/AI input area has scrolled away
+      if (bnavAiSlot) bnavAiSlot.classList.toggle('visible', s >= 220);
+      ticking = false;
+    });
+  }, { passive: true });
 })();
 
-/* ── Home status-bar blur on scroll ──────────────────── */
-document.querySelector('.home-scroll').addEventListener('scroll', function() {
-  const blur = document.querySelector('.home-statusbar-blur');
-  blur.classList.toggle('active', this.scrollTop > 8);
-});
+/* ── Account-detail: status-bar blur + nav title reveal on scroll ─────── */
+(function() {
+  var adScroll = document.getElementById('adScroll');
+  var navBar = document.getElementById('adHeaderNav');
 
-/* ── Account-detail status-bar blur on scroll ─────── */
-document.getElementById('adScroll').addEventListener('scroll', function() {
-  document.getElementById('adStatusBlur').classList.toggle('active', this.scrollTop > 8);
-});
+  var mainCard = document.getElementById('adMainCard');
+  var heroWrap = document.getElementById('adHeroBgWrap');
+  var heroBlurTop = document.getElementById('adHeroBlurTop');
+  var ticking = false;
+  function onAdScroll() {
+    var st = adScroll.scrollTop;
+    // Reveal the pinned nav title once the hero name reaches the bar
+    if (navBar) navBar.classList.toggle('show-title', st > 90);
+    // Fade the hero (name, balance, Add funds) out as it rises into the nav
+    if (mainCard) mainCard.style.opacity = String(1 - Math.min(Math.max((st - 20) / 80, 0), 1));
+    // Dissolve scrolling content ~16px below the nav buttons (mask only once scrolled)
+    adScroll.classList.toggle('ad-fade-top', st > 8);
+    // Grow the transactions + cards sheets more opaque (0.4 → 0.8) as you scroll up
+    adScroll.style.setProperty('--ad-sheet-op', (0.4 + Math.min(st / 160, 1) * 0.4).toFixed(3));
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      var s = Math.max(adScroll.scrollTop, 0);
+      var p = Math.min(s / 240, 1); // 0 at top → 1 by 240px
+      // Zoom out: 1.25 (rest) → 1.0 (device width)
+      if (heroWrap) heroWrap.style.transform = 'scale(' + (1.25 - p * 0.25).toFixed(4) + ')';
+      // Final state: top region blurs up to 40px
+      if (heroBlurTop) heroBlurTop.style.opacity = p.toFixed(3);
+      ticking = false;
+    });
+  }
+  adScroll.addEventListener('scroll', onAdScroll, { passive: true });
+})();
 
 /* ── Accounts status-bar blur on scroll ─────────── */
 document.getElementById('acctScroll').addEventListener('scroll', function() {
@@ -5870,6 +6522,9 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
     // Drag-based carousel (overflow:visible — no scroll container clipping)
     var _offset = 0;      // current translateX offset (negative = swiped left)
     var _activeIdx = 0;
+    // Track which card's spend figure is showing so we roll the number up
+    // only when a *new* card becomes active (init 0 so the entry animation owns card 0).
+    var _lastSpendIdx = 0;
     var CARD_W = 286, GAP = 4, SIDE_PAD = 45;
 
     function snapToIndex(idx, animated) {
@@ -5897,6 +6552,10 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
         item.style.transform = 'scale(' + (0.82 + 0.18 * norm).toFixed(3) + ')';
         if (dist < closestDist) { closestDist = dist; closestIdx = i; }
       });
+      // Only the centred card gets the live 3D wander sway
+      items.forEach(function(item, i) {
+        item.classList.toggle('cr-active', i === closestIdx);
+      });
       var isAdd = items[closestIdx] && items[closestIdx].classList.contains('cr-carousel-add');
       if (spendHdr) spendHdr.style.display = isAdd ? 'none'  : '';
       if (tip)      tip.style.display      = isAdd ? 'flex'  : 'none';
@@ -5905,8 +6564,25 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
       dragEl.style.marginBottom = isAdd ? '40px' : '';
       var spend = CARD_SPENDS[closestIdx];
       if (!isAdd && spend && spendInt && spendDec) {
-        spendInt.textContent = spend.int;
-        spendDec.textContent = spend.dec;
+        // Roll the number up only when a new card lands in the centre
+        if (closestIdx !== _lastSpendIdx) {
+          _lastSpendIdx = closestIdx;
+          // Update hero tinge: green for physical card (0), grey for virtual/dark cards
+          var _crHero = document.querySelector('#cards .cr-hero');
+          if (_crHero) {
+            var _tinge = closestIdx === 0 ? 'rgba(8,110,1,0.2)' : 'rgba(80,80,80,0.18)';
+            var _tingeFade = closestIdx === 0 ? 'rgba(8,110,1,0)' : 'rgba(80,80,80,0)';
+            _crHero.style.setProperty('--cr-tinge', _tinge);
+            _crHero.style.setProperty('--cr-tinge-fade', _tingeFade);
+          }
+          spendDec.textContent = spend.dec;
+          var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+          var target = parseFloat(spend.int.replace(/,/g, ''));
+          if (reduce) spendInt.textContent = spend.int;
+          else _crCountUp(spendInt, target, 700);
+        }
+      } else if (isAdd) {
+        _lastSpendIdx = -1; // returning to a card will re-roll its number
       }
     }
 
@@ -6550,6 +7226,13 @@ function benOpenAdd() {}
     var aiBtn = document.querySelector('.bnav-ai');
     if (!pill || typeof Motion === 'undefined') return;
 
+    // Snap indicator to active tab on load (no animation)
+    var activeTab = document.querySelector('.bnav-tab.active');
+    var indicator = document.getElementById('bnavIndicator');
+    if (indicator && activeTab) {
+      indicator.style.transform = 'translateX(' + activeTab.offsetLeft + 'px)';
+    }
+
     // Apple liquid glass spring: high stiffness, underdamped for a single clean overshoot
     var LG_SPRING = { easing: Motion.spring({ stiffness: 800, damping: 24, mass: 0.55 }) };
     var LG_DOWN   = { duration: 0.065, easing: [0.3, 0, 0.5, 1] };
@@ -6623,3 +7306,521 @@ function benOpenAdd() {}
     init();
   }
 }());
+
+/* ══════════════════════════════════════════════════════
+   CARD AGENT — Conversational card creation
+══════════════════════════════════════════════════════ */
+
+var _cardAgentOpen  = false;
+var _cardAgentConvo = false;
+var _caState        = null; // { step, cardType, flow, flowIdx, data }
+
+var _CA_SPACES = [
+  { id: 'usd',      label: 'USD Checking',     sub: '·· 7654' },
+  { id: 'thailand', label: 'Thailand holiday',  sub: 'Space' },
+  { id: 'moms',     label: "Mom's expenses",    sub: 'Space' },
+  { id: 'wedding',  label: 'Wedding',           sub: 'Space' },
+];
+
+var _CA_TYPE_LABELS = {
+  subscription: 'Subscription',
+  merchant:     'Merchant',
+  event:        'Event',
+  budget:       'Budget',
+  safety:       'Safety / Trial',
+  added_user:   'Added user',
+};
+
+function openCardAgent() {
+  if (_cardAgentOpen) return;
+  _cardAgentOpen = true;
+  _caState = { step: 'idle', cardType: null, flow: [], flowIdx: 0, data: {} };
+
+  // The .phone div uses scrollTop to navigate between screens.
+  // Anchor card-agent-screen to the current scroll position so it fills
+  // exactly the visible portion of the phone.
+  var phone = document.querySelector('.phone');
+  var scrollTop = phone ? phone.scrollTop : 0;
+  var clientH  = phone ? phone.clientHeight : 852;
+
+  var screen = document.getElementById('card-agent-screen');
+  screen.style.top    = scrollTop + 'px';
+  screen.style.height = clientH + 'px';
+  screen.removeAttribute('aria-hidden');
+  screen.style.transition = 'none';
+  screen.style.opacity    = '1';
+  screen.style.transform  = 'translateY(0)';
+  screen.classList.add('ca-open');
+  void screen.offsetHeight;
+  screen.style.transition = '';
+
+  showNav(false);
+  setTimeout(function() {
+    var f = document.getElementById('caField');
+    if (f) f.focus();
+  }, 420);
+}
+
+// Auto-open card agent when arriving from index.html with ?newcard=1
+(function() {
+  if (new URLSearchParams(window.location.search).get('newcard') !== '1') return;
+  window.addEventListener('load', function() {
+    setTimeout(function() {
+      _cardAgentOpen = false;
+      showCards('all');
+      setTimeout(openCardAgent, 200);
+    }, 600);
+  });
+}());
+
+function closeCardAgent() {
+  if (!_cardAgentOpen) return;
+  _cardAgentOpen = false; _cardAgentConvo = false; _caState = null;
+
+  var screen = document.getElementById('card-agent-screen');
+  screen.style.transition = 'opacity 220ms var(--ease-out), transform 280ms var(--ease-spring)';
+  screen.style.opacity    = '0';
+  screen.style.transform  = 'translateY(24px)';
+  screen.classList.remove('ca-open', 'ca-convo');
+  screen.setAttribute('aria-hidden', 'true');
+
+  setTimeout(function() {
+    var msgs = document.getElementById('caMsgs');
+    if (msgs) msgs.innerHTML = '<div class="ca-msgs-spacer"></div>';
+    var f = document.getElementById('caField');
+    var s = document.getElementById('caSend');
+    if (f) { f.value = ''; f.style.height = 'auto'; }
+    if (s) { s.classList.remove('active'); s.setAttribute('aria-disabled', 'true'); }
+    // Reset preview
+    var prev = document.getElementById('caPreview');
+    if (prev) prev.classList.remove('visible');
+    var nameEl = document.getElementById('caPreviewName');
+    if (nameEl) nameEl.textContent = 'New card';
+    var limEl = document.getElementById('caPreviewLimit');
+    if (limEl) { limEl.style.display = 'none'; limEl.textContent = ''; }
+    // Reset chips visibility (they come back via CSS on next open)
+    var chips = document.getElementById('caChips');
+    if (chips) chips.style.cssText = '';
+    screen.style.transition = '';
+    screen.style.opacity    = '';
+    screen.style.transform  = '';
+    screen.style.top        = '';
+    screen.style.height     = '';
+  }, 300);
+
+  showNav(true);
+}
+
+function caOnInput(input) {
+  input.style.height = '28px';
+  input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+  var s = document.getElementById('caSend');
+  if (!s) return;
+  var has = input.value.trim().length > 0;
+  if (has) { s.classList.add('active'); s.removeAttribute('aria-disabled'); }
+  else     { s.classList.remove('active'); s.setAttribute('aria-disabled', 'true'); }
+}
+
+function caKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); caSend(); }
+}
+
+function caChip(el, type) {
+  el.style.transform = 'scale(0.94)';
+  setTimeout(function() { el.style.transform = ''; _caStartConvo(type); }, 100);
+}
+
+function _caHideChips() {
+  var chips = document.getElementById('caChips');
+  if (!chips || chips.style.display === 'none') return;
+  chips.style.transition = 'opacity 200ms ease, transform 220ms var(--ease-out)';
+  chips.style.opacity    = '0';
+  chips.style.transform  = 'translateY(6px)';
+  setTimeout(function() {
+    chips.style.display     = 'none';
+    chips.style.transition  = '';
+    chips.style.opacity     = '';
+    chips.style.transform   = '';
+  }, 220);
+}
+
+function _caStartConvo(type) {
+  _caHideChips();
+  if (!_cardAgentConvo) {
+    _cardAgentConvo = true;
+    document.getElementById('card-agent-screen').classList.add('ca-convo');
+  }
+  _caState.cardType = type;
+
+  var flows = {
+    subscription: ['name',     'limit_monthly', 'space'],
+    merchant:     ['name',     'limit_monthly', 'space'],
+    event:        ['name',     'limit_total',   'space'],
+    budget:       ['category', 'limit_monthly', 'space'],
+    safety:       ['name',     'limit_pertx',   'space'],
+    added_user:   ['who',      'name',          'limit_monthly', 'space'],
+  };
+  _caState.flow    = flows[type] || ['name', 'space'];
+  _caState.flowIdx = 0;
+  _caState.data    = {};
+  _caAdvanceFlow();
+}
+
+var _CA_PROMPTS = {
+  name: {
+    subscription: { q: "What service is this card for?",            chips: ['Netflix','Spotify','ChatGPT','Amazon Prime'] },
+    merchant:     { q: "Which merchant is this card for?",          chips: ['Amazon','Uber','Whole Foods','Target'] },
+    event:        { q: "What's the occasion?",                      chips: ['Trip','Wedding','Party','Medical'] },
+    safety:       { q: "Give this card a nickname.",                 chips: ['Trials','Online shopping','Free trials'] },
+    added_user:   { q: "What should this card be called?",          chips: ['Household','School lunch','Travel','Kids'] },
+  },
+  category: {
+    budget: { q: "Which spending category?", chips: ['Groceries','Dining','Travel','Fuel','Shopping','Kids'] },
+  },
+  who: {
+    added_user: { q: "Who is this card for?", chips: ['Spouse','Child','Delegate'] },
+  },
+  limit_monthly: {
+    subscription: { q: "What's the monthly limit?",          chips: ['$10','$15','$20','$50'] },
+    merchant:     { q: "Monthly cap?",                       chips: ['$100','$200','$300','No limit'] },
+    budget:       { q: "Monthly cap?",                       chips: ['$200','$500','$800','$1,000'] },
+    added_user:   { q: "Monthly limit for this card?",       chips: ['$100','$200','$500','No limit'] },
+  },
+  limit_total: {
+    event: { q: "Total budget for this event?", chips: ['$500','$1,000','$2,500'] },
+  },
+  limit_pertx: {
+    safety: { q: "Per-transaction limit?", chips: ['$10','$25','$50','$100'] },
+  },
+  space: {
+    subscription: { q: "Which Space should this card draw from?" },
+    merchant:     { q: "Which Space?" },
+    event:        { q: "Which Space?" },
+    budget:       { q: "Which Space?" },
+    safety:       { q: "Which Space?" },
+    added_user:   { q: "Which Space should this card be linked to?" },
+  },
+};
+
+function _caAdvanceFlow() {
+  var step = _caState.flow[_caState.flowIdx];
+  if (!step) { _caRenderSummary(); return; }
+  _caState.step = step;
+
+  var p = (_CA_PROMPTS[step] || {})[_caState.cardType] || { q: "Tell me more." };
+  var chips = p.chips || null;
+
+  if (step === 'space') {
+    chips = _CA_SPACES.map(function(s) { return s.label; });
+  }
+
+  _caAppendAiMsg(p.q, chips);
+}
+
+// ── Message rendering ─────────────────────────────────
+
+function _caAppendAiMsg(text, chips) {
+  var msgs = document.getElementById('caMsgs');
+
+  var aiDiv = document.createElement('div');
+  aiDiv.className = 'ca-msg-ai';
+  aiDiv.innerHTML =
+    '<div class="ca-msg-ai-label" aria-hidden="true">' +
+      '<div class="ca-msg-ai-dot-wrap"><div class="ca-msg-ai-dot"></div></div>' +
+      '<span class="ca-msg-ai-name">Banyan</span>' +
+    '</div>';
+  msgs.appendChild(aiDiv);
+
+  setTimeout(function() {
+    requestAnimationFrame(function() {
+      aiDiv.classList.add('visible');
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  }, 50);
+
+  var textEl = document.createElement('div');
+  textEl.className = 'ca-msg-ai-text';
+  var cursor = document.createElement('span');
+  cursor.className = 'ag-cursor';
+  textEl.appendChild(cursor);
+  aiDiv.appendChild(textEl);
+
+  var chars = text.split('');
+  var i = 0;
+  function typeChar() {
+    if (i < chars.length) {
+      cursor.insertAdjacentText('beforebegin', chars[i++]);
+      setTimeout(typeChar, 16 + Math.floor(Math.random() * 12));
+    } else {
+      cursor.style.transition = 'opacity 400ms ease';
+      cursor.style.opacity    = '0';
+      setTimeout(function() { cursor.remove(); }, 440);
+
+      if (chips && chips.length) {
+        var chipsEl = document.createElement('div');
+        chipsEl.className = 'ca-reply-chips';
+        chips.forEach(function(label) {
+          var btn = document.createElement('button');
+          btn.className    = 'ca-reply-chip';
+          btn.textContent  = label;
+          btn.onclick      = function() { _caReplyChip(label); };
+          chipsEl.appendChild(btn);
+        });
+        aiDiv.appendChild(chipsEl);
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            chipsEl.classList.add('visible');
+            msgs.scrollTop = msgs.scrollHeight;
+          });
+        });
+      }
+    }
+  }
+  setTimeout(typeChar, 60);
+}
+
+function _caAppendUserMsg(text) {
+  var msgs = document.getElementById('caMsgs');
+  var d = document.createElement('div');
+  d.className = 'ca-msg-user';
+  d.innerHTML = '<div class="ca-msg-user-bubble">' + _agEscape(text) + '</div>';
+  msgs.appendChild(d);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      d.classList.add('visible');
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+function _caDisableReplyChips() {
+  document.querySelectorAll('#caMsgs .ca-reply-chip').forEach(function(b) { b.disabled = true; });
+}
+
+function _caReplyChip(text) {
+  _caDisableReplyChips();
+  _caAppendUserMsg(text);
+  _caProcessInput(text);
+}
+
+// ── Send ──────────────────────────────────────────────
+
+function caSend() {
+  var f = document.getElementById('caField');
+  if (!f) return;
+  var text = f.value.trim();
+  if (!text) return;
+
+  f.value = ''; f.style.height = 'auto';
+  var s = document.getElementById('caSend');
+  if (s) { s.classList.remove('active'); s.setAttribute('aria-disabled', 'true'); }
+  _caDisableReplyChips();
+
+  if (!_cardAgentConvo) {
+    _cardAgentConvo = true;
+    document.getElementById('card-agent-screen').classList.add('ca-convo');
+    _caHideChips();
+
+    var detected = _caDetectType(text);
+    _caAppendUserMsg(text);
+    if (detected) {
+      _caStartConvo(detected);
+    } else {
+      _caState.step = 'choose_type';
+      _caAppendAiMsg("What kind of card is this for?",
+        ['Subscription','Merchant','Event','Budget','Safety / Trial','Added user']);
+    }
+    return;
+  }
+
+  _caAppendUserMsg(text);
+  _caProcessInput(text);
+}
+
+function _caDetectType(t) {
+  t = t.toLowerCase();
+  if (/subscri|netflix|spotify|chatgpt|hulu|disney|streaming|saas/.test(t))       return 'subscription';
+  if (/merchant|amazon|uber|target|store|retailer|whole foods/.test(t))            return 'merchant';
+  if (/event|trip|wedding|party|vacation|holiday|diwali|birthday/.test(t))         return 'event';
+  if (/budget|grocery|groceries|dining|fuel|gas|envelope|categories/.test(t))      return 'budget';
+  if (/trial|safety|burner|temp|unknown site|one.?time|free trial/.test(t))        return 'safety';
+  if (/spouse|wife|husband|child|kid|daughter|son|delegate|family member/.test(t)) return 'added_user';
+  return null;
+}
+
+// ── Input processing state machine ───────────────────
+
+function _caProcessInput(rawText) {
+  if (!_caState) return;
+  var step = _caState.step;
+  var t    = rawText.toLowerCase().trim();
+
+  // Choose-type step (free-text initiated convo, didn't match a type)
+  if (step === 'choose_type') {
+    var typeMap = {
+      subscription: 'subscription', merchant: 'merchant', event: 'event',
+      budget: 'budget', safety: 'safety', 'safety / trial': 'safety',
+      'added user': 'added_user', added_user: 'added_user',
+    };
+    var chosen = null;
+    for (var key in typeMap) {
+      if (t.includes(key)) { chosen = typeMap[key]; break; }
+    }
+    if (!chosen) chosen = _caDetectType(t);
+    if (chosen) { _caStartConvo(chosen); }
+    else { _caAppendAiMsg("Pick a card type to get started:", ['Subscription','Merchant','Event','Budget','Safety / Trial','Added user']); }
+    return;
+  }
+
+  if (step === 'who') {
+    _caState.data.who = rawText;
+    _caState.flowIdx++;
+    _caAdvanceFlow();
+    return;
+  }
+
+  if (step === 'name' || step === 'category') {
+    _caState.data.name = rawText;
+    _caUpdatePreview();
+    _caState.flowIdx++;
+    _caAdvanceFlow();
+    return;
+  }
+
+  if (step === 'limit_monthly' || step === 'limit_total' || step === 'limit_pertx') {
+    var noLimit = /no limit|unlimited|none/.test(t);
+    var numMatch = t.match(/(\d[\d,]*)/);
+    if (noLimit) {
+      _caState.data.limit      = null;
+      _caState.data.limitLabel = 'No limit';
+    } else if (numMatch) {
+      var n = parseInt(numMatch[1].replace(/,/g, ''));
+      _caState.data.limit      = n;
+      _caState.data.limitLabel = '$' + n.toLocaleString() +
+        (step === 'limit_monthly' ? '/mo' : step === 'limit_pertx' ? '/tx' : ' total');
+    } else {
+      _caAppendAiMsg("Enter an amount, like $200 or $50.", null);
+      return;
+    }
+    _caUpdatePreview();
+    _caState.flowIdx++;
+    _caAdvanceFlow();
+    return;
+  }
+
+  if (step === 'space') {
+    var matched = null;
+    _CA_SPACES.forEach(function(sp) {
+      if (t.includes(sp.label.toLowerCase()) || t.includes(sp.id)) matched = sp;
+    });
+    if (!matched) {
+      _CA_SPACES.forEach(function(sp) {
+        sp.label.toLowerCase().split(' ').forEach(function(w) {
+          if (w.length > 2 && t.includes(w)) matched = sp;
+        });
+      });
+    }
+    if (!matched) matched = _CA_SPACES[0];
+    _caState.data.space = matched;
+    _caState.flowIdx++;
+    _caRenderSummary();
+    return;
+  }
+}
+
+function _caUpdatePreview() {
+  var prev   = document.getElementById('caPreview');
+  var nameEl = document.getElementById('caPreviewName');
+  var limEl  = document.getElementById('caPreviewLimit');
+  if (!prev) return;
+  if (_caState.data.name) {
+    if (nameEl) nameEl.textContent = _caState.data.name;
+    prev.classList.add('visible');
+  }
+  if (_caState.data.limitLabel && limEl) {
+    limEl.textContent    = _caState.data.limitLabel;
+    limEl.style.display  = '';
+  }
+}
+
+// ── Summary card ──────────────────────────────────────
+
+function _caRenderSummary() {
+  var d         = _caState.data;
+  var typeLabel = _CA_TYPE_LABELS[_caState.cardType] || 'Virtual card';
+  var cardName  = d.name || d.category || d.who || 'New card';
+  var spaceName = d.space ? d.space.label : 'USD Checking';
+  var limitText = d.limitLabel || 'No limit set';
+
+  var msgs  = document.getElementById('caMsgs');
+  var aiDiv = document.createElement('div');
+  aiDiv.className = 'ca-msg-ai';
+  aiDiv.innerHTML =
+    '<div class="ca-msg-ai-label" aria-hidden="true">' +
+      '<div class="ca-msg-ai-dot-wrap"><div class="ca-msg-ai-dot"></div></div>' +
+      '<span class="ca-msg-ai-name">Banyan</span>' +
+    '</div>';
+  msgs.appendChild(aiDiv);
+  setTimeout(function() {
+    requestAnimationFrame(function() { aiDiv.classList.add('visible'); msgs.scrollTop = msgs.scrollHeight; });
+  }, 50);
+
+  var intro = "Here's your card. Tap Create to add it to your wallet.";
+  var textEl = document.createElement('div');
+  textEl.className = 'ca-msg-ai-text';
+  var cursor = document.createElement('span');
+  cursor.className = 'ag-cursor';
+  textEl.appendChild(cursor);
+  aiDiv.appendChild(textEl);
+
+  var chars = intro.split(''), i = 0;
+  function typeIntro() {
+    if (i < chars.length) {
+      cursor.insertAdjacentText('beforebegin', chars[i++]);
+      setTimeout(typeIntro, 16 + Math.floor(Math.random() * 10));
+    } else {
+      cursor.remove();
+      setTimeout(function() {
+        _caAppendSummaryCard(aiDiv, msgs, cardName, typeLabel, spaceName, limitText, d);
+      }, 100);
+    }
+  }
+  setTimeout(typeIntro, 60);
+}
+
+function _caAppendSummaryCard(aiDiv, msgs, cardName, typeLabel, spaceName, limitText, d) {
+  var card = document.createElement('div');
+  card.className = 'ca-summary-card ag-ui-card';
+
+  var limitRow = d.limitLabel
+    ? '<div class="ca-sum-row"><span class="ca-sum-key">Limit</span><span class="ca-sum-val">' + _agEscape(limitText) + '</span></div>'
+    : '';
+
+  card.innerHTML =
+    '<div class="ca-sum-card-preview">' +
+      '<img src="assets/card-create-preview.webp" alt="" class="ca-sum-img">' +
+      '<div class="ca-sum-card-name">' + _agEscape(cardName) + '</div>' +
+    '</div>' +
+    '<div class="ca-sum-rows">' +
+      '<div class="ca-sum-row"><span class="ca-sum-key">Type</span><span class="ca-sum-val ca-sum-badge">' + _agEscape(typeLabel) + '</span></div>' +
+      limitRow +
+      '<div class="ca-sum-row"><span class="ca-sum-key">Space</span><span class="ca-sum-val">' + _agEscape(spaceName) + '</span></div>' +
+    '</div>' +
+    '<button class="ca-sum-cta" onclick="caConfirmCreate()">' +
+      'Create card' +
+      '<span class="ico ol" style="--ico:url(\'Icons/ArrowRight.svg\');--sz:18px;color:#fff;margin-left:4px" aria-hidden="true"></span>' +
+    '</button>';
+
+  aiDiv.appendChild(card);
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      msgs.scrollTop = msgs.scrollHeight;
+    });
+  });
+}
+
+function caConfirmCreate() {
+  closeCardAgent();
+  setTimeout(function() { showToast('Card created'); }, 340);
+}
