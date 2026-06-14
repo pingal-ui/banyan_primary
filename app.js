@@ -80,6 +80,10 @@ function showNav(visible) {
   const nav = document.getElementById('globalNav');
   if (nav) nav.classList.toggle('bnav-hidden', !visible);
 }
+function showNavAi(visible) {
+  var slot = document.getElementById('bnavAiSlot');
+  if (slot) slot.classList.toggle('visible', visible);
+}
 
 /* ══════════════════════════════════════════════════════
    HOME AGENT EXPERIENCE
@@ -3429,7 +3433,7 @@ function showHome() {
   var _bas = document.getElementById('bnavAiSlot'); if (_bas) _bas.classList.remove('visible');
   document.querySelector('#home .home-scroll').classList.remove('home-fade-top');
   setSbLight(true); // white status-bar text over the hero photo
-  showNav(true);
+  showNav(true); showNavAi(true);
   setNavActive(0);
   _smOrigin = 'home';
   renderEmbeddedTxSection('homeTxList');
@@ -3452,7 +3456,7 @@ function showExplore() {
   document.getElementById('accounts').className = 'screen hb';
   document.getElementById('explore').className  = 'screen on';
   setSbLight(false);
-  showNav(true);
+  showNav(true); showNavAi(true);
   setNavActive(3);
   _smOrigin = 'explore';
 }
@@ -3484,7 +3488,7 @@ function showAccounts() {
   document.getElementById('accounts').className = 'screen on';
   document.querySelector('#accounts .acct-scroll').scrollTop = 0;
   setSbLight(false);
-  showNav(true);
+  showNav(true); showNavAi(true);
   setNavActive(2);
   _smOrigin = 'accounts';
 }
@@ -4456,7 +4460,7 @@ function openCcSheet() {
 }
 function closeCcSheet() {
   document.getElementById('ccOverlay').classList.remove('open');
-  showNav(true);
+  showNav(true); showNavAi(true);
 }
 function ccSetSeg(btn, _type) {
   btn.closest('.cc-seg').querySelectorAll('.cc-seg-opt').forEach(b => b.classList.remove('active'));
@@ -4821,7 +4825,7 @@ function showAccountDetail(acct) {
 
 function closeAccountDetail() {
   document.getElementById('account-detail').className = 'screen hr';
-  showNav(true);
+  showNav(true); showNavAi(true);
   goBack();
 }
 
@@ -4932,7 +4936,7 @@ function smCloseAll() {
   const origin = document.getElementById(smOrigin);
   if (origin) origin.className = 'screen on';
   setSbLight(smOrigin === 'explore');
-  showNav(true);
+  showNav(true); showNavAi(true);
   setNavActive(smOrigin === 'explore' ? 3 : smOrigin === 'accounts' ? 2 : 0);
 }
 
@@ -5053,7 +5057,7 @@ function smBack(from) {
     if (list) list.className = 'screen hr';
     document.getElementById(smOrigin).className = 'screen on';
     setSbLight(smOrigin === 'explore');
-    showNav(true);
+    showNav(true); showNavAi(true);
     setNavActive(smOrigin === 'explore' ? 3 : smOrigin === 'accounts' ? 2 : 0);
   } else {
     document.getElementById(from).className = 'screen hr';
@@ -7408,7 +7412,7 @@ function closeCardAgent() {
     screen.style.height     = '';
   }, 300);
 
-  showNav(true);
+  showNav(true); showNavAi(true);
 }
 
 function caOnInput(input) {
