@@ -147,6 +147,46 @@ const _AG_DATA = {
     { icon: '🍕', label: 'Food',        amount: '$145.20', pct: 28,  change: null,   dir: null },
     { icon: '📺', label: 'Entertainment',amount: '$15.49', pct: 3,   change: '-12%', dir: 'down' },
   ],
+  // Physical/virtual cards — used by the card-controls journey
+  cards: [
+    { id: 'travel', name: 'Travel card', network: 'Banyan Visa', last4: '4821',
+      gradient: 'linear-gradient(135deg,#3a6ea5 0%,#1e3c5a 100%)' },
+    { id: 'dining', name: 'Dining card', network: 'Banyan Visa', last4: '7290',
+      gradient: 'linear-gradient(135deg,#b5532e 0%,#7a2f17 100%)' },
+  ],
+  // Proactively flagged activity — the vigilance journey
+  flagged: {
+    merchant: 'Uber Eats', card: 'dining', amount: '$42.18', gap: '3 minutes apart',
+    charges: [
+      { merch: 'Uber Eats', time: 'Today · 7:12 PM', amount: '$42.18' },
+      { merch: 'Uber Eats', time: 'Today · 7:15 PM', amount: '$42.18' },
+    ],
+  },
+  // Recurring bills & predicted payments — bills journey
+  bills: [
+    { name: 'Rent',     ic: 'House.svg',      due: 'Due Jul 1 · in 5 days',  amount: '$2,400', kind: 'scheduled', col: '#46882B' },
+    { name: 'ConEd',    ic: 'Lightning.svg',  due: 'Due in 3 days',          amount: '~$146',  kind: 'predicted', col: '#C17C14' },
+    { name: 'Internet', ic: 'WifiHigh.svg',   due: 'Due in 6 days',          amount: '$78',    kind: 'up19',      col: '#2f5bb0' },
+    { name: 'Netflix',  ic: 'MonitorPlay.svg',due: 'Due in 8 days',          amount: '$18',    kind: 'scheduled', col: '#c4477f' },
+  ],
+  // Family operations — a teen's Banyan card (money + controls, not chores)
+  family: {
+    child: 'Emma', spentWeek: 42, purchases: 4, allowance: 20, allowanceDue: 'Sunday',
+    card: { id: 'emma', name: "Emma's card", network: 'Banyan Visa', last4: '5512',
+      gradient: 'linear-gradient(135deg,#7b4bd4 0%,#4a2a8a 100%)' },
+    pending: { merchant: 'Steam', amount: 28, category: 'Games', ago: '2h ago', icon: 'GameController.svg' },
+    spend: [
+      { t: 'Steam',     s: 'Mon · Games',     a: '$28.00', ic: 'GameController.svg' },
+      { t: 'Starbucks', s: 'Wed · Food',      a: '$6.40',  ic: 'ShoppingBag.svg' },
+      { t: 'Spotify',   s: 'Thu · Music',     a: '$5.99',  ic: 'SpotifyLogo.svg' },
+      { t: 'Uber',      s: 'Fri · Transport', a: '$1.61',  ic: 'ShoppingBag.svg' },
+    ],
+  },
+  // Beneficiary / payee verification
+  payee: {
+    oldName: 'Acme Services LLC', newName: 'Acme Service Group',
+    routing: 'ICICI · →9012', lastPaid: '$1,200 · last month', confidence: 'Moderate',
+  },
   rates: {
     USD_INR: { rate: 94.72,  label: 'USD → INR', fromFlag: '🇺🇸', toFlag: '🇮🇳', change: '+0.4%', positive: true  },
     USD_EUR: { rate: 0.9372, label: 'USD → EUR', fromFlag: '🇺🇸', toFlag: '🇪🇺', change: '+0.2%', positive: true  },
@@ -159,11 +199,31 @@ const _AG_DATA = {
 let _agResponseIdx = 0;
 let _homeAgentOpen  = false;
 let _homeAgentConvo = false;
+// Multi-turn conversation state for stateful journeys (freeze / vigilance).
+// null when no flow is active; otherwise { journey, card, step, vigilance? }.
+let _agFlow = null;
+// When true, renderers skip the typewriter + follow-ups so the card-styles
+// gallery can lay every component out instantly.
+let _agGalleryMode = false;
 let _prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ── Query router ────────────────────────────────────────
 function _agRouteQuery(text) {
   var t = text.toLowerCase();
+  // ── Context-aware replies inside an active multi-turn flow ──
+  if (_agFlow) {
+    var fr = _agFlowReply(t);
+    if (fr) return fr;
+    _agFlow = null; // unmatched reply ends the flow → treat as a fresh request
+  }
+  // ── Stateful journey entries ──
+  if (/\b(freeze|lock|pause|block|disable|stop)\b/.test(t) && /card/.test(t)) return _agScenarioFreezeStart(t);
+  if (/duplicate|flagged?|suspicious|unusual|fraud|double[- ]?charge|review.{0,16}(charge|activity|transaction)|anything.{0,16}(review|attention|watch)|need.{0,10}attention/.test(t)) return _agScenarioVigilance();
+  if (/bills?\s*(coming|due|up)?|recurring|what.{0,12}(bills?|due)|upcoming bills?|subscriptions?\b/.test(t)) return _agScenarioBills();
+  if (/afford|can i (buy|spend|book)|forecast|cashflow|cash flow|runway|month[- ]?end|will i have enough|drop below|enough (money|funds|to)/.test(t)) return _agScenarioAfford(t);
+  if (/sav(e|ing)|goal|\$?\d[\d,]*k?\b.{0,20}(by|for|saved)|vacation fund|set aside|put aside/.test(t)) return _agScenarioGoal(t);
+  if (/\b(emma|liam)\b|allowance|family|my (kid|child|teen|son|daughter)|(approve|pending).{0,16}(request|purchase)/.test(t)) return _agScenarioFamily(t);
+  if (/payee|beneficiar|same vendor|vendor.{0,16}(last|paid)|verify.{0,12}(payee|vendor|recipient)|account number.{0,12}correct|is this the same/.test(t)) return _agScenarioPayee();
   // Chip phrases — exact or close matches first
   if (/due this week|what.{0,10}due|upcoming|bills?\s+(this|due)|payments? due/.test(t)) return _agScenarioUpcoming();
   if (/recent spending|show.{0,8}spend|spending|last month|dining|categor/.test(t)) return _agScenarioSpendUI();
@@ -287,6 +347,165 @@ function _agScenarioDefault() {
   if (idx === 0) return _agScenarioBalance('');
   if (idx === 1) return _agScenarioUpcoming();
   return _agScenarioSpendUI();
+}
+
+// ── Stateful flow: interpret a reply given the active journey/step ──
+function _agFlowReply(t) {
+  var yes = /^\s*(yes|yep|yeah|yup|sure|confirm|correct|do it|go ahead|please do|ok(ay)?|that'?s? (it|right|the one|correct))\b/.test(t);
+  var no  = /^\s*(no|nope|nah|different|another|wrong|not that)\b/.test(t);
+  if (_agFlow.journey === 'freeze') {
+    if (_agFlow.step === 'disambiguate') {
+      if (yes) return _agScenarioFreezeConfirm(_agFlow.card, { vigilance: _agFlow.vigilance });
+      if (no)  return _agScenarioRecipientSelect(); // graceful exit — not core to the demo
+    }
+    if (_agFlow.step === 'confirm') {
+      if (yes || /freeze|lock|confirm/.test(t)) return _agScenarioFreezeDone(_agFlow.card, { vigilance: _agFlow.vigilance });
+    }
+  }
+  if (_agFlow.journey === 'vigilance') {
+    if (/why|explain|reason|how.{0,12}(know|flag|tell)|what.{0,8}made/.test(t)) return _agScenarioFlagReason();
+    if (/what.{0,12}(do|should)|next step|options?|advice|help|recommend/.test(t)) return _agScenarioFlagOptions();
+    if (/\b(freeze|lock|block|disable)\b/.test(t)) return _agScenarioFreezeConfirm('dining', { vigilance: true });
+    if (/dispute|report|fraud|challenge/.test(t)) return _agScenarioDispute();
+    if (/wait|hold|leave it|do nothing|24/.test(t)) return _agScenarioWait();
+  }
+  if (_agFlow.journey === 'bills') {
+    if (/unusual|chang|increas|\bup\b|which.{0,10}(bill|increas)/.test(t)) return _agScenarioBillsUnusual();
+    if (/enough|cover|can i (cover|pay)|afford/.test(t)) return _agScenarioBillsCover();
+    if (/remind/.test(t)) return _agScenarioRemind('Rent', 'if checking is still below your cushion 2 days before');
+  }
+  if (_agFlow.journey === 'cashflow') {
+    if (/driv|why|breakdown|what.{0,10}(driving|behind|that)/.test(t)) return _agScenarioAffordWhy();
+    if (/cancel|subscription|cut/.test(t)) return _agScenarioAffordCancel();
+    if (/recommend|what.{0,10}(do|should)|advice/.test(t)) return _agScenarioAffordRec();
+  }
+  if (_agFlow.journey === 'goal') {
+    if (/deposit|from (each|incoming|my)|percent|%/.test(t)) return _agScenarioGoalDeposit();
+    if (/heav|lean|tight|adaptive|vary|behind/.test(t)) return _agScenarioGoalAdaptive();
+    if (yes || /do (that|it)|create|set.{0,6}up|start it/.test(t)) return _agScenarioGoalCreate();
+  }
+  if (_agFlow.journey === 'family') {
+    if (/approv|pending|request|the purchase/.test(t)) return _agScenarioFamilyApprove();
+    if (/decline|deny|reject/.test(t)) return _agScenarioFamilyDecline();
+    if (/spend|spent|activity|purchase|what.{0,10}buy|show.{0,10}card/.test(t)) return _agScenarioFamilySpend();
+    if (/\b(freeze|lock|block|disable|pause)\b/.test(t)) return _agScenarioFreezeConfirm(_AG_DATA.family.card);
+    if (/allowance|pay|send.{0,10}(money|allowance)/.test(t)) return _agScenarioFamilyAllowance();
+  }
+  if (_agFlow.journey === 'payee') {
+    if (/confiden|how sure|certain|how.{0,8}sure/.test(t)) return _agScenarioPayeeConfidence();
+    if (/verify|should i|check.{0,8}first|safe/.test(t)) return _agScenarioPayeeVerify();
+    if (/remind.{0,18}(send|clear|funds|available)|when.{0,14}(clear|available)|once.{0,10}clear/.test(t)) return _agScenarioPayeeRemind();
+  }
+  return null;
+}
+
+// ── Journey 2: Card & spend controls ──
+function _agScenarioFreezeStart(t) {
+  var card = /din(ing|e)|food|restaurant|7290/.test(t) ? _AG_DATA.cards[1] : _AG_DATA.cards[0];
+  _agFlow = { journey: 'freeze', card: card, step: 'disambiguate' };
+  return { type: 'freeze_disambig', fast: true, data: { card: card } };
+}
+function _agScenarioFreezeConfirm(card, opts) {
+  if (typeof card === 'string') card = _AG_DATA.cards.find(function(c){ return c.id === card; }) || _AG_DATA.cards[0];
+  _agFlow = { journey: 'freeze', card: card, step: 'confirm', vigilance: opts && opts.vigilance };
+  return { type: 'freeze_confirm', fast: true, data: { card: card, vigilance: opts && opts.vigilance } };
+}
+function _agScenarioFreezeDone(card, opts) {
+  if (typeof card === 'string') card = _AG_DATA.cards.find(function(c){ return c.id === card; }) || _AG_DATA.cards[0];
+  _agFlow = null;
+  return { type: 'freeze_done', fast: true, data: { card: card, vigilance: opts && opts.vigilance } };
+}
+
+// ── Journey 3: Awareness & vigilance ──
+function _agScenarioVigilance() {
+  var card = _AG_DATA.cards[1]; // dining card
+  _agFlow = { journey: 'vigilance', card: card, step: 'alert' };
+  return {
+    type: 'vigilance', fast: true,
+    steps: [
+      { id: 's1', label: 'Scanning recent card activity' },
+      { id: 's2', label: 'Comparing against your patterns' },
+    ],
+    data: { card: card },
+  };
+}
+function _agScenarioFlagReason() {
+  if (_agFlow) _agFlow.step = 'reason';
+  return { type: 'flag_reason', fast: true, data: {} };
+}
+function _agScenarioFlagOptions() {
+  if (_agFlow) _agFlow.step = 'options';
+  return { type: 'flag_options', fast: true, data: {} };
+}
+function _agScenarioDispute() {
+  _agFlow = null;
+  return { type: 'flag_dispute', fast: true, data: {} };
+}
+function _agScenarioWait() {
+  if (_agFlow) _agFlow.step = 'options';
+  return { type: 'flag_wait', fast: true, data: {} };
+}
+
+// ── Journey: Bills & recurring ──
+function _agScenarioBills() {
+  _agFlow = { journey: 'bills', step: 'list' };
+  return { type: 'bills', fast: true, data: {} };
+}
+function _agScenarioBillsUnusual() { return { type: 'bills_unusual', fast: true, data: {} }; }
+function _agScenarioBillsCover()   { return { type: 'bills_cover', fast: true, data: {} }; }
+function _agScenarioRemind(name, cond) {
+  _agFlow = null;
+  return { type: 'remind', fast: true, data: { name: name, cond: cond } };
+}
+
+// ── Journey: Cashflow & forecasting ──
+function _agScenarioAfford(t) {
+  var m = t.match(/[£$€]?\s*(\d[\d,]*(?:\.\d{1,2})?)\s*k?/);
+  var amount = m ? parseFloat(m[1].replace(/,/g, '')) : 1200;
+  if (/\dk\b/.test(t) && amount < 100) amount *= 1000;
+  _agFlow = { journey: 'cashflow', step: 'forecast' };
+  return { type: 'afford', fast: true, data: { amount: amount } };
+}
+function _agScenarioAffordWhy()    { return { type: 'afford_why', fast: true, data: {} }; }
+function _agScenarioAffordCancel() { return { type: 'afford_cancel', fast: true, data: {} }; }
+function _agScenarioAffordRec()    { _agFlow = null; return { type: 'afford_rec', fast: true, data: {} }; }
+
+// ── Journey: Savings, goals & Spaces ──
+function _agScenarioGoal(t) {
+  var m = t.match(/\$?\s*(\d[\d,]*)\s*(k)?/);
+  var target = m ? parseFloat(m[1].replace(/,/g, '')) * (m[2] ? 1000 : 1) : 3000;
+  if (target < 100) target = 3000;
+  _agFlow = { journey: 'goal', step: 'plan', target: target };
+  return { type: 'goal', fast: true, data: { target: target, weeks: 16, current: 0 } };
+}
+function _agScenarioGoalDeposit()  { return { type: 'goal_deposit', fast: true, data: {} }; }
+function _agScenarioGoalAdaptive() { return { type: 'goal_adaptive', fast: true, data: {} }; }
+function _agScenarioGoalCreate() {
+  var target = (_agFlow && _agFlow.target) || 3000;
+  _agFlow = null;
+  return { type: 'goal_create', fast: true, data: { target: target } };
+}
+
+// ── Journey: Family operations (teen card — money & controls) ──
+function _agScenarioFamily(t) {
+  _agFlow = { journey: 'family', step: 'overview' };
+  return { type: 'family', fast: true, data: {} };
+}
+function _agScenarioFamilySpend()   { return { type: 'family_spend', fast: true, data: {} }; }
+function _agScenarioFamilyApprove() { if (_agFlow) _agFlow.step = 'approve'; return { type: 'family_approve', fast: true, data: {} }; }
+function _agScenarioFamilyDecline() { _agFlow = null; return { type: 'family_decline', fast: true, data: {} }; }
+function _agScenarioFamilyAllowance(){ if (_agFlow) _agFlow.step = 'allowance'; return { type: 'family_allowance', fast: true, data: {} }; }
+
+// ── Journey: Beneficiary & payee management ──
+function _agScenarioPayee() {
+  _agFlow = { journey: 'payee', step: 'verify' };
+  return { type: 'payee', fast: true, data: {} };
+}
+function _agScenarioPayeeConfidence() { return { type: 'payee_confidence', fast: true, data: {} }; }
+function _agScenarioPayeeVerify()     { return { type: 'payee_verify', fast: true, data: {} }; }
+function _agScenarioPayeeRemind() {
+  _agFlow = null;
+  return { type: 'remind', fast: true, data: { name: _AG_DATA.payee.newName, cond: 'the moment your balance is available' } };
 }
 
 // Transfer also needs fromAccount.flag — derive it from currency
@@ -454,6 +673,13 @@ function _agAddCtx(aiDiv, text, onDone) {
   el.className = 'ag-reply-ctx';
   el.innerHTML = '<span class="ag-cursor"></span>';
   aiDiv.appendChild(el);
+  // Gallery mode: drop the text in instantly and hand off to reveal the card
+  if (_agGalleryMode) {
+    el.textContent = text;
+    el.classList.add('s-in');
+    if (onDone) requestAnimationFrame(function() { requestAnimationFrame(onDone); });
+    return el;
+  }
   requestAnimationFrame(function() {
     requestAnimationFrame(function() { el.classList.add('s-in'); });
   });
@@ -480,6 +706,7 @@ function _agAddCtx(aiDiv, text, onDone) {
 }
 // Part 3: follow-up list (next actions)
 function _agAddFollowups(aiDiv, msgs, chips) {
+  if (_agGalleryMode) return; // gallery shows cards only, no next-step chips
   var wrap = document.createElement('div');
   wrap.className = 'ag-followup-wrap';
   var header = document.createElement('div');
@@ -1158,6 +1385,725 @@ function _agRenderBillStatus(aiDiv, msgs) {
   });
 }
 
+// ════════════════════════════════════════════════════════
+//  JOURNEY 2 — Card & spend controls
+//  JOURNEY 3 — Awareness & vigilance
+//  Shared principle: every agent turn surfaces a tappable card.
+// ════════════════════════════════════════════════════════
+
+// Shared mini card visual
+function _agCardVizHTML(card, frozen) {
+  return '<div class="ag-cardviz' + (frozen ? ' frozen' : '') + '" style="background:' + card.gradient + '">' +
+    '<div class="ag-cardviz-top">' +
+      '<span class="ag-cardviz-net">' + _agEscape(card.network) + '</span>' +
+      '<span class="ag-cardviz-chip" aria-hidden="true"></span>' +
+    '</div>' +
+    '<div class="ag-cardviz-frost"><span class="ico" style="--ico:url(\'Icons/Snowflake.svg\');--sz:18px;color:#eaf6fb"></span></div>' +
+    '<div class="ag-cardviz-name">' + _agEscape(card.name) + '</div>' +
+    '<div class="ag-cardviz-num">•••• ' + _agEscape(card.last4) + '</div>' +
+  '</div>';
+}
+
+// Helper: slide a card in after the ctx line finishes streaming
+function _agRevealCard(aiDiv, card, afterReveal) {
+  setTimeout(function() {
+    aiDiv.appendChild(card);
+    requestAnimationFrame(function() { requestAnimationFrame(function() {
+      card.classList.add('ui-in');
+      _agStagger(card, '.ag-stagger-item', 60);
+      if (afterReveal) afterReveal();
+    }); });
+  }, 120);
+}
+
+// ── Disambiguation: "do you mean this card?" ──
+function _agRenderCardDisambig(aiDiv, msgs, data) {
+  var card = data.card;
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-cardctl-body">' +
+      '<div class="ag-stagger-item">' + _agCardVizHTML(card, false) + '</div>' +
+      '<div class="ag-card-actions ag-stagger-item">' +
+        '<button class="ag-action-btn primary" type="button" data-yes>' +
+          '<span class="ico" style="--ico:url(\'Icons/Snowflake.svg\');--sz:15px;color:#fff"></span>' +
+          '<span class="ag-action-label">Yes, freeze it</span>' +
+        '</button>' +
+        '<button class="ag-action-btn secondary" type="button" data-no>' +
+          '<span class="ag-action-label">No, another card</span>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  el.querySelector('[data-yes]').addEventListener('click', function() { agentSendText('Yes'); });
+  el.querySelector('[data-no]').addEventListener('click', function() { agentSendText('No'); });
+  _agAddCtx(aiDiv, 'I can do that. Just to confirm — do you mean your ' + card.network + ' ending in ' + card.last4 + '?', function() {
+    _agRevealCard(aiDiv, el);
+  });
+}
+
+// ── Freeze confirmation ──
+function _agRenderFreezeConfirm(aiDiv, msgs, data) {
+  var card = data.card;
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-cardctl-body">' +
+      '<div class="ag-stagger-item">' + _agCardVizHTML(card, false) + '</div>' +
+      '<div class="ag-warn-note ag-stagger-item">' +
+        '<span class="ico" style="--ico:url(\'Icons/Warning.svg\');--sz:15px;color:#C17C14"></span>' +
+        '<span>New transactions will be blocked until you unfreeze. Existing subscriptions may still be declined.</span>' +
+      '</div>' +
+      '<div class="ag-card-actions ag-stagger-item">' +
+        '<button class="ag-action-btn primary" type="button" data-confirm>' +
+          '<span class="ag-action-label">Freeze card</span>' +
+          '<span class="ag-action-spinner" style="display:none"></span>' +
+        '</button>' +
+      '</div>' +
+    '</div>';
+  var btn = el.querySelector('[data-confirm]');
+  btn.addEventListener('click', function() {
+    if (btn.classList.contains('loading')) return;
+    btn.classList.add('loading');
+    btn.querySelector('.ag-action-spinner').style.display = 'block';
+    setTimeout(function() {
+      // Decision made — retire the action card, render the result in place
+      el.style.transition = 'opacity 200ms ease, transform 220ms var(--ease-out)';
+      el.style.opacity = '0'; el.style.transform = 'translateY(-4px) scale(0.985)';
+      setTimeout(function() {
+        el.remove();
+        _agRenderFreezeDone(aiDiv, msgs, { card: card, vigilance: data.vigilance });
+      }, 220);
+    }, 750);
+  });
+  var line = data.vigilance
+    ? 'Freezing your ' + card.name.toLowerCase() + ' will block new charges right away. Freeze it now?'
+    : 'Freezing your ' + card.name.toLowerCase() + ' will block new transactions until you unfreeze it. Freeze now?';
+  _agAddCtx(aiDiv, line, function() { _agRevealCard(aiDiv, el); });
+}
+
+// ── Frozen status + proactive alert offer ──
+function _agRenderFreezeDone(aiDiv, msgs, data) {
+  _agFlow = null;
+  var card = data.card;
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  var watchOn = data.vigilance ? ' on' : '';
+  el.innerHTML =
+    '<div class="ag-cardctl-body" style="padding-bottom:4px">' +
+      '<div class="ag-stagger-item">' + _agCardVizHTML(card, true) + '</div>' +
+      '<div class="ag-stagger-item"><span class="ag-frozen-badge">' +
+        '<span class="ico" style="--ico:url(\'Icons/Snowflake.svg\');--sz:13px;color:#2f5bb0"></span>' +
+        card.name + ' frozen</span></div>' +
+    '</div>' +
+    '<div class="ag-toggle-row ag-stagger-item">' +
+      '<div class="ag-toggle-row-info">' +
+        '<span class="ag-toggle-row-title">Alert me on new attempts</span>' +
+        '<span class="ag-toggle-row-sub">Notify instantly if this card is used</span>' +
+      '</div>' +
+      '<div class="cr-toggle' + watchOn + '" role="switch" tabindex="0" data-alert-toggle></div>' +
+    '</div>';
+  var tog = el.querySelector('[data-alert-toggle]');
+  tog.addEventListener('click', function() { tog.classList.toggle('on'); });
+  var line = data.vigilance
+    ? 'Done — your ' + card.name.toLowerCase() + ' is now frozen. I\'ll also keep watching for repeat activity from ' + _AG_DATA.flagged.merchant + '.'
+    : 'Done — your ' + card.name.toLowerCase() + ' is now frozen. Want me to alert you if any new attempt is made on it?';
+  _agAddCtx(aiDiv, line, function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: "Check my balance", text: "What's my balance?" },
+          { label: 'Anything I should review?', text: 'Anything I should review?' }
+        ]);
+      }, 360);
+    });
+  });
+}
+
+// ── Vigilance: proactive duplicate-charge alert ──
+function _agRenderFlaggedAlert(aiDiv, msgs, data) {
+  var fl = _AG_DATA.flagged;
+  var card = data.card;
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  var html = '<div class="ag-alert-head ag-stagger-item">' +
+    '<div class="ag-alert-icon"><span class="ico" style="--ico:url(\'Icons/ShieldWarning.svg\');--sz:18px;color:#C17C14"></span></div>' +
+    '<div class="ag-alert-head-text">' +
+      '<span class="ag-alert-title">Possible duplicate charge</span>' +
+      '<span class="ag-alert-merchant">' + card.name + ' · ' + card.network + ' ' + card.last4 + '</span>' +
+    '</div></div>';
+  fl.charges.forEach(function(c) {
+    html += '<div class="ag-charge-row ag-stagger-item">' +
+      '<span class="ag-charge-dot"></span>' +
+      '<div class="ag-charge-info">' +
+        '<span class="ag-charge-merch">' + _agEscape(c.merch) + '</span>' +
+        '<span class="ag-charge-time">' + _agEscape(c.time) + '</span>' +
+      '</div>' +
+      '<span class="ag-charge-amt">' + _agEscape(c.amount) + '</span>' +
+    '</div>';
+  });
+  html += '<div class="ag-charge-gap ag-stagger-item">' +
+    '<span class="ico" style="--ico:url(\'Icons/Clock.svg\');--sz:13px;color:#875610"></span>' +
+    'Both posted · ' + fl.gap + '</div>';
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, 'I noticed two charges from ' + fl.merchant + ' for ' + fl.amount + ' within 3 minutes on your ' + card.name.toLowerCase() + '. That may be a duplicate charge.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Why did you flag it?', text: 'Why did you flag it?' },
+          { label: 'What should I do?', text: 'What should I do?' }
+        ]);
+      }, 360);
+    });
+  });
+}
+
+// ── Vigilance: why it was flagged ──
+function _agRenderFlagReason(aiDiv, msgs) {
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  var reasons = [
+    'Both charges posted successfully — neither was declined or reversed.',
+    'You usually place just one order in this amount range at this time of day.'
+  ];
+  var html = '<div class="ag-card-header ag-stagger-item">Why I flagged this<span class="ag-card-header-meta">2 signals</span></div>' +
+    '<div class="ag-reason-list">';
+  reasons.forEach(function(r) {
+    html += '<div class="ag-reason-row ag-stagger-item">' +
+      '<span class="ag-reason-check"><span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:11px;color:#46882B"></span></span>' +
+      '<span class="ag-reason-text">' + _agEscape(r) + '</span>' +
+    '</div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, 'Here\'s what stood out when I compared it to your usual activity.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'What should I do?', text: 'What should I do?' }
+        ]);
+      }, 360);
+    });
+  });
+}
+
+// ── Vigilance: next-step options ──
+function _agRenderFlagOptions(aiDiv, msgs) {
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  var opts = [
+    { ico: 'Clock.svg',        bg: 'rgba(0,0,0,0.06)',        col: 'rgba(0,0,0,0.55)', title: 'Wait 24 hours',  sub: 'A duplicate often reverses on its own', text: 'Wait 24 hours' },
+    { ico: 'Snowflake.svg',    bg: 'rgba(56,100,200,0.12)',   col: '#2f5bb0',          title: 'Freeze the card', sub: 'Block new charges right away',         text: 'Freeze my dining card' },
+    { ico: 'ShieldWarning.svg',bg: 'rgba(193,124,20,0.12)',   col: '#C17C14',          title: 'Start a dispute', sub: 'Challenge the duplicate with Banyan',   text: 'Start a dispute' },
+  ];
+  var html = '<div class="ag-card-header ag-stagger-item">Recommended next steps<span class="ag-card-header-meta">Tap one</span></div>';
+  opts.forEach(function(o) {
+    html += '<button class="ag-option-row ag-stagger-item" type="button" data-text="' + o.text + '">' +
+      '<span class="ag-option-icon" style="background:' + o.bg + '"><span class="ico" style="--ico:url(\'Icons/' + o.ico + '\');--sz:17px;color:' + o.col + '"></span></span>' +
+      '<span class="ag-option-info"><span class="ag-option-title">' + o.title + '</span><span class="ag-option-sub">' + o.sub + '</span></span>' +
+      '<span class="ag-option-arrow" aria-hidden="true">›</span>' +
+    '</button>';
+  });
+  el.innerHTML = html;
+  el.querySelectorAll('.ag-option-row').forEach(function(row) {
+    row.addEventListener('click', function() { agentSendText(row.getAttribute('data-text')); });
+  });
+  _agAddCtx(aiDiv, 'Here are your best next steps — pick whichever you\'re comfortable with.', function() {
+    _agRevealCard(aiDiv, el);
+  });
+}
+
+// ── Vigilance: dispute opened ──
+function _agRenderDisputeStarted(aiDiv, msgs) {
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item">' +
+      '<div class="ag-alert-icon" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url(\'Icons/ShieldCheck.svg\');--sz:18px;color:#46882B"></span></div>' +
+      '<div class="ag-alert-head-text">' +
+        '<span class="ag-alert-title">Dispute opened</span>' +
+        '<span class="ag-alert-merchant">' + _AG_DATA.flagged.merchant + ' · ' + _AG_DATA.flagged.amount + '</span>' +
+      '</div></div>' +
+    '<div class="ag-toggle-row ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.06)">' +
+      '<div class="ag-toggle-row-info">' +
+        '<span class="ag-toggle-row-title">Reference DSP-4471</span>' +
+        '<span class="ag-toggle-row-sub">Banyan reviews within 5 business days</span>' +
+      '</div>' +
+      '<span class="ag-frozen-badge" style="background:rgba(193,124,20,0.10);color:#875610">Under review</span>' +
+    '</div>';
+  _agAddCtx(aiDiv, 'I\'ve started a dispute for the duplicate ' + _AG_DATA.flagged.amount + ' charge. Banyan will review it and update you within 5 business days.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Freeze the card', text: 'Freeze my dining card' },
+          { label: "Check my balance", text: "What's my balance?" }
+        ]);
+      }, 360);
+    });
+  });
+}
+
+// ── Vigilance: wait & monitor ──
+function _agRenderWaitAdvice(aiDiv, msgs) {
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item">' +
+      '<div class="ag-alert-icon" style="background:rgba(56,100,200,0.12)"><span class="ico" style="--ico:url(\'Icons/Eye.svg\');--sz:18px;color:#2f5bb0"></span></div>' +
+      '<div class="ag-alert-head-text">' +
+        '<span class="ag-alert-title">Monitoring active</span>' +
+        '<span class="ag-alert-merchant">' + _AG_DATA.flagged.merchant + ' · ' + _AG_DATA.flagged.amount + '</span>' +
+      '</div></div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.06);background:transparent;color:var(--text-secondary)">' +
+      '<span class="ico" style="--ico:url(\'Icons/Clock.svg\');--sz:13px;color:var(--text-tertiary)"></span>' +
+      'I\'ll alert you if it doesn\'t reverse by tomorrow 7:15 PM</div>';
+  _agAddCtx(aiDiv, 'Good call. I\'ll keep an eye on it and let you know if the duplicate doesn\'t drop off within 24 hours.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() {
+        _agAddFollowups(aiDiv, msgs, [
+          { label: 'Freeze the card', text: 'Freeze my dining card' },
+          { label: 'Start a dispute', text: 'Start a dispute' }
+        ]);
+      }, 360);
+    });
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  JOURNEYS 2–6: bills · cashflow · goals · family · payees
+// ════════════════════════════════════════════════════════
+function _agTagHTML(kind, label) { return '<span class="ag-tag ' + kind + '">' + _agEscape(label) + '</span>'; }
+function _agCardHeaderHTML(title, meta) {
+  return '<div class="ag-card-header ag-stagger-item">' + _agEscape(title) +
+    (meta ? '<span class="ag-card-header-meta">' + _agEscape(meta) + '</span>' : '') + '</div>';
+}
+// Generic confirm card: card body + primary button that resolves to a follow-up render
+function _agConfirmButton(label) {
+  return '<div class="ag-card-actions ag-stagger-item">' +
+    '<button class="ag-action-btn primary" type="button" data-confirm>' +
+      '<span class="ag-action-label">' + _agEscape(label) + '</span>' +
+      '<span class="ag-action-spinner" style="display:none"></span>' +
+    '</button></div>';
+}
+function _agWireConfirm(el, aiDiv, msgs, onDone) {
+  var btn = el.querySelector('[data-confirm]');
+  if (!btn) return;
+  btn.addEventListener('click', function() {
+    if (btn.classList.contains('loading')) return;
+    btn.classList.add('loading');
+    btn.querySelector('.ag-action-spinner').style.display = 'block';
+    setTimeout(function() {
+      el.style.transition = 'opacity 200ms ease, transform 220ms var(--ease-out)';
+      el.style.opacity = '0'; el.style.transform = 'translateY(-4px) scale(0.985)';
+      setTimeout(function() { el.remove(); onDone(); }, 220);
+    }, 700);
+  });
+}
+
+// ── BILLS: upcoming list ──
+function _agRenderBills(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  var html = _agCardHeaderHTML('Upcoming bills', 'Next 14 days');
+  _AG_DATA.bills.forEach(function(b) {
+    var tag = b.kind === 'predicted' ? _agTagHTML('predicted', 'Predicted')
+            : b.kind === 'up19'      ? _agTagHTML('up', 'Up 19%')
+            : _agTagHTML('neutral', 'Scheduled');
+    html += '<div class="ag-lrow ag-stagger-item">' +
+      '<span class="ag-lrow-ic" style="background:' + b.col + '1f"><span class="ico" style="--ico:url(\'Icons/' + b.ic + '\');--sz:15px;color:' + b.col + '"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">' + _agEscape(b.name) + '</span><span class="ag-lrow-sub">' + _agEscape(b.due) + '</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">' + _agEscape(b.amount) + '</span>' + tag + '</div></div>';
+  });
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, 'You have 4 recurring bills in the next 14 days. Rent is the largest, and your checking may be tight a few days before it hits.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Anything unusual?', text: 'Anything unusual?' },
+        { label: 'Will I have enough?', text: 'Will I have enough?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderBillsUnusual(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML = _agCardHeaderHTML('What changed', '1 flag') +
+    '<div class="ag-lrow ag-stagger-item">' +
+      '<span class="ag-lrow-ic" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url(\'Icons/TrendUp.svg\');--sz:15px;color:#C17C14"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">Internet</span><span class="ag-lrow-sub">$66 avg → $78 this month</span></div>' +
+      '<div class="ag-lrow-right">' + _agTagHTML('up', 'Up 19%') + '</div></div>';
+  _agAddCtx(aiDiv, 'One bill stands out — your internet is up 19% from its prior 3-month average. Everything else is in line with usual.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Will I have enough?', text: 'Will I have enough?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderBillsCover(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-metric-verdict ok ag-stagger-item"><span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:13px;color:#3a7020"></span>Covers all 4 bills</div>' +
+    '<div class="ag-lrow ag-stagger-item" style="margin-top:8px">' +
+      '<span class="ag-lrow-ic" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url(\'Icons/Wallet.svg\');--sz:15px;color:#C17C14"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">Lowest projected balance</span><span class="ag-lrow-sub">Jul 2, just after rent</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">$640</span>' + _agTagHTML('up', 'Below cushion') + '</div></div>';
+  _agAddCtx(aiDiv, 'If nothing changes, yes — you can cover all four. But your balance dips to about $640 for a few days after rent, below your usual $1,000 cushion.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Remind me 2 days before rent', text: 'Remind me 2 days before rent if checking is low' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderRemind(aiDiv, msgs, data) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item">' +
+      '<div class="ag-alert-icon" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url(\'Icons/BellSimpleRinging.svg\');--sz:18px;color:#46882B"></span></div>' +
+      '<div class="ag-alert-head-text"><span class="ag-alert-title">Reminder set</span><span class="ag-alert-merchant">' + _agEscape(data.name) + '</span></div></div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.06);background:transparent;color:var(--text-secondary)">' +
+      '<span class="ico" style="--ico:url(\'Icons/Clock.svg\');--sz:13px;color:var(--text-tertiary)"></span>I\'ll nudge you ' + _agEscape(data.cond) + '</div>';
+  _agAddCtx(aiDiv, 'Done — I\'ll remind you about ' + data.name + ' ' + data.cond + '.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: "Check my balance", text: "What's my balance?" },
+        { label: 'Anything I should review?', text: 'Anything I should review?' }
+      ]); }, 360);
+    });
+  });
+}
+
+// ── CASHFLOW: affordability forecast ──
+function _agRenderAfford(aiDiv, msgs, data) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-metric ag-stagger-item"><div class="ag-metric-label">Projected month-end balance</div>' +
+      '<div class="ag-metric-row"><span class="ag-metric-sym">$</span><span class="ag-metric-num" id="agAffordNum">0</span></div></div>' +
+    '<div class="ag-metric-verdict warn ag-stagger-item"><span class="ico" style="--ico:url(\'Icons/Warning.svg\');--sz:13px;color:#875610"></span>≈ $480 below your usual cushion</div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.05);background:transparent;color:var(--text-tertiary);justify-content:flex-start;padding-left:16px">Assumes recent inflows, recurring bills & predicted renewals · savings untouched</div>';
+  _agAddCtx(aiDiv, 'Probably yes — booking the $' + data.amount.toLocaleString() + ' flight wouldn\'t touch savings, but it would leave you about $480 under your normal month-end buffer.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      _agCountUp(document.getElementById('agAffordNum'), 0, 1820, 800, true);
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: "What's driving that?", text: "What's driving that?" },
+        { label: 'What if I cancel two subscriptions?', text: 'What if I cancel two subscriptions?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderAffordWhy(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  var pts = ['Rent and insurance both clear early in the month', 'Two predicted subscriptions renew before your paycheck', 'Your average grocery spend is included as a predicted outflow'];
+  var html = _agCardHeaderHTML("What's driving the dip", '3 factors') + '<div class="ag-reason-list">';
+  pts.forEach(function(p) {
+    html += '<div class="ag-reason-row ag-stagger-item"><span class="ag-reason-check" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url(\'Icons/Clock.svg\');--sz:11px;color:#C17C14"></span></span><span class="ag-reason-text">' + _agEscape(p) + '</span></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, "Here's what's pulling your month-end down. I'm treating the renewals and groceries as predictions, not confirmed.", function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'What if I cancel two subscriptions?', text: 'What if I cancel two subscriptions?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderAffordCancel(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-metric ag-stagger-item"><div class="ag-metric-label">Month-end improvement</div>' +
+      '<div class="ag-metric-row"><span class="ag-metric-sym" style="color:#46882B">+$</span><span class="ag-metric-num" id="agCancelNum" style="color:#46882B">0</span></div></div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.05);background:transparent;color:var(--text-tertiary);justify-content:flex-start;padding-left:16px">Helps a little, but doesn\'t materially change the answer</div>';
+  _agAddCtx(aiDiv, 'Canceling two subscriptions improves your projected month-end by about $63. It helps, but it doesn\'t materially change the answer.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      _agCountUp(document.getElementById('agCancelNum'), 0, 63, 700, false);
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'So what do you recommend?', text: 'So what do you recommend?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderAffordRec(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  var recs = [
+    { ic: 'CalendarCheck.svg', col: '#46882B', t: 'Book after payday lands', s: 'Jul 28 — keeps your full cushion' },
+    { ic: 'ChartLineDown.svg', col: '#2f5bb0', t: 'Or trim discretionary spend', s: 'About $480 that month covers the gap' },
+  ];
+  var html = _agCardHeaderHTML('My recommendation', '2 ways');
+  recs.forEach(function(r) {
+    html += '<div class="ag-lrow ag-stagger-item">' +
+      '<span class="ag-lrow-ic" style="background:' + r.col + '1f"><span class="ico" style="--ico:url(\'Icons/' + r.ic + '\');--sz:15px;color:' + r.col + '"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">' + r.t + '</span><span class="ag-lrow-sub">' + r.s + '</span></div></div>';
+  });
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, 'If you want to keep your normal cushion, book after your paycheck lands — or reduce discretionary spend that month. Either keeps you safe.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Remind me on payday', text: 'Remind me to book after payday' },
+        { label: "Check my balance", text: "What's my balance?" }
+      ]); }, 360);
+    });
+  });
+}
+
+// ── GOALS: savings plan ──
+function _agRenderGoal(aiDiv, msgs, data) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-goal-head ag-stagger-item"><span class="ag-goal-cur">$0</span><span class="ag-goal-target">of $' + data.target.toLocaleString() + ' by August</span></div>' +
+    '<div class="ag-goal-bar-wrap ag-stagger-item"><div class="ag-goal-bar" id="agGoalBar" data-pct="3"></div></div>' +
+    '<div class="ag-goal-pace ag-stagger-item"><span class="ico" style="--ico:url(\'Icons/Target.svg\');--sz:14px;color:#823CB4"></span><span>About <strong>$190 / week</strong> for the next 16 weeks</span></div>';
+  _agAddCtx(aiDiv, 'You\'ve got about 4 months. At your current pace, saving roughly $190 a week would get you to $' + data.target.toLocaleString() + ' by August.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      var bar = document.getElementById('agGoalBar'); if (bar) setTimeout(function(){ bar.style.width = '3%'; }, 200);
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Fund it from deposits instead', text: 'Can I do that from deposits instead?' },
+        { label: 'What if I have a heavier month?', text: 'What if I have a heavier month?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderGoalDeposit(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-metric ag-stagger-item"><div class="ag-metric-label">Transfer from each deposit</div>' +
+      '<div class="ag-metric-row"><span class="ag-metric-num" id="agPctNum">0</span><span class="ag-metric-sym">%</span></div></div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.05);background:transparent;color:var(--text-tertiary);justify-content:flex-start;padding-left:16px">Based on your recent inflows, this likely reaches $3,000 by August</div>';
+  _agAddCtx(aiDiv, 'Yes. A 14% transfer from each incoming deposit would likely hit the target, based on your recent inflows.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      _agCountUp(document.getElementById('agPctNum'), 0, 14, 700, false);
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'What if I have a heavier month?', text: 'What if I have a heavier month?' },
+        { label: 'Set this up', text: 'Do that' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderGoalAdaptive(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  var pts = ['Save 14% of every deposit automatically', 'Auto-pause the week if money is tight', 'I\'ll nudge you if you slip behind pace'];
+  var html = _agCardHeaderHTML('Adaptive savings rule', 'Flexible');
+  html += '<div class="ag-reason-list">';
+  pts.forEach(function(p) {
+    html += '<div class="ag-reason-row ag-stagger-item"><span class="ag-reason-check"><span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:11px;color:#46882B"></span></span><span class="ag-reason-text">' + _agEscape(p) + '</span></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, 'I can make it adaptive: save 14% of deposits, ease off automatically on lean weeks, and tell you if you fall behind pace.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Set this up', text: 'Do that' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderGoalCreate(aiDiv, msgs, data) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-goal-head ag-stagger-item"><span class="ag-goal-cur">Vacation</span><span class="ag-goal-target">$' + data.target.toLocaleString() + ' by August</span></div>' +
+    '<div class="ag-goal-bar-wrap ag-stagger-item"><div class="ag-goal-bar" id="agGoalBar2" data-pct="3"></div></div>' +
+    '<div class="ag-toggle-row ag-stagger-item">' +
+      '<div class="ag-toggle-row-info"><span class="ag-toggle-row-title">Adaptive 14% deposit rule</span><span class="ag-toggle-row-sub">Auto-saves from each deposit</span></div>' +
+      '<div class="cr-toggle on" role="switch" tabindex="0" data-alert-toggle></div></div>';
+  var tog = el.querySelector('[data-alert-toggle]');
+  tog.addEventListener('click', function() { tog.classList.toggle('on'); });
+  _agAddCtx(aiDiv, 'Done — I\'ve created your Vacation space with an adaptive 14% deposit rule. I\'ll track your pace and flag you if you slip behind.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      var bar = document.getElementById('agGoalBar2'); if (bar) setTimeout(function(){ bar.style.width = '3%'; }, 200);
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: "Check my balance", text: "What's my balance?" },
+        { label: 'Anything I should review?', text: 'Anything I should review?' }
+      ]); }, 360);
+    });
+  });
+}
+
+// ── FAMILY operations (teen card: money, controls, approvals) ──
+function _agRenderFamily(aiDiv, msgs) {
+  var fam = _AG_DATA.family;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML = _agCardHeaderHTML(fam.child + "'s card · this week", fam.card.network + ' →' + fam.card.last4) +
+    '<div class="ag-lrow ag-stagger-item"><span class="ag-lrow-ic" style="background:rgba(124,75,212,0.12)"><span class="ico" style="--ico:url(\'Icons/CreditCard.svg\');--sz:15px;color:#7b4bd4"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">Spent this week</span><span class="ag-lrow-sub">' + fam.purchases + ' purchases · card active</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">$' + fam.spentWeek + '.00</span></div></div>' +
+    '<div class="ag-lrow ag-stagger-item"><span class="ag-lrow-ic" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url(\'Icons/Hourglass.svg\');--sz:15px;color:#C17C14"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">Purchase to approve</span><span class="ag-lrow-sub">' + _agEscape(fam.pending.merchant) + ' · ' + fam.pending.ago + '</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">$' + fam.pending.amount + '.00</span>' + _agTagHTML('up', '1 waiting') + '</div></div>' +
+    '<div class="ag-lrow ag-stagger-item"><span class="ag-lrow-ic" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url(\'Icons/HandCoins.svg\');--sz:15px;color:#46882B"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">Weekly allowance</span><span class="ag-lrow-sub">Due ' + fam.allowanceDue + '</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">$' + fam.allowance + '.00</span></div></div>';
+  _agAddCtx(aiDiv, "Here's " + fam.child + "'s Banyan card this week — $" + fam.spentWeek + " spent across " + fam.purchases + " purchases, one request waiting for your approval, and her $" + fam.allowance + " allowance is due " + fam.allowanceDue + ".", function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Review the request', text: 'Review the pending request' },
+        { label: 'Show her spending', text: "Show Emma's spending" },
+        { label: 'Freeze her card', text: "Freeze Emma's card" }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderFamilySpend(aiDiv, msgs) {
+  var fam = _AG_DATA.family;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  var html = _agCardHeaderHTML(fam.child + ' · spending', 'This week · $' + fam.spentWeek + '.00');
+  fam.spend.forEach(function(r) {
+    html += '<div class="ag-lrow ag-stagger-item"><span class="ag-lrow-ic"><span class="ico" style="--ico:url(\'Icons/' + r.ic + '\');--sz:14px;color:var(--text-tertiary)"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">' + _agEscape(r.t) + '</span><span class="ag-lrow-sub">' + _agEscape(r.s) + '</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">' + r.a + '</span></div></div>';
+  });
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, "Here's everything " + fam.child + ' spent this week — $' + fam.spentWeek + '.00 across ' + fam.purchases + ' purchases, all within her limit.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Freeze her card', text: "Freeze Emma's card" },
+        { label: 'Pay her allowance', text: "Pay Emma's allowance" }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderFamilyApprove(aiDiv, msgs) {
+  var fam = _AG_DATA.family, p = fam.pending;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item"><div class="ag-alert-icon" style="background:rgba(124,75,212,0.12)"><span class="ico" style="--ico:url(\'Icons/' + p.icon + '\');--sz:18px;color:#7b4bd4"></span></div>' +
+      '<div class="ag-alert-head-text"><span class="ag-alert-title">Purchase request</span><span class="ag-alert-merchant">' + fam.child + ' · ' + fam.card.network + ' →' + fam.card.last4 + '</span></div></div>' +
+    '<div class="ag-lrow ag-stagger-item"><span class="ag-lrow-ic" style="background:rgba(124,75,212,0.12)"><span class="ico" style="--ico:url(\'Icons/' + p.icon + '\');--sz:15px;color:#7b4bd4"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">' + _agEscape(p.merchant) + '</span><span class="ag-lrow-sub">' + _agEscape(p.category) + ' · ' + p.ago + '</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">$' + p.amount + '.00</span></div></div>' +
+    '<div class="ag-card-actions ag-stagger-item">' +
+      '<button class="ag-action-btn primary" data-approve type="button"><span class="ag-action-label">Approve $' + p.amount + '</span><span class="ag-action-spinner" style="display:none"></span></button>' +
+      '<button class="ag-action-btn secondary" data-decline type="button">Decline</button></div>';
+  var ap = el.querySelector('[data-approve]'), dc = el.querySelector('[data-decline]');
+  function dismiss(then) {
+    el.style.transition = 'opacity 200ms ease, transform 220ms var(--ease-out)';
+    el.style.opacity = '0'; el.style.transform = 'translateY(-4px) scale(0.985)';
+    setTimeout(function() { el.remove(); then(); }, 220);
+  }
+  ap.addEventListener('click', function() {
+    if (ap.classList.contains('loading')) return;
+    ap.classList.add('loading'); ap.querySelector('.ag-action-spinner').style.display = 'block';
+    setTimeout(function() { dismiss(function() { _agRenderFamilyApproved(aiDiv, msgs); }); }, 700);
+  });
+  dc.addEventListener('click', function() { dismiss(function() { _agRenderFamilyDecline(aiDiv, msgs); }); });
+  _agAddCtx(aiDiv, fam.child + " is asking you to approve a $" + p.amount + " purchase at " + p.merchant + ", requested " + p.ago + ".", function() {
+    _agRevealCard(aiDiv, el);
+  });
+}
+function _agRenderFamilyApproved(aiDiv, msgs) {
+  _agFlow = null;
+  var fam = _AG_DATA.family, p = fam.pending;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item"><div class="ag-alert-icon" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:18px;color:#46882B"></span></div>' +
+      '<div class="ag-alert-head-text"><span class="ag-alert-title">$' + p.amount + '.00 approved</span><span class="ag-alert-merchant">' + _agEscape(p.merchant) + ' · ' + fam.child + "'s card</span></div></div>" +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.06);background:transparent;color:var(--text-secondary)"><span class="ico" style="--ico:url(\'Icons/ChatCircle.svg\');--sz:13px;color:var(--text-tertiary)"></span>' + fam.child + ' has been notified</div>';
+  _agAddCtx(aiDiv, 'Approved — $' + p.amount + '.00 is now available on ' + fam.child + "'s card. I've let her know.", function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Show her spending', text: "Show Emma's spending" },
+        { label: 'Pay her allowance', text: "Pay Emma's allowance" }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderFamilyDecline(aiDiv, msgs) {
+  _agFlow = null;
+  var fam = _AG_DATA.family, p = fam.pending;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item"><div class="ag-alert-icon" style="background:rgba(0,0,0,0.06)"><span class="ico" style="--ico:url(\'Icons/X.svg\');--sz:16px;color:var(--text-secondary)"></span></div>' +
+      '<div class="ag-alert-head-text"><span class="ag-alert-title">Request declined</span><span class="ag-alert-merchant">' + _agEscape(p.merchant) + ' · $' + p.amount + '.00</span></div></div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.06);background:transparent;color:var(--text-secondary)"><span class="ico" style="--ico:url(\'Icons/ChatCircle.svg\');--sz:13px;color:var(--text-tertiary)"></span>' + fam.child + ' has been notified</div>';
+  _agAddCtx(aiDiv, "Declined — I've let " + fam.child + " know the $" + p.amount + ' ' + p.merchant + " purchase wasn't approved.", function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Show her spending', text: "Show Emma's spending" },
+        { label: 'Freeze her card', text: "Freeze Emma's card" }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderFamilyAllowance(aiDiv, msgs) {
+  var fam = _AG_DATA.family;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-lrow ag-stagger-item" style="border-top:none">' +
+      '<span class="ag-lrow-ic" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url(\'Icons/HandCoins.svg\');--sz:15px;color:#46882B"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">' + fam.child + "'s allowance</span><span class=\"ag-lrow-sub\">Weekly · to " + fam.card.network + ' →' + fam.card.last4 + '</span></div>' +
+      '<div class="ag-lrow-right"><span class="ag-lrow-amt">$' + fam.allowance + '.00</span></div></div>' +
+    _agConfirmButton('Send $' + fam.allowance + ' to ' + fam.child);
+  _agWireConfirm(el, aiDiv, msgs, function() { _agRenderFamilyAllowanceDone(aiDiv, msgs); });
+  _agAddCtx(aiDiv, fam.child + "'s weekly allowance is $" + fam.allowance + ', due ' + fam.allowanceDue + '. Want me to send it now?', function() {
+    _agRevealCard(aiDiv, el);
+  });
+}
+function _agRenderFamilyAllowanceDone(aiDiv, msgs) {
+  _agFlow = null;
+  var fam = _AG_DATA.family;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item"><div class="ag-alert-icon" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:18px;color:#46882B"></span></div>' +
+      '<div class="ag-alert-head-text"><span class="ag-alert-title">$' + fam.allowance + '.00 sent to ' + fam.child + '</span><span class="ag-alert-merchant">Weekly allowance · ' + fam.card.network + ' →' + fam.card.last4 + '</span></div></div>';
+  _agAddCtx(aiDiv, 'Done — $' + fam.allowance + '.00 is on its way to ' + fam.child + "'s card.", function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Show her spending', text: "Show Emma's spending" },
+        { label: 'Anything I should review?', text: 'Anything I should review?' }
+      ]); }, 360);
+    });
+  });
+}
+
+// ── PAYEE / beneficiary verification ──
+function _agRenderPayee(aiDiv, msgs) {
+  var p = _AG_DATA.payee;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item">' +
+      '<div class="ag-alert-icon"><span class="ico" style="--ico:url(\'Icons/UserCheck.svg\');--sz:18px;color:#C17C14"></span></div>' +
+      '<div class="ag-alert-head-text"><span class="ag-alert-title">Verify before sending</span><span class="ag-alert-merchant">Details don\'t fully match your history</span></div></div>' +
+    '<div class="ag-lrow ag-stagger-item"><span class="ag-lrow-ic" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url(\'Icons/PencilSimple.svg\');--sz:14px;color:#C17C14"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">Name changed</span><span class="ag-lrow-sub">' + _agEscape(p.oldName) + ' → ' + _agEscape(p.newName) + '</span></div></div>' +
+    '<div class="ag-lrow ag-stagger-item"><span class="ag-lrow-ic" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:14px;color:#46882B"></span></span>' +
+      '<div class="ag-lrow-info"><span class="ag-lrow-title">Routing matches prior payment</span><span class="ag-lrow-sub">' + _agEscape(p.routing) + ' · ' + _agEscape(p.lastPaid) + '</span></div>' +
+      '<div class="ag-lrow-right">' + _agTagHTML('up', p.confidence) + '</div></div>';
+  _agAddCtx(aiDiv, 'Before you send, I want to flag this — the payee\'s details don\'t fully match your history. Likely the same vendor, but the display name changed.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'How confident are you?', text: 'How confident are you?' },
+        { label: 'Should I verify first?', text: 'Should I verify before sending?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderPayeeConfidence(aiDiv, msgs) {
+  var p = _AG_DATA.payee;
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  var html = _agCardHeaderHTML('Why moderate confidence', '2 signals') + '<div class="ag-reason-list">';
+  html += '<div class="ag-reason-row ag-stagger-item"><span class="ag-reason-check" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url(\'Icons/Warning.svg\');--sz:11px;color:#C17C14"></span></span><span class="ag-reason-text">Display name changed from "' + _agEscape(p.oldName) + '" to "' + _agEscape(p.newName) + '".</span></div>';
+  html += '<div class="ag-reason-row ag-stagger-item"><span class="ag-reason-check"><span class="ico" style="--ico:url(\'Icons/Check.svg\');--sz:11px;color:#46882B"></span></span><span class="ag-reason-text">Routing and account details match your prior payment exactly.</span></div>';
+  html += '</div>';
+  el.innerHTML = html;
+  _agAddCtx(aiDiv, 'Moderately confident. The name changed, but the routing details line up with what you paid last month.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Should I verify first?', text: 'Should I verify before sending?' }
+      ]); }, 360);
+    });
+  });
+}
+function _agRenderPayeeVerify(aiDiv, msgs) {
+  var el = document.createElement('div'); el.className = 'ag-ui-card';
+  el.innerHTML =
+    '<div class="ag-metric-verdict warn ag-stagger-item"><span class="ico" style="--ico:url(\'Icons/ShieldCheck.svg\');--sz:13px;color:#875610"></span>Verify before sending</div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.05);background:transparent;color:var(--text-tertiary);justify-content:flex-start;padding:10px 16px">A quick confirmation protects you since the display name changed.</div>';
+  _agAddCtx(aiDiv, 'Yes — I\'d do a quick verification because the display name changed. Once you\'re comfortable, I can also wait for your funds to clear before sending.', function() {
+    _agRevealCard(aiDiv, el, function() {
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'Remind me when funds clear', text: 'Remind me to send once my funds clear' }
+      ]); }, 360);
+    });
+  });
+}
+
 // ── TEXT (typewriter) ─────────────────────────────────
 function _agRenderText(aiDiv, msgs, responseText) {
   var textEl = document.createElement('div');
@@ -1268,6 +2214,120 @@ function focusHomeAi() {
   setTimeout(openHomeAgent, 320);
 }
 
+// ── Use-case switcher (top dropdown) ──
+var _AG_USECASES = {
+  send:      { label: 'Send money abroad',     seed: 'Send $500 to Maya Sarini' },
+  vigilance: { label: 'Awareness & vigilance', seed: 'Anything I should review?' },
+  bills:     { label: 'Bills & recurring',     seed: 'What bills are coming up?' },
+  cashflow:  { label: 'Cashflow & forecast',   seed: 'Can I afford a $1,200 flight next month without touching savings?' },
+  goals:     { label: 'Savings & goals',       seed: 'I want $3k saved for vacation by August' },
+  family:    { label: 'Family operations',     seed: "What's happening with Emma's card?" },
+  payee:     { label: 'Beneficiary & payees',  seed: 'Is this the same vendor I paid last month?' },
+};
+function agToggleUseCaseMenu(e) {
+  if (e) e.stopPropagation();
+  var menu = document.getElementById('agUseCaseMenu');
+  var scrim = document.getElementById('agUseCaseScrim');
+  var btn = document.getElementById('agUseCaseBtn');
+  if (!menu) return;
+  var open = !menu.classList.contains('open');
+  menu.classList.toggle('open', open);
+  if (scrim) scrim.classList.toggle('open', open);
+  if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function agCloseUseCaseMenu() {
+  var menu = document.getElementById('agUseCaseMenu');
+  var scrim = document.getElementById('agUseCaseScrim');
+  var btn = document.getElementById('agUseCaseBtn');
+  if (menu) menu.classList.remove('open');
+  if (scrim) scrim.classList.remove('open');
+  if (btn) btn.setAttribute('aria-expanded', 'false');
+}
+// Clear the thread back to a fresh state without closing the agent
+function _agResetConvo() {
+  var msgs = document.getElementById('agentMsgs');
+  if (!msgs) return;
+  msgs.innerHTML = '<div class="ag-msgs-spacer" aria-hidden="true"></div>';
+  var screen = document.getElementById('agent-screen');
+  if (screen) screen.classList.remove('ag-convo');
+  _homeAgentConvo = false; _agFlow = null; _agResponseIdx = 0;
+  msgs.scrollTop = 0;
+}
+function agPickUseCase(key) {
+  agCloseUseCaseMenu();
+  var lbl = document.getElementById('agUseCaseLabel');
+  document.querySelectorAll('#agUseCaseMenu .ag-usecase-item').forEach(function(it) {
+    it.classList.toggle('active', it.getAttribute('onclick') === "agPickUseCase('" + key + "')");
+  });
+  if (key === 'gallery') {
+    if (lbl) lbl.textContent = 'All card styles';
+    _agRenderGallery();
+    return;
+  }
+  var uc = _AG_USECASES[key];
+  if (!uc) return;
+  if (lbl) lbl.textContent = uc.label;
+  _agResetConvo();
+  setTimeout(function() { agentSendText(uc.seed); }, 80);
+}
+
+// ── Card-styles gallery: every component, laid out at once ──
+function _agGalleryCaption(msgs, label) {
+  var c = document.createElement('div');
+  c.className = 'ag-gallery-cap';
+  c.textContent = label;
+  msgs.appendChild(c);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { c.classList.add('s-in'); }); });
+}
+function _agRenderGallery() {
+  _agResetConvo();
+  var msgs = document.getElementById('agentMsgs');
+  var screen = document.getElementById('agent-screen');
+  if (!msgs) return;
+  if (screen) screen.classList.add('ag-convo');
+  _homeAgentConvo = true;
+  var spacer = msgs.querySelector('.ag-msgs-spacer');
+  if (spacer) { spacer.style.flex = 'none'; spacer.style.height = '0'; }
+  _agGalleryMode = true;
+
+  var C = _AG_DATA.cards;
+  var entries = [
+    ['Balance',                    function(d) { _agRenderBalance(d, msgs, {}); }],
+    ['Spending breakdown',         function(d) { _agRenderSpending(d, msgs); }],
+    ['Upcoming bills',             function(d) { _agRenderBills(d, msgs); }],
+    ['Forecast · metric + verdict',function(d) { _agRenderAfford(d, msgs, { amount: 1200 }); }],
+    ['Reasoning list',             function(d) { _agRenderAffordWhy(d, msgs); }],
+    ['Next-step options',          function(d) { _agFlow = { journey: 'vigilance', step: 'options', card: C[1] }; _agRenderFlagOptions(d, msgs); }],
+    ['Vigilance · duplicate alert',function(d) { _agRenderFlaggedAlert(d, msgs, { card: C[1] }); }],
+    ['Card · disambiguation',      function(d) { _agRenderCardDisambig(d, msgs, { card: C[0] }); }],
+    ['Card · freeze confirm',      function(d) { _agRenderFreezeConfirm(d, msgs, { card: C[0] }); }],
+    ['Card · frozen + alert toggle',function(d){ _agRenderFreezeDone(d, msgs, { card: C[0] }); }],
+    ['Savings goal',               function(d) { _agRenderGoal(d, msgs, { target: 3000, weeks: 16, current: 0 }); }],
+    ['Goal created · rule toggle',  function(d){ _agRenderGoalCreate(d, msgs, { target: 3000 }); }],
+    ['Family · card overview',     function(d) { _agRenderFamily(d, msgs); }],
+    ['Family · approve request',   function(d) { _agRenderFamilyApprove(d, msgs); }],
+    ['Family · allowance confirm', function(d) { _agRenderFamilyAllowance(d, msgs); }],
+    ['Payee · verification',       function(d) { _agRenderPayee(d, msgs); }],
+    ['Reminder set',               function(d) { _agRenderRemind(d, msgs, { name: 'Rent', cond: "2 days before it's due" }); }],
+  ];
+
+  var i = 0;
+  function next() {
+    if (i >= entries.length) {
+      _agGalleryMode = false; _agFlow = null;
+      return;
+    }
+    var e = entries[i++];
+    _agGalleryCaption(msgs, e[0]);
+    var d = document.createElement('div');
+    d.className = 'ag-msg-ai visible';
+    msgs.appendChild(d);
+    try { e[1](d); } catch (err) { /* keep the gallery going */ }
+    setTimeout(next, 420);
+  }
+  next();
+}
+
 // Shared ref so the keyboard listener can cancel the FLIP cleanup timeout
 var _flipCleanupTimer = null;
 
@@ -1370,6 +2430,10 @@ function closeHomeAgent() {
     }, 360);
   }
   _agResponseIdx = 0;
+  _agFlow = null;
+  agCloseUseCaseMenu();
+  var _ucl = document.getElementById('agUseCaseLabel'); if (_ucl) _ucl.textContent = 'Use cases';
+  document.querySelectorAll('#agUseCaseMenu .ag-usecase-item.active').forEach(function(it){ it.classList.remove('active'); });
   if (typeof showHome === 'function') showHome();
 }
 
@@ -1471,17 +2535,49 @@ function agentSend() {
 
   // Thinking steps → answer handoff
   setTimeout(function() {
-    _agRunSteps(aiDiv, scenario.steps, msgs, function() {
-      if      (scenario.type === 'transfer')   { _agRenderTransfer(aiDiv, msgs, scenario.data); }
-      else if (scenario.type === 'fx_rate')   { _agRenderFXRate(aiDiv, msgs, scenario.data); }
-      else if (scenario.type === 'balance')   { _agRenderBalance(aiDiv, msgs, scenario.data); }
-      else if (scenario.type === 'upcoming')  { _agRenderUpcoming(aiDiv, msgs); }
-      else if (scenario.type === 'spending')  { _agRenderSpending(aiDiv, msgs); }
-      else if (scenario.type === 'recipients'){ _agRenderRecipientSelect(aiDiv, msgs); }
-      else if (scenario.type === 'bill')      { _agRenderBillStatus(aiDiv, msgs); }
+    var runRender = function() {
+      if      (scenario.type === 'transfer')        { _agRenderTransfer(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'fx_rate')         { _agRenderFXRate(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'balance')         { _agRenderBalance(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'upcoming')        { _agRenderUpcoming(aiDiv, msgs); }
+      else if (scenario.type === 'spending')        { _agRenderSpending(aiDiv, msgs); }
+      else if (scenario.type === 'recipients')      { _agRenderRecipientSelect(aiDiv, msgs); }
+      else if (scenario.type === 'bill')            { _agRenderBillStatus(aiDiv, msgs); }
+      else if (scenario.type === 'freeze_disambig') { _agRenderCardDisambig(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'freeze_confirm')  { _agRenderFreezeConfirm(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'freeze_done')     { _agRenderFreezeDone(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'vigilance')       { _agRenderFlaggedAlert(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'flag_reason')     { _agRenderFlagReason(aiDiv, msgs); }
+      else if (scenario.type === 'flag_options')    { _agRenderFlagOptions(aiDiv, msgs); }
+      else if (scenario.type === 'flag_dispute')    { _agRenderDisputeStarted(aiDiv, msgs); }
+      else if (scenario.type === 'flag_wait')       { _agRenderWaitAdvice(aiDiv, msgs); }
+      else if (scenario.type === 'bills')           { _agRenderBills(aiDiv, msgs); }
+      else if (scenario.type === 'bills_unusual')   { _agRenderBillsUnusual(aiDiv, msgs); }
+      else if (scenario.type === 'bills_cover')     { _agRenderBillsCover(aiDiv, msgs); }
+      else if (scenario.type === 'remind')          { _agRenderRemind(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'afford')          { _agRenderAfford(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'afford_why')      { _agRenderAffordWhy(aiDiv, msgs); }
+      else if (scenario.type === 'afford_cancel')   { _agRenderAffordCancel(aiDiv, msgs); }
+      else if (scenario.type === 'afford_rec')      { _agRenderAffordRec(aiDiv, msgs); }
+      else if (scenario.type === 'goal')            { _agRenderGoal(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'goal_deposit')    { _agRenderGoalDeposit(aiDiv, msgs); }
+      else if (scenario.type === 'goal_adaptive')   { _agRenderGoalAdaptive(aiDiv, msgs); }
+      else if (scenario.type === 'goal_create')     { _agRenderGoalCreate(aiDiv, msgs, scenario.data); }
+      else if (scenario.type === 'family')          { _agRenderFamily(aiDiv, msgs); }
+      else if (scenario.type === 'family_spend')    { _agRenderFamilySpend(aiDiv, msgs); }
+      else if (scenario.type === 'family_approve')  { _agRenderFamilyApprove(aiDiv, msgs); }
+      else if (scenario.type === 'family_decline')  { _agRenderFamilyDecline(aiDiv, msgs); }
+      else if (scenario.type === 'family_allowance'){ _agRenderFamilyAllowance(aiDiv, msgs); }
+      else if (scenario.type === 'payee')           { _agRenderPayee(aiDiv, msgs); }
+      else if (scenario.type === 'payee_confidence'){ _agRenderPayeeConfidence(aiDiv, msgs); }
+      else if (scenario.type === 'payee_verify')    { _agRenderPayeeVerify(aiDiv, msgs); }
       else { _agRenderText(aiDiv, msgs, scenario.responseText); }
       _agResponseIdx++;
-    });
+    };
+    // Quick conversational turns skip the long "thinking" block; the
+    // typewriter context line carries the responsiveness instead.
+    if (scenario.fast) { setTimeout(runRender, 340); }
+    else { _agRunSteps(aiDiv, scenario.steps, msgs, runRender); }
   }, 90);
 
   setTimeout(function() { f.focus(); }, 130);

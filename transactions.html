@@ -6,7 +6,7 @@
   <title>Banyan – Transactions</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=97">
+  <link rel="stylesheet" href="styles.css?v=103">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -2762,10 +2762,53 @@
       <button class="ag-nav-btn ag-nav-menu" aria-label="Menu">
         <span class="ico ol" style="--ico:url('Icons/List.svg');--sz:18px" aria-hidden="true"></span>
       </button>
+      <button class="ag-usecase-btn" id="agUseCaseBtn" onclick="agToggleUseCaseMenu(event)" aria-haspopup="menu" aria-expanded="false">
+        <span class="ag-usecase-label" id="agUseCaseLabel">Use cases</span>
+        <span class="ico ol ag-usecase-caret" style="--ico:url('Icons/CaretDown.svg');--sz:11px" aria-hidden="true"></span>
+      </button>
       <button class="ag-nav-btn ag-nav-close" onclick="closeHomeAgent()" aria-label="Close">
         <span class="ico ol" style="--ico:url('Icons/X.svg');--sz:14px" aria-hidden="true"></span>
       </button>
     </nav>
+
+    <!-- Use-case switcher menu -->
+    <div class="ag-usecase-scrim" id="agUseCaseScrim" onclick="agCloseUseCaseMenu()"></div>
+    <div class="ag-usecase-menu" id="agUseCaseMenu" role="menu" aria-label="Switch use case">
+      <div class="ag-usecase-menu-head">Agent use cases</div>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('send')">
+        <span class="ag-usecase-ic" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:16px;color:#46882B"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Send money abroad</span><span class="ag-usecase-s">Transfer with live FX</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('vigilance')">
+        <span class="ag-usecase-ic" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url('Icons/ShieldWarning.svg');--sz:16px;color:#C17C14"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Awareness & vigilance</span><span class="ag-usecase-s">Catch unusual activity</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('bills')">
+        <span class="ag-usecase-ic" style="background:rgba(56,100,200,0.12)"><span class="ico" style="--ico:url('Icons/CalendarCheck.svg');--sz:16px;color:#2f5bb0"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Bills & recurring</span><span class="ag-usecase-s">Stay ahead of what's due</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('cashflow')">
+        <span class="ag-usecase-ic" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url('Icons/ChartLineUp.svg');--sz:16px;color:#46882B"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Cashflow & forecast</span><span class="ag-usecase-s">Plan ahead with confidence</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('goals')">
+        <span class="ag-usecase-ic" style="background:rgba(130,60,180,0.12)"><span class="ico" style="--ico:url('Icons/Target.svg');--sz:16px;color:#823CB4"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Savings & goals</span><span class="ag-usecase-s">Turn intent into a plan</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('family')">
+        <span class="ag-usecase-ic" style="background:rgba(217,80,144,0.12)"><span class="ico" style="--ico:url('Icons/UsersThree.svg');--sz:16px;color:#c4477f"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Family operations</span><span class="ag-usecase-s">Allowance, approvals, cards</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('payee')">
+        <span class="ag-usecase-ic" style="background:rgba(0,150,150,0.12)"><span class="ico" style="--ico:url('Icons/UserCheck.svg');--sz:16px;color:#0a8a8a"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Beneficiary & payees</span><span class="ag-usecase-s">Verify before you send</span></span>
+      </button>
+      <div class="ag-usecase-sep" role="separator"></div>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('gallery')">
+        <span class="ag-usecase-ic" style="background:rgba(0,0,0,0.06)"><span class="ico" style="--ico:url('Icons/Cards.svg');--sz:16px;color:var(--text-secondary)"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">All card styles</span><span class="ag-usecase-s">Browse every component</span></span>
+      </button>
+    </div>
 
     <!-- Identity hero — decorative, not read by AT -->
     <div class="ag-hero" id="agHero" aria-hidden="true">
@@ -2780,29 +2823,29 @@
 
     <!-- Suggestion chips -->
     <div class="ag-chips" id="agChips" role="group" aria-label="Suggested questions">
-      <button class="ag-chip" style="transition-delay:280ms" onclick="agentChip(this)" data-text="What's due this week?">
+      <button class="ag-chip" style="transition-delay:280ms" onclick="agentChip(this)" data-text="Send $500 to Maya Sarini">
         <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/CalendarCheck.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
+          <span class="ico ol" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
         </div>
-        <span class="ag-chip-label">What's due this week?</span>
+        <span class="ag-chip-label">Send $500 to Maya</span>
       </button>
-      <button class="ag-chip" style="transition-delay:340ms" onclick="agentChip(this)" data-text="Show recent spending">
+      <button class="ag-chip" style="transition-delay:340ms" onclick="agentChip(this)" data-text="Freeze my travel card">
+        <div class="ag-chip-icon" aria-hidden="true">
+          <span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
+        </div>
+        <span class="ag-chip-label">Freeze my travel card</span>
+      </button>
+      <button class="ag-chip" style="transition-delay:400ms" onclick="agentChip(this)" data-text="Anything I should review?">
+        <div class="ag-chip-icon" aria-hidden="true">
+          <span class="ico ol" style="--ico:url('Icons/ShieldWarning.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
+        </div>
+        <span class="ag-chip-label">Anything I should review?</span>
+      </button>
+      <button class="ag-chip" style="transition-delay:460ms" onclick="agentChip(this)" data-text="Show recent spending">
         <div class="ag-chip-icon" aria-hidden="true">
           <span class="ico ol" style="--ico:url('Icons/ChartLine.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
         </div>
         <span class="ag-chip-label">Recent spending</span>
-      </button>
-      <button class="ag-chip" style="transition-delay:400ms" onclick="agentChip(this)" data-text="Send money to a beneficiary">
-        <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
-        </div>
-        <span class="ag-chip-label">Send money</span>
-      </button>
-      <button class="ag-chip" style="transition-delay:460ms" onclick="agentChip(this)" data-text="Check my BESCOM bill status">
-        <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/Receipt.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
-        </div>
-        <span class="ag-chip-label">BESCOM bill</span>
       </button>
     </div>
 
@@ -3554,6 +3597,6 @@
 
 </div>
 
-  <script src="app.js?v=57"></script>
+  <script src="app.js?v=62"></script>
 </body>
 </html>
