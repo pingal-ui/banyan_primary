@@ -1651,15 +1651,8 @@
       z-index: 5500;
       pointer-events: none;
       overflow: hidden;
-      /* Solid base gradient — prevents home screen bleeding through during entry */
-      background: linear-gradient(
-        180deg,
-        #e6f2e2 0%,
-        #f2f9ef 14%,
-        #f9fcf8 26%,
-        #ffffff 42%,
-        #ffffff 100%
-      );
+      /* Solid warm-sand base — prevents home screen bleeding through during entry */
+      background: #ECE6DE;
       opacity: 0;
       transition: opacity 220ms var(--ease-out);
     }
@@ -1686,8 +1679,8 @@
     }
     #agent-screen .ag-bg-blur {
       position: absolute; inset: 0;
-      /* Simple white overlay — no backdrop-filter (which would bleed the home screen through) */
-      background: rgba(248, 252, 246, 0.78);
+      /* Warm-sand overlay — no backdrop-filter (which would bleed the home screen through) */
+      background: rgba(236, 230, 222, 0.78);
       opacity: 0;
       transition: opacity 380ms var(--ease-out);
     }
@@ -1699,9 +1692,9 @@
       z-index: 50;
       background: linear-gradient(
         180deg,
-        rgba(255,255,255,0.92) 0%,
-        rgba(255,255,255,0.55) 40%,
-        rgba(255,255,255,0.15) 70%,
+        rgba(236,230,222,0.92) 0%,
+        rgba(236,230,222,0.55) 40%,
+        rgba(236,230,222,0.15) 70%,
         transparent 100%
       );
       /* Blur fades continuously — no flat solid band at top */
@@ -1726,10 +1719,10 @@
       pointer-events: none;
     }
 
-    /* Conversation wash — solid opaque white, no bleed-through */
+    /* Conversation wash — solid warm sand, no bleed-through */
     #agent-screen .ag-bg-white {
       position: absolute; inset: 0;
-      background: #ffffff;
+      background: #ECE6DE;
       opacity: 0;
       transition: opacity 700ms var(--ease-out);
       pointer-events: none;
