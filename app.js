@@ -5119,6 +5119,7 @@ function showCreateCard() {
   var setup  = document.getElementById('ctplSetupPanel');
   if (picker) { picker.classList.remove('ctpl-exit'); picker.classList.remove('ctpl-continuing'); }
   if (setup)  { setup.classList.remove('ctpl-active'); setup.classList.remove('ctpl-flip'); setup.classList.remove('ctpl-did-flip'); }
+  _ctplSetMiniShown(false);
   var _setupCard = document.getElementById('ctplSetupCard');
   if (_setupCard) { _setupCard.style.transition = ''; _setupCard.style.transform = ''; _setupCard.style.transformOrigin = ''; }
   document.querySelectorAll('.ctpl-dcard').forEach(function(d){ d.style.transition=''; d.style.transform=''; d.style.opacity=''; });
@@ -5153,6 +5154,7 @@ function goBackCreateCard() {
     var picker = document.getElementById('ctplPickerPanel');
     var setup  = document.getElementById('ctplSetupPanel');
     if (setup)  { setup.classList.remove('ctpl-active'); setup.classList.remove('ctpl-flip'); setup.classList.remove('ctpl-did-flip'); }
+    _ctplSetMiniShown(false);
     var _bsc = document.getElementById('ctplSetupCard');
     if (_bsc) { _bsc.style.transition = ''; _bsc.style.transform = ''; _bsc.style.transformOrigin = ''; }
     if (picker) {
@@ -5345,15 +5347,15 @@ function ctplContinue() {
 
 // Template visuals for the setup featured card (gradient · icon · display name · desc)
 var CTPL_VIZ = {
-  subscriptions: { g: 'linear-gradient(159deg,#00272b 0%,#005b89 170%)', ic: 'Television.svg', n: 'Subscriptions', d: 'Frequency control for recurring charges.', caps: ['Monthly limit', 'Renewal aware'] },
-  merchant:      { g: 'linear-gradient(159deg,#2b1700 0%,#894200 170%)', ic: 'Package.svg', n: 'Favourite brand', d: 'One brand you spend with often.', caps: ['Merchant lock', 'Monthly limit'] },
-  event:         { g: 'linear-gradient(159deg,#270038 0%,#8700b0 170%)', ic: 'CalendarStar.svg', n: 'Events', d: 'A temporary budget for one occasion.', caps: ['Date range', 'Total cap'] },
-  travel:        { g: 'linear-gradient(159deg,#002b2b 0%,#008789 170%)', ic: 'AirplaneTilt.svg', n: 'Travel', d: 'Trip spending, kept separate.', caps: ['Multi-country', 'Trip cap'] },
-  trial:         { g: 'linear-gradient(159deg,#072b00 0%,#598900 170%)', ic: 'Clock.svg', n: 'Trial', d: 'A low limit for unfamiliar sites.', caps: ['Low limit', 'Single use'] },
-  onetimebuy:    { g: 'linear-gradient(159deg,#2b2400 0%,#897400 170%)', ic: 'ShoppingBag.svg', n: 'One-time buy', d: 'Cap one purchase, then close.', caps: ['One purchase', 'Auto-close'] },
-  household:     { g: 'linear-gradient(159deg,#00132b 0%,#005289 170%)', ic: 'UsersThree.svg', n: 'Household', d: 'Shared spending with clear limits.', caps: ['Shared use', 'Monthly limit'] },
-  childteen:     { g: 'linear-gradient(159deg,#2b000d 0%,#890027 170%)', ic: 'Baby.svg', n: 'Child / Teen', d: 'Supervised spending with guardrails.', caps: ['Category limits', 'Spend alerts'] },
-  custom:        { g: 'linear-gradient(159deg,#2a2a2a 0%,#555 170%)', ic: 'Cards.svg', n: 'Custom', d: 'Build your own from scratch.', caps: ['Custom', 'Virtual card'] },
+  subscriptions: { g: 'linear-gradient(159deg,#00272b 0%,#005b89 170%)', ic: 'Television.svg', n: 'Subscriptions', d: 'Frequency control for recurring charges.', caps: ['Monthly limit', 'Renewal aware'], bleed: '0,91,137' },
+  merchant:      { g: 'linear-gradient(159deg,#2b1700 0%,#894200 170%)', ic: 'Package.svg', n: 'Favourite brand', d: 'One brand you spend with often.', caps: ['Merchant lock', 'Monthly limit'], bleed: '137,66,0' },
+  event:         { g: 'linear-gradient(159deg,#270038 0%,#8700b0 170%)', ic: 'CalendarStar.svg', n: 'Events', d: 'A temporary budget for one occasion.', caps: ['Date range', 'Total cap'], bleed: '135,0,176' },
+  travel:        { g: 'linear-gradient(159deg,#002b2b 0%,#008789 170%)', ic: 'AirplaneTilt.svg', n: 'Travel', d: 'Trip spending, kept separate.', caps: ['Multi-country', 'Trip cap'], bleed: '0,135,137' },
+  trial:         { g: 'linear-gradient(159deg,#072b00 0%,#598900 170%)', ic: 'Clock.svg', n: 'Trial', d: 'A low limit for unfamiliar sites.', caps: ['Low limit', 'Single use'], bleed: '89,137,0' },
+  onetimebuy:    { g: 'linear-gradient(159deg,#2b2400 0%,#897400 170%)', ic: 'ShoppingBag.svg', n: 'One-time buy', d: 'Cap one purchase, then close.', caps: ['One purchase', 'Auto-close'], bleed: '137,116,0' },
+  household:     { g: 'linear-gradient(159deg,#00132b 0%,#005289 170%)', ic: 'UsersThree.svg', n: 'Household', d: 'Shared spending with clear limits.', caps: ['Shared use', 'Monthly limit'], bleed: '0,82,137' },
+  childteen:     { g: 'linear-gradient(159deg,#2b000d 0%,#890027 170%)', ic: 'Baby.svg', n: 'Child / Teen', d: 'Supervised spending with guardrails.', caps: ['Category limits', 'Spend alerts'], bleed: '137,0,39' },
+  custom:        { g: 'linear-gradient(159deg,#2a2a2a 0%,#555 170%)', ic: 'Cards.svg', n: 'Custom', d: 'Build your own from scratch.', caps: ['Custom', 'Virtual card'], bleed: '85,85,85' },
 };
 function _ctplExpiryDateDMY(days) {
   var d = new Date(Date.now() + days * 86400000);
@@ -5361,26 +5363,30 @@ function _ctplExpiryDateDMY(days) {
   return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
 }
 
-// Sticky setup card: collapse to a compact pinned header as the form scrolls.
-// A compensating spacer absorbs the height the card frees, so total scroll
-// height stays constant — without it, collapsing would remove overflow, snap
-// scrollTop to 0, and re-expand in a flicker loop. Hysteresis adds margin.
+// As the featured card scrolls away, hide the nav and reveal the pinned mini pill
+// at the top (iOS large-title style). Hysteresis avoids flicker at the threshold.
 var _ctplSetupScrollBound = false;
-function _ctplSetCardCompact(v) {
-  var card = document.getElementById('ctplSetupCard');
-  var sp = document.getElementById('ctplCollapseSpacer');
-  if (card) card.classList.toggle('is-compact', v);
-  if (sp) sp.style.height = v ? '88px' : '0px';
+function _ctplSetMiniShown(v) {
+  var mini = document.getElementById('ctplMini');
+  var nav = document.querySelector('#create-card .ctpl-nav');
+  if (mini) mini.classList.toggle('is-visible', v);
+  if (nav) nav.classList.toggle('ctpl-nav-hidden', v);
 }
 function _ctplSetupScrollHandler() {
   var scroll = document.querySelector('.ctpl-setup-scroll');
   var card = document.getElementById('ctplSetupCard');
-  if (!scroll || !card) return;
+  var mini = document.getElementById('ctplMini');
+  if (!scroll || !card || !mini) return;
   var y = scroll.scrollTop;
-  if (card.classList.contains('is-compact')) {
-    if (y < 8) _ctplSetCardCompact(false);
-  } else if (y > 24) {
-    _ctplSetCardCompact(true);
+  var h = card.offsetHeight || 144;
+  // Scroll-linked: fade the featured card out as it scrolls up so it's gone
+  // before the pill appears (no doubled state). Pill swaps in once card is faded.
+  var p = Math.min(1, Math.max(0, (y - h * 0.28) / (h * 0.5)));
+  card.style.opacity = String(1 - p);
+  if (mini.classList.contains('is-visible')) {
+    if (p < 0.5) _ctplSetMiniShown(false);
+  } else if (p >= 1) {
+    _ctplSetMiniShown(true);
   }
 }
 
@@ -5400,8 +5406,17 @@ function selectCardTemplate(template) {
 
   // Featured card preview
   var sc = document.getElementById('ctplSetupCard'); if (sc) sc.style.background = VIZ.g;
+  // Soft bleed: tint the form bg with the card's colour, fading out down the panel
+  var bleedPanel = document.getElementById('ctplSetupPanel');
+  if (bleedPanel && VIZ.bleed) {
+    bleedPanel.style.background = 'linear-gradient(180deg, rgba(' + VIZ.bleed + ',0.30) 0%, rgba(' + VIZ.bleed + ',0.16) 32%, rgba(' + VIZ.bleed + ',0.08) 64%, rgba(' + VIZ.bleed + ',0.04) 100%), rgba(255,255,255,0.98)';
+  }
   var wm = document.getElementById('ctplSetupCardWm'); if (wm) wm.style.setProperty('--ico', "url('Icons/" + VIZ.ic + "')");
   var scn = document.getElementById('ctplSetupCardName'); if (scn) scn.textContent = dispName;
+  // Mini pinned pill mirrors the card's colour, name and icon
+  var mn = document.getElementById('ctplMiniName'); if (mn) mn.textContent = dispName;
+  var mini = document.getElementById('ctplMini'); if (mini) mini.style.background = VIZ.g;
+  var mw = document.getElementById('ctplMiniWm'); if (mw) mw.style.setProperty('--ico', "url('Icons/" + VIZ.ic + "')");
   var scd = document.getElementById('ctplSetupCardDesc'); if (scd) scd.textContent = dispDesc;
   var scc = document.getElementById('ctplSetupCardCaps');
   if (scc && VIZ.caps) { scc.innerHTML = VIZ.caps.map(function(c){ return '<span>' + c + '</span>'; }).join(''); }
@@ -5482,7 +5497,9 @@ function selectCardTemplate(template) {
   // Scroll setup to top + reset the sticky card to its full (expanded) state
   var scroll = document.querySelector('.ctpl-setup-scroll');
   if (scroll) scroll.scrollTop = 0;
-  _ctplSetCardCompact(false);
+  _ctplSetMiniShown(false);
+  var _stk = document.getElementById('ctplSetupCard');
+  if (_stk) _stk.style.opacity = '';
   if (scroll && !_ctplSetupScrollBound) {
     _ctplSetupScrollBound = true;
     scroll.addEventListener('scroll', _ctplSetupScrollHandler, { passive: true });

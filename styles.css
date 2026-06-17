@@ -8618,6 +8618,7 @@
       justify-content: space-between;
       padding: 8px 20px;
       z-index: 4;
+      transition: opacity 0.24s var(--ease-out);
     }
     .ctpl-nav-title {
       display: flex; align-items: center; gap: 4px;
@@ -8717,7 +8718,7 @@
     .ctpl-dcard.ctpl-edge .ctpl-dcard-caps,
     .ctpl-dcard.ctpl-edge .ctpl-dcard-visa { opacity: 0; transition: opacity 0.25s ease; }
     .ctpl-dcard.ctpl-edge .ctpl-dcard-name { top: auto; bottom: 14px; }
-    .ctpl-dcard.is-current { filter: none; box-shadow: 0 28px 56px rgba(0,0,0,0.36); }
+    .ctpl-dcard.is-current { filter: brightness(1.5) saturate(1.08); box-shadow: 0 28px 56px rgba(0,0,0,0.36); }
     .ctpl-dcard-wm { position: absolute; right: -6px; bottom: 30px; color: rgba(255,255,255,0.13) !important; pointer-events: none; }
     .ctpl-dcard-name { position: absolute; left: 16px; top: 14px; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.82); transition: font-size 200ms ease, color 200ms ease; }
     .ctpl-dcard.is-current .ctpl-dcard-name { font-size: 17px; color: #fff; }
@@ -8917,31 +8918,35 @@
 
     /* ── Redesigned setup form (Figma 3656-5928) ── */
     .ctpl-setup-scroll { padding: 0 16px; }
+    /* Featured card: scrolls away normally; a pinned mini pill takes over at the top */
     .ctpl-setup-card {
-      position: sticky; top: 0; z-index: 6;
+      position: relative;
       width: 80%; height: 144px; flex-shrink: 0;
       margin: 0 auto 16px;
       border-radius: 14px; overflow: hidden;
       border-top: 0.5px solid rgba(255,255,255,0.18);
       box-shadow: 0 20px 44px rgba(0,0,0,0.32);
-      transition: width 0.26s var(--ease-out), height 0.26s var(--ease-out),
-                  border-radius 0.26s var(--ease-out), box-shadow 0.26s var(--ease-out);
     }
-    /* Collapsed pinned state: shorter, full-width header showing just the name */
-    .ctpl-setup-card.is-compact {
-      width: 100%; height: 56px; border-radius: 12px;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
-    }
-    .ctpl-setup-card-caps, .ctpl-setup-card-visa,
-    .ctpl-setup-card-wm, .ctpl-setup-card-desc { transition: opacity 0.18s var(--ease-out); }
-    .ctpl-setup-card.is-compact .ctpl-setup-card-caps,
-    .ctpl-setup-card.is-compact .ctpl-setup-card-visa,
-    .ctpl-setup-card.is-compact .ctpl-setup-card-wm,
-    .ctpl-setup-card.is-compact .ctpl-setup-card-desc { opacity: 0; }
-    .ctpl-setup-card.is-compact .ctpl-setup-card-texts { top: 50%; transform: translateY(-50%); }
-    .ctps-collapse-spacer { transition: height 0.26s var(--ease-out); }
     .ctpl-setup-card-wm { top: -28px; bottom: auto; right: 0; }
-    .ctpl-setup-card-texts { position: absolute; left: 14px; top: 14px; width: 140px; transition: top 0.26s var(--ease-out), transform 0.26s var(--ease-out); }
+    .ctpl-setup-card-texts { position: absolute; left: 14px; top: 14px; width: 140px; }
+
+    /* Pinned mini header pill (replaces the nav once the card scrolls away) */
+    .ctpl-mini {
+      position: absolute; top: 60px; left: 50%; z-index: 5;
+      width: min(264px, calc(100% - 80px)); height: 52px;
+      border-radius: 16px; overflow: hidden;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.16);
+      opacity: 0; pointer-events: none;
+      transform: translateX(-50%) translateY(-8px);
+      transition: opacity 0.24s var(--ease-out), transform 0.24s var(--ease-out);
+    }
+    .ctpl-mini.is-visible { opacity: 1; pointer-events: auto; transform: translateX(-50%) translateY(0); }
+    .ctpl-mini-name { position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; line-height: 20px; color: #fff; }
+    .ctpl-mini-wm { position: absolute; right: -4px; top: 50%; transform: translateY(-50%);
+      color: rgba(255,255,255,0.16) !important; pointer-events: none; }
+    /* Hide the nav once the mini pill takes over */
+    .ctpl-nav.ctpl-nav-hidden { opacity: 0; pointer-events: none; transition: opacity 0.24s var(--ease-out); }
     .ctpl-setup-card-name { font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; line-height: 18px; color: #fff; }
     .ctpl-setup-card-desc { font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 400; line-height: 14px; color: rgba(255,255,255,0.45); margin-top: 3px; }
     .ctpl-setup-card-caps { position: absolute; left: 14px; bottom: 13px; }
@@ -8951,37 +8956,41 @@
     .ctpl-setup-title-name { display: none; }
     .ctpl-setup-title-sub { display: none; }
 
-    /* Grouped settings list: one subtle card per group, flat rows divided by hairlines (no nested boxes) */
-    .ctps-group { background: rgba(0,0,0,0.03); border-radius: 16px; overflow: hidden; margin-bottom: 12px; }
-    .ctps-field {
-      position: relative; background: transparent; border: none; border-radius: 0;
-      padding: 13px 16px; min-height: 56px; box-sizing: border-box;
-      display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;
+    /* Frosted group card (real glass — card-tint bleeds through, blurred); rows = label left + value box right */
+    .ctps-group {
+      background: rgba(255,255,255,0.32); border: 1px solid rgba(255,255,255,0.8); border-radius: 20px;
+      padding: 16px; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
     }
-    .ctps-field--tap { padding-right: 40px; }
-    .ctps-field-lbl { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px; color: rgba(0,0,0,0.85); white-space: nowrap; }
-    .ctps-field-val { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px; color: rgba(0,0,0,0.6); text-align: right; margin-left: auto; }
-    .ctps-field-acct { display: flex; align-items: center; gap: 8px; margin-left: auto; min-width: 0; }
-    .ctps-field-acct span { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .ctps-acct-ic { width: 18px; height: 18px; border-radius: 13px; object-fit: cover; flex-shrink: 0; border-bottom: 0.5px solid rgba(0,0,0,0.1); }
-    .ctps-caret { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); }
-    .ctps-field-input { border: none; background: transparent; outline: none; flex: 1; min-width: 0; padding: 0; text-align: right; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); -webkit-tap-highlight-color: transparent; }
-    .ctps-field-input::placeholder { color: rgba(0,0,0,0.35); }
-    .ctps-amount { display: flex; align-items: baseline; margin-left: auto; }
-    .ctps-amt-sym { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.6); }
-    .ctps-amount-inp { border: none; background: transparent; outline: none; width: 80px; padding: 0; text-align: right; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); }
-    .ctps-helper { padding: 11px 16px; font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 400; line-height: 16px; color: rgba(0,0,0,0.6); }
-    .ctps-tgl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; min-height: 56px; }
-    .ctps-tgl-lbl { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); }
-    .ctps-controls-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; min-height: 56px; cursor: pointer; }
-    .ctps-controls-title { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); }
-    .ctps-controls-sub { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 400; color: rgba(0,0,0,0.5); margin-top: 2px; }
-    /* hairline dividers between sibling rows within a group */
-    .ctps-field, .ctps-tgl-row, .ctps-helper, .ctps-controls-row { border-top: 0.5px solid rgba(0,0,0,0.06); }
-    .ctps-group > :first-child { border-top: none; }
+    .ctps-line { display: flex; align-items: center; gap: 8px; width: 100%; box-sizing: border-box; }
+    .ctps-line--tap { cursor: pointer; }
+    .ctps-line-lbl { flex: 1; min-width: 0; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px; color: rgba(0,0,0,0.6); }
+    .ctps-line-lbl--stack { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+    .ctps-line-sub { font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 400; line-height: 16px; color: rgba(0,0,0,0.6); }
+    /* value box on the right */
+    .ctps-box {
+      flex: 1; min-width: 0; box-sizing: border-box;
+      display: flex; align-items: center; gap: 8px;
+      height: 44px; padding: 0 12px; border-radius: 12px; overflow: hidden;
+      background: rgba(255,255,255,0.28); border: 0.5px solid rgba(255,255,255,0.6);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    }
+    .ctps-box-val { flex: 1; min-width: 0; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px; color: rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ctps-box-ic { width: 16px; height: 16px; border-radius: 8px; object-fit: cover; flex-shrink: 0; }
+    .ctps-box-tic { flex-shrink: 0; }
+    .ctps-box-input { flex: 1; min-width: 0; border: none; background: transparent; outline: none; padding: 0; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.8); -webkit-tap-highlight-color: transparent; }
+    .ctps-box-input::placeholder { color: rgba(0,0,0,0.4); }
+    .ctps-amount { gap: 2px; }
+    .ctps-amt-sym { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.8); flex-shrink: 0; }
+    .ctps-amount-inp { flex: 1; min-width: 0; border: none; background: transparent; outline: none; padding: 0; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.8); }
+    .ctps-tgl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; min-height: 26px; }
+    .ctps-tgl-lbl { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.6); }
+    .ctps-controls-row { display: flex; align-items: center; justify-content: space-between; cursor: pointer; width: 100%; }
+    .ctps-controls-title { font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 400; line-height: 22px; color: rgba(0,0,0,0.8); }
+    .ctps-controls-sub { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(0,0,0,0.4); margin-top: 2px; }
     .ctps-ghost-btn { width: 34px; height: 34px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
     .ctps-group .ctpl2-manual-body { background: transparent; }
-    .ctps-group .ctpl2-manual-body.open { max-height: 200px; margin-top: 8px; }
+    .ctps-group .ctpl2-manual-body.open { max-height: 200px; }
 
     /* Template header */
     /* Hide sheet-row header strip on step 2 */

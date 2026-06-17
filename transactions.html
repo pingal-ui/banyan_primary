@@ -6,7 +6,7 @@
   <title>Banyan – Transactions</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=138">
+  <link rel="stylesheet" href="styles.css?v=147">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -646,6 +646,12 @@
       </div>
     </div>
 
+    <!-- Pinned mini header pill (appears once the featured card scrolls away) -->
+    <div class="ctpl-mini" id="ctplMini" aria-hidden="true" style="background:linear-gradient(159deg,#00272b 0%,#005b89 170%)">
+      <span class="ico ctpl-dcard-wm ctpl-mini-wm" id="ctplMiniWm" style="--ico:url('Icons/Television.svg');--sz:80px"></span>
+      <span class="ctpl-mini-name" id="ctplMiniName">Subscriptions</span>
+    </div>
+
     <!-- Create with AI card -->
     <div class="ctpl-ai" id="ctplAiCard">
       <div class="ctpl-ai-glow"></div>
@@ -762,50 +768,62 @@
             <div class="ctpl-setup-title-sub" id="ctplSetupSub">Shared spending with clear limits.</div>
           </div>
 
-          <!-- Group 1: account + nickname -->
+          <!-- Group 1: space + nickname -->
           <div class="ctps-group">
-            <div class="ctps-field ctps-field--tap" onclick="openCtplAcctPicker()">
-              <div class="ctps-field-lbl">Account</div>
-              <div class="ctps-field-acct">
-                <img id="ctplAcctIcon" src="assets/space-usd-checking.webp" class="ctps-acct-ic" alt="">
-                <span id="ctplAcctLabel">USD Checking (•• 7654)</span>
+            <div class="ctps-line ctps-line--tap" onclick="openCtplAcctPicker()">
+              <div class="ctps-line-lbl">Space</div>
+              <div class="ctps-box">
+                <img id="ctplAcctIcon" src="assets/space-usd-checking.webp" class="ctps-box-ic" alt="">
+                <span class="ctps-box-val" id="ctplAcctLabel">USD Checking (•• 7654)</span>
               </div>
-              <span class="ico ol ctps-caret" style="--ico:url('Icons/CaretDown.svg');--sz:18px;color:rgba(0,0,0,0.35)"></span>
             </div>
-            <div class="ctps-field ctps-field--tap ctpl-merchant-row" id="ctplMerchantRow" onclick="openCtplMerchantPicker()" style="display:none">
-              <div class="ctps-field-lbl">Merchant</div>
-              <div class="ctps-field-acct">
-                <div class="ctpl-merchant-avatar" id="ctplMerchantAvatar"></div>
-                <span id="ctplMerchantLabel">Select merchant</span>
+            <div class="ctps-line ctps-line--tap ctpl-merchant-row" id="ctplMerchantRow" onclick="openCtplMerchantPicker()" style="display:none">
+              <div class="ctps-line-lbl">Merchant</div>
+              <div class="ctps-box">
+                <div class="ctpl-merchant-avatar ctps-box-ic" id="ctplMerchantAvatar"></div>
+                <span class="ctps-box-val" id="ctplMerchantLabel">Select merchant</span>
+                <span class="ico ol ctps-box-tic" style="--ico:url('Icons/CaretRight.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
               </div>
-              <span class="ico ol ctps-caret" style="--ico:url('Icons/CaretRight.svg');--sz:18px;color:rgba(0,0,0,0.35)"></span>
             </div>
-            <div class="ctps-field" onclick="document.getElementById('ctplNickname').focus()">
-              <div class="ctps-field-lbl">Nickname</div>
-              <input class="ctps-field-input" id="ctplNickname" type="text" autocomplete="off" placeholder="Card nickname">
+            <div class="ctps-line" onclick="document.getElementById('ctplNickname').focus()">
+              <div class="ctps-line-lbl">Card nickname</div>
+              <div class="ctps-box">
+                <input class="ctps-box-input" id="ctplNickname" type="text" autocomplete="off" placeholder="Card nickname">
+              </div>
             </div>
           </div>
 
-          <!-- Group 2: limits + expiry + toggles -->
+          <!-- Group 2: limits + expiry -->
           <div class="ctps-group">
-            <div class="ctps-field ctps-field--tap" onclick="openCtplLimitPicker()">
-              <div class="ctps-field-lbl">Limit type</div>
-              <div class="ctps-field-val" id="ctplLimitTypeVal">Total amount</div>
-              <span class="ico ol ctps-caret" style="--ico:url('Icons/CaretDown.svg');--sz:18px;color:rgba(0,0,0,0.35)"></span>
+            <div class="ctps-line ctps-line--tap" onclick="openCtplLimitPicker()">
+              <div class="ctps-line-lbl">Limit type</div>
+              <div class="ctps-box">
+                <span class="ctps-box-val" id="ctplLimitTypeVal">Total amount</span>
+                <span class="ico ol ctps-box-tic" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+              </div>
             </div>
-            <div class="ctps-field" onclick="document.getElementById('ctplAmount').focus()">
-              <div class="ctps-field-lbl">Spend limit</div>
-              <div class="ctps-amount"><span class="ctps-amt-sym">$</span><input class="ctps-amount-inp" id="ctplAmount" type="number" min="0" autocomplete="off" placeholder="0"></div>
+            <div class="ctps-line" onclick="document.getElementById('ctplAmount').focus()">
+              <div class="ctps-line-lbl">Total spend limit</div>
+              <div class="ctps-box ctps-amount"><span class="ctps-amt-sym">$</span><input class="ctps-amount-inp" id="ctplAmount" type="number" min="0" autocomplete="off" placeholder="0"></div>
             </div>
-            <div class="ctps-field">
-              <div class="ctps-field-lbl">Per transaction</div>
-              <div class="ctps-field-val"><span class="ctps-amt-sym">$ </span><span id="ctplPerTxn">500.00</span></div>
+            <div class="ctps-line">
+              <div class="ctps-line-lbl">Per transaction limit</div>
+              <div class="ctps-box"><span class="ctps-box-val"><span class="ctps-amt-sym">$ </span><span id="ctplPerTxn">500.00</span></span></div>
             </div>
-            <div class="ctps-field">
-              <div class="ctps-field-lbl">Expiry date</div>
-              <div class="ctps-field-val" id="ctplExpiryVal">15/09/2026</div>
+            <div class="ctps-line">
+              <div class="ctps-line-lbl ctps-line-lbl--stack">
+                <span>Expiry date</span>
+                <span class="ctps-line-sub">The default is set to 3 months.</span>
+              </div>
+              <div class="ctps-box">
+                <span class="ctps-box-val" id="ctplExpiryVal">15/09/2026</span>
+                <span class="ico ol ctps-box-tic" style="--ico:url('Icons/Calendar.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+              </div>
             </div>
-            <div class="ctps-helper">Defaults to 3 months. You can change it later.</div>
+          </div>
+
+          <!-- Group 3: toggles -->
+          <div class="ctps-group">
             <div class="ctps-tgl-row">
               <span class="ctps-tgl-lbl">International transactions</span>
               <div class="ctpl-toggle" id="ctplIntl" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
@@ -816,7 +834,7 @@
             </div>
           </div>
 
-          <!-- Group 3: set up other controls -->
+          <!-- Group 4: set up other controls -->
           <div class="ctps-group">
             <div class="ctps-controls-row" onclick="ctplToggleManual()">
               <div class="ctps-controls-text">
@@ -839,8 +857,7 @@
             </div>
           </div>
 
-          <div class="ctps-collapse-spacer" id="ctplCollapseSpacer" style="height:0;flex-shrink:0"></div>
-          <div style="height:140px;flex-shrink:0"></div>
+          <div style="height:156px;flex-shrink:0"></div>
         </div><!-- /.ctpl-setup-scroll -->
 
         <!-- Floating pill CTA -->
@@ -3683,6 +3700,6 @@
 
 </div>
 
-  <script src="app.js?v=87"></script>
+  <script src="app.js?v=92"></script>
 </body>
 </html>
