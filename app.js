@@ -2243,6 +2243,27 @@ function agCloseUseCaseMenu() {
   if (scrim) scrim.classList.remove('open');
   if (btn) btn.setAttribute('aria-expanded', 'false');
 }
+// Jump-to-latest: show a floating button when scrolled up from the bottom
+var _agJumpBound = false;
+function _agUpdateJump() {
+  var msgs = document.getElementById('agentMsgs');
+  var jump = document.getElementById('agentJump');
+  if (!msgs || !jump) return;
+  var fromBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
+  jump.classList.toggle('is-visible', fromBottom > 120);
+}
+function _agBindJump() {
+  var msgs = document.getElementById('agentMsgs');
+  if (!msgs || _agJumpBound) return;
+  _agJumpBound = true;
+  msgs.addEventListener('scroll', _agUpdateJump, { passive: true });
+}
+function agentScrollToBottom() {
+  var msgs = document.getElementById('agentMsgs');
+  if (!msgs) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  msgs.scrollTo({ top: msgs.scrollHeight, behavior: reduce ? 'auto' : 'smooth' });
+}
 // Clear the thread back to a fresh state without closing the agent
 function _agResetConvo() {
   var msgs = document.getElementById('agentMsgs');
@@ -2252,6 +2273,7 @@ function _agResetConvo() {
   if (screen) screen.classList.remove('ag-convo');
   _homeAgentConvo = false; _agFlow = null; _agResponseIdx = 0;
   msgs.scrollTop = 0;
+  var jump = document.getElementById('agentJump'); if (jump) jump.classList.remove('is-visible');
 }
 function agPickUseCase(key) {
   agCloseUseCaseMenu();
@@ -2375,6 +2397,9 @@ function openHomeAgent() {
   screen.classList.add('ag-open');
   void screen.offsetHeight;
   screen.style.transition = '';
+
+  // Bind the jump-to-latest scroll watcher once
+  _agBindJump();
 
   // ── Step 4: NOW safe to remove the focus class (it's hidden under the screen)
   if (home) home.classList.remove('home-ai-focused');
@@ -5022,6 +5047,65 @@ function ctplToggleManual() {
   if (caret) caret.classList.toggle('open');
 }
 
+/* ── "Set up other controls" — editable advanced rules ── */
+var _CTPL_TXNS_OPTS = ['Unlimited', '1', '3', '6', '12'];
+var _CTPL_BLOCKED_CATS = ['Gambling', 'Crypto', 'Adult content', 'Cash withdrawals', 'Foreign merchants'];
+var _ctplTxns = 'Unlimited';
+var _ctplBlocked = [];
+
+function _ctplTxnsLabel(v) {
+  if (v == null || v === 'Unlimited') return 'Unlimited';
+  return v + (v === '1' ? ' payment' : ' payments');
+}
+function _ctplBlockedLabel() {
+  if (!_ctplBlocked.length) return 'None';
+  if (_ctplBlocked.length === 1) return _ctplBlocked[0];
+  return _ctplBlocked.length + ' blocked';
+}
+// Renders the row values + the collapsed subtext preview (rules not shown upfront)
+function _ctplRenderOtherControls() {
+  var t = document.getElementById('ctplTxns'); if (t) t.textContent = _ctplTxnsLabel(_ctplTxns);
+  var b = document.getElementById('ctplBlocked'); if (b) b.textContent = _ctplBlockedLabel();
+  var n = _ctplBlocked.length;
+  var blockedSummary = n ? (n + ' blocked categor' + (n === 1 ? 'y' : 'ies')) : 'No blocked categories';
+  var sub = document.getElementById('ctplAiSub');
+  if (sub) sub.textContent = _ctplTxnsLabel(_ctplTxns) + ' • ' + blockedSummary;
+}
+
+function closeCtplCtrlPicker() {
+  document.getElementById('ctplCtrlOverlay').classList.remove('open');
+  document.getElementById('ctplCtrlSheet').classList.remove('open');
+}
+function _ctplOpenCtrl(title, html) {
+  document.getElementById('ctplCtrlTitle').textContent = title;
+  document.getElementById('ctplCtrlList').innerHTML = html;
+  document.getElementById('ctplCtrlOverlay').classList.add('open');
+  document.getElementById('ctplCtrlSheet').classList.add('open');
+}
+function _ctplOptRow(label, selected, onclick) {
+  return '<div class="ctpl-acct-opt' + (selected ? ' selected' : '') + '" onclick="' + onclick + '">' +
+    '<div class="ctpl-acct-opt-text"><div class="ctpl-acct-opt-name">' + label + '</div></div>' +
+    '<div class="ctpl-acct-opt-check"><svg viewBox="0 0 11 11" fill="none"><path d="M1.5 5.5L4.5 8.5L9.5 2.5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>' +
+  '</div>';
+}
+function openCtplTxnsPicker() {
+  _ctplOpenCtrl('Number of payments', _CTPL_TXNS_OPTS.map(function(v) {
+    return _ctplOptRow(_ctplTxnsLabel(v), v === _ctplTxns, "selectCtplTxns('" + v + "')");
+  }).join(''));
+}
+function selectCtplTxns(v) { _ctplTxns = v; _ctplRenderOtherControls(); closeCtplCtrlPicker(); }
+function openCtplBlockedPicker() {
+  _ctplOpenCtrl('Blocked categories', _CTPL_BLOCKED_CATS.map(function(c) {
+    return _ctplOptRow(c, _ctplBlocked.indexOf(c) !== -1, "toggleCtplBlocked('" + c.replace(/'/g, "\\'") + "')");
+  }).join(''));
+}
+function toggleCtplBlocked(cat) {
+  var i = _ctplBlocked.indexOf(cat);
+  if (i === -1) _ctplBlocked.push(cat); else _ctplBlocked.splice(i, 1);
+  _ctplRenderOtherControls();
+  openCtplBlockedPicker(); // re-render to reflect multi-select state
+}
+
 // Per-template prefill — sourced from the virtual-card spec table.
 // txns: 'unlimited' | number · expiryDays: 0 = none · online/contactless: per-txn $ cap (0 = off)
 var CTPL_CONFIG = {
@@ -5372,17 +5456,81 @@ function _ctplSetMiniShown(v) {
   if (mini) mini.classList.toggle('is-visible', v);
   if (nav) nav.classList.toggle('ctpl-nav-hidden', v);
 }
+// Featured-card neighbours: switch templates from the setup screen
+var _ctplCurIdx = 0;
+function _ctplUpdatePeeks(template) {
+  _ctplCurIdx = CTPL_DECK.findIndex(function(d){ return d.key === template; });
+  if (_ctplCurIdx < 0) _ctplCurIdx = 0;
+  var prev = CTPL_DECK[_ctplCurIdx - 1], next = CTPL_DECK[_ctplCurIdx + 1];
+  var pv = document.getElementById('ctplPeekPrev'), nx = document.getElementById('ctplPeekNext');
+  if (pv) { if (prev) { pv.style.display = ''; pv.style.background = (CTPL_VIZ[prev.key] || CTPL_VIZ.custom).g; } else { pv.style.display = 'none'; } }
+  if (nx) { if (next) { nx.style.display = ''; nx.style.background = (CTPL_VIZ[next.key] || CTPL_VIZ.custom).g; } else { nx.style.display = 'none'; } }
+  // arrows are disabled at the ends
+  var ap = document.getElementById('ctplArrowPrev'), an = document.getElementById('ctplArrowNext');
+  if (ap) ap.classList.toggle('is-disabled', !prev);
+  if (an) an.classList.toggle('is-disabled', !next);
+}
+function ctplSwitchTemplate(dir) {
+  var ni = _ctplCurIdx + dir;
+  if (ni < 0 || ni >= CTPL_DECK.length) return;
+  selectCardTemplate(CTPL_DECK[ni].key);
+  // directional nudge — the row slides toward the chosen side, then settles (no auto-advance)
+  var row = document.getElementById('ctplCardRow');
+  if (row) {
+    var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce) {
+      row.style.transition = 'none';
+      row.style.transform = 'translateX(' + (dir > 0 ? -26 : 26) + 'px)';
+      requestAnimationFrame(function() {
+        row.style.transition = '';
+        row.style.transform = '';
+      });
+    }
+  }
+}
+// Drag/swipe to switch templates (same feel as the cards-home carousel; manual, no auto-advance)
+var _ctplCardDragBound = false;
+function _ctplBindCardDrag() {
+  var row = document.getElementById('ctplCardRow');
+  if (!row || _ctplCardDragBound) return;
+  _ctplCardDragBound = true;
+  var x0 = null, dx = 0, moved = false;
+  row.addEventListener('pointerdown', function(e) { x0 = e.clientX; dx = 0; moved = false; });
+  row.addEventListener('pointermove', function(e) {
+    if (x0 === null) return;
+    dx = e.clientX - x0;
+    if (Math.abs(dx) > 8) {
+      moved = true;
+      row.style.transition = 'none';
+      row.style.transform = 'translateX(' + (dx * 0.4) + 'px)';
+    }
+  });
+  var end = function() {
+    if (x0 === null) return;
+    var d = dx; x0 = null;
+    if (moved && Math.abs(d) > 44) {
+      ctplSwitchTemplate(d < 0 ? 1 : -1);  // ctplSwitchTemplate handles the settle nudge
+    } else {
+      row.style.transition = 'transform 0.3s var(--ease-out)';
+      row.style.transform = '';
+    }
+  };
+  row.addEventListener('pointerup', end);
+  row.addEventListener('pointercancel', function() { x0 = null; row.style.transition = 'transform 0.3s var(--ease-out)'; row.style.transform = ''; });
+}
+
 function _ctplSetupScrollHandler() {
   var scroll = document.querySelector('.ctpl-setup-scroll');
   var card = document.getElementById('ctplSetupCard');
+  var row = document.getElementById('ctplCardRow') || card;
   var mini = document.getElementById('ctplMini');
   if (!scroll || !card || !mini) return;
   var y = scroll.scrollTop;
   var h = card.offsetHeight || 144;
-  // Scroll-linked: fade the featured card out as it scrolls up so it's gone
-  // before the pill appears (no doubled state). Pill swaps in once card is faded.
+  // Scroll-linked: fade the featured card (+ peeking neighbours) out as it scrolls
+  // up so it's gone before the pill appears (no doubled state).
   var p = Math.min(1, Math.max(0, (y - h * 0.28) / (h * 0.5)));
-  card.style.opacity = String(1 - p);
+  row.style.opacity = String(1 - p);
   if (mini.classList.contains('is-visible')) {
     if (p < 0.5) _ctplSetMiniShown(false);
   } else if (p >= 1) {
@@ -5409,7 +5557,7 @@ function selectCardTemplate(template) {
   // Soft bleed: tint the form bg with the card's colour, fading out down the panel
   var bleedPanel = document.getElementById('ctplSetupPanel');
   if (bleedPanel && VIZ.bleed) {
-    bleedPanel.style.background = 'linear-gradient(180deg, rgba(' + VIZ.bleed + ',0.30) 0%, rgba(' + VIZ.bleed + ',0.16) 32%, rgba(' + VIZ.bleed + ',0.08) 64%, rgba(' + VIZ.bleed + ',0.04) 100%), rgba(255,255,255,0.98)';
+    bleedPanel.style.background = 'linear-gradient(180deg, rgba(' + VIZ.bleed + ',0.20) 0%, rgba(' + VIZ.bleed + ',0.13) 45%, rgba(' + VIZ.bleed + ',0.09) 100%), rgba(255,255,255,0.965)';
   }
   var wm = document.getElementById('ctplSetupCardWm'); if (wm) wm.style.setProperty('--ico', "url('Icons/" + VIZ.ic + "')");
   var scn = document.getElementById('ctplSetupCardName'); if (scn) scn.textContent = dispName;
@@ -5420,6 +5568,8 @@ function selectCardTemplate(template) {
   var scd = document.getElementById('ctplSetupCardDesc'); if (scd) scd.textContent = dispDesc;
   var scc = document.getElementById('ctplSetupCardCaps');
   if (scc && VIZ.caps) { scc.innerHTML = VIZ.caps.map(function(c){ return '<span>' + c + '</span>'; }).join(''); }
+  _ctplUpdatePeeks(template);
+  // carousel temporarily disabled — single card only (no swipe binding)
 
   // Nickname
   var nick = document.getElementById('ctplNickname');
@@ -5434,13 +5584,13 @@ function selectCardTemplate(template) {
   var ltv = document.getElementById('ctplLimitTypeVal');
   if (ltv) ltv.textContent = _ctplLimitType === 'All time' ? 'Total amount' : _ctplLimitType;
 
-  // Per-transaction limit
+  // Per-transaction limit (free-type)
   var perTxn = document.getElementById('ctplPerTxn');
-  if (perTxn) perTxn.textContent = (cfg.online == null) ? 'No limit' : (Number(cfg.online).toFixed(2));
+  if (perTxn) perTxn.value = (cfg.online == null) ? '' : Number(cfg.online).toFixed(2);
 
-  // Expiry date (DD/MM/YYYY; default 3 months)
+  // Expiry date (free-type DD/MM/YYYY; default 3 months)
   var expVal = document.getElementById('ctplExpiryVal');
-  if (expVal) expVal.textContent = _ctplExpiryDateDMY(cfg.expiryDays || 90);
+  if (expVal) expVal.value = _ctplExpiryDateDMY(cfg.expiryDays || 90);
 
   // Toggles
   var intlEl = document.getElementById('ctplIntl');
@@ -5448,21 +5598,10 @@ function selectCardTemplate(template) {
   var ctlTgl = document.getElementById('ctplContactlessTgl');
   if (ctlTgl) ctlTgl.classList.toggle('ctpl-toggle--on', !!(cfg.contactless && cfg.contactless > 0));
 
-  // Advanced (number of payments, blocked categories)
-  var txnsEl = document.getElementById('ctplTxns');
-  if (txnsEl) txnsEl.textContent = (cfg.txns == null || cfg.txns === 'unlimited')
-    ? 'Unlimited' : (cfg.txns + (cfg.txns === 1 ? ' payment' : ' payments'));
-  var blockedRow = document.getElementById('ctplBlockedRow');
-  var blockedEl = document.getElementById('ctplBlocked');
-  if (blockedRow) blockedRow.style.display = cfg.blocked ? '' : 'none';
-  if (blockedEl && cfg.blocked) blockedEl.textContent = cfg.blocked.join(', ');
-
-  // AI sub: show template-relevant controls hint
-  var aiSub = document.getElementById('ctplAiSub');
-  if (aiSub) {
-    var hints = { subscriptions: 'Billing date · Retry rules', merchant: 'Merchant lock · Category', trial: 'Country · Auto-close', event: 'Date range · Category', household: 'Members · Categories', travel: 'Countries · Airlines', onetimebuy: 'Merchant · Auto-close', childteen: 'Categories · Time limits', custom: 'Controls · Limits' };
-    aiSub.textContent = hints[template] || 'Country · Businesses';
-  }
+  // Advanced controls — seed from the template, then render rows + collapsed summary
+  _ctplTxns = (cfg.txns == null || cfg.txns === 'unlimited') ? 'Unlimited' : String(cfg.txns);
+  _ctplBlocked = Array.isArray(cfg.blocked) ? cfg.blocked.slice() : [];
+  _ctplRenderOtherControls();
 
   // Reset manual section
   var manualBody  = document.getElementById('ctplManualBody');
@@ -5500,6 +5639,7 @@ function selectCardTemplate(template) {
   _ctplSetMiniShown(false);
   var _stk = document.getElementById('ctplSetupCard');
   if (_stk) _stk.style.opacity = '';
+  var _row = document.getElementById('ctplCardRow'); if (_row) _row.style.opacity = '';
   if (scroll && !_ctplSetupScrollBound) {
     _ctplSetupScrollBound = true;
     scroll.addEventListener('scroll', _ctplSetupScrollHandler, { passive: true });
@@ -5580,6 +5720,34 @@ function ccsDiscard() {
 function ccsSave() {
   _ccsDirty = false;
   document.getElementById('ccsSaveBar').classList.remove('visible');
+  showToast('Controls saved');
+}
+
+/* ── Card controls (redesign) — physical vs virtual variant by active card ── */
+function openCardControls() {
+  // Active carousel card: index 0 = physical, 1 = virtual
+  var active = document.querySelector('#crCarousel .cr-carousel-item.cr-active');
+  var items = Array.prototype.slice.call(document.querySelectorAll('#crCarousel .cr-carousel-item'));
+  var idx = items.indexOf(active);
+  var isVirtual = idx === 1; // Card 2 is the virtual card
+  var phys = document.getElementById('ccxPhysical');
+  var virt = document.getElementById('ccxVirtual');
+  if (phys) phys.style.display = isVirtual ? 'none' : '';
+  if (virt) virt.style.display = isVirtual ? '' : 'none';
+  openCrSheet('crControlsSheet');
+}
+function ccxSeg(btn, i) {
+  var btns = btn.parentElement.querySelectorAll('.ccx-seg-btn');
+  btns.forEach(function(b) { b.classList.remove('ccx-seg-on'); });
+  btn.classList.add('ccx-seg-on');
+}
+function ccxToggleChan(row) {
+  // Don't toggle when interacting with the amount input
+  if (window.event && window.event.target && window.event.target.classList.contains('ccx-amt-inp')) return;
+  row.classList.toggle('ccx-on');
+}
+function ccxSave() {
+  closeCrSheet('crControlsSheet');
   showToast('Controls saved');
 }
 
@@ -5850,30 +6018,27 @@ function crToggle(row) {
 }
 
 /* Lock card */
+// Freeze action: if already frozen, reopen the frozen sheet; else ask to confirm
 function openCrLockSheet() {
-  const title = document.getElementById('crLockTitle');
-  const sub   = document.getElementById('crLockSub');
-  const btn   = document.getElementById('crLockConfirmBtn');
-  const ico   = document.getElementById('crLockSheetIco');
-  const wrap  = document.getElementById('crLockIconWrap');
-  if (_cardLocked) {
-    title.textContent = 'Unlock this card?';
-    sub.textContent   = 'Your card will be active again and transactions will be allowed.';
-    btn.textContent   = 'Unlock card';
-    btn.className     = 'cr-lock-btn cr-lock-btn-unlock';
-    ico.style.setProperty('--ico', "url('Icons/LockOpen.svg')");
-    ico.style.color   = '#46882b';
-    wrap.style.background = 'rgba(70,136,43,0.08)';
-  } else {
-    title.textContent = 'Lock this card?';
-    sub.textContent   = 'Transactions will be declined until you unlock it. You can unlock at any time.';
-    btn.textContent   = 'Lock card';
-    btn.className     = 'cr-lock-btn cr-lock-btn-danger';
-    ico.style.setProperty('--ico', "url('Icons/Lock.svg')");
-    ico.style.color   = 'rgba(0,0,0,0.65)';
-    wrap.style.background = 'rgba(0,0,0,0.05)';
-  }
-  openCrSheet('crLockSheet');
+  openCrSheet(_cardLocked ? 'crFrozenSheet' : 'crLockSheet');
+}
+function _crApplyFrozen(frozen) {
+  _cardLocked = frozen;
+  var carousel = document.getElementById('crCarousel');
+  if (carousel) carousel.classList.toggle('is-frozen', frozen);
+  var ico = document.getElementById('crLockActionIco');
+  var lbl = document.getElementById('crLockActionLbl');
+  if (ico) { ico.style.setProperty('--ico', frozen ? "url('Icons/LockOpen.svg')" : "url('Icons/Snowflake.svg')"); ico.style.color = frozen ? '#2f6dd0' : 'rgba(0,0,0,0.8)'; }
+  if (lbl) lbl.textContent = frozen ? 'Unfreeze' : 'Freeze';
+}
+function confirmFreezeCard() {
+  _crApplyFrozen(true);
+  closeCrSheet('crLockSheet');
+  openCrSheet('crFrozenSheet');
+}
+function unfreezeCard() {
+  _crApplyFrozen(false);
+  closeCrSheet('crFrozenSheet');
 }
 function confirmLockCard() {
   _cardLocked = !_cardLocked;
@@ -5883,11 +6048,11 @@ function confirmLockCard() {
   if (_cardLocked) {
     ico.style.setProperty('--ico', "url('Icons/LockOpen.svg')");
     ico.style.color = '#c82c2c';
-    lbl.textContent = 'Unlock card';
+    lbl.textContent = 'Unfreeze';
   } else {
-    ico.style.setProperty('--ico', "url('Icons/Lock.svg')");
+    ico.style.setProperty('--ico', "url('Icons/Snowflake.svg')");
     ico.style.color = 'rgba(0,0,0,0.8)';
-    lbl.textContent = 'Lock card';
+    lbl.textContent = 'Freeze';
   }
   closeCrSheet('crLockSheet');
 }
@@ -7918,6 +8083,7 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
       { int: '2,340',  dec: '.17' },  // Card 2 Virtual
       null                             // Create a new card
     ];
+    var CARD_NAMES = ['Banyan card', 'Card 2', ''];
 
     function update() {
       var items = carousel.querySelectorAll('.cr-carousel-item');
@@ -7951,7 +8117,7 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
     // Track which card's spend figure is showing so we roll the number up
     // only when a *new* card becomes active (init 0 so the entry animation owns card 0).
     var _lastSpendIdx = 0;
-    var CARD_W = 286, GAP = 4, SIDE_PAD = 45;
+    var CARD_W = 286, GAP = -12, SIDE_PAD = 39;
 
     function snapToIndex(idx, animated) {
       var items = carousel.querySelectorAll('.cr-carousel-item');
@@ -7975,18 +8141,23 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
         var ic = SIDE_PAD + i * (CARD_W + GAP) + CARD_W / 2;
         var dist = Math.abs(centerX - ic);
         var norm = Math.max(0, 1 - dist / (CARD_W * 0.65));
-        item.style.transform = 'scale(' + (0.82 + 0.18 * norm).toFixed(3) + ')';
+        item.style.transform = 'scale(' + (0.80 + 0.20 * norm).toFixed(3) + ')';
         if (dist < closestDist) { closestDist = dist; closestIdx = i; }
       });
       // Only the centred card gets the live 3D wander sway
       items.forEach(function(item, i) {
         item.classList.toggle('cr-active', i === closestIdx);
+        if (i !== closestIdx) item.classList.remove('cr-flipped');
       });
       var isAdd = items[closestIdx] && items[closestIdx].classList.contains('cr-carousel-add');
       if (spendHdr) spendHdr.style.display = isAdd ? 'none'  : '';
       if (tip)      tip.style.display      = isAdd ? 'flex'  : 'none';
       if (actions)  actions.style.display  = isAdd ? 'none'  : '';
       if (txSec)    txSec.style.display    = isAdd ? 'none'  : '';
+      var spentCard = document.getElementById('crSpentCard');
+      if (spentCard) spentCard.style.display = isAdd ? 'none' : '';
+      var nameEl = document.getElementById('crCardName');
+      if (nameEl && !isAdd && CARD_NAMES[closestIdx]) nameEl.textContent = CARD_NAMES[closestIdx];
       dragEl.style.marginBottom = isAdd ? '40px' : '';
       var spend = CARD_SPENDS[closestIdx];
       if (!isAdd && spend && spendInt && spendDec) {
@@ -8021,16 +8192,18 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
     // Drag on the outer container so the full area is the hit target
     var dragEl = carousel.parentElement; // cr-carousel-outer
     dragEl.style.cursor = 'grab';
-    var _dragStart = null, _offsetStart = 0;
+    var _dragStart = null, _offsetStart = 0, _dragMoved = false;
     dragEl.addEventListener('pointerdown', function(e) {
-      _dragStart = e.clientX; _offsetStart = _offset;
+      _dragStart = e.clientX; _offsetStart = _offset; _dragMoved = false;
       dragEl.style.cursor = 'grabbing';
       carousel.style.transition = 'none';
       dragEl.setPointerCapture(e.pointerId);
+      _crResetTilt();
     });
     dragEl.addEventListener('pointermove', function(e) {
       if (_dragStart === null) return;
       var dx = e.clientX - _dragStart;
+      if (Math.abs(dx) > 6) _dragMoved = true;
       _offset = _offsetStart + dx;
       carousel.style.transform = 'translateX(' + _offset + 'px)';
       update();
@@ -8041,6 +8214,13 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
       var dx = e.clientX - _dragStart;
       carousel.classList.remove('dragging');
       _dragStart = null;
+      // Tap (no drag) on the active flip card → flip to reveal the CVV.
+      // Handled here because pointer capture makes the synthesized click target
+      // the drag container, so a click listener on the card never fires.
+      if (!_dragMoved) {
+        var _tapCard = carousel.querySelector('.cr-flipcard.cr-active');
+        if (_tapCard) { _tapCard.classList.toggle('cr-flipped'); _crResetTilt(); return; }
+      }
       // Find closest card and snap
       var containerW = carousel.parentElement.parentElement.offsetWidth || 375;
       var centerX = -_offset + containerW / 2;
@@ -8060,6 +8240,27 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
       _dragStart = null;
       snapToIndex(_activeIdx, true);
     });
+
+    // ── 3D pointer-tilt + tap-to-flip (reveals CVV) on the physical card ──
+    function _crResetTilt() {
+      carousel.querySelectorAll('.cr-flipcard .cr-tilt').forEach(function(t) {
+        t.style.setProperty('--rx', '0deg'); t.style.setProperty('--ry', '0deg');
+      });
+    }
+    // Tilt follows the pointer over the active card (skipped while dragging or flipped)
+    carousel.addEventListener('pointermove', function(e) {
+      if (_dragStart !== null) return;
+      var card = carousel.querySelector('.cr-flipcard.cr-active');
+      if (!card || card.classList.contains('cr-flipped')) return;
+      var tilt = card.querySelector('.cr-tilt');
+      if (!tilt) return;
+      var r = card.getBoundingClientRect();
+      var px = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width / 2)));
+      var py = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (r.height / 2)));
+      tilt.style.setProperty('--ry', (px * 10) + 'deg');
+      tilt.style.setProperty('--rx', (-py * 10) + 'deg');
+    });
+    carousel.addEventListener('pointerleave', _crResetTilt);
 
     // Init: snap to first card
     snapToIndex(0, false);

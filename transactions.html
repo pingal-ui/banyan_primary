@@ -5,8 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual"/>
   <title>Banyan – Transactions</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@400;500;600;700&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=147">
+  <link rel="stylesheet" href="styles.css?v=168">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -97,16 +98,32 @@
       <!-- ── Main content ── -->
       <div class="home-main">
 
-        <!-- ── Today's Brief ── -->
-        <div class="home-brief">
-          <div class="home-brief-head">
-            <span class="home-brief-title">Today's Brief</span>
-            <span class="home-brief-by">curated by Banyan AI</span>
+        <!-- ── Today's brief ── -->
+        <div class="home-brief2">
+          <div class="home-brief2-head">
+            <span class="home-brief2-eyebrow">Today's brief</span>
+            <span class="home-brief2-date">Thursday, June 18</span>
           </div>
-          <div class="home-brief-card">
-            <p class="home-brief-text">You've got $15,600 in the bank. The exchange rate today is $1=₹94.70. You'll be $850 short when rent hits on the 26th.</p>
-          </div>
+          <h2 class="home-brief2-headline">Here's what's worth your<br>attention today.</h2>
         </div>
+
+        <!-- FX / remittance opportunity -->
+        <section class="home-sec">
+          <div class="home-eyebrow">Sending money home looks cheap today — the rupee just hit a <b>3-month low</b>.</div>
+          <div class="home-fx-card">
+            <span class="home-fx-symbol" aria-hidden="true">
+              <svg viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
+            </span>
+            <div class="home-fx-info">
+              <span class="home-fx-rate">₹94.70 to the dollar</span>
+              <span class="home-fx-sub">A 3-month low — money goes further home today.</span>
+            </div>
+            <button class="home-fx-send" onclick="openHomeAgent()">
+              <span>Send</span>
+              <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:12px;color:#fff"></span>
+            </button>
+          </div>
+        </section>
 
         <!-- ── Pending actions ── -->
         <section class="home-sec">
@@ -539,14 +556,12 @@
   ══════════════════════════════════════ -->
   <div class="screen hb" id="cards">
 
-    <!-- Header: back btn + space filter pill + create btn -->
+    <!-- Header: back btn + centered title + create btn -->
     <div class="cr-header">
       <button class="cr-back-btn" onclick="showCardsBack()">
         <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:var(--text-primary)"></span>
       </button>
-      <div class="cr-filter-wrap" id="crFilterPill">
-        <!-- populated by updateCardsFilter() -->
-      </div>
+      <div class="cr-header-title">Cards</div>
       <button class="cr-create-btn" onclick="showCreateCard()">
         <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.80)"></span>
       </button>
@@ -560,12 +575,15 @@
 
         <!-- Spend header (hidden when add card is active) -->
         <div class="cr-spend-hdr" id="crSpendHdr">
-          <span class="cr-spend-lbl">Spends for the month</span>
+          <div class="cr-cardname">
+            <img class="cr-cardname-av" src="assets/space-usd-checking.webp" alt="">
+            <span class="cr-cardname-lbl" id="crCardName">Card name</span>
+          </div>
           <div class="cr-amount">
             <span class="cr-amount-sym">$</span><span class="cr-amount-int" id="crSpendInt">14,098</span><span class="cr-amount-dec" id="crSpendDec">.43</span>
           </div>
           <button class="cr-month-btn">
-            <span class="cr-month-lbl">May '26</span>
+            <span class="cr-month-lbl">Spends for May '26</span>
             <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:12px;color:var(--brand-primary)"></span>
           </button>
         </div>
@@ -579,11 +597,43 @@
         <!-- Card carousel: center card is prominent, side cards peek in -->
         <div class="cr-carousel-outer">
           <div class="cr-carousel" id="crCarousel">
-            <div class="cr-carousel-item">
-              <img src="assets/card-front.webp" alt="Banyan – Physical">
+            <div class="cr-carousel-item cr-flipcard">
+              <div class="cr-tilt">
+                <div class="cr-flip">
+                  <div class="cr-face cr-face-front">
+                    <img src="assets/card-front.webp" alt="Banyan – Physical">
+                    <div class="cr-card-frost"><span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:44px;color:rgba(255,255,255,0.92)"></span></div>
+                  </div>
+                  <div class="cr-face cr-face-back" aria-hidden="true">
+                    <span class="cr-back-brand">Banyan</span>
+                    <div class="cr-back-strip"></div>
+                    <div class="cr-back-cvv">
+                      <span class="cr-back-cvv-lbl">CVV</span>
+                      <span class="cr-back-cvv-val">312</span>
+                    </div>
+                    <div class="cr-back-note">Tap to hide · only you can see this</div>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div class="cr-carousel-item">
-              <img src="assets/card-back.webp" alt="Card 2 – Virtual">
+            <div class="cr-carousel-item cr-flipcard cr-flipcard-dark">
+              <div class="cr-tilt">
+                <div class="cr-flip">
+                  <div class="cr-face cr-face-front">
+                    <img src="assets/card-back.webp" alt="Card 2 – Virtual">
+                    <div class="cr-card-frost"><span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:44px;color:rgba(255,255,255,0.92)"></span></div>
+                  </div>
+                  <div class="cr-face cr-face-back" aria-hidden="true">
+                    <span class="cr-back-brand">Card 2</span>
+                    <div class="cr-back-strip"></div>
+                    <div class="cr-back-cvv">
+                      <span class="cr-back-cvv-lbl">CVV</span>
+                      <span class="cr-back-cvv-val">887</span>
+                    </div>
+                    <div class="cr-back-note">Tap to hide · only you can see this</div>
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="cr-carousel-item cr-carousel-add" onclick="openCcSheet()">
               <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:16px;color:var(--text-secondary)"></span>
@@ -592,29 +642,50 @@
           </div>
         </div>
 
-        <!-- Action buttons: Settings | Lock card | Change PIN -->
+        <!-- Action buttons: Controls | Freeze | More -->
         <div class="cr-actions" id="crActions">
-          <div class="cr-action-item" onclick="openCrSheet('crSettingsSheet')">
+          <div class="cr-action-item" onclick="openCardControls()">
             <button class="cr-action-btn">
-              <span class="ico ol" style="--ico:url('Icons/Gear.svg');--sz:16px;color:var(--text-primary)"></span>
+              <span class="ico ol" style="--ico:url('Icons/SlidersHorizontal.svg');--sz:16px;color:var(--text-primary)"></span>
             </button>
-            <span class="cr-action-lbl">Settings</span>
+            <span class="cr-action-lbl">Controls</span>
           </div>
           <div class="cr-action-item" id="crLockActionItem" onclick="openCrLockSheet()">
             <button class="cr-action-btn" id="crLockActionBtn">
-              <span class="ico ol" id="crLockActionIco" style="--ico:url('Icons/Lock.svg');--sz:16px;color:var(--text-primary)"></span>
+              <span class="ico ol" id="crLockActionIco" style="--ico:url('Icons/Snowflake.svg');--sz:16px;color:var(--text-primary)"></span>
             </button>
-            <span class="cr-action-lbl" id="crLockActionLbl">Lock card</span>
+            <span class="cr-action-lbl" id="crLockActionLbl">Freeze</span>
           </div>
           <div class="cr-action-item" onclick="openCrPinSheet()">
             <button class="cr-action-btn">
-              <span class="ico ol" style="--ico:url('Icons/DotsSix.svg');--sz:16px;color:var(--text-primary)"></span>
+              <span class="ico ol" style="--ico:url('Icons/DotsThree.svg');--sz:16px;color:var(--text-primary)"></span>
             </button>
-            <span class="cr-action-lbl">Change PIN</span>
+            <span class="cr-action-lbl">More</span>
           </div>
         </div>
 
       </div><!-- /.cr-hero -->
+
+      <!-- Spent today — daily limit gauge -->
+      <div class="cr-spent-card" id="crSpentCard">
+        <div class="cr-spent-main">
+          <div class="cr-spent-text">
+            <span class="cr-spent-lbl">Spent today</span>
+            <div class="cr-spent-amt">
+              <span class="cr-spent-int">$462.50</span>
+              <span class="cr-spent-max">/ $1,000</span>
+            </div>
+          </div>
+          <svg class="cr-spent-gauge" viewBox="0 0 64 40" aria-hidden="true">
+            <path class="cr-gauge-track" d="M6 36 A26 26 0 0 1 58 36" fill="none" stroke-width="7" stroke-linecap="round"/>
+            <path class="cr-gauge-fill" d="M6 36 A26 26 0 0 1 58 36" fill="none" stroke-width="7" stroke-linecap="round" pathLength="100"/>
+          </svg>
+        </div>
+        <div class="cr-spent-foot">
+          <span class="cr-spent-reset">Limit resets on Aug 30, 12:00 AM</span>
+          <button class="cr-spent-link" onclick="openCardControls()">Manage limits</button>
+        </div>
+      </div>
 
       <!-- Transactions section (rendered by JS) -->
       <div id="crTxSection"></div>
@@ -634,16 +705,13 @@
 
     <!-- Nav — back + centered title + phantom spacer -->
     <div class="ctpl-nav">
-      <button class="ad-nav-pill" onclick="goBackCreateCard()" id="ctplBackBtn">
-        <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
-      </button>
       <div class="ctpl-nav-title">
         <span class="ctpl-nav-lbl">Creating a virtual card</span>
-        <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
+        <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.40)"></span>
       </div>
-      <div class="ad-nav-pill" style="opacity:0;pointer-events:none" aria-hidden="true">
-        <span class="ico ol" style="--ico:url('Icons/X.svg');--sz:14px"></span>
-      </div>
+      <button class="ad-nav-pill" onclick="closeCreateCard()" id="ctplBackBtn" aria-label="Close">
+        <span class="ico ol" style="--ico:url('Icons/X.svg');--sz:14px;color:rgba(0,0,0,0.55)"></span>
+      </button>
     </div>
 
     <!-- Pinned mini header pill (appears once the featured card scrolls away) -->
@@ -751,15 +819,19 @@
       <div class="ctpl-setup-panel" id="ctplSetupPanel">
         <div class="ctpl-setup-scroll">
 
-          <!-- Featured template card -->
-          <div class="ctpl-setup-card" id="ctplSetupCard" style="background:linear-gradient(159deg,#00132b 0%,#005289 170%)">
-            <span class="ico ctpl-dcard-wm ctpl-setup-card-wm" id="ctplSetupCardWm" style="--ico:url('Icons/UsersThree.svg');--sz:144px"></span>
-            <div class="ctpl-setup-card-texts">
-              <div class="ctpl-setup-card-name" id="ctplSetupCardName">Household</div>
-              <div class="ctpl-setup-card-desc" id="ctplSetupCardDesc">Shared spending with clear limits.</div>
+          <!-- Featured template card with peeking neighbours (swipe/tap to switch) -->
+          <div class="ctps-cardrow" id="ctplCardRow">
+            <div class="ctps-peek ctps-peek-prev" id="ctplPeekPrev" onclick="ctplSwitchTemplate(-1)" aria-label="Previous template"></div>
+            <div class="ctps-peek ctps-peek-next" id="ctplPeekNext" onclick="ctplSwitchTemplate(1)" aria-label="Next template"></div>
+            <div class="ctpl-setup-card" id="ctplSetupCard" style="background:linear-gradient(159deg,#00132b 0%,#005289 170%)">
+              <span class="ico ctpl-dcard-wm ctpl-setup-card-wm" id="ctplSetupCardWm" style="--ico:url('Icons/UsersThree.svg');--sz:144px"></span>
+              <div class="ctpl-setup-card-texts">
+                <div class="ctpl-setup-card-name" id="ctplSetupCardName">Household</div>
+                <div class="ctpl-setup-card-desc" id="ctplSetupCardDesc">Shared spending with clear limits.</div>
+              </div>
+              <div class="ctpl-dcard-caps ctpl-setup-card-caps" id="ctplSetupCardCaps"><span>Shared use</span><span>Monthly limit</span></div>
+              <span class="ctpl-dcard-visa ctpl-setup-card-visa">VISA</span>
             </div>
-            <div class="ctpl-dcard-caps ctpl-setup-card-caps" id="ctplSetupCardCaps"><span>Shared use</span><span>Monthly limit</span></div>
-            <span class="ctpl-dcard-visa ctpl-setup-card-visa">VISA</span>
           </div>
 
           <!-- Centered title -->
@@ -806,17 +878,17 @@
               <div class="ctps-line-lbl">Total spend limit</div>
               <div class="ctps-box ctps-amount"><span class="ctps-amt-sym">$</span><input class="ctps-amount-inp" id="ctplAmount" type="number" min="0" autocomplete="off" placeholder="0"></div>
             </div>
-            <div class="ctps-line">
+            <div class="ctps-line" onclick="document.getElementById('ctplPerTxn').focus()">
               <div class="ctps-line-lbl">Per transaction limit</div>
-              <div class="ctps-box"><span class="ctps-box-val"><span class="ctps-amt-sym">$ </span><span id="ctplPerTxn">500.00</span></span></div>
+              <div class="ctps-box ctps-amount"><span class="ctps-amt-sym">$</span><input class="ctps-amount-inp" id="ctplPerTxn" type="number" min="0" autocomplete="off" placeholder="0"></div>
             </div>
-            <div class="ctps-line">
+            <div class="ctps-line" onclick="document.getElementById('ctplExpiryVal').focus()">
               <div class="ctps-line-lbl ctps-line-lbl--stack">
                 <span>Expiry date</span>
                 <span class="ctps-line-sub">The default is set to 3 months.</span>
               </div>
               <div class="ctps-box">
-                <span class="ctps-box-val" id="ctplExpiryVal">15/09/2026</span>
+                <input class="ctps-box-input" id="ctplExpiryVal" type="text" inputmode="numeric" autocomplete="off" placeholder="DD/MM/YYYY">
                 <span class="ico ol ctps-box-tic" style="--ico:url('Icons/Calendar.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
               </div>
             </div>
@@ -846,13 +918,19 @@
               </button>
             </div>
             <div class="ctpl2-manual-body" id="ctplManualBody">
-              <div class="ctpl2-toggle-row">
-                <span class="ctpl2-toggle-lbl">Number of payments</span>
-                <span class="ctpl2-ctrl-val" id="ctplTxns">Unlimited</span>
+              <div class="ctps-line ctps-line--tap" onclick="openCtplTxnsPicker()">
+                <div class="ctps-line-lbl">Transaction count</div>
+                <div class="ctps-box">
+                  <span class="ctps-box-val" id="ctplTxns">Unlimited</span>
+                  <span class="ico ol ctps-box-tic" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+                </div>
               </div>
-              <div class="ctpl2-toggle-row" id="ctplBlockedRow" style="display:none">
-                <span class="ctpl2-toggle-lbl">Blocked categories</span>
-                <span class="ctpl2-ctrl-val" id="ctplBlocked">—</span>
+              <div class="ctps-line ctps-line--tap" onclick="openCtplBlockedPicker()">
+                <div class="ctps-line-lbl">Blocked categories</div>
+                <div class="ctps-box">
+                  <span class="ctps-box-val" id="ctplBlocked">None</span>
+                  <span class="ico ol ctps-box-tic" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+                </div>
               </div>
             </div>
           </div>
@@ -875,6 +953,14 @@
     <div class="ctpl-acct-sheet-handle"></div>
     <div class="ctpl-acct-sheet-title">Limit type</div>
     <div class="ctpl-acct-list" id="ctplLimitList"></div>
+  </div>
+
+  <!-- Generic control picker sheet (number of payments, blocked categories) -->
+  <div class="ctpl-acct-overlay" id="ctplCtrlOverlay" onclick="closeCtplCtrlPicker()"></div>
+  <div class="ctpl-acct-sheet" id="ctplCtrlSheet">
+    <div class="ctpl-acct-sheet-handle"></div>
+    <div class="ctpl-acct-sheet-title" id="ctplCtrlTitle">Setting</div>
+    <div class="ctpl-acct-list" id="ctplCtrlList"></div>
   </div>
 
   <!-- Merchant picker sheet -->
@@ -2990,6 +3076,11 @@
       </div>
     </div>
 
+    <!-- Jump-to-latest — appears when scrolled up from the bottom -->
+    <button class="ag-jump" id="agentJump" aria-label="Scroll to latest" onclick="agentScrollToBottom()">
+      <span class="ico ol" style="--ico:url('Icons/ArrowDown.svg');--sz:16px;color:rgba(0,0,0,0.7)" aria-hidden="true"></span>
+    </button>
+
   </div>
 
   <!-- ══════════════════════════════════════════════════════
@@ -3513,6 +3604,108 @@
 
   </div><!-- /#crSettingsSheet -->
 
+  <!-- ══ Card controls (redesign — physical / virtual variants) ══ -->
+  <div class="cr-sheet cr-sheet--controls" onclick="event.stopPropagation()" id="crControlsSheet">
+    <div class="cr-sheet-handle"></div>
+    <div class="cr-sheet-hdr">
+      <span class="cr-sheet-title">Card controls</span>
+      <button class="cr-sheet-close" onclick="closeCrSheet('crControlsSheet')">
+        <span class="ico ol" style="--ico:url('Icons/X.svg');--sz:14px;color:rgba(0,0,0,0.55)"></span>
+      </button>
+    </div>
+
+    <div class="ccx-scroll">
+
+      <!-- ─ PHYSICAL: limit type + domestic/intl + channel limits ─ -->
+      <div id="ccxPhysical" style="display:none">
+        <div class="ctps-group">
+          <div class="ctps-line">
+            <div class="ctps-line-lbl">Limit type</div>
+            <div class="ctps-box"><span class="ctps-box-val">Monthly</span><span class="ico ol ctps-box-tic" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span></div>
+          </div>
+        </div>
+        <div class="ccx-seg" role="tablist">
+          <button class="ccx-seg-btn ccx-seg-on" onclick="ccxSeg(this,0)">Domestic</button>
+          <button class="ccx-seg-btn" onclick="ccxSeg(this,1)">International</button>
+        </div>
+        <div class="ctps-group ccx-chans">
+          <div class="ccx-chan ccx-on" onclick="ccxToggleChan(this)">
+            <span class="ccx-chan-check"></span>
+            <span class="ccx-chan-name">Online</span>
+            <span class="ccx-chan-amt"><span class="ccx-chan-amt-lbl">Limit</span><span class="ccx-amt-sym">$</span><input class="ccx-amt-inp" type="number" value="5000"></span>
+          </div>
+          <div class="ccx-chan ccx-on" onclick="ccxToggleChan(this)">
+            <span class="ccx-chan-check"></span>
+            <span class="ccx-chan-name">POS</span>
+            <span class="ccx-chan-amt"><span class="ccx-chan-amt-lbl">Limit</span><span class="ccx-amt-sym">$</span><input class="ccx-amt-inp" type="number" value="5000"></span>
+          </div>
+          <div class="ccx-chan ccx-on" onclick="ccxToggleChan(this)">
+            <span class="ccx-chan-check"></span>
+            <span class="ccx-chan-name">ATM withdrawal</span>
+            <span class="ccx-chan-amt"><span class="ccx-chan-amt-lbl">Limit</span><span class="ccx-amt-sym">$</span><input class="ccx-amt-inp" type="number" value="5000"></span>
+          </div>
+          <div class="ccx-chan ccx-on" onclick="ccxToggleChan(this)">
+            <span class="ccx-chan-check"></span>
+            <span class="ccx-chan-name">Contactless - Tap &amp; Pay</span>
+            <span class="ccx-chan-amt"><span class="ccx-chan-amt-lbl">Limit</span><span class="ccx-amt-sym">$</span><input class="ccx-amt-inp" type="number" value="5000"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ─ VIRTUAL: template + limits + toggles + other controls ─ -->
+      <div id="ccxVirtual" style="display:none">
+        <div class="ctps-group">
+          <div class="ctps-line">
+            <div class="ctps-line-lbl">Card template</div>
+            <div class="ctps-box"><span class="ctps-box-val">Favourite brand</span><span class="ico ol ctps-box-tic" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span></div>
+          </div>
+        </div>
+        <div class="ctps-group">
+          <div class="ctps-line">
+            <div class="ctps-line-lbl">Limit type</div>
+            <div class="ctps-box"><span class="ctps-box-val">Total amount</span><span class="ico ol ctps-box-tic" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span></div>
+          </div>
+          <div class="ctps-line" onclick="this.querySelector('input').focus()">
+            <div class="ctps-line-lbl">Total spend limit</div>
+            <div class="ctps-box ctps-amount"><span class="ctps-amt-sym">$</span><input class="ctps-amount-inp" type="number" value="500"></div>
+          </div>
+          <div class="ctps-line" onclick="this.querySelector('input').focus()">
+            <div class="ctps-line-lbl">Per transaction limit</div>
+            <div class="ctps-box ctps-amount"><span class="ctps-amt-sym">$</span><input class="ctps-amount-inp" type="number" value="500"></div>
+          </div>
+          <div class="ctps-line" onclick="this.querySelector('input').focus()">
+            <div class="ctps-line-lbl ctps-line-lbl--stack"><span>Expiry date</span><span class="ctps-line-sub">The default is set to 3 months.</span></div>
+            <div class="ctps-box"><input class="ctps-box-input" type="text" value="15/09/2026"><span class="ico ol ctps-box-tic" style="--ico:url('Icons/Calendar.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span></div>
+          </div>
+        </div>
+        <div class="ctps-group">
+          <div class="ctps-tgl-row">
+            <span class="ctps-tgl-lbl">International transactions</span>
+            <div class="ctpl-toggle ctpl-toggle--on" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
+          </div>
+          <div class="ctps-tgl-row">
+            <span class="ctps-tgl-lbl">Contactless transactions</span>
+            <div class="ctpl-toggle ctpl-toggle--on" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
+          </div>
+        </div>
+        <div class="ctps-group">
+          <div class="ctps-controls-row">
+            <div class="ctps-controls-text">
+              <div class="ctps-controls-title">Set up other controls</div>
+              <div class="ctps-controls-sub">Transaction count • No blocked categories</div>
+            </div>
+            <button class="ctps-ghost-btn"><span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span></button>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /.ccx-scroll -->
+
+    <div class="ccx-cta-wrap">
+      <button class="ccx-cta" onclick="ccxSave()">Save changes</button>
+    </div>
+  </div><!-- /#crControlsSheet -->
+
   <!-- ── Limit Setter Sub-Sheet ── -->
   <div class="cr-limit-sheet" id="crLimitSheet">
     <div class="cr-sheet-handle" style="margin:10px auto 0;width:36px;height:5px;background:var(--neutral-black-20);border-radius:999px;flex-shrink:0"></div>
@@ -3535,19 +3728,43 @@
     </div>
   </div><!-- /#crLimitSheet -->
 
-  <!-- ── Lock Card Sheet ── -->
+  <!-- ── Freeze Card — confirm sheet ── -->
   <div class="cr-sheet" onclick="event.stopPropagation()" id="crLockSheet">
     <div class="cr-sheet-handle"></div>
-    <div class="cr-lock-body">
-      <div class="cr-lock-icon-wrap" id="crLockIconWrap">
-        <span class="ico ol" id="crLockSheetIco" style="--ico:url('Icons/Lock.svg');--sz:28px;color:rgba(0,0,0,0.65)"></span>
+    <div class="cr-frz-body">
+      <div class="cr-frz-icon">
+        <span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:28px;color:rgba(0,0,0,0.7)"></span>
       </div>
-      <div class="cr-lock-title" id="crLockTitle">Lock this card?</div>
-      <div class="cr-lock-sub" id="crLockSub">Transactions will be declined until you unlock it. You can unlock at any time.</div>
-      <button class="cr-lock-btn cr-lock-btn-danger" id="crLockConfirmBtn" onclick="confirmLockCard()">Lock card</button>
-      <button class="cr-lock-btn cr-lock-btn-cancel" onclick="closeCrSheet('crLockSheet')">Cancel</button>
+      <div class="cr-frz-texts">
+        <div class="cr-frz-title">Freeze this card?</div>
+        <div class="cr-frz-sub">Transactions will be declined while the card is frozen. You can unfreeze it anytime.</div>
+      </div>
+      <div class="cr-frz-btns">
+        <button class="cr-frz-btn cr-frz-btn-secondary" onclick="closeCrSheet('crLockSheet')">Cancel</button>
+        <button class="cr-frz-btn cr-frz-btn-danger" onclick="confirmFreezeCard()">Freeze card</button>
+      </div>
     </div>
   </div><!-- /#crLockSheet -->
+
+  <!-- ── Card Frozen — confirmation sheet ── -->
+  <div class="cr-sheet" onclick="event.stopPropagation()" id="crFrozenSheet">
+    <div class="cr-sheet-handle"></div>
+    <div class="cr-frz-body">
+      <div class="cr-frozen-card">
+        <img src="assets/card-back.webp" alt="">
+        <div class="cr-frozen-frost"></div>
+        <span class="ico ol cr-frozen-snow" style="--ico:url('Icons/Snowflake.svg');--sz:64px;color:rgba(255,255,255,0.92)"></span>
+      </div>
+      <div class="cr-frz-texts">
+        <div class="cr-frz-title">Card frozen</div>
+        <div class="cr-frz-sub">New transactions will be declined until you unfreeze this card.</div>
+      </div>
+      <div class="cr-frz-btns cr-frz-btns-row">
+        <button class="cr-frz-btn cr-frz-btn-secondary" onclick="unfreezeCard()">Unfreeze</button>
+        <button class="cr-frz-btn cr-frz-btn-primary" onclick="closeCrSheet('crFrozenSheet')">Done</button>
+      </div>
+    </div>
+  </div><!-- /#crFrozenSheet -->
 
   <!-- ── Change PIN Sheet ── -->
   <div class="cr-sheet" onclick="event.stopPropagation()" id="crPinSheet">
@@ -3700,6 +3917,6 @@
 
 </div>
 
-  <script src="app.js?v=92"></script>
+  <script src="app.js?v=107"></script>
 </body>
 </html>
