@@ -5246,7 +5246,7 @@
     .home-notif-row { display: flex; flex-direction: column; gap: 8px; }
     .home-ncard {
       display: flex; flex-direction: column; gap: 16px;
-      padding: 16px 120px 16px 16px;
+      padding: 20px 120px 20px 20px;
       border-radius: 20px; position: relative; overflow: hidden;
     }
     .home-ncard--dark { background: #000; border: 1px solid #000; }
@@ -5256,12 +5256,24 @@
         rgba(255,255,255,0.8);
       border: 1px solid #fff;
     }
+    /* Netflix — deep maroon · Short of balance — warm brown */
+    .home-ncard--netflix {
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 100%), #53040b;
+      border: 1px solid #53040b;
+    }
+    .home-ncard--short {
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%), #a26b3f;
+      border: 1px solid #a67119;
+    }
     .home-ncard-texts { position: relative; z-index: 1; display: flex; flex-direction: column; gap: 4px; }
     .home-ncard-title {
       font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; line-height: 20px;
       color: rgba(0,0,0,0.8);
     }
-    .home-ncard--dark .home-ncard-title { color: rgba(255,255,255,0.8); }
+    .home-ncard-title--lg { font-size: 20px; line-height: 25px; letter-spacing: -1px; }
+    .home-ncard-title--light { color: #fff; }
+    .home-ncard--dark .home-ncard-title,
+    .home-ncard--netflix .home-ncard-title { color: rgba(255,255,255,0.8); }
     .home-ncard-red { color: #c82c2c; }
     .home-ncard-sub {
       font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400; line-height: 18px;
@@ -5287,6 +5299,67 @@
       position: absolute; right: -51px; bottom: -43px;
       width: 171px; height: 171px; object-fit: cover; pointer-events: none; z-index: 0;
     }
+
+    /* ── Attention: swipe-down to expand into a compact list ── */
+    .home-notif { position: relative; }
+    /* Stacked deck: front card full, others tucked behind peeking from below.
+       JS sets per-card translateY/scale; height transitions on expand/collapse. */
+    .home-notif-deck {
+      position: relative; width: 100%;
+      transition: height 0.42s var(--ease-spring);
+    }
+    .home-notif-deck > .home-ncard2 {
+      position: absolute; left: 0; right: 0; top: 0;
+      transform-origin: center top;
+      transition: transform 0.42s var(--ease-spring), opacity 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .home-notif:not(.expanded) .home-notif-deck > .home-ncard2:not(:first-child) {
+      box-shadow: 0 -2px 12px rgba(0,0,0,0.12);
+    }
+    .home-notif-toggle-wrap { display: flex; justify-content: center; margin-top: 12px; }
+    .home-notif-toggle {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 9px 18px; border: none; border-radius: 999px; cursor: pointer;
+      background: var(--surface-secondary, #fff);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--text-primary, #1a1a1a);
+      transition: transform 0.16s var(--ease-out), box-shadow 0.16s var(--ease-out);
+    }
+    .home-notif-toggle-caret {
+      width: 8px; height: 8px; flex-shrink: 0;
+      border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+      transform: translateY(-1px) rotate(45deg);
+      transition: transform 0.3s var(--ease-spring);
+    }
+    .home-notif.expanded .home-notif-toggle-caret { transform: translateY(2px) rotate(225deg); }
+    @media (hover: hover) and (pointer: fine) {
+      .home-notif-toggle:hover { box-shadow: 0 4px 10px rgba(0,0,0,0.12); }
+    }
+    .home-notif-toggle:active { transform: scale(0.97); }
+    @media (prefers-reduced-motion: reduce) {
+      .home-notif-deck, .home-notif-deck > .home-ncard2, .home-notif-toggle-caret { transition: opacity 0.18s ease; }
+    }
+
+    /* Compact attention card (expanded list) */
+    .home-ncard2 {
+      display: flex; align-items: center; gap: 16px;
+      min-height: 100px; padding: 20px; box-sizing: border-box;
+      border-radius: 20px; overflow: hidden; position: relative;
+    }
+    .home-ncard2--netflix { background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.2) 100%), #53040b; border: 1px solid #53040b; }
+    .home-ncard2--short   { background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%), #a26b3f; border: 1px solid #a67119; }
+    .home-ncard2--ananya  { background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 100%), #533fa6; border: 1px solid #2919a6; }
+    .home-ncard2-ic { width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+    .home-ncard2-ic img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    .home-ncard2-ic--av { border-radius: 9999px; overflow: hidden; background: rgba(255,255,255,0.12); }
+    .home-ncard2-ic--av img { object-fit: cover; }
+    .home-ncard2-texts { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .home-ncard2-title { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; line-height: 20px; color: #fff; }
+    .home-ncard2--netflix .home-ncard2-title { color: rgba(255,255,255,0.8); }
+    .home-ncard2-sub { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(255,255,255,0.6); }
+    .home-ncard2 .home-ncard-btn { align-self: center; flex-shrink: 0; }
 
     /* ── Since-your-last-visit summary ── */
     .home-summary {
@@ -5417,6 +5490,7 @@
       background: rgba(0,0,0,0.03); border: none; border-bottom: 1px solid rgba(0,0,0,0.05);
       border-radius: 9999px; cursor: pointer; white-space: nowrap;
     }
+    .home-acctsum-pill--solid { background: #fff; border-bottom: 1px solid #fff; }
     .home-acctsum-ic {
       width: 20px; height: 20px; flex-shrink: 0; border-radius: 15px; overflow: hidden;
       background: rgba(255,255,255,0.8); border-bottom: 0.5px solid rgba(0,0,0,0.1);
@@ -5424,6 +5498,117 @@
     .home-acctsum-ic img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .home-acctsum-nm { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(0,0,0,0.6); }
     .home-acctsum-am { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600; line-height: 18px; color: rgba(0,0,0,0.8); }
+
+    /* ── Today's Brief ── */
+    .home-brief {
+      position: relative; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; gap: 16px;
+      padding: 32px 8px 8px; border-radius: 24px;
+      background-image: url('assets/home-brief-bg.webp');
+      background-size: cover; background-position: center;
+    }
+    .home-brief-head {
+      display: flex; align-items: center; justify-content: space-between;
+      width: 100%; padding: 0 16px; box-sizing: border-box;
+    }
+    .home-brief-title { font-family: 'Geist', sans-serif; font-size: 24px; font-weight: 600; letter-spacing: -1.2px; color: rgba(0,0,0,0.8); }
+    .home-brief-by { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px; color: rgba(0,0,0,0.6); }
+    .home-brief-card {
+      width: 100%; box-sizing: border-box;
+      display: flex; flex-direction: column; align-items: center; gap: 24px;
+      padding: 20px; border-radius: 20px;
+      background: rgba(255,255,255,0.6); border-top: 1px solid rgba(255,255,255,0.8);
+    }
+    .home-brief-text {
+      font-family: 'Bradley Hand', 'Segoe Print', 'Comic Sans MS', cursive;
+      font-size: 17px; line-height: 25px; font-weight: 600;
+      color: rgba(0,0,0,0.6); text-align: center;
+    }
+    .home-brief-btn {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      height: 44px; padding: 0 16px;
+      background: #f1f1f1; border: none; border-bottom: 1px solid #fff;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
+      border-radius: 9999px; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600; line-height: 18px;
+      color: rgba(0,0,0,0.8); white-space: nowrap;
+    }
+
+    /* ── What happened recently ── */
+    .home-recent {
+      display: flex; flex-direction: column; gap: 16px;
+      padding: 20px 4px 4px;
+      background: rgba(255,255,255,0.6); border: 1px solid #fff; border-radius: 20px;
+    }
+    .home-recent-head {
+      padding: 0 16px;
+      font-family: 'Geist', sans-serif; font-size: 20px; font-weight: 600;
+      line-height: 25px; letter-spacing: -1px; color: rgba(0,0,0,0.8);
+    }
+    .home-recent-list {
+      display: flex; flex-direction: column; gap: 8px;
+      padding: 8px 0; background: #fff; border: 1px solid #fff; border-radius: 20px;
+    }
+    .home-recent-daydiv { display: flex; align-items: center; gap: 8px; padding: 8px 16px; }
+    .home-recent-daydiv span {
+      font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; line-height: 13px;
+      letter-spacing: 1px; text-transform: uppercase; color: rgba(0,0,0,0.6); white-space: nowrap;
+    }
+    .home-recent-line { flex: 1; height: 1px; background: rgba(0,0,0,0.10); }
+    .home-recent-row { display: flex; align-items: center; gap: 16px; padding: 8px 16px; }
+    .home-recent-av {
+      position: relative; flex-shrink: 0; width: 40px; height: 40px;
+      border-radius: 12px; padding: 2px; box-sizing: border-box;
+      background: rgba(0,0,0,0.1); border-bottom: 1px solid rgba(0,0,0,0.2);
+    }
+    .home-recent-av > img {
+      position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%);
+      width: 32px; height: 32px; object-fit: cover;
+    }
+    .home-recent-badge {
+      position: absolute; left: 22px; top: 22px;
+      display: flex; align-items: center; padding: 4px; border-radius: 9999px;
+      background: #fff; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+    }
+    .home-recent-row--dim .home-recent-av { opacity: 0.4; }
+    .home-recent-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+    .home-recent-name {
+      display: flex; align-items: center; gap: 8px;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px;
+      color: rgba(0,0,0,0.8);
+    }
+    .home-recent-row--dim .home-recent-name { color: rgba(0,0,0,0.4); }
+    .home-recent-status {
+      font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; line-height: 13px;
+      letter-spacing: 1px; text-transform: uppercase;
+    }
+    .home-recent-status--err { color: #c82c2c; }
+    .home-recent-status--warn { color: #c17c14; }
+    .home-recent-amt {
+      flex-shrink: 0; display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px;
+      color: rgba(0,0,0,0.8); white-space: nowrap; text-align: right;
+    }
+    .home-recent-row--dim .home-recent-amt { color: rgba(0,0,0,0.4); }
+    .home-recent-inr { font-size: 10px; font-weight: 500; color: rgba(0,0,0,0.4); }
+    .home-recent-cta-wrap { padding: 12px; }
+    .home-recent-cta {
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+      width: 100%; height: 44px;
+      background: #f1f1f1; border: none; border-bottom: 1px solid #fff;
+      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+      box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
+      border-radius: 9999px; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600; line-height: 18px;
+      color: rgba(0,0,0,0.8);
+    }
+    .home-brief-btn:active, .home-recent-cta:active {
+      transform: scale(0.98); transition: transform 160ms var(--ease-out);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .home-brief-btn:active, .home-recent-cta:active { transform: none; }
+    }
 
     .home-ncard-btn:active, .home-summary-caret:active, .home-rec-card:active,
     .home-rec-ctrl:active, .home-acctsum-pill:active {
@@ -8423,7 +8608,7 @@
     /* ══════════════════════════════════════
        CREATE CARD — Template selection
     ══════════════════════════════════════ */
-    #create-card { background: #f0f0f0; }
+    #create-card { background: #fff; }
 
     /* Nav bar */
     .ctpl-nav {
@@ -8445,28 +8630,54 @@
       white-space: nowrap;
     }
 
-    /* Card peeking above sheet */
-    .ctpl-card-peek {
-      position: absolute;
-      top: 117px;
-      left: 50%; transform: translateX(-50%);
-      width: 285px; height: 115px;
-      border-radius: 24px 24px 0 0;
-      overflow: hidden;
-      box-shadow: 0 -16px 40px rgba(0,0,0,0.10), 0 24px 48px rgba(0,0,0,0.24);
-      z-index: 1;
+    /* Create-with-AI card */
+    .ctpl-ai {
+      position: absolute; top: 104px; left: 16px; right: 16px; z-index: 3;
+      border-radius: 24px; padding: 20px 8px 8px; overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: linear-gradient(180deg, #20371a 0%, #0b1a09 100%);
     }
-    .ctpl-card-peek-img {
-      width: 100%; height: 180px;
-      object-fit: cover; object-position: center top;
+    .ctpl-ai-glow {
+      position: absolute; top: -50px; left: 50%; transform: translateX(-50%);
+      width: 300px; height: 170px; border-radius: 50%; pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(79,166,44,0.55), transparent 70%);
+      filter: blur(28px); opacity: 0.55;
+    }
+    .ctpl-ai-title {
+      position: relative; z-index: 1;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
+      color: rgba(255,255,255,0.8);
+    }
+    .ctpl-ai-input {
+      position: relative; z-index: 1; align-self: stretch;
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 12px 12px 20px; border-radius: 16px; cursor: pointer;
+      background: rgba(255,255,255,0.82);
+      backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+      border: 0.5px solid #fff;
+      transition: transform 140ms var(--ease-out);
+    }
+    .ctpl-ai-input:active { transform: scale(0.99); }
+    .ctpl-ai-orb {
+      width: 34px; height: 34px; border-radius: 999px; overflow: hidden; flex-shrink: 0;
+      background: #4fa62c; display: flex; align-items: center; justify-content: center;
+    }
+    .ctpl-ai-orb video {
+      width: 180%; height: 180%; object-fit: cover; flex-shrink: 0;
+      filter: saturate(0.25) sepia(0.85) hue-rotate(88deg) saturate(2.2) brightness(0.82);
+    }
+    .ctpl-ai-ph {
+      flex: 1; min-width: 0;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400;
+      color: rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
 
     /* Bottom sheet */
     .ctpl-sheet {
       position: absolute;
-      top: 232px; left: 0; right: 0; bottom: 0;
+      top: 240px; left: 0; right: 0; bottom: 0;
       border-radius: 24px 24px 0 0;
-      background: rgba(255,255,255,0.98);
+      background: #f4f3f1;
       border-top: 0.5px solid rgba(255,255,255,0.6);
       box-shadow: 0 -1px 0 rgba(0,0,0,0.06);
       z-index: 2;
@@ -8474,9 +8685,8 @@
       overflow: hidden;
     }
     .ctpl-sheet-row {
-      display: flex; align-items: center;
-      justify-content: space-between;
-      padding: 32px 32px 0;
+      display: flex; align-items: center; justify-content: center;
+      padding: 28px 32px 4px;
       flex-shrink: 0;
     }
     .ctpl-sheet-lbl {
@@ -8484,11 +8694,60 @@
       font-size: 15px; font-weight: 600;
       color: rgba(0,0,0,0.8);
     }
-    .ctpl-sheet-step {
-      font-family: 'Geist', sans-serif;
-      font-size: 17px; font-weight: 600;
-      color: rgba(0,0,0,0.4);
+    .ctpl-sheet-step { display: none; }
+
+    /* Template deck — vertical 3D card carousel */
+    .ctpl-deck-scroll { flex: 1; overflow: hidden; padding: 0 16px; display: flex; align-items: center; justify-content: center; touch-action: none; }
+    .ctpl-deck { position: relative; width: 100%; height: 560px; perspective: 1200px; margin-top: -16px; }
+    .ctpl-dcard {
+      position: absolute; top: 50%; left: 50%; width: 100%; height: 180px;
+      border-radius: 16px; overflow: hidden; cursor: grab; box-sizing: border-box;
+      border-top: 0.5px solid rgba(255,255,255,0.18);
+      box-shadow: 0 16px 32px rgba(0,0,0,0.22);
+      transform-style: preserve-3d;
+      transform: translate(-50%,-50%);
+      transition: transform 0.55s cubic-bezier(0.16,1,0.3,1), opacity 0.42s ease, box-shadow 0.42s ease, filter 0.42s ease;
+      -webkit-tap-highlight-color: transparent;
     }
+    .ctpl-dcard:active { cursor: grabbing; }
+    /* Non-current cards stay solid but darker (de-emphasised, not faded) */
+    .ctpl-dcard:not(.is-current) { filter: grayscale(1) brightness(0.78); }
+    /* Previous cards tucked below show only their name, anchored to the bottom peek */
+    .ctpl-dcard.ctpl-edge .ctpl-dcard-desc,
+    .ctpl-dcard.ctpl-edge .ctpl-dcard-caps,
+    .ctpl-dcard.ctpl-edge .ctpl-dcard-visa { opacity: 0; transition: opacity 0.25s ease; }
+    .ctpl-dcard.ctpl-edge .ctpl-dcard-name { top: auto; bottom: 14px; }
+    .ctpl-dcard.is-current { filter: none; box-shadow: 0 28px 56px rgba(0,0,0,0.36); }
+    .ctpl-dcard-wm { position: absolute; right: -6px; bottom: 30px; color: rgba(255,255,255,0.13) !important; pointer-events: none; }
+    .ctpl-dcard-name { position: absolute; left: 16px; top: 14px; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.82); transition: font-size 200ms ease, color 200ms ease; }
+    .ctpl-dcard.is-current .ctpl-dcard-name { font-size: 17px; color: #fff; }
+    .ctpl-dcard-desc { position: absolute; left: 16px; top: 48px; width: 160px; font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 400; line-height: 16px; color: rgba(255,255,255,0.45); opacity: 0; transition: opacity 200ms ease; }
+    .ctpl-dcard.is-current .ctpl-dcard-desc { opacity: 1; }
+    .ctpl-dcard-caps { position: absolute; left: 16px; bottom: 16px; display: flex; flex-direction: column; gap: 8px; font-family: 'Geist', sans-serif; font-size: 8px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,0.6); }
+    .ctpl-dcard-visa { position: absolute; right: 16px; bottom: 18px; font-family: 'Geist', sans-serif; font-style: italic; font-weight: 800; font-size: 16px; letter-spacing: -0.5px; color: #fff; }
+    @media (prefers-reduced-motion: reduce) { .ctpl-dcard { transition: opacity 0.2s ease; } }
+
+    /* Continue CTA pinned at the bottom of the picker */
+    .ctpl-picker-panel { display: flex; flex-direction: column; min-height: 0; }
+    .ctpl-deck-scroll { padding-bottom: 72px; }
+    .ctpl-continue-wrap {
+      position: absolute; left: 0; right: 0; bottom: 0;
+      padding: 12px 16px calc(env(safe-area-inset-bottom, 0px) + 20px);
+      background: linear-gradient(180deg, rgba(244,243,241,0) 0%, #f4f3f1 38%);
+      pointer-events: none; z-index: 20;
+    }
+    .ctpl-continue {
+      pointer-events: auto; width: 100%; min-height: 52px;
+      border: none; border-radius: 16px; cursor: pointer;
+      background: var(--brand-primary); color: #fff;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.1px;
+      box-shadow: 0 8px 24px rgba(70,136,43,0.32);
+      transition: transform 140ms var(--ease-out), background 150ms ease, opacity 180ms ease;
+    }
+    .ctpl-continue span { font-weight: 700; }
+    .ctpl-continue:active { transform: scale(0.98); }
+    @media (hover: hover) and (pointer: fine) { .ctpl-continue:hover { background: #3a7020; } }
+    @media (prefers-reduced-motion: reduce) { .ctpl-continue:active { transform: none; } }
 
     /* Scrollable grid area */
     .ctpl-grid-scroll {
@@ -8590,21 +8849,54 @@
     }
     .ctpl-setup-panel {
       position: absolute; inset: 0; top: 68px; /* below the sheet-row header */
+      padding-top: 112px; box-sizing: border-box; /* non-scrolling clearance for the nav */
       background: rgba(255,255,255,0.98);
-      opacity: 0; transform: translateX(28px);
+      opacity: 0; transform: none;
       pointer-events: none;
     }
+    .ctpl-sheet.ctpl-step2 { top: 0; border-radius: 0; }
     .ctpl-sheet.ctpl-step2 .ctpl-setup-panel { top: 0; }
     .ctpl-setup-panel.ctpl-active {
-      opacity: 1; transform: translateX(0);
+      opacity: 1; transform: none;
       pointer-events: auto;
     }
+    /* Continue → the selected card rises & settles at top, the form opens from below */
+    .ctpl-setup-panel.ctpl-active .ctpl-setup-card { animation: ctpl-settle 0.52s var(--ease-out) both; }
+    .ctpl-setup-panel.ctpl-active .ctpl-setup-title { animation: ctpl-rise 0.48s var(--ease-out) 0.10s both; }
+    .ctpl-setup-panel.ctpl-active .ctps-group { animation: ctpl-rise 0.50s var(--ease-out) 0.16s both; }
+    .ctpl-setup-panel.ctpl-active .ctps-group:nth-of-type(2) { animation-delay: 0.21s; }
+    .ctpl-setup-panel.ctpl-active .ctps-group:nth-of-type(3) { animation-delay: 0.26s; }
+    .ctpl-setup-panel.ctpl-active .ctpl2-cta-wrap { animation: ctpl-rise 0.48s var(--ease-out) 0.28s both; }
+    @keyframes ctpl-settle {
+      0%   { opacity: 0; transform: translateY(44px) scale(0.97); }
+      60%  { opacity: 1; transform: translateY(-6px) scale(1.005); }
+      100% { transform: translateY(0) scale(1); }
+    }
+    @keyframes ctpl-rise {
+      0%   { opacity: 0; transform: translateY(40px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
     .ctpl-picker-panel.ctpl-exit {
-      opacity: 0; transform: translateX(-28px);
+      opacity: 0; transform: scale(0.98);
       pointer-events: none;
     }
+    /* Continue: the non-selected cards & the CTA fade out; the selected card is
+       handed off (FLIP) to the setup featured card, which flies up to the top. */
+    .ctpl-picker-panel.ctpl-continuing .ctpl-dcard:not(.is-current) { opacity: 0 !important; transition: opacity 0.2s ease; }
+    .ctpl-picker-panel.ctpl-continuing .ctpl-continue-wrap { opacity: 0; transition: opacity 0.2s ease; }
+    /* When the card is FLIP-animated in, suppress the default settle pop */
+    .ctpl-setup-panel.ctpl-flip .ctpl-setup-card { animation: none !important; }
+    /* After FLIP lands, permanently lock out the settle animation */
+    .ctpl-setup-panel.ctpl-did-flip .ctpl-setup-card { animation: none !important; }
     @media (prefers-reduced-motion: reduce) {
       .ctpl-picker-panel, .ctpl-setup-panel { transition: opacity 0.15s; transform: none !important; }
+      .ctpl-setup-panel.ctpl-active .ctpl-setup-card,
+      .ctpl-setup-panel.ctpl-active .ctpl-setup-title,
+      .ctpl-setup-panel.ctpl-active .ctps-group,
+      .ctpl-setup-panel.ctpl-active .ctpl2-cta-wrap { animation: none; }
+      .ctpl-setup-card, .ctpl-setup-card-texts,
+      .ctpl-setup-card-caps, .ctpl-setup-card-visa,
+      .ctpl-setup-card-wm, .ctpl-setup-card-desc { transition: none; }
     }
 
     /* Card tint overlay */
@@ -8622,6 +8914,74 @@
       padding: 0;
     }
     .ctpl-setup-scroll::-webkit-scrollbar { display: none; }
+
+    /* ── Redesigned setup form (Figma 3656-5928) ── */
+    .ctpl-setup-scroll { padding: 0 16px; }
+    .ctpl-setup-card {
+      position: sticky; top: 0; z-index: 6;
+      width: 80%; height: 144px; flex-shrink: 0;
+      margin: 0 auto 16px;
+      border-radius: 14px; overflow: hidden;
+      border-top: 0.5px solid rgba(255,255,255,0.18);
+      box-shadow: 0 20px 44px rgba(0,0,0,0.32);
+      transition: width 0.26s var(--ease-out), height 0.26s var(--ease-out),
+                  border-radius 0.26s var(--ease-out), box-shadow 0.26s var(--ease-out);
+    }
+    /* Collapsed pinned state: shorter, full-width header showing just the name */
+    .ctpl-setup-card.is-compact {
+      width: 100%; height: 56px; border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    .ctpl-setup-card-caps, .ctpl-setup-card-visa,
+    .ctpl-setup-card-wm, .ctpl-setup-card-desc { transition: opacity 0.18s var(--ease-out); }
+    .ctpl-setup-card.is-compact .ctpl-setup-card-caps,
+    .ctpl-setup-card.is-compact .ctpl-setup-card-visa,
+    .ctpl-setup-card.is-compact .ctpl-setup-card-wm,
+    .ctpl-setup-card.is-compact .ctpl-setup-card-desc { opacity: 0; }
+    .ctpl-setup-card.is-compact .ctpl-setup-card-texts { top: 50%; transform: translateY(-50%); }
+    .ctps-collapse-spacer { transition: height 0.26s var(--ease-out); }
+    .ctpl-setup-card-wm { top: -28px; bottom: auto; right: 0; }
+    .ctpl-setup-card-texts { position: absolute; left: 14px; top: 14px; width: 140px; transition: top 0.26s var(--ease-out), transform 0.26s var(--ease-out); }
+    .ctpl-setup-card-name { font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; line-height: 18px; color: #fff; }
+    .ctpl-setup-card-desc { font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 400; line-height: 14px; color: rgba(255,255,255,0.45); margin-top: 3px; }
+    .ctpl-setup-card-caps { position: absolute; left: 14px; bottom: 13px; }
+    .ctpl-setup-card-visa { right: 14px; bottom: 13px; }
+
+    .ctpl-setup-title { display: none; }
+    .ctpl-setup-title-name { display: none; }
+    .ctpl-setup-title-sub { display: none; }
+
+    /* Grouped settings list: one subtle card per group, flat rows divided by hairlines (no nested boxes) */
+    .ctps-group { background: rgba(0,0,0,0.03); border-radius: 16px; overflow: hidden; margin-bottom: 12px; }
+    .ctps-field {
+      position: relative; background: transparent; border: none; border-radius: 0;
+      padding: 13px 16px; min-height: 56px; box-sizing: border-box;
+      display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; cursor: pointer;
+    }
+    .ctps-field--tap { padding-right: 40px; }
+    .ctps-field-lbl { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px; color: rgba(0,0,0,0.85); white-space: nowrap; }
+    .ctps-field-val { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; line-height: 20px; color: rgba(0,0,0,0.6); text-align: right; margin-left: auto; }
+    .ctps-field-acct { display: flex; align-items: center; gap: 8px; margin-left: auto; min-width: 0; }
+    .ctps-field-acct span { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ctps-acct-ic { width: 18px; height: 18px; border-radius: 13px; object-fit: cover; flex-shrink: 0; border-bottom: 0.5px solid rgba(0,0,0,0.1); }
+    .ctps-caret { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); }
+    .ctps-field-input { border: none; background: transparent; outline: none; flex: 1; min-width: 0; padding: 0; text-align: right; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); -webkit-tap-highlight-color: transparent; }
+    .ctps-field-input::placeholder { color: rgba(0,0,0,0.35); }
+    .ctps-amount { display: flex; align-items: baseline; margin-left: auto; }
+    .ctps-amt-sym { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.6); }
+    .ctps-amount-inp { border: none; background: transparent; outline: none; width: 80px; padding: 0; text-align: right; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); }
+    .ctps-helper { padding: 11px 16px; font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 400; line-height: 16px; color: rgba(0,0,0,0.6); }
+    .ctps-tgl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; min-height: 56px; }
+    .ctps-tgl-lbl { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); }
+    .ctps-controls-row { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; min-height: 56px; cursor: pointer; }
+    .ctps-controls-title { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 400; color: rgba(0,0,0,0.85); }
+    .ctps-controls-sub { font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 400; color: rgba(0,0,0,0.5); margin-top: 2px; }
+    /* hairline dividers between sibling rows within a group */
+    .ctps-field, .ctps-tgl-row, .ctps-helper, .ctps-controls-row { border-top: 0.5px solid rgba(0,0,0,0.06); }
+    .ctps-group > :first-child { border-top: none; }
+    .ctps-ghost-btn { width: 34px; height: 34px; border: none; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .ctps-group .ctpl2-manual-body { background: transparent; }
+    .ctps-group .ctpl2-manual-body.open { max-height: 200px; margin-top: 8px; }
 
     /* Template header */
     /* Hide sheet-row header strip on step 2 */
@@ -8787,9 +9147,9 @@
       max-height: 0; overflow: hidden;
       transition: max-height 0.25s var(--ease-drawer);
     }
-    .ctpl2-manual-body.open { max-height: 200px; }
+    .ctpl2-manual-body.open { max-height: 460px; overflow-y: auto; }
     .ctpl2-toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
       padding: 14px 20px;
       border-top: 0.5px solid rgba(0,0,0,0.06);
     }
@@ -8798,10 +9158,16 @@
       font-size: 15px; font-weight: 400;
       color: rgba(0,0,0,0.8);
     }
+    .ctpl2-ctrl-val {
+      font-family: 'Geist', sans-serif;
+      font-size: 15px; font-weight: 500;
+      color: rgba(0,0,0,0.55); text-align: right;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
 
     /* Floating pill CTA */
     .ctpl2-cta-wrap {
-      position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+      position: absolute; bottom: 20px; left: 0; right: 0; margin: 0 auto;
       width: calc(100% - 40px); max-width: 353px;
       z-index: 10;
     }

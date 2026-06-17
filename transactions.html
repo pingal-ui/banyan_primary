@@ -6,7 +6,7 @@
   <title>Banyan – Transactions</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=104">
+  <link rel="stylesheet" href="styles.css?v=138">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -97,52 +97,21 @@
       <!-- ── Main content ── -->
       <div class="home-main">
 
-        <!-- ── Things that need attention ── -->
-        <section class="home-sec">
-          <div class="home-eyebrow">There are things that need your attention</div>
-
-          <div class="home-notif-row">
-            <!-- Netflix price increase -->
-            <div class="home-ncard home-ncard--dark">
-              <div class="home-ncard-texts">
-                <p class="home-ncard-title"><span>Netflix went up by </span><span class="home-ncard-red">$2.00</span></p>
-                <p class="home-ncard-sub home-ncard-sub--light">Your charge is now $17.99 for April, up from $15.99.</p>
-              </div>
-              <button class="home-ncard-btn">
-                <span class="ico ol" style="--ico:url('Icons/Leaf.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
-                <span>Review with AI</span>
-              </button>
-              <img class="home-ncard-netflix" src="assets/home-netflix-symbol.webp" alt="">
-            </div>
-            <!-- Running short of balance -->
-            <div class="home-ncard home-ncard--glass">
-              <div class="home-ncard-texts">
-                <p class="home-ncard-title">Running short of balance</p>
-                <p class="home-ncard-sub">$356 short to pay Maya Sarini on May 25.</p>
-              </div>
-              <button class="home-ncard-btn"><span>Add balance</span></button>
-              <img class="home-ncard-coins" src="assets/home-coins.webp" alt="">
-            </div>
+        <!-- ── Today's Brief ── -->
+        <div class="home-brief">
+          <div class="home-brief-head">
+            <span class="home-brief-title">Today's Brief</span>
+            <span class="home-brief-by">curated by Banyan AI</span>
           </div>
-
-          <!-- Since your last visit summary -->
-          <div class="home-summary">
-            <div class="home-summary-top">
-              <div class="home-summary-info">
-                <span class="home-summary-title">Since your last visit</span>
-                <span class="home-summary-sub">4 new payments <i>·</i> $2,400 spent <i>·</i> 1 failed</span>
-              </div>
-              <button class="home-summary-caret" onclick="openHomeAgent()">
-                <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:14px;color:rgba(0,0,0,0.80)"></span>
-              </button>
-            </div>
+          <div class="home-brief-card">
+            <p class="home-brief-text">You've got $15,600 in the bank. The exchange rate today is $1=₹94.70. You'll be $850 short when rent hits on the 26th.</p>
           </div>
-        </section>
+        </div>
 
-        <!-- ── Recommendations ── -->
+        <!-- ── Pending actions ── -->
         <section class="home-sec">
           <div class="home-sec-head">
-            <span class="home-eyebrow">Based on your history</span>
+            <span class="home-eyebrow">You have actions pending on you</span>
             <div class="home-rec-controls">
               <button class="home-rec-ctrl"><span class="ico" style="--ico:url('Icons/CaretCircleLeft.svg');--sz:20px;color:rgba(0,0,0,0.40)"></span></button>
               <button class="home-rec-ctrl"><span class="ico" style="--ico:url('Icons/CaretCircleRight.svg');--sz:20px;color:rgba(0,0,0,0.40)"></span></button>
@@ -170,33 +139,165 @@
           </div>
         </section>
 
+        <!-- ── Things that need attention ── -->
+        <section class="home-sec">
+          <div class="home-eyebrow">There are things that need your attention</div>
+          <div class="home-notif" id="homeNotif">
+            <div class="home-notif-deck" id="homeNotifDeck">
+              <div class="home-ncard2 home-ncard2--netflix">
+                <div class="home-ncard2-ic"><img src="assets/home-netflix-symbol.webp" alt=""></div>
+                <div class="home-ncard2-texts">
+                  <p class="home-ncard2-title"><span>Netflix went up by </span><span class="home-ncard-red">$2.00</span></p>
+                  <p class="home-ncard2-sub">Your charge is now $17.99 for April, up from $15.99.</p>
+                </div>
+                <button class="home-ncard-btn">
+                  <span class="ico ol" style="--ico:url('Icons/Leaf.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
+                  <span>Review</span>
+                </button>
+              </div>
+              <div class="home-ncard2 home-ncard2--short">
+                <div class="home-ncard2-ic"><img src="assets/home-coins.webp" alt=""></div>
+                <div class="home-ncard2-texts">
+                  <p class="home-ncard2-title">Running short of balance</p>
+                  <p class="home-ncard2-sub">$356 short to pay Maya Sarini on May 25.</p>
+                </div>
+                <button class="home-ncard-btn">
+                  <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
+                  <span>Balance</span>
+                </button>
+              </div>
+              <div class="home-ncard2 home-ncard2--ananya">
+                <div class="home-ncard2-ic home-ncard2-ic--av"><img src="assets/home-rec-ananya.webp" alt=""></div>
+                <div class="home-ncard2-texts">
+                  <p class="home-ncard2-title">Send money to Ananya</p>
+                  <p class="home-ncard2-sub">$50 is sent monthly, on or before the 18th</p>
+                </div>
+                <button class="home-ncard-btn" onclick="openHomeAgent()">
+                  <span>Send now</span>
+                  <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
+                </button>
+              </div>
+            </div>
+            <div class="home-notif-toggle-wrap">
+              <button class="home-notif-toggle" id="homeNotifToggle" aria-expanded="false" onclick="toggleHomeNotif()">
+                <span class="home-notif-toggle-label">Show all 3</span>
+                <span class="home-notif-toggle-caret" aria-hidden="true"></span>
+              </button>
+            </div>
+          </div>
+        </section>
+
         <!-- ── Where your money is right now ── -->
         <section class="home-sec">
           <div class="home-eyebrow">Here is where your money is right now</div>
           <div class="home-acctsum">
             <div class="home-acctsum-balrow">
               <div class="home-acctsum-info">
-                <span class="home-acctsum-healthy">Balance is looking healthy</span>
+                <span class="home-acctsum-healthy">Balance is 10% higher than on May 15.</span>
                 <span class="home-acctsum-proj"><b>$13,200</b> by month end<br>post bills &amp; scheduled payments</span>
               </div>
               <span class="home-acctsum-total"><span class="s">$</span><span class="b">15,600</span></span>
             </div>
             <div class="home-acctsum-accts">
-              <div class="home-acctsum-pill" onclick="showAccountDetail({name:'USD Checking',num:'1678 0987 9876 3214',balInt:'137,978',balDec:'.00'})">
+              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'USD Checking',num:'1678 0987 9876 3214',balInt:'137,978',balDec:'.00'})">
                 <div class="home-acctsum-ic"><img src="assets/space-usd-checking.webp" alt=""></div>
-                <span class="home-acctsum-nm">USD Checking</span><span class="home-acctsum-am">$137,978.00</span>
+                <span class="home-acctsum-nm">USD Checking</span><span class="home-acctsum-am">$12,600.00</span>
               </div>
-              <div class="home-acctsum-pill" onclick="showAccountDetail({name:'Thailand holiday',num:'1678 0987 9876 7654',balInt:'37,978',balDec:'.00',showCases:true,pendingAmt:'$12,450'})">
+              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'Thailand holiday',num:'1678 0987 9876 7654',balInt:'37,978',balDec:'.00',showCases:true,pendingAmt:'$12,450'})">
                 <div class="home-acctsum-ic"><img src="assets/space-thailand.webp" alt=""></div>
                 <span class="home-acctsum-nm">Thailand trip</span><span class="home-acctsum-am">$800.00</span>
               </div>
-              <div class="home-acctsum-pill" onclick="showAccountDetail({name:'Mom\'s expenses',num:'1678 0987 9876 8745',balInt:'10,120',balDec:'.00'})">
+              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'Mom\'s expenses',num:'1678 0987 9876 8745',balInt:'10,120',balDec:'.00'})">
                 <div class="home-acctsum-ic"><img src="assets/space-moms.webp" alt=""></div>
                 <span class="home-acctsum-nm">Mom's expenses</span><span class="home-acctsum-am">$10,120.00</span>
               </div>
-              <div class="home-acctsum-pill" onclick="showAccountDetail({name:'Wedding',num:'1678 0987 9876 8746',balInt:'50,768',balDec:'.00'})">
+              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'Wedding',num:'1678 0987 9876 8746',balInt:'50,768',balDec:'.00'})">
                 <div class="home-acctsum-ic"><img src="assets/space-wedding.webp" alt=""></div>
                 <span class="home-acctsum-nm">Wedding</span><span class="home-acctsum-am">$50,768.00</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ── What happened recently ── -->
+        <section class="home-sec">
+          <div class="home-eyebrow">What happened recently</div>
+          <div class="home-recent">
+            <div class="home-recent-head">4 new payments.<br>$2,400 spent.</div>
+            <div class="home-recent-list">
+
+              <div class="home-recent-daydiv"><span>Jul 27</span><div class="home-recent-line"></div></div>
+
+              <div class="home-recent-row">
+                <div class="home-recent-av">
+                  <img src="assets/tx-p2p.webp" alt="">
+                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
+                </div>
+                <div class="home-recent-info">
+                  <div class="home-recent-name">Maya Sarini
+                    <span class="ico ol" style="--ico:url('Icons/CalendarDots.svg');--sz:15px;color:rgba(0,0,0,0.4)"></span>
+                    <span class="ico ol" style="--ico:url('Icons/ArrowUUpLeft.svg');--sz:15px;color:rgba(0,0,0,0.4)"></span>
+                  </div>
+                </div>
+                <div class="home-recent-amt"><span>- $1,600.00</span><span class="home-recent-inr">- ₹53,878.21</span></div>
+              </div>
+
+              <div class="home-recent-row home-recent-row--dim">
+                <div class="home-recent-av">
+                  <img src="assets/tx-transport.webp" alt="">
+                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
+                </div>
+                <div class="home-recent-info">
+                  <div class="home-recent-name">Lyft</div>
+                  <div class="home-recent-status home-recent-status--err">Failed</div>
+                </div>
+                <div class="home-recent-amt"><span>- $30.00</span></div>
+              </div>
+
+              <div class="home-recent-row home-recent-row--dim">
+                <div class="home-recent-av">
+                  <img src="assets/tx-transport.webp" alt="">
+                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
+                </div>
+                <div class="home-recent-info">
+                  <div class="home-recent-name">Lyft</div>
+                  <div class="home-recent-status home-recent-status--err">Cancelled</div>
+                </div>
+                <div class="home-recent-amt"><span>- $1,200.00</span></div>
+              </div>
+
+              <div class="home-recent-daydiv"><span>Jul 26</span><div class="home-recent-line"></div></div>
+
+              <div class="home-recent-row home-recent-row--dim">
+                <div class="home-recent-av">
+                  <img src="assets/tx-shopping.webp" alt="">
+                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
+                </div>
+                <div class="home-recent-info">
+                  <div class="home-recent-name">Zara</div>
+                  <div class="home-recent-status home-recent-status--warn">On hold</div>
+                </div>
+                <div class="home-recent-amt"><span>- $250.00</span></div>
+              </div>
+
+              <div class="home-recent-row">
+                <div class="home-recent-av">
+                  <img src="assets/tx-p2p.webp" alt="">
+                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
+                </div>
+                <div class="home-recent-info">
+                  <div class="home-recent-name">Harry Morgan
+                    <span class="ico ol" style="--ico:url('Icons/ArrowUUpLeft.svg');--sz:15px;color:rgba(0,0,0,0.4)"></span>
+                  </div>
+                </div>
+                <div class="home-recent-amt"><span>- $50.00</span></div>
+              </div>
+
+              <div class="home-recent-cta-wrap">
+                <button class="home-recent-cta" onclick="showList()">
+                  <span>See all transactions</span>
+                  <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+                </button>
               </div>
             </div>
           </div>
@@ -545,216 +646,201 @@
       </div>
     </div>
 
-    <!-- Virtual card peeking above the sheet -->
-    <div class="ctpl-card-peek">
-      <img src="assets/0564b0cd-2f4e-4e37-a8f8-f8b152e2bede.webp" class="ctpl-card-peek-img" alt="Virtual card preview">
-      <div class="ctpl-card-tint" id="ctplCardTint"></div>
+    <!-- Create with AI card -->
+    <div class="ctpl-ai" id="ctplAiCard">
+      <div class="ctpl-ai-glow"></div>
+      <div class="ctpl-ai-title">Create your card with Banyan AI</div>
+      <div class="ctpl-ai-input" onclick="openCardAgent()">
+        <div class="ctpl-ai-orb"><video src="ai-orb.mp4" autoplay loop muted playsinline></video></div>
+        <span class="ctpl-ai-ph">Card for Netflix subscriptions</span>
+      </div>
     </div>
 
     <!-- Bottom sheet -->
     <div class="ctpl-sheet">
 
-      <!-- Sheet handle -->
+      <!-- Sheet heading -->
       <div class="ctpl-sheet-row">
-        <span class="ctpl-sheet-lbl">Select a template to get started</span>
-        <span class="ctpl-sheet-step">1/3</span>
+        <span class="ctpl-sheet-lbl">Or, Select a template to get started</span>
       </div>
 
-      <!-- Step 1: Template picker -->
+      <!-- Step 1: Template picker — stacked deck -->
       <div class="ctpl-picker-panel" id="ctplPickerPanel">
-      <div class="ctpl-grid-scroll">
-        <div class="ctpl-grid">
+      <div class="ctpl-deck-scroll">
+        <div class="ctpl-deck">
 
-          <!-- Subscriptions -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(222,185,150,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('subscriptions')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">Subscriptions</div>
-              <div class="ctpl-tile-desc">Frequency control for recurring charges.</div>
-            </div>
-            <img class="ctpl-tile-icon" style="right:-10px;top:18px" src="assets/card-tmpl-subscriptions-icon2.webp" alt="">
-            <img class="ctpl-tile-icon" style="left:140px;top:64px" src="assets/card-tmpl-subscriptions-icon1.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(90deg,rgba(0,0,0,0.4),rgba(0,0,0,0.4)),linear-gradient(158deg,#00272b 0%,#005b89 170%)" onclick="ctplCardClick(0)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/Television.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">Subscriptions</div>
+            <div class="ctpl-dcard-desc">Frequency control for recurring charges.</div>
+            <div class="ctpl-dcard-caps"><span>Monthly limit</span><span>Renewal aware</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-          <!-- Merchant -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(150,222,220,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('merchant')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">Merchant</div>
-              <div class="ctpl-tile-desc">One merchant you use often.</div>
-            </div>
-            <img class="ctpl-tile-img" src="assets/card-tmpl-merchant.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(90deg,rgba(0,0,0,0.4),rgba(0,0,0,0.4)),linear-gradient(158deg,#2b1700 0%,#894200 170%)" onclick="ctplCardClick(1)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/Package.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">Favourite brand</div>
+            <div class="ctpl-dcard-desc">One brand you spend with often.</div>
+            <div class="ctpl-dcard-caps"><span>Merchant lock</span><span>Monthly limit</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-          <!-- Trial -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(150,222,221,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('trial')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">Trial</div>
-              <div class="ctpl-tile-desc">Safer spending for unfamiliar sites.</div>
-            </div>
-            <img class="ctpl-tile-img" src="assets/card-tmpl-trial.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(90deg,rgba(0,0,0,0.4),rgba(0,0,0,0.4)),linear-gradient(158deg,#270038 0%,#8700b0 170%)" onclick="ctplCardClick(2)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/CalendarStar.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">Events</div>
+            <div class="ctpl-dcard-desc">A temporary budget for one occasion.</div>
+            <div class="ctpl-dcard-caps"><span>Date range</span><span>Total cap</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-          <!-- Event -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(222,221,150,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('event')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">Event</div>
-              <div class="ctpl-tile-desc">A card for a temporary budget.</div>
-            </div>
-            <img class="ctpl-tile-img" src="assets/card-tmpl-event.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(90deg,rgba(0,0,0,0.4),rgba(0,0,0,0.4)),linear-gradient(158deg,#002b2b 0%,#008789 170%)" onclick="ctplCardClick(3)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/AirplaneTilt.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">Travel</div>
+            <div class="ctpl-dcard-desc">Trip spending, kept separate.</div>
+            <div class="ctpl-dcard-caps"><span>Multi-country</span><span>Trip cap</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-          <!-- Household -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(204,150,222,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('household')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">Household</div>
-              <div class="ctpl-tile-desc">Shared spending with clear limits.</div>
-            </div>
-            <img class="ctpl-tile-img" src="assets/card-tmpl-household.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(90deg,rgba(0,0,0,0.4),rgba(0,0,0,0.4)),linear-gradient(158deg,#072b00 0%,#598900 170%)" onclick="ctplCardClick(4)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/Clock.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">Trial</div>
+            <div class="ctpl-dcard-desc">A low limit for unfamiliar sites.</div>
+            <div class="ctpl-dcard-caps"><span>Low limit</span><span>Single use</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-          <!-- Travel -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(150,190,222,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('travel')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">Travel</div>
-              <div class="ctpl-tile-desc">Keep trip spending contained.</div>
-            </div>
-            <img class="ctpl-tile-icon" style="right:-10px;top:18px" src="assets/card-tmpl-travel-icon2.webp" alt="">
-            <img class="ctpl-tile-icon" style="right:-10px;bottom:-14px" src="assets/card-tmpl-travel-icon1.webp" alt="">
-            <img class="ctpl-tile-icon" style="left:86px;top:62px" src="assets/card-tmpl-travel-icon3.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(90deg,rgba(0,0,0,0.4),rgba(0,0,0,0.4)),linear-gradient(158deg,#2b2400 0%,#897400 170%)" onclick="ctplCardClick(5)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/ShoppingBag.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">One-time buy</div>
+            <div class="ctpl-dcard-desc">Cap one purchase, then close.</div>
+            <div class="ctpl-dcard-caps"><span>One purchase</span><span>Auto-close</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-          <!-- One-time buy -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(186,222,150,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('onetimebuy')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">One-time buy</div>
-              <div class="ctpl-tile-desc">Cap a purchase and close it after use.</div>
-            </div>
-            <img class="ctpl-tile-img" src="assets/card-tmpl-onetimebuy.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(159deg,#00132b 0%,#005289 170%)" onclick="ctplCardClick(6)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/UsersThree.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">Household</div>
+            <div class="ctpl-dcard-desc">Shared spending with clear limits.</div>
+            <div class="ctpl-dcard-caps"><span>Shared use</span><span>Monthly limit</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-          <!-- Child / Teen -->
-          <div class="ctpl-tile" style="background:linear-gradient(180deg,rgba(255,255,255,0.2) 0%,rgba(222,150,171,0.2) 100%),rgba(255,255,255,0.4)" onclick="selectCardTemplate('childteen')">
-            <div class="ctpl-tile-texts">
-              <div class="ctpl-tile-name">Child / Teen</div>
-              <div class="ctpl-tile-desc">Supervised spending with guardrails.</div>
-            </div>
-            <img class="ctpl-tile-img" src="assets/card-tmpl-childteen.webp" alt="">
+          <div class="ctpl-dcard" style="background:linear-gradient(90deg,rgba(0,0,0,0.4),rgba(0,0,0,0.4)),linear-gradient(158deg,#2b000d 0%,#890027 170%)" onclick="ctplCardClick(7)">
+            <span class="ico ctpl-dcard-wm" style="--ico:url('Icons/Baby.svg');--sz:144px"></span>
+            <div class="ctpl-dcard-name">Child / Teen</div>
+            <div class="ctpl-dcard-desc">Supervised spending with guardrails.</div>
+            <div class="ctpl-dcard-caps"><span>Category limits</span><span>Spend alerts</span></div>
+            <span class="ctpl-dcard-visa">VISA</span>
           </div>
 
-        </div><!-- /.cc-tmpl-grid -->
-
-        <!-- Custom — full-width tile -->
-        <div class="ctpl-custom" onclick="selectCardTemplate('custom')">
-          <div class="ctpl-tile-name">Custom</div>
-          <div class="ctpl-tile-desc">Create your own setup from scratch.</div>
         </div>
-
         <div style="height:24px;flex-shrink:0"></div>
-      </div><!-- /.ctpl-grid-scroll -->
+      </div><!-- /.ctpl-deck-scroll -->
+      <div class="ctpl-continue-wrap">
+        <button class="ctpl-continue" id="ctplContinue" onclick="ctplContinue()">Continue with <span id="ctplContinueName">Household</span></button>
+      </div>
       </div><!-- /.ctpl-picker-panel -->
 
       <!-- Step 2: Template setup form -->
       <div class="ctpl-setup-panel" id="ctplSetupPanel">
         <div class="ctpl-setup-scroll">
 
-          <!-- Header: template name + subtext + step -->
-          <div class="ctpl2-hdr">
-            <div class="ctpl2-hdr-left">
-              <div class="ctpl2-hdr-name" id="ctplSetupName"></div>
-              <div class="ctpl2-hdr-sub" id="ctplSetupSub"></div>
+          <!-- Featured template card -->
+          <div class="ctpl-setup-card" id="ctplSetupCard" style="background:linear-gradient(159deg,#00132b 0%,#005289 170%)">
+            <span class="ico ctpl-dcard-wm ctpl-setup-card-wm" id="ctplSetupCardWm" style="--ico:url('Icons/UsersThree.svg');--sz:144px"></span>
+            <div class="ctpl-setup-card-texts">
+              <div class="ctpl-setup-card-name" id="ctplSetupCardName">Household</div>
+              <div class="ctpl-setup-card-desc" id="ctplSetupCardDesc">Shared spending with clear limits.</div>
             </div>
-            <div class="ctpl2-hdr-step">2/3</div>
+            <div class="ctpl-dcard-caps ctpl-setup-card-caps" id="ctplSetupCardCaps"><span>Shared use</span><span>Monthly limit</span></div>
+            <span class="ctpl-dcard-visa ctpl-setup-card-visa">VISA</span>
           </div>
 
-          <!-- Group 1: Where to create + (Merchant) + Nickname -->
-          <div class="ctpl2-group">
-            <!-- Account selector -->
-            <div class="ctpl2-input ctpl2-input--tap" onclick="openCtplAcctPicker()">
-              <div class="ctpl2-input-body">
-                <div class="ctpl2-input-lbl">Choose where to create the card</div>
-                <div class="ctpl2-input-acct">
-                  <img id="ctplAcctIcon" src="assets/space-usd-checking.webp" class="ctpl2-acct-icon" alt="">
-                  <span id="ctplAcctLabel">USD Checking (·· 7654)</span>
-                </div>
+          <!-- Centered title -->
+          <div class="ctpl-setup-title">
+            <div class="ctpl-setup-title-name" id="ctplSetupName">Household</div>
+            <div class="ctpl-setup-title-sub" id="ctplSetupSub">Shared spending with clear limits.</div>
+          </div>
+
+          <!-- Group 1: account + nickname -->
+          <div class="ctps-group">
+            <div class="ctps-field ctps-field--tap" onclick="openCtplAcctPicker()">
+              <div class="ctps-field-lbl">Account</div>
+              <div class="ctps-field-acct">
+                <img id="ctplAcctIcon" src="assets/space-usd-checking.webp" class="ctps-acct-ic" alt="">
+                <span id="ctplAcctLabel">USD Checking (•• 7654)</span>
               </div>
-              <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:18px;color:rgba(0,0,0,0.35);flex-shrink:0"></span>
+              <span class="ico ol ctps-caret" style="--ico:url('Icons/CaretDown.svg');--sz:18px;color:rgba(0,0,0,0.35)"></span>
             </div>
-            <!-- Merchant (merchant template only) -->
-            <div class="ctpl2-separator ctpl-merchant-row" id="ctplMerchantSep" style="display:none"></div>
-            <div class="ctpl2-input ctpl2-input--tap ctpl-merchant-row" id="ctplMerchantRow" onclick="openCtplMerchantPicker()" style="display:none">
-              <div class="ctpl2-input-body">
-                <div class="ctpl2-input-lbl">Merchant</div>
-                <div class="ctpl2-input-acct">
-                  <div class="ctpl-merchant-avatar" id="ctplMerchantAvatar"></div>
-                  <span id="ctplMerchantLabel">Select merchant</span>
-                </div>
+            <div class="ctps-field ctps-field--tap ctpl-merchant-row" id="ctplMerchantRow" onclick="openCtplMerchantPicker()" style="display:none">
+              <div class="ctps-field-lbl">Merchant</div>
+              <div class="ctps-field-acct">
+                <div class="ctpl-merchant-avatar" id="ctplMerchantAvatar"></div>
+                <span id="ctplMerchantLabel">Select merchant</span>
               </div>
-              <span class="ico ol" style="--ico:url('Icons/CaretRight.svg');--sz:18px;color:rgba(0,0,0,0.35);flex-shrink:0"></span>
+              <span class="ico ol ctps-caret" style="--ico:url('Icons/CaretRight.svg');--sz:18px;color:rgba(0,0,0,0.35)"></span>
             </div>
-            <div class="ctpl2-separator"></div>
-            <!-- Card nickname -->
-            <div class="ctpl2-input" onclick="document.getElementById('ctplNickname').focus()">
-              <div class="ctpl2-input-body">
-                <div class="ctpl2-input-lbl">Card nickname</div>
-                <input class="ctpl2-input-val" id="ctplNickname" type="text" autocomplete="off" placeholder="">
-              </div>
+            <div class="ctps-field" onclick="document.getElementById('ctplNickname').focus()">
+              <div class="ctps-field-lbl">Nickname</div>
+              <input class="ctps-field-input" id="ctplNickname" type="text" autocomplete="off" placeholder="Card nickname">
             </div>
           </div>
 
-          <!-- Group 2: Limit type + Spend limit (side by side) -->
-          <div class="ctpl2-group ctpl2-group--row">
-            <div class="ctpl2-input ctpl2-input--tap ctpl2-input--half" onclick="openCtplLimitPicker()">
-              <div class="ctpl2-input-body">
-                <div class="ctpl2-input-lbl">Limit type</div>
-                <div class="ctpl2-input-val" id="ctplLimitTypeVal">Monthly</div>
-              </div>
-              <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:18px;color:rgba(0,0,0,0.35);flex-shrink:0"></span>
+          <!-- Group 2: limits + expiry + toggles -->
+          <div class="ctps-group">
+            <div class="ctps-field ctps-field--tap" onclick="openCtplLimitPicker()">
+              <div class="ctps-field-lbl">Limit type</div>
+              <div class="ctps-field-val" id="ctplLimitTypeVal">Total amount</div>
+              <span class="ico ol ctps-caret" style="--ico:url('Icons/CaretDown.svg');--sz:18px;color:rgba(0,0,0,0.35)"></span>
             </div>
-            <div class="ctpl2-group-vsep"></div>
-            <div class="ctpl2-input ctpl2-input--half" onclick="document.getElementById('ctplAmount').focus()">
-              <div class="ctpl2-input-body">
-                <div class="ctpl2-input-lbl">Total spend limit</div>
-                <div class="ctpl2-amount-row">
-                  <span class="ctpl2-amount-sym">$</span>
-                  <input class="ctpl2-amount-inp" id="ctplAmount" type="number" min="0" autocomplete="off" placeholder="0">
-                </div>
-              </div>
+            <div class="ctps-field" onclick="document.getElementById('ctplAmount').focus()">
+              <div class="ctps-field-lbl">Spend limit</div>
+              <div class="ctps-amount"><span class="ctps-amt-sym">$</span><input class="ctps-amount-inp" id="ctplAmount" type="number" min="0" autocomplete="off" placeholder="0"></div>
+            </div>
+            <div class="ctps-field">
+              <div class="ctps-field-lbl">Per transaction</div>
+              <div class="ctps-field-val"><span class="ctps-amt-sym">$ </span><span id="ctplPerTxn">500.00</span></div>
+            </div>
+            <div class="ctps-field">
+              <div class="ctps-field-lbl">Expiry date</div>
+              <div class="ctps-field-val" id="ctplExpiryVal">15/09/2026</div>
+            </div>
+            <div class="ctps-helper">Defaults to 3 months. You can change it later.</div>
+            <div class="ctps-tgl-row">
+              <span class="ctps-tgl-lbl">International transactions</span>
+              <div class="ctpl-toggle" id="ctplIntl" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
+            </div>
+            <div class="ctps-tgl-row">
+              <span class="ctps-tgl-lbl">Contactless transactions</span>
+              <div class="ctpl-toggle" id="ctplContactlessTgl" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
             </div>
           </div>
 
-          <!-- AI + Manual controls card group -->
-          <div class="ctpl2-ai-wrap">
-            <!-- Black AI card -->
-            <div class="ctpl2-ai-card">
-              <div class="ctpl2-ai-text">
-                <div class="ctpl2-ai-title">Set up other controls with AI</div>
-                <div class="ctpl2-ai-sub" id="ctplAiSub">Country · Businesses</div>
+          <!-- Group 3: set up other controls -->
+          <div class="ctps-group">
+            <div class="ctps-controls-row" onclick="ctplToggleManual()">
+              <div class="ctps-controls-text">
+                <div class="ctps-controls-title">Set up other controls</div>
+                <div class="ctps-controls-sub" id="ctplAiSub">Country • Businesses</div>
               </div>
-              <div class="ctpl2-ai-orb">
-                <div class="ctpl2-ai-orb-glow"></div>
-              </div>
-            </div>
-            <!-- Or fill manually (connected below AI card) -->
-            <div class="ctpl2-manual-row" onclick="ctplToggleManual()">
-              <span class="ctpl2-manual-lbl">Or fill it manually</span>
-              <span class="ico ol ctpl2-manual-caret" id="ctplManualCaret" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+              <button class="ctps-ghost-btn">
+                <span class="ico ol ctpl2-manual-caret" id="ctplManualCaret" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+              </button>
             </div>
             <div class="ctpl2-manual-body" id="ctplManualBody">
               <div class="ctpl2-toggle-row">
-                <span class="ctpl2-toggle-lbl">Merchant lock</span>
-                <div class="ctpl-toggle" id="ctplMerchantLock" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
+                <span class="ctpl2-toggle-lbl">Number of payments</span>
+                <span class="ctpl2-ctrl-val" id="ctplTxns">Unlimited</span>
               </div>
-              <div class="ctpl2-toggle-row">
-                <span class="ctpl2-toggle-lbl">Spend alerts</span>
-                <div class="ctpl-toggle ctpl-toggle--on" id="ctplSpendAlerts" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
-              </div>
-              <div class="ctpl2-toggle-row">
-                <span class="ctpl2-toggle-lbl">Auto-close after limit</span>
-                <div class="ctpl-toggle" id="ctplAutoClose" onclick="ctplToggleSwitch(this)"><div class="ctpl-toggle-thumb"></div></div>
+              <div class="ctpl2-toggle-row" id="ctplBlockedRow" style="display:none">
+                <span class="ctpl2-toggle-lbl">Blocked categories</span>
+                <span class="ctpl2-ctrl-val" id="ctplBlocked">—</span>
               </div>
             </div>
           </div>
 
-          <div style="height:100px;flex-shrink:0"></div>
+          <div class="ctps-collapse-spacer" id="ctplCollapseSpacer" style="height:0;flex-shrink:0"></div>
+          <div style="height:140px;flex-shrink:0"></div>
         </div><!-- /.ctpl-setup-scroll -->
 
         <!-- Floating pill CTA -->
@@ -3597,6 +3683,6 @@
 
 </div>
 
-  <script src="app.js?v=62"></script>
+  <script src="app.js?v=87"></script>
 </body>
 </html>

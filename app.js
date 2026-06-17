@@ -4527,6 +4527,13 @@ function showHome() {
   var _hai = document.querySelector('#home .home-ai'); if (_hai) _hai.style.setProperty('--ai-bg-op', '0.60');
   var _hgh = document.getElementById('homeGreetingHalo'); if (_hgh) _hgh.style.opacity = '1';
   var _bas = document.getElementById('bnavAiSlot'); if (_bas) _bas.classList.remove('visible');
+  var _hnt = document.getElementById('homeNotif');
+  if (_hnt) {
+    _hnt.classList.remove('expanded');
+    var _hntb = document.getElementById('homeNotifToggle');
+    if (_hntb) { _hntb.setAttribute('aria-expanded', 'false'); var _l = _hntb.querySelector('.home-notif-toggle-label'); if (_l) _l.textContent = 'Show all 3'; }
+    if (typeof layoutHomeNotifDeck === 'function') setTimeout(layoutHomeNotifDeck, 0);
+  }
   document.querySelector('#home .home-scroll').classList.remove('home-fade-top');
   setSbLight(true); // white status-bar text over the hero photo
   showNav(true); showNavAi(true);
@@ -5015,76 +5022,79 @@ function ctplToggleManual() {
   if (caret) caret.classList.toggle('open');
 }
 
+// Per-template prefill — sourced from the virtual-card spec table.
+// txns: 'unlimited' | number · expiryDays: 0 = none · online/contactless: per-txn $ cap (0 = off)
 var CTPL_CONFIG = {
   subscriptions: {
     name: 'Subscriptions',
     subtext: 'Set a monthly cap and cancel without affecting your other cards.',
-    nickname: 'Subscription card',
-    amount: 50,
-    limitType: 'Monthly',
+    nickname: 'Monthly subscriptions',
+    amount: 100, limitType: 'Monthly',
+    txns: 'unlimited', expiryDays: 0, intl: true, online: 100, contactless: 0, blocked: null,
     tint: 'rgba(222,185,150,0.35)',
     features: ['Monthly cap', 'Separate card for recurring charges', 'Easy to freeze or close']
   },
   merchant: {
     name: 'Merchant',
     subtext: 'Keep spending with one merchant separate, controlled, and easy to freeze.',
-    nickname: 'Merchant card',
-    amount: 300,
-    limitType: 'Monthly',
+    nickname: '',
+    amount: 250, limitType: 'Monthly',
+    txns: 'unlimited', expiryDays: 0, intl: false, online: 250, contactless: 250, blocked: null,
     tint: 'rgba(150,222,220,0.35)',
     features: ['Merchant-focused spending', 'Monthly limit', 'Freeze independently']
   },
   trial: {
     name: 'Trial',
     subtext: 'Protect yourself with a low-limit card for signups and unfamiliar checkouts.',
-    nickname: 'Trial card',
-    amount: 25,
-    limitType: 'All time',
+    nickname: 'Trial / One-time',
+    amount: 20, limitType: 'All time',
+    txns: 1, expiryDays: 30, intl: true, online: 20, contactless: 0, blocked: null,
     tint: 'rgba(150,222,221,0.35)',
     features: ['Low-limit protection', 'Safer online checkout', 'Close anytime']
   },
   event: {
     name: 'Event',
     subtext: 'Give a temporary budget its own card so event costs stay under control.',
-    nickname: 'Event card',
-    amount: 1000,
-    limitType: 'All time',
+    nickname: '',
+    amount: 500, limitType: 'All time',
+    txns: 'unlimited', expiryDays: 90, intl: true, online: 500, contactless: 500, blocked: null,
     tint: 'rgba(222,221,150,0.35)',
     features: ['Event budget', 'Temporary spending control', 'Close after use']
   },
   household: {
     name: 'Household',
     subtext: 'Make shared spending simpler while keeping limits and visibility in your hands.',
-    nickname: 'Household spending',
-    amount: 600,
-    limitType: 'Monthly',
+    nickname: 'Household',
+    amount: 500, limitType: 'Monthly',
+    txns: 'unlimited', expiryDays: 0, intl: true, online: 500, contactless: 500, blocked: null,
     tint: 'rgba(204,150,222,0.35)',
     features: ['Shared spending', 'Monthly limit', 'Owner visibility']
   },
   travel: {
     name: 'Travel',
     subtext: 'Keep trip spending contained without mixing it into everyday expenses.',
-    nickname: 'Travel card',
-    amount: 1500,
-    limitType: 'All time',
+    nickname: '',
+    amount: 500, limitType: 'All time',
+    txns: 'unlimited', expiryDays: 90, intl: true, online: 500, contactless: 500, blocked: null,
     tint: 'rgba(150,190,222,0.35)',
     features: ['Trip budget', 'Separate travel spending', 'Freeze after trip']
   },
   onetimebuy: {
     name: 'One-time buy',
     subtext: 'Put a cap on a single purchase and close the card when you\'re done.',
-    nickname: 'One-time purchase',
-    amount: 250,
-    limitType: 'All time',
+    nickname: 'Trial / One-time',
+    amount: 20, limitType: 'All time',
+    txns: 1, expiryDays: 30, intl: true, online: 20, contactless: 0, blocked: null,
     tint: 'rgba(186,222,150,0.35)',
     features: ['All-time cap', 'Safer checkout', 'Close after use']
   },
   childteen: {
     name: 'Child / Teen',
     subtext: 'Give supervised spending access with clear limits and safer boundaries.',
-    nickname: 'Child card',
-    amount: 100,
-    limitType: 'Monthly',
+    nickname: '',
+    amount: 50, limitType: 'Monthly',
+    txns: 'unlimited', expiryDays: 0, intl: false, online: 50, contactless: 50,
+    blocked: ['Gambling', 'Alcohol', 'Adult content', 'Crypto'],
     tint: 'rgba(222,150,171,0.35)',
     features: ['Allowance limit', 'Parent controls', 'Spend alerts']
   },
@@ -5107,12 +5117,17 @@ function showCreateCard() {
   // Reset to picker view
   var picker = document.getElementById('ctplPickerPanel');
   var setup  = document.getElementById('ctplSetupPanel');
-  if (picker) picker.classList.remove('ctpl-exit');
-  if (setup)  setup.classList.remove('ctpl-active');
+  if (picker) { picker.classList.remove('ctpl-exit'); picker.classList.remove('ctpl-continuing'); }
+  if (setup)  { setup.classList.remove('ctpl-active'); setup.classList.remove('ctpl-flip'); setup.classList.remove('ctpl-did-flip'); }
+  var _setupCard = document.getElementById('ctplSetupCard');
+  if (_setupCard) { _setupCard.style.transition = ''; _setupCard.style.transform = ''; _setupCard.style.transformOrigin = ''; }
+  document.querySelectorAll('.ctpl-dcard').forEach(function(d){ d.style.transition=''; d.style.transform=''; d.style.opacity=''; });
+  var _sheet = document.querySelector('.ctpl-sheet'); if (_sheet) _sheet.classList.remove('ctpl-step2');
+  var _aiCard = document.getElementById('ctplAiCard'); if (_aiCard) _aiCard.style.display = '';
   // Reset header
   var lbl = document.querySelector('.ctpl-sheet-lbl');
   var step = document.querySelector('.ctpl-sheet-step');
-  if (lbl)  lbl.textContent = 'Select a template to get started';
+  if (lbl)  lbl.textContent = 'Or, Select a template to get started';
   if (step) step.textContent = '1/3';
   // Reset tint
   var tint = document.getElementById('ctplCardTint');
@@ -5125,6 +5140,10 @@ function showCreateCard() {
   el.className = 'screen on';
   setSbLight(false);
   showNav(false);
+  // Reset & lay out the template carousel
+  _ctplDeckIdx = 0;
+  _ctplDeckInit();
+  _ctplApplyDeck();
 }
 
 function goBackCreateCard() {
@@ -5133,12 +5152,17 @@ function goBackCreateCard() {
     _ctplStep = 1;
     var picker = document.getElementById('ctplPickerPanel');
     var setup  = document.getElementById('ctplSetupPanel');
-    if (setup)  { setup.classList.remove('ctpl-active'); }
+    if (setup)  { setup.classList.remove('ctpl-active'); setup.classList.remove('ctpl-flip'); setup.classList.remove('ctpl-did-flip'); }
+    var _bsc = document.getElementById('ctplSetupCard');
+    if (_bsc) { _bsc.style.transition = ''; _bsc.style.transform = ''; _bsc.style.transformOrigin = ''; }
     if (picker) {
+      picker.classList.remove('ctpl-continuing');
       picker.style.transition = 'none';
       picker.style.transform  = 'translateX(-28px)';
       picker.style.opacity    = '0';
       picker.classList.remove('ctpl-exit');
+      var _restoreCards = document.querySelectorAll('#ctplPickerPanel .ctpl-dcard');
+      _restoreCards.forEach(function(d){ d.style.opacity = ''; });
       requestAnimationFrame(function() {
         picker.style.transition = '';
         picker.style.transform  = '';
@@ -5147,12 +5171,14 @@ function goBackCreateCard() {
     }
     var lbl = document.querySelector('.ctpl-sheet-lbl');
     var step = document.querySelector('.ctpl-sheet-step');
-    if (lbl)  lbl.textContent = 'Select a template to get started';
+    if (lbl)  lbl.textContent = 'Or, Select a template to get started';
     if (step) step.textContent = '1/3';
     var tint = document.getElementById('ctplCardTint');
     if (tint) tint.style.background = 'transparent';
     var sheet = document.querySelector('.ctpl-sheet');
     if (sheet) sheet.classList.remove('ctpl-step2');
+    var aiCard = document.getElementById('ctplAiCard');
+    if (aiCard) aiCard.style.display = '';
   } else {
     closeCreateCard();
   }
@@ -5165,28 +5191,256 @@ function closeCreateCard() {
   if (cards) { cards.className = 'screen on'; showNav(false); }
 }
 
+function _ctplExpiryDate(days) {
+  var d = new Date(Date.now() + days * 86400000);
+  var m = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  return d.getDate() + ' ' + m[d.getMonth()] + ' ' + d.getFullYear();
+}
+
+// Stacked deck: tapping a card lifts it out of the stack (others recede);
+// the Continue CTA then opens the setup step.
+// ── Template picker: vertical 3D card-stack carousel ──
+// Centered card is prominent; neighbours recede above/below. Scroll, drag,
+// or tap any card to bring it to centre and select it.
+var CTPL_DECK = [
+  { key: 'subscriptions', name: 'Subscriptions' },
+  { key: 'merchant',      name: 'Favourite brand' },
+  { key: 'event',         name: 'Events' },
+  { key: 'travel',        name: 'Travel' },
+  { key: 'trial',         name: 'Trial' },
+  { key: 'onetimebuy',    name: 'One-time buy' },
+  { key: 'household',     name: 'Household' },
+  { key: 'childteen',     name: 'Child / Teen' },
+];
+var _ctplDeckIdx = 0;
+var _ctplSel = CTPL_DECK[0];
+var _ctplNavAt = 0;
+function _ctplDeckCards() { return document.querySelectorAll('#ctplPickerPanel .ctpl-dcard'); }
+function _ctplApplyDeck() {
+  var cards = _ctplDeckCards();
+  var n = cards.length;
+  // Centred coverflow: the focal card sits in the middle. Upcoming cards fan UP
+  // (name peeks at the top); previous cards fan DOWN (name peeks at the bottom).
+  var BASE = 8, UP_GAP = 44, UP_PEEK = 38, DN_GAP = 44, DN_PEEK = 36, UP_MAX = 3, DN_MAX = 3;
+  cards.forEach(function(el, i) {
+    var diff = i - _ctplDeckIdx;
+    if (diff >  n / 2) diff -= n;
+    if (diff < -n / 2) diff += n;
+    var st, isEdge = false;
+    if (diff === 0) {
+      st = { y: BASE, s: 1, o: 1, z: 100, rx: 0 };
+    } else if (diff > 0) {                       // upcoming → above, name at top
+      st = {
+        y: BASE - UP_GAP - (diff - 1) * UP_PEEK,
+        s: Math.max(0.78, 1 - diff * 0.05),
+        o: diff <= UP_MAX ? 1 : 0, z: 100 - diff,
+        rx: Math.min(8, diff * 2.2)
+      };
+    } else {                                     // previous → below, name at bottom
+      var ad = -diff;
+      isEdge = true;
+      st = {
+        y: BASE + DN_GAP + (ad - 1) * DN_PEEK,
+        s: Math.max(0.8, 1 - ad * 0.05),
+        o: ad <= DN_MAX ? 1 : 0, z: 100 - ad,
+        rx: -Math.min(8, ad * 2.2)
+      };
+    }
+    el.style.transform = 'translate(-50%,-50%) translateY(' + st.y + 'px) scale(' + st.s + ') rotateX(' + st.rx + 'deg)';
+    el.style.opacity = st.o;
+    el.style.zIndex = st.z;
+    el.style.pointerEvents = st.o > 0 ? 'auto' : 'none';
+    el.classList.toggle('is-current', diff === 0);
+    el.classList.toggle('ctpl-edge', isEdge);
+  });
+  var cur = CTPL_DECK[_ctplDeckIdx] || CTPL_DECK[0];
+  _ctplSel = cur;
+  var cn = document.getElementById('ctplContinueName');
+  if (cn) cn.textContent = cur.name;
+}
+function ctplDeckGo(i) {
+  var n = _ctplDeckCards().length || CTPL_DECK.length;
+  _ctplDeckIdx = ((i % n) + n) % n; // wrap around
+  _ctplApplyDeck();
+}
+function ctplDeckNav(dir) {
+  var now = Date.now();
+  if (now - _ctplNavAt < 380) return; // cooldown
+  _ctplNavAt = now;
+  ctplDeckGo(_ctplDeckIdx + dir);
+}
+// Click a card: centre it; if it's already centred, continue.
+function ctplCardClick(i) {
+  if (i === _ctplDeckIdx) ctplContinue();
+  else ctplDeckGo(i);
+}
+var _ctplDeckWired = false;
+function _ctplDeckInit() {
+  if (_ctplDeckWired) return;
+  var deck = document.querySelector('#ctplPickerPanel .ctpl-deck');
+  if (!deck) return;
+  _ctplDeckWired = true;
+  var startY = null, dragging = false;
+  deck.addEventListener('pointerdown', function(e) { startY = e.clientY; dragging = true; });
+  deck.addEventListener('pointermove', function(e) {
+    if (!dragging || startY === null) return;
+    var dy = e.clientY - startY;
+    if (dy < -46) { ctplDeckNav(1); dragging = false; }
+    else if (dy > 46) { ctplDeckNav(-1); dragging = false; }
+  });
+  var end = function() { dragging = false; startY = null; };
+  deck.addEventListener('pointerup', end);
+  deck.addEventListener('pointercancel', end);
+  deck.addEventListener('wheel', function(e) {
+    if (Math.abs(e.deltaY) > 18) ctplDeckNav(e.deltaY > 0 ? 1 : -1);
+  }, { passive: true });
+}
+function ctplContinue() {
+  if (!_ctplSel || !_ctplSel.key) return;
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var picker = document.getElementById('ctplPickerPanel');
+  var setupPanel = document.getElementById('ctplSetupPanel');
+  var deckCard = document.querySelector('#ctplPickerPanel .ctpl-dcard.is-current');
+  if (reduce || !picker || !deckCard || !setupPanel) { selectCardTemplate(_ctplSel.key); return; }
+
+  // 1. Capture where the selected card currently sits (FLIP "first").
+  var first = deckCard.getBoundingClientRect();
+
+  // 2. Fade the other cards + CTA out; suppress the setup card's settle pop.
+  picker.classList.add('ctpl-continuing');
+  setupPanel.classList.add('ctpl-flip');
+
+  // 3. Build the setup view (sets ctpl-step2 + ctpl-exit + queues ctpl-active).
+  selectCardTemplate(_ctplSel.key);
+
+  // 4. After the setup card lands in its final spot, FLIP it back to where the
+  //    deck card was, then release — it flies up to the top as one continuous card.
+  var setupCard = document.getElementById('ctplSetupCard');
+  requestAnimationFrame(function() {
+    var last = setupCard.getBoundingClientRect();
+    if (!last.width) { setupPanel.classList.remove('ctpl-flip'); return; }
+    var dx = first.left - last.left;
+    var dy = first.top - last.top;
+    var sx = first.width / last.width;
+    var sy = first.height / last.height;
+    setupCard.style.transformOrigin = 'top left';
+    setupCard.style.transition = 'none';
+    setupCard.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sx + ',' + sy + ')';
+    deckCard.style.opacity = '0'; // hide the original so only one card is visible
+    requestAnimationFrame(function() {
+      setupCard.style.transition = 'transform 0.52s var(--ease-out)';
+      setupCard.style.transform = 'translate(0,0) scale(1)';
+    });
+    var done = function() {
+      setupCard.style.transition = '';
+      setupCard.style.transform = '';
+      setupCard.style.transformOrigin = '';
+      setupPanel.classList.remove('ctpl-flip');
+      setupPanel.classList.add('ctpl-did-flip');
+      setupCard.removeEventListener('transitionend', done);
+    };
+    setupCard.addEventListener('transitionend', done);
+  });
+}
+
+// Template visuals for the setup featured card (gradient · icon · display name · desc)
+var CTPL_VIZ = {
+  subscriptions: { g: 'linear-gradient(159deg,#00272b 0%,#005b89 170%)', ic: 'Television.svg', n: 'Subscriptions', d: 'Frequency control for recurring charges.', caps: ['Monthly limit', 'Renewal aware'] },
+  merchant:      { g: 'linear-gradient(159deg,#2b1700 0%,#894200 170%)', ic: 'Package.svg', n: 'Favourite brand', d: 'One brand you spend with often.', caps: ['Merchant lock', 'Monthly limit'] },
+  event:         { g: 'linear-gradient(159deg,#270038 0%,#8700b0 170%)', ic: 'CalendarStar.svg', n: 'Events', d: 'A temporary budget for one occasion.', caps: ['Date range', 'Total cap'] },
+  travel:        { g: 'linear-gradient(159deg,#002b2b 0%,#008789 170%)', ic: 'AirplaneTilt.svg', n: 'Travel', d: 'Trip spending, kept separate.', caps: ['Multi-country', 'Trip cap'] },
+  trial:         { g: 'linear-gradient(159deg,#072b00 0%,#598900 170%)', ic: 'Clock.svg', n: 'Trial', d: 'A low limit for unfamiliar sites.', caps: ['Low limit', 'Single use'] },
+  onetimebuy:    { g: 'linear-gradient(159deg,#2b2400 0%,#897400 170%)', ic: 'ShoppingBag.svg', n: 'One-time buy', d: 'Cap one purchase, then close.', caps: ['One purchase', 'Auto-close'] },
+  household:     { g: 'linear-gradient(159deg,#00132b 0%,#005289 170%)', ic: 'UsersThree.svg', n: 'Household', d: 'Shared spending with clear limits.', caps: ['Shared use', 'Monthly limit'] },
+  childteen:     { g: 'linear-gradient(159deg,#2b000d 0%,#890027 170%)', ic: 'Baby.svg', n: 'Child / Teen', d: 'Supervised spending with guardrails.', caps: ['Category limits', 'Spend alerts'] },
+  custom:        { g: 'linear-gradient(159deg,#2a2a2a 0%,#555 170%)', ic: 'Cards.svg', n: 'Custom', d: 'Build your own from scratch.', caps: ['Custom', 'Virtual card'] },
+};
+function _ctplExpiryDateDMY(days) {
+  var d = new Date(Date.now() + days * 86400000);
+  var p = function(n){ return (n < 10 ? '0' : '') + n; };
+  return p(d.getDate()) + '/' + p(d.getMonth() + 1) + '/' + d.getFullYear();
+}
+
+// Sticky setup card: collapse to a compact pinned header as the form scrolls.
+// A compensating spacer absorbs the height the card frees, so total scroll
+// height stays constant — without it, collapsing would remove overflow, snap
+// scrollTop to 0, and re-expand in a flicker loop. Hysteresis adds margin.
+var _ctplSetupScrollBound = false;
+function _ctplSetCardCompact(v) {
+  var card = document.getElementById('ctplSetupCard');
+  var sp = document.getElementById('ctplCollapseSpacer');
+  if (card) card.classList.toggle('is-compact', v);
+  if (sp) sp.style.height = v ? '88px' : '0px';
+}
+function _ctplSetupScrollHandler() {
+  var scroll = document.querySelector('.ctpl-setup-scroll');
+  var card = document.getElementById('ctplSetupCard');
+  if (!scroll || !card) return;
+  var y = scroll.scrollTop;
+  if (card.classList.contains('is-compact')) {
+    if (y < 8) _ctplSetCardCompact(false);
+  } else if (y > 24) {
+    _ctplSetCardCompact(true);
+  }
+}
+
 function selectCardTemplate(template) {
   var cfg = CTPL_CONFIG[template];
   if (!cfg) return;
   _ctplSelected = template;
   _ctplStep = 2;
 
-  // Populate header
-  document.getElementById('ctplSetupName').textContent = cfg.name;
-  document.getElementById('ctplSetupSub').textContent  = cfg.subtext;
+  var VIZ = CTPL_VIZ[template] || CTPL_VIZ.custom;
+  var dispName = VIZ.n || cfg.name;
+  var dispDesc = VIZ.d || cfg.subtext;
+
+  // Header (centered title)
+  document.getElementById('ctplSetupName').textContent = dispName;
+  document.getElementById('ctplSetupSub').textContent  = dispDesc;
+
+  // Featured card preview
+  var sc = document.getElementById('ctplSetupCard'); if (sc) sc.style.background = VIZ.g;
+  var wm = document.getElementById('ctplSetupCardWm'); if (wm) wm.style.setProperty('--ico', "url('Icons/" + VIZ.ic + "')");
+  var scn = document.getElementById('ctplSetupCardName'); if (scn) scn.textContent = dispName;
+  var scd = document.getElementById('ctplSetupCardDesc'); if (scd) scd.textContent = dispDesc;
+  var scc = document.getElementById('ctplSetupCardCaps');
+  if (scc && VIZ.caps) { scc.innerHTML = VIZ.caps.map(function(c){ return '<span>' + c + '</span>'; }).join(''); }
 
   // Nickname
   var nick = document.getElementById('ctplNickname');
-  if (nick) { nick.value = cfg.nickname || ''; nick.placeholder = cfg.nickname || 'e.g. My card'; }
+  if (nick) { nick.value = cfg.nickname || ''; nick.placeholder = cfg.nickname || ('e.g. ' + dispName + ' card'); }
 
   // Amount
   var amt = document.getElementById('ctplAmount');
-  if (amt) { amt.value = cfg.amount !== null ? cfg.amount : ''; }
+  if (amt) { amt.value = cfg.amount !== null && cfg.amount !== undefined ? cfg.amount : ''; }
 
   // Limit type dropdown
   _ctplLimitType = cfg.limitType || 'Monthly';
   var ltv = document.getElementById('ctplLimitTypeVal');
-  if (ltv) ltv.textContent = _ctplLimitType;
+  if (ltv) ltv.textContent = _ctplLimitType === 'All time' ? 'Total amount' : _ctplLimitType;
+
+  // Per-transaction limit
+  var perTxn = document.getElementById('ctplPerTxn');
+  if (perTxn) perTxn.textContent = (cfg.online == null) ? 'No limit' : (Number(cfg.online).toFixed(2));
+
+  // Expiry date (DD/MM/YYYY; default 3 months)
+  var expVal = document.getElementById('ctplExpiryVal');
+  if (expVal) expVal.textContent = _ctplExpiryDateDMY(cfg.expiryDays || 90);
+
+  // Toggles
+  var intlEl = document.getElementById('ctplIntl');
+  if (intlEl) intlEl.classList.toggle('ctpl-toggle--on', !!cfg.intl);
+  var ctlTgl = document.getElementById('ctplContactlessTgl');
+  if (ctlTgl) ctlTgl.classList.toggle('ctpl-toggle--on', !!(cfg.contactless && cfg.contactless > 0));
+
+  // Advanced (number of payments, blocked categories)
+  var txnsEl = document.getElementById('ctplTxns');
+  if (txnsEl) txnsEl.textContent = (cfg.txns == null || cfg.txns === 'unlimited')
+    ? 'Unlimited' : (cfg.txns + (cfg.txns === 1 ? ' payment' : ' payments'));
+  var blockedRow = document.getElementById('ctplBlockedRow');
+  var blockedEl = document.getElementById('ctplBlocked');
+  if (blockedRow) blockedRow.style.display = cfg.blocked ? '' : 'none';
+  if (blockedEl && cfg.blocked) blockedEl.textContent = cfg.blocked.join(', ');
 
   // AI sub: show template-relevant controls hint
   var aiSub = document.getElementById('ctplAiSub');
@@ -5205,9 +5459,11 @@ function selectCardTemplate(template) {
   var tint = document.getElementById('ctplCardTint');
   if (tint) tint.style.background = cfg.tint;
 
-  // Hide top sheet-row strip on step 2
+  // Hide top sheet-row strip on step 2 + hide the AI card
   var sheet = document.querySelector('.ctpl-sheet');
   if (sheet) sheet.classList.add('ctpl-step2');
+  var aiCard = document.getElementById('ctplAiCard');
+  if (aiCard) aiCard.style.display = 'none';
 
   // Merchant row (merchant template only)
   var merchantRow = document.getElementById('ctplMerchantRow');
@@ -5223,9 +5479,14 @@ function selectCardTemplate(template) {
     if (lb) lb.textContent = 'Select merchant';
   }
 
-  // Scroll setup to top
+  // Scroll setup to top + reset the sticky card to its full (expanded) state
   var scroll = document.querySelector('.ctpl-setup-scroll');
   if (scroll) scroll.scrollTop = 0;
+  _ctplSetCardCompact(false);
+  if (scroll && !_ctplSetupScrollBound) {
+    _ctplSetupScrollBound = true;
+    scroll.addEventListener('scroll', _ctplSetupScrollHandler, { passive: true });
+  }
 
   // Animate: picker slides left out, setup slides in from right
   var picker = document.getElementById('ctplPickerPanel');
@@ -7529,6 +7790,54 @@ renderEmbeddedTxSection('homeTxList');
     });
   }, { passive: true });
 })();
+
+/* ── Attention cards: stacked deck that expands into a list via Show all ── */
+var PEEK = 14; // px of each tucked card visible below the front card (collapsed)
+function layoutHomeNotifDeck() {
+  var notif = document.getElementById('homeNotif');
+  var deck = document.getElementById('homeNotifDeck');
+  if (!notif || !deck) return;
+  var cards = deck.querySelectorAll('.home-ncard2');
+  if (!cards.length) return;
+  var expanded = notif.classList.contains('expanded');
+  var gap = 8;
+  var y = 0;
+  cards.forEach(function(el, i) {
+    var h = el.offsetHeight || 100;
+    if (expanded) {
+      el.style.transform = 'translateY(' + y + 'px) scale(1)';
+      el.style.opacity = '1';
+      el.style.zIndex = String(i + 1);
+      y += h + gap;
+    } else {
+      el.style.transform = 'translateY(' + (i * PEEK) + 'px) scale(' + (1 - i * 0.045) + ')';
+      el.style.opacity = '1';
+      el.style.zIndex = String(cards.length - i); // front card on top
+    }
+  });
+  if (expanded) {
+    deck.style.height = (y - gap) + 'px';
+  } else {
+    var frontH = cards[0].offsetHeight || 100;
+    deck.style.height = (frontH + (cards.length - 1) * PEEK) + 'px';
+  }
+}
+function toggleHomeNotif() {
+  var notif = document.getElementById('homeNotif');
+  var btn = document.getElementById('homeNotifToggle');
+  if (!notif) return;
+  var willExpand = !notif.classList.contains('expanded');
+  notif.classList.toggle('expanded', willExpand);
+  if (btn) {
+    btn.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+    var lbl = btn.querySelector('.home-notif-toggle-label');
+    if (lbl) lbl.textContent = willExpand ? 'Show less' : 'Show all 3';
+  }
+  layoutHomeNotifDeck();
+}
+window.addEventListener('resize', layoutHomeNotifDeck);
+window.addEventListener('load', layoutHomeNotifDeck);
+setTimeout(layoutHomeNotifDeck, 0);
 
 /* ── Account-detail: status-bar blur + nav title reveal on scroll ─────── */
 (function() {

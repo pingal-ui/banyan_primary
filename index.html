@@ -65,8 +65,11 @@
     /* ── Cards ── */
     .choices {
       display: flex;
+      flex-wrap: wrap;
       gap: 20px;
       align-items: stretch;
+      justify-content: center;
+      max-width: 920px;
     }
 
     .choice-card {
@@ -284,6 +287,31 @@
       </div>
       <div class="choice-arrow">
         Open prototype
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </div>
+    </a>
+
+    <!-- New card journey -->
+    <a href="transactions.html?newcard=1" class="choice-card">
+      <span class="badge">New</span>
+      <div class="choice-preview">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+          <div style="width:48px;height:48px;background:rgba(70,136,43,0.15);border:1px solid rgba(70,136,43,0.3);border-radius:14px;display:flex;align-items:center;justify-content:center">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#46882B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><path d="M2 10h20"/><path d="M7 15h2M12 15h5"/></svg>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:5px;width:80px">
+            <div style="height:6px;background:rgba(70,136,43,0.25);border-radius:3px"></div>
+            <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;width:70%"></div>
+            <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;width:50%"></div>
+          </div>
+        </div>
+      </div>
+      <div class="choice-label">
+        <span class="choice-title">Create a card</span>
+        <span class="choice-sub">Set up a virtual card with Banyan's agent. Subscription, budget, merchant lock, and more.</span>
+      </div>
+      <div class="choice-arrow">
+        Start journey
         <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </div>
     </a>
