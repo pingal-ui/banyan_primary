@@ -9521,36 +9521,50 @@ function caConfirmCreate() {
   setTimeout(function() { showToast('Card created'); }, 340);
 }
 
-/* ── Face ID (biometric auth before send) ───────────────── */
-function smShowFaceScan() {
-  const overlay = document.getElementById('faceScanOverlay');
-  const title   = document.getElementById('fscTitle');
+/* ── Face ID sheet (Apple light-mode) ───────────────────── */
+var _fscTimers = [];
+function _fscClearTimers() { _fscTimers.forEach(clearTimeout); _fscTimers = []; }
 
-  // Reset to base state
+function smShowFaceScan() {
+  const overlay  = document.getElementById('faceScanOverlay');
+  const subLabel = document.getElementById('fscTitle');
+
+  _fscClearTimers();
+
+  // Reset
   overlay.classList.remove('fsc-scanning', 'fsc-done');
-  title.textContent = 'Face ID';
+  subLabel.textContent = 'Confirming with Face ID…';
 
   overlay.classList.add('open');
 
-  // Phase 1 (next frame): glyph scales in + features draw + breathe
-  requestAnimationFrame(function() {
+  // Sheet slides up, then glyph appears
+  _fscTimers.push(setTimeout(function() {
     overlay.classList.add('fsc-scanning');
-  });
+  }, 80));
 
-  // Phase 2 (~1300ms): authenticated — glyph morphs to checkmark
-  setTimeout(function() {
+  // ~1.3s: authenticated
+  _fscTimers.push(setTimeout(function() {
     overlay.classList.remove('fsc-scanning');
     overlay.classList.add('fsc-done');
-    title.textContent = 'Done';
+    subLabel.textContent = 'Confirmed';
     if (navigator.vibrate) navigator.vibrate(40);
-  }, 1300);
+  }, 1350));
 
-  // Phase 3 (~1750ms): dismiss + proceed to payment progress
-  setTimeout(function() {
+  // ~1.9s: dismiss + proceed
+  _fscTimers.push(setTimeout(function() {
     overlay.classList.remove('open');
-    setTimeout(function() {
+    _fscTimers.push(setTimeout(function() {
       overlay.classList.remove('fsc-done');
-    }, 240);
+    }, 400));
     smGoToProgress();
-  }, 1750);
+  }, 1900));
+}
+
+function fscCancel() {
+  _fscClearTimers();
+  const overlay = document.getElementById('faceScanOverlay');
+  overlay.classList.remove('open');
+  setTimeout(function() {
+    overlay.classList.remove('fsc-scanning', 'fsc-done');
+  }, 400);
 }

@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=201">
+  <link rel="stylesheet" href="styles.css?v=202">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -1958,29 +1958,42 @@
     </div><!-- /.sms-scroll -->
   </div><!-- /#sm-success -->
 
-  <!-- Face ID overlay — Apple faceid glyph -->
+  <!-- Face ID sheet — Apple light-mode style -->
   <div id="faceScanOverlay" class="fsc-overlay">
-    <div class="fsc-bg"></div>
-    <div class="fsc-glyph-wrap" id="fscGlyphWrap">
-      <!-- faceid SF Symbol: corner brackets + eyes / nose / smile -->
-      <svg class="fsc-glyph" id="fscGlyph" viewBox="0 0 100 100" fill="none"
-           stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
-        <path class="fsc-frame" d="M8 30 V20 Q8 8 20 8 H30"/>
-        <path class="fsc-frame" d="M70 8 H80 Q92 8 92 20 V30"/>
-        <path class="fsc-frame" d="M92 70 V80 Q92 92 80 92 H70"/>
-        <path class="fsc-frame" d="M30 92 H20 Q8 92 8 80 V70"/>
-        <path class="fsc-feat" d="M34 38 V46"/>
-        <path class="fsc-feat" d="M66 38 V46"/>
-        <path class="fsc-feat" d="M50 39 V54 H56"/>
-        <path class="fsc-feat" d="M37 64 Q50 73 63 64"/>
-      </svg>
-      <!-- success checkmark, drawn on auth -->
-      <svg class="fsc-check" id="fscCheck" viewBox="0 0 100 100" fill="none"
-           stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
-        <path id="fscCheckPath" d="M26 52 L43 69 L75 33"/>
-      </svg>
+    <div class="fsc-bg" onclick="fscCancel()"></div>
+    <div class="fsc-sheet" id="fscSheet">
+      <!-- App icon -->
+      <div class="fsc-app-icon">
+        <img src="assets/banyan-icon.webp" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Banyan">
+        <div class="fsc-app-icon-fallback">B</div>
+      </div>
+
+      <!-- Glyph area: Face ID icon → checkmark -->
+      <div class="fsc-glyph-wrap" id="fscGlyphWrap">
+        <svg class="fsc-glyph" id="fscGlyph" viewBox="0 0 100 100" fill="none"
+             stroke="currentColor" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+          <path class="fsc-frame" d="M8 30 V20 Q8 8 20 8 H30"/>
+          <path class="fsc-frame" d="M70 8 H80 Q92 8 92 20 V30"/>
+          <path class="fsc-frame" d="M92 70 V80 Q92 92 80 92 H70"/>
+          <path class="fsc-frame" d="M30 92 H20 Q8 92 8 80 V70"/>
+          <path class="fsc-feat" d="M34 38 V46"/>
+          <path class="fsc-feat" d="M66 38 V46"/>
+          <path class="fsc-feat" d="M50 39 V54 H56"/>
+          <path class="fsc-feat" d="M37 64 Q50 73 63 64"/>
+        </svg>
+        <svg class="fsc-check" id="fscCheck" viewBox="0 0 100 100" fill="none"
+             stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+          <path id="fscCheckPath" d="M26 52 L43 69 L75 33"/>
+        </svg>
+      </div>
+
+      <!-- Labels -->
+      <p class="fsc-label" id="fscLabel">Banyan</p>
+      <p class="fsc-sub-label" id="fscTitle">Confirming with Face ID…</p>
+
+      <!-- Cancel -->
+      <button class="fsc-cancel-btn" onclick="fscCancel()">Cancel</button>
     </div>
-    <p class="fsc-title" id="fscTitle">Face ID</p>
   </div>
 
 
@@ -3935,7 +3948,7 @@
 
 </div>
 
-  <script src="app.js?v=126"></script>
+  <script src="app.js?v=127"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');
