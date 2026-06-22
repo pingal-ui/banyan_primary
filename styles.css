@@ -58,21 +58,27 @@
 
     .phone { width:393px; height:852px; background:#fff; border-radius:16px; overflow:hidden; position:relative; box-shadow:0 40px 100px rgba(0,0,0,0.65),inset 0 0 0 1px rgba(255,255,255,0.08); flex-shrink:0; overscroll-behavior:none; }
 
-    /* ── Mobile: fill the full screen, no chrome ── */
-    @media (max-width: 430px) {
+    /* ── Mobile: scale the 393×852 frame to fill any phone screen ── */
+    @media (max-width: 600px) {
       body {
         background: #000;
         padding: 0;
-        align-items: stretch;
-        justify-content: stretch;
+        display: block;
         min-height: 100dvh;
       }
       .phone {
-        width: 100%;
-        height: 100dvh;
-        height: 100svh;
+        /* Keep the logical 393×852 layout intact — scale it to fit */
+        width: 393px;
+        height: 852px;
         border-radius: 0;
         box-shadow: none;
+        transform-origin: top left;
+        /* JS sets --phone-scale; fallback fills width */
+        transform: scale(var(--phone-scale, calc(100vw / 393)));
+        /* Shrink the layout footprint to match scaled size */
+        margin: 0;
+        position: absolute;
+        top: 0; left: 0;
       }
     }
 

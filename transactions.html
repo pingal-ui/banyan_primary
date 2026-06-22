@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=200">
+  <link rel="stylesheet" href="styles.css?v=201">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -3935,6 +3935,31 @@
 
 </div>
 
-  <script src="app.js?v=125"></script>
+  <script src="app.js?v=126"></script>
+  <script>
+    (function() {
+      var phone = document.querySelector('.phone');
+      if (!phone) return;
+      function applyScale() {
+        // Only active on narrow viewports (mobile)
+        if (window.innerWidth > 600) {
+          phone.style.removeProperty('--phone-scale');
+          return;
+        }
+        var scaleX = window.innerWidth  / 393;
+        var scaleY = window.innerHeight / 852;
+        var scale  = Math.min(scaleX, scaleY);
+        phone.style.setProperty('--phone-scale', scale);
+        // Shrink the body height to match the scaled phone so it doesn't scroll
+        document.body.style.height = Math.round(852 * scale) + 'px';
+      }
+      applyScale();
+      window.addEventListener('resize', applyScale);
+      // Re-run after orientation change settles
+      window.addEventListener('orientationchange', function() {
+        setTimeout(applyScale, 120);
+      });
+    })();
+  </script>
 </body>
 </html>

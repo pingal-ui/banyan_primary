@@ -1,3 +1,8 @@
+/* ── Haptic helper ───────────────────────────────────── */
+function haptic(pattern) {
+  if (navigator.vibrate) navigator.vibrate(pattern || 8);
+}
+
 /* ── Per-transaction user notes ──────────────────────── */
 const txNotes = {};
 let _noteTxId = null;
@@ -2601,6 +2606,7 @@ function _agEscape(str) {
 let _agentOpen = false;
 
 function openAgent() {
+  haptic(8);
   if (_agentOpen) return;
   _agentOpen = true;
   const overlay = document.getElementById('sm-agent');
@@ -4525,6 +4531,7 @@ let _greetingIdx = parseInt(localStorage.getItem('_greetingIdx') || '0', 10);
 let _greetingSet = false;
 
 function showHome() {
+  haptic(8);
   document.getElementById('explore').className  = 'screen hb';
   document.getElementById('accounts').className = 'screen hb';
   document.getElementById('list').className     = 'screen hr';
@@ -4563,6 +4570,7 @@ function showHome() {
   }
 }
 function showExplore() {
+  haptic(8);
   document.getElementById('list').className     = 'screen hr';
   document.getElementById('home').className     = 'screen hb';
   document.getElementById('accounts').className = 'screen hb';
@@ -4594,6 +4602,7 @@ let smRecipient = {
 };
 
 function showAccounts() {
+  haptic(8);
   document.getElementById('home').className     = 'screen hb';
   document.getElementById('explore').className  = 'screen hb';
   document.getElementById('list').className     = 'screen hr';
@@ -4738,6 +4747,7 @@ function renderCrTxSection() {
 // Space switcher (Figma 3213-46823): expandable tabs — the tapped space
 // expands to show its label, the others collapse to icon-only.
 function crSelectSpace(btn) {
+  haptic(8);
   var pill = document.getElementById('crSpacesPill');
   if (!pill) return;
   pill.querySelectorAll('.cr-space').forEach(function(b) {
@@ -6239,6 +6249,7 @@ function closePayPicker() {
 }
 
 function bnavPaySelect(spaceId) {
+  haptic(8);
   if (spaceId && spaceId !== 'all') {
     _bnavPickerSelected = spaceId;
     _bnavUpdateActiveSlot();
@@ -6573,6 +6584,7 @@ function renderSmLBubbles() {
 }
 
 function showSendMoney(from) {
+  haptic(8);
   smOrigin = from || _smOrigin || 'home';
   renderSmLBubbles();
   ['home','accounts','explore'].forEach(id => {
