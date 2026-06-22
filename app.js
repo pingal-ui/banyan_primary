@@ -1097,13 +1097,13 @@ function _agRenderUpcoming(aiDiv, msgs) {
   card.className = 'ag-ui-card';
   var statusTotal = items.filter(function(i) { return i.status === 'scheduled'; }).length;
   var html = '<div class="ag-card-header ag-stagger-item">';
-  html +=   'Scheduled';
+  html +=   'Upcoming';
   html +=   '<div class="ag-card-header-line"></div>';
   html +=   '<span class="ag-card-header-meta">' + statusTotal + ' upcoming</span>';
   html += '</div>';
   items.forEach(function(b) {
     var statusColor = b.status === 'skipped' ? 'color:var(--text-tertiary)' : 'color:var(--brand-primary)';
-    var statusText  = b.status === 'skipped' ? 'Skipped' : 'Scheduled';
+    var statusText  = b.status === 'skipped' ? 'Skipped' : 'Upcoming';
     // Exact tx-row markup — same structure as the transaction list
     html += '<div class="tx-row ag-stagger-item" style="border-bottom:0.5px solid var(--divider)">';
     html +=   '<div class="av-container">';
@@ -1651,7 +1651,7 @@ function _agRenderBills(aiDiv, msgs) {
   _AG_DATA.bills.forEach(function(b) {
     var tag = b.kind === 'predicted' ? _agTagHTML('predicted', 'Predicted')
             : b.kind === 'up19'      ? _agTagHTML('up', 'Up 19%')
-            : _agTagHTML('neutral', 'Scheduled');
+            : _agTagHTML('neutral', 'Upcoming');
     html += '<div class="ag-lrow ag-stagger-item">' +
       '<span class="ag-lrow-ic" style="background:' + b.col + '1f"><span class="ico" style="--ico:url(\'Icons/' + b.ic + '\');--sz:15px;color:' + b.col + '"></span></span>' +
       '<div class="ag-lrow-info"><span class="ag-lrow-title">' + _agEscape(b.name) + '</span><span class="ag-lrow-sub">' + _agEscape(b.due) + '</span></div>' +
@@ -2830,7 +2830,7 @@ function aiMic()    { /* placeholder */ }
 const S = {
   completed:          { label:'Completed',             badge:'b-green', hdr:'dh-green',   desc:null,                                                                           cta:'Share receipt',   ctaType:'primary', icon:'share' },
   pending:            { label:'Pending',               badge:'b-blue',  hdr:'dh-blue',    desc:'Expected to be transferred in the next 5 mins.',                              cta:'Share receipt',   ctaType:'primary', icon:'share' },
-  scheduled:          { label:'Scheduled',             badge:'b-green', hdr:'dh-green',   desc:null,                                                                           cta:'Reschedule',      ctaType:'primary', icon:'calendar' },
+  scheduled:          { label:'Upcoming',              badge:'b-green', hdr:'dh-green',   desc:null,                                                                           cta:'Reschedule',      ctaType:'primary', icon:'calendar' },
   failed:             { label:'Failed',                badge:'b-red',   hdr:'dh-red',     desc:'Insufficient funds in your account when the payment was attempted.',           cta:'Try again',       ctaType:'primary', icon:'retry' },
   cancelled:          { label:'Cancelled',             badge:'b-grey',  hdr:'dh-neutral', desc:null,                                                                           cta:'Share receipt',   ctaType:'primary', icon:'share' },
   on_hold:            { label:'On hold',               badge:'b-amber', hdr:'dh-red',     desc:'Awaiting identity verification. Banyan needs an invoice to release this payment.', cta:'Submit document', ctaType:'primary', icon:'upload' },
@@ -4679,7 +4679,7 @@ function renderCrTxSection() {
   hdrRow.appendChild(title);
   const seg = document.createElement('div');
   seg.className = 'emb-tx-seg';
-  [['recent','Recent'],['recurring','Recurring']].forEach(([t,lbl]) => {
+  [['recent','Recent'],['recurring','Upcoming']].forEach(([t,lbl]) => {
     const opt = document.createElement('button');
     opt.className = 'emb-tx-seg-opt' + (tab === t ? ' active' : '');
     opt.textContent = lbl;
@@ -5700,6 +5700,17 @@ let _pinNew    = '';  // saved new PIN from step 1
 function openCrSheet(id) {
   document.getElementById('crOverlay').classList.add('visible');
   document.getElementById(id).classList.add('open');
+  // Frozen sheet: play the natural rising-frost animation, then drop the
+  // transient mask so the rest state is the full, clean frost artwork.
+  if (id === 'crFrozenSheet') {
+    var card = document.querySelector('#crFrozenSheet .cr-frozen-card');
+    if (card) {
+      card.classList.remove('cr-frz-icing');
+      void card.offsetWidth;            // restart the animation on each open
+      card.classList.add('cr-frz-icing');
+      setTimeout(function() { card.classList.remove('cr-frz-icing'); }, 1750);
+    }
+  }
 }
 function closeCrSheet(id) {
   document.getElementById(id).classList.remove('open');
@@ -6031,14 +6042,45 @@ function crToggle(row) {
 function openCrLockSheet() {
   openCrSheet(_cardLocked ? 'crFrozenSheet' : 'crLockSheet');
 }
+function _crSyncLockUI(frozen) {
+  // Freeze action label (icon stays a snowflake in both states, per Figma)
+  var lbl = document.getElementById('crLockActionLbl');
+  if (lbl) lbl.textContent = frozen ? 'Unfreeze' : 'Freeze';
+  // Whole-screen frozen state: FROZEN badge, description, Controls hidden,
+  // actions re-centred (driven by CSS off #cards.cr-frozen-state)
+  var cards = document.getElementById('cards');
+  if (cards) cards.classList.toggle('cr-frozen-state', !!frozen);
+  // Hero backdrop: frosted-teal when frozen, else the active card's own tinge
+  var hero = document.querySelector('#cards .cr-hero');
+  if (hero) {
+    var carousel = document.getElementById('crCarousel');
+    var active = carousel && carousel.querySelector('.cr-carousel-item.cr-active');
+    var items = carousel ? Array.prototype.slice.call(carousel.querySelectorAll('.cr-carousel-item')) : [];
+    var green = active ? items.indexOf(active) === 0 : true;
+    var tinge = frozen ? 'rgba(150,200,202,0.92)' : (green ? 'rgba(8,110,1,0.2)' : 'rgba(80,80,80,0.18)');
+    var fade  = frozen ? 'rgba(150,200,202,0)'    : (green ? 'rgba(8,110,1,0)'   : 'rgba(80,80,80,0)');
+    hero.style.setProperty('--cr-tinge', tinge);
+    hero.style.setProperty('--cr-tinge-fade', fade);
+  }
+}
 function _crApplyFrozen(frozen) {
   _cardLocked = frozen;
   var carousel = document.getElementById('crCarousel');
-  if (carousel) carousel.classList.toggle('is-frozen', frozen);
-  var ico = document.getElementById('crLockActionIco');
-  var lbl = document.getElementById('crLockActionLbl');
-  if (ico) { ico.style.setProperty('--ico', frozen ? "url('Icons/LockOpen.svg')" : "url('Icons/Snowflake.svg')"); ico.style.color = frozen ? '#2f6dd0' : 'rgba(0,0,0,0.8)'; }
-  if (lbl) lbl.textContent = frozen ? 'Unfreeze' : 'Freeze';
+  // Ice over (or thaw) the currently-centred card — frost spreads in over it
+  var card = carousel && carousel.querySelector('.cr-flipcard.cr-active');
+  if (card) {
+    card.classList.remove('cr-freezing', 'cr-thawing');
+    if (frozen) {
+      card.classList.add('cr-iced', 'cr-freezing');
+      haptic([20, 50, 30]);
+      setTimeout(function() { card.classList.remove('cr-freezing'); }, 1750);
+    } else {
+      // keep cr-iced through the melt animation, then drop it
+      card.classList.add('cr-thawing');
+      setTimeout(function() { card.classList.remove('cr-thawing', 'cr-iced'); }, 840);
+    }
+  }
+  _crSyncLockUI(frozen);
 }
 function confirmFreezeCard() {
   _crApplyFrozen(true);
@@ -7485,24 +7527,35 @@ document.addEventListener('pointerdown', function primeAudio() {
   document.removeEventListener('pointerdown', primeAudio);
 }, { once: true });
 
-function playSuccessSound() {
-  const ctx = _getAudioCtx();
-  if (!ctx) return;
+function _playSuccessTones(ctx) {
   try {
     const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    const base = ctx.currentTime + 0.02;
     notes.forEach(function(freq, i) {
       const osc  = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
       osc.type = 'sine';
       osc.frequency.value = freq;
-      const t = ctx.currentTime + i * 0.1;
+      const t = base + i * 0.1;
       gain.gain.setValueAtTime(0, t);
       gain.gain.linearRampToValueAtTime(0.22, t + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
       osc.start(t); osc.stop(t + 0.35);
     });
   } catch(e) {}
+}
+function playSuccessSound() {
+  const ctx = _getAudioCtx();
+  if (!ctx) return;
+  // resume() is async on iOS — wait for the context to actually be running
+  // before scheduling notes, otherwise they're dropped silently.
+  if (ctx.state === 'suspended' && ctx.resume) {
+    ctx.resume().then(function() { _playSuccessTones(ctx); })
+                .catch(function() { _playSuccessTones(ctx); });
+  } else {
+    _playSuccessTones(ctx);
+  }
 }
 
 function smGoToSuccess() {
@@ -8150,9 +8203,10 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
     var CARD_SPENDS = [
       { int: '14,098', dec: '.43' },  // Banyan Physical
       { int: '2,340',  dec: '.17' },  // Card 2 Virtual
+      { int: '0',      dec: '.00' },  // Travel card (frozen)
       null                             // Create a new card
     ];
-    var CARD_NAMES = ['Banyan card', 'Card 2', ''];
+    var CARD_NAMES = ['Banyan card', 'Card 2', 'Travel card', ''];
 
     function update() {
       var items = carousel.querySelectorAll('.cr-carousel-item');
@@ -8218,6 +8272,13 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
         item.classList.toggle('cr-active', i === closestIdx);
         if (i !== closestIdx) item.classList.remove('cr-flipped');
       });
+      // Reflect the active card's frozen state in the Freeze action + lock state
+      var activeCard = items[closestIdx];
+      if (activeCard && activeCard.classList.contains('cr-flipcard')) {
+        var frozenNow = activeCard.classList.contains('cr-iced');
+        if (frozenNow !== _cardLocked) { _cardLocked = frozenNow; }
+        if (typeof _crSyncLockUI === 'function') _crSyncLockUI(frozenNow);
+      }
       var isAdd = items[closestIdx] && items[closestIdx].classList.contains('cr-carousel-add');
       if (spendHdr) spendHdr.style.display = isAdd ? 'none'  : '';
       if (tip)      tip.style.display      = isAdd ? 'flex'  : 'none';
@@ -8233,11 +8294,12 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
         // Roll the number up only when a new card lands in the centre
         if (closestIdx !== _lastSpendIdx) {
           _lastSpendIdx = closestIdx;
-          // Update hero tinge: green for physical card (0), grey for virtual/dark cards
+          // Update hero tinge: frosted-teal if frozen, else green (card 0) / grey
           var _crHero = document.querySelector('#cards .cr-hero');
           if (_crHero) {
-            var _tinge = closestIdx === 0 ? 'rgba(8,110,1,0.2)' : 'rgba(80,80,80,0.18)';
-            var _tingeFade = closestIdx === 0 ? 'rgba(8,110,1,0)' : 'rgba(80,80,80,0)';
+            var _froz = items[closestIdx] && items[closestIdx].classList.contains('cr-iced');
+            var _tinge = _froz ? 'rgba(150,200,202,0.92)' : (closestIdx === 0 ? 'rgba(8,110,1,0.2)' : 'rgba(80,80,80,0.18)');
+            var _tingeFade = _froz ? 'rgba(150,200,202,0)' : (closestIdx === 0 ? 'rgba(8,110,1,0)' : 'rgba(80,80,80,0)');
             _crHero.style.setProperty('--cr-tinge', _tinge);
             _crHero.style.setProperty('--cr-tinge-fade', _tingeFade);
           }
@@ -8310,26 +8372,15 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
       snapToIndex(_activeIdx, true);
     });
 
-    // ── 3D pointer-tilt + tap-to-flip (reveals CVV) on the physical card ──
+    // ── Tap-to-flip (reveals CVV) on the physical card ──
+    // Pointer-tilt hover removed in favour of a continuous idle bob (see styles.css).
+    // _crResetTilt clears any stray rotation vars before/after drag and flip.
     function _crResetTilt() {
       carousel.querySelectorAll('.cr-flipcard .cr-tilt').forEach(function(t) {
         t.style.setProperty('--rx', '0deg'); t.style.setProperty('--ry', '0deg');
       });
     }
-    // Tilt follows the pointer over the active card (skipped while dragging or flipped)
-    carousel.addEventListener('pointermove', function(e) {
-      if (_dragStart !== null) return;
-      var card = carousel.querySelector('.cr-flipcard.cr-active');
-      if (!card || card.classList.contains('cr-flipped')) return;
-      var tilt = card.querySelector('.cr-tilt');
-      if (!tilt) return;
-      var r = card.getBoundingClientRect();
-      var px = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width / 2)));
-      var py = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (r.height / 2)));
-      tilt.style.setProperty('--ry', (px * 10) + 'deg');
-      tilt.style.setProperty('--rx', (-py * 10) + 'deg');
-    });
-    carousel.addEventListener('pointerleave', _crResetTilt);
+    _crResetTilt();
 
     // Init: snap to first card
     snapToIndex(0, false);
@@ -9533,21 +9584,22 @@ function smShowFaceScan() {
 
   // Reset
   overlay.classList.remove('fsc-scanning', 'fsc-done');
-  subLabel.textContent = 'Confirming with Face ID…';
+  subLabel.textContent = 'Face ID';
 
   overlay.classList.add('open');
 
-  // Sheet slides up, then glyph appears
+  // Sheet slides up, then glyph appears — soft tick as scanning starts
   _fscTimers.push(setTimeout(function() {
     overlay.classList.add('fsc-scanning');
+    haptic(10);
   }, 80));
 
-  // ~1.3s: authenticated
+  // ~1.3s: authenticated — crisp double-tap success pattern
   _fscTimers.push(setTimeout(function() {
     overlay.classList.remove('fsc-scanning');
     overlay.classList.add('fsc-done');
     subLabel.textContent = 'Confirmed';
-    if (navigator.vibrate) navigator.vibrate(40);
+    haptic([35, 55, 90]);
   }, 1350));
 
   // ~1.9s: dismiss + proceed

@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=202">
+  <link rel="stylesheet" href="styles.css?v=221">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -99,11 +99,20 @@
       <!-- ── Main content ── -->
       <div class="home-main">
 
-        <!-- ── Today's edition ── -->
-        <div class="home-brief2">
-          <div class="home-brief2-dateline">Thursday, June 18 · Today's edition</div>
-          <h2 class="home-brief2-headline">Here's what's worth your attention today.</h2>
-          <div class="home-brief2-rule"></div>
+        <!-- ── The Banyan Daily ── -->
+        <div class="home-daily">
+          <h1 class="home-daily-mast">The Banyan Daily</h1>
+          <div class="home-daily-meta">
+            <span class="home-daily-label">Today's headlines</span>
+            <span class="home-daily-date">THURSDAY, JUNE 18</span>
+          </div>
+          <div class="home-daily-rule"></div>
+          <h2 class="home-daily-hl">3 items need you to act on them</h2>
+          <p class="home-daily-sub">Review, approve and add balance.</p>
+          <div class="home-daily-imgs">
+            <div class="home-daily-img-card home-daily-img-card--l"><img src="assets/home-bg.webp" alt=""></div>
+            <div class="home-daily-img-card home-daily-img-card--r"><img src="assets/home-coins.webp" alt=""></div>
+          </div>
         </div>
 
         <!-- FX / remittance opportunity -->
@@ -125,9 +134,7 @@
         </section>
 
         <!-- ── Pending actions ── -->
-        <!-- ── Things that need attention ── -->
         <section class="home-sec">
-          <div class="home-eyebrow">3 items need you to <b>act</b> on them — review, approve and add balance.</div>
           <div class="home-notif" id="homeNotif">
             <div class="home-notif-deck" id="homeNotifDeck">
               <div class="home-ncard2 home-ncard2--netflix">
@@ -547,6 +554,7 @@
           <div class="cr-cardname">
             <img class="cr-cardname-av" src="assets/space-usd-checking.webp" alt="">
             <span class="cr-cardname-lbl" id="crCardName">Card name</span>
+            <span class="cr-frozen-badge" id="crFrozenBadge">Frozen</span>
           </div>
           <div class="cr-amount">
             <span class="cr-amount-sym">$</span><span class="cr-amount-int" id="crSpendInt">14,098</span><span class="cr-amount-dec" id="crSpendDec">.43</span>
@@ -566,40 +574,89 @@
         <!-- Card carousel: center card is prominent, side cards peek in -->
         <div class="cr-carousel-outer">
           <div class="cr-carousel" id="crCarousel">
-            <div class="cr-carousel-item cr-flipcard">
+            <div class="cr-carousel-item cr-flipcard" style="--cbg:linear-gradient(154deg,#0b2807 0%,#2f6d22 170%)">
               <div class="cr-tilt">
                 <div class="cr-flip">
                   <div class="cr-face cr-face-front">
                     <img src="assets/card-front.webp" alt="Banyan – Physical">
-                    <div class="cr-card-frost"><span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:44px;color:rgba(255,255,255,0.92)"></span></div>
+                    <div class="cr-card-frost">
+                      <span class="cr-frost-name">Banyan card</span>
+                      <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
+                      <span class="cr-frost-visa"></span>
+                    </div>
+                    <span class="cr-frost-flash"></span>
                   </div>
                   <div class="cr-face cr-face-back" aria-hidden="true">
-                    <span class="cr-back-brand">Banyan</span>
-                    <div class="cr-back-strip"></div>
-                    <div class="cr-back-cvv">
-                      <span class="cr-back-cvv-lbl">CVV</span>
-                      <span class="cr-back-cvv-val">312</span>
+                    <span class="cr-bk-name">Banyan card</span>
+                    <div class="cr-bk-chiprow">
+                      <span class="cr-bk-chip"></span>
+                      <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
                     </div>
-                    <div class="cr-back-note">Tap to hide · only you can see this</div>
+                    <div class="cr-bk-num">1234 5678 9101 1121</div>
+                    <div class="cr-bk-valid">
+                      <span class="cr-bk-valid-lbl">Valid thru</span>
+                      <span class="cr-bk-valid-val">06/21</span>
+                    </div>
+                    <div class="cr-bk-holder">Devanand Patel</div>
+                    <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
                   </div>
                 </div>
               </div>
             </div>
-            <div class="cr-carousel-item cr-flipcard cr-flipcard-dark">
+            <div class="cr-carousel-item cr-flipcard cr-flipcard-dark" style="--cbg:linear-gradient(154deg,#18181a 0%,#3a3a40 170%)">
               <div class="cr-tilt">
                 <div class="cr-flip">
                   <div class="cr-face cr-face-front">
                     <img src="assets/card-back.webp" alt="Card 2 – Virtual">
-                    <div class="cr-card-frost"><span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:44px;color:rgba(255,255,255,0.92)"></span></div>
+                    <div class="cr-card-frost">
+                      <span class="cr-frost-name">Card 2</span>
+                      <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
+                      <span class="cr-frost-visa"></span>
+                    </div>
+                    <span class="cr-frost-flash"></span>
                   </div>
                   <div class="cr-face cr-face-back" aria-hidden="true">
-                    <span class="cr-back-brand">Card 2</span>
-                    <div class="cr-back-strip"></div>
-                    <div class="cr-back-cvv">
-                      <span class="cr-back-cvv-lbl">CVV</span>
-                      <span class="cr-back-cvv-val">887</span>
+                    <span class="cr-bk-name">Card 2</span>
+                    <div class="cr-bk-chiprow">
+                      <span class="cr-bk-chip"></span>
+                      <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
                     </div>
-                    <div class="cr-back-note">Tap to hide · only you can see this</div>
+                    <div class="cr-bk-num">4892 1145 7732 0098</div>
+                    <div class="cr-bk-valid">
+                      <span class="cr-bk-valid-lbl">Valid thru</span>
+                      <span class="cr-bk-valid-val">09/28</span>
+                    </div>
+                    <div class="cr-bk-holder">Devanand Patel</div>
+                    <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="cr-carousel-item cr-flipcard cr-flipcard-dark cr-iced" style="--cbg:linear-gradient(154deg,#00132b 0%,#005289 170%)">
+              <div class="cr-tilt">
+                <div class="cr-flip">
+                  <div class="cr-face cr-face-front">
+                    <img src="assets/card-back.webp" alt="Travel card – frozen">
+                    <div class="cr-card-frost">
+                      <span class="cr-frost-name">Travel card</span>
+                      <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
+                      <span class="cr-frost-visa"></span>
+                    </div>
+                    <span class="cr-frost-flash"></span>
+                  </div>
+                  <div class="cr-face cr-face-back" aria-hidden="true">
+                    <span class="cr-bk-name">Travel card</span>
+                    <div class="cr-bk-chiprow">
+                      <span class="cr-bk-chip"></span>
+                      <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
+                    </div>
+                    <div class="cr-bk-num">5167 3810 1139 5591</div>
+                    <div class="cr-bk-valid">
+                      <span class="cr-bk-valid-lbl">Valid thru</span>
+                      <span class="cr-bk-valid-val">08/30</span>
+                    </div>
+                    <div class="cr-bk-holder">Devanand Patel</div>
+                    <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
                   </div>
                 </div>
               </div>
@@ -611,9 +668,12 @@
           </div>
         </div>
 
-        <!-- Action buttons: Controls | Freeze | More -->
+        <!-- Frozen-state description (shown only when the active card is frozen) -->
+        <p class="cr-frozen-desc" id="crFrozenDesc">This card is frozen. New transactions will be declined until you unfreeze this card.</p>
+
+        <!-- Action buttons: Controls | Freeze | More (Controls hidden when frozen) -->
         <div class="cr-actions" id="crActions">
-          <div class="cr-action-item" onclick="openCardControls()">
+          <div class="cr-action-item" id="crControlsAction" onclick="openCardControls()">
             <button class="cr-action-btn">
               <span class="ico ol" style="--ico:url('Icons/SlidersHorizontal.svg');--sz:16px;color:var(--text-primary)"></span>
             </button>
@@ -1961,14 +2021,9 @@
   <!-- Face ID sheet — Apple light-mode style -->
   <div id="faceScanOverlay" class="fsc-overlay">
     <div class="fsc-bg" onclick="fscCancel()"></div>
-    <div class="fsc-sheet" id="fscSheet">
-      <!-- App icon -->
-      <div class="fsc-app-icon">
-        <img src="assets/banyan-icon.webp" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="Banyan">
-        <div class="fsc-app-icon-fallback">B</div>
-      </div>
 
-      <!-- Glyph area: Face ID icon → checkmark -->
+    <!-- iOS-style badge that drops down from the top -->
+    <div class="fsc-badge" id="fscBadge">
       <div class="fsc-glyph-wrap" id="fscGlyphWrap">
         <svg class="fsc-glyph" id="fscGlyph" viewBox="0 0 100 100" fill="none"
              stroke="currentColor" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
@@ -1986,13 +2041,7 @@
           <path id="fscCheckPath" d="M26 52 L43 69 L75 33"/>
         </svg>
       </div>
-
-      <!-- Labels -->
-      <p class="fsc-label" id="fscLabel">Banyan</p>
-      <p class="fsc-sub-label" id="fscTitle">Confirming with Face ID…</p>
-
-      <!-- Cancel -->
-      <button class="fsc-cancel-btn" onclick="fscCancel()">Cancel</button>
+      <p class="fsc-badge-label" id="fscTitle">Face ID</p>
     </div>
   </div>
 
@@ -3784,7 +3833,7 @@
       <div class="cr-frozen-card">
         <img src="assets/card-back.webp" alt="">
         <div class="cr-frozen-frost"></div>
-        <span class="ico ol cr-frozen-snow" style="--ico:url('Icons/Snowflake.svg');--sz:64px;color:rgba(255,255,255,0.92)"></span>
+        <img class="cr-frost-snow cr-frozen-snow" src="assets/snowflake-frost.svg" alt="">
       </div>
       <div class="cr-frz-texts">
         <div class="cr-frz-title">Card frozen</div>
@@ -3948,7 +3997,7 @@
 
 </div>
 
-  <script src="app.js?v=127"></script>
+  <script src="app.js?v=137"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

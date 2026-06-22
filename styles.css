@@ -5348,18 +5348,49 @@
     .home-eyebrow b { font-weight: 600; color: var(--ink); }
     .home-sec-head .home-eyebrow { padding: 0; }
 
-    /* ── Today's edition (masthead) ── */
-    .home-brief2 { padding: 6px 16px 2px; display: flex; flex-direction: column; }
-    .home-brief2-dateline {
-      font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600;
-      letter-spacing: 1.4px; text-transform: uppercase; color: #46882b; line-height: 1;
+    /* ── The Banyan Daily (masthead) ── */
+    .home-daily {
+      padding: 24px 16px 8px;
+      display: flex; flex-direction: column;
     }
-    .home-brief2-headline {
-      margin: 10px 0 0;
-      font-family: var(--font-serif); font-size: 30px; font-weight: 600; line-height: 1.12;
-      letter-spacing: -0.5px; color: var(--ink); text-wrap: balance;
+    .home-daily-mast {
+      margin: 0 0 16px;
+      font-family: var(--font-serif); font-size: 36px; font-weight: 700; line-height: 1;
+      letter-spacing: -0.8px; color: var(--ink);
+      text-align: center;
     }
-    .home-brief2-rule { height: 1.5px; background: var(--ink); margin-top: 16px; }
+    .home-daily-meta {
+      display: flex; align-items: baseline; justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .home-daily-label {
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: var(--ink-soft);
+    }
+    .home-daily-date {
+      font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 1.2px; text-transform: uppercase; color: var(--ink-soft);
+    }
+    .home-daily-rule { height: 1.5px; background: var(--ink); margin-bottom: 16px; }
+    .home-daily-hl {
+      margin: 0 0 6px;
+      font-family: 'Geist', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.18;
+      letter-spacing: -0.4px; color: var(--ink); text-wrap: balance;
+    }
+    .home-daily-sub {
+      margin: 0 0 16px;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 400; line-height: 1.4;
+      color: var(--ink-soft);
+    }
+    .home-daily-imgs {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      margin: 0 0 4px;
+    }
+    .home-daily-img-card {
+      border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1;
+    }
+    .home-daily-img-card img {
+      width: 100%; height: 100%; object-fit: cover; display: block;
+    }
     /* FX / remittance card */
     .home-fx-card {
       display: flex; align-items: center; gap: 16px; margin: 0 8px; padding: 20px;
@@ -6156,6 +6187,27 @@
     .cr-cardname { display: flex; align-items: center; gap: 6px; }
     .cr-cardname-av { width: 16px; height: 16px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
     .cr-cardname-lbl { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400; color: var(--text-secondary); }
+    /* FROZEN pill — only shown when the active card is frozen */
+    .cr-frozen-badge {
+      display: none; align-items: center; height: 20px; padding: 0 8px; margin-left: 2px;
+      border-radius: 9999px; background: rgba(25,80,75,0.1); border: 1px solid rgba(25,80,75,0.1);
+      font-family: 'Geist', sans-serif; font-size: 10px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; color: rgba(25,80,75,0.7); line-height: 1;
+    }
+    #cards.cr-frozen-state .cr-frozen-badge { display: inline-flex; }
+    /* Frozen description line under the card */
+    .cr-frozen-desc {
+      display: none; margin: 0; padding: 0 24px; text-align: center;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400; line-height: 18px;
+      color: var(--text-secondary);
+    }
+    #cards.cr-frozen-state .cr-frozen-desc { display: block; }
+    /* Frozen actions: Controls hidden, Unfreeze + More centred */
+    #cards.cr-frozen-state #crControlsAction { display: none; }
+    #cards.cr-frozen-state .cr-actions { justify-content: center; gap: 56px; }
+    #cards.cr-frozen-state .cr-action-item { flex: 0 0 auto; }
+    /* Frosted-teal hero rim when frozen */
+    #cards.cr-frozen-state .cr-hero::before { border-color: #e7fdff; }
 
     /* Spent-today daily-limit gauge card */
     .cr-spent-card {
@@ -6234,34 +6286,109 @@
       transition: transform 0.6s cubic-bezier(0.16,1,0.3,1);
     }
     .cr-flipcard.cr-flipped .cr-flip { transform: rotateY(180deg); }
-    .cr-flipcard.cr-flipped .cr-tilt { transform: none; }   /* ignore tilt while flipped */
+    .cr-flipcard.cr-flipped .cr-tilt { transform: none; animation: none; }   /* hold still while flipped */
+
+    /* ── Active card: gentle continuous bob + grounded bottom shadow ──
+       (replaces the old pointer-tilt hover; the centred card softly floats,
+       its shadow tightening as it lifts so it reads as weight off the surface) */
+    .cr-flipcard.cr-active .cr-tilt {
+      animation: crBob 3.4s ease-in-out infinite;
+      will-change: transform;
+    }
+    @keyframes crBob {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    .cr-flipcard.cr-active::after {
+      content: '';
+      position: absolute; left: 50%; bottom: -16px;
+      width: 68%; height: 13px; border-radius: 50%;
+      background: rgba(0,0,0,0.30);
+      filter: blur(7px);
+      transform: translateX(-50%);
+      animation: crBobShadow 3.4s ease-in-out infinite;
+      pointer-events: none; z-index: -1;
+    }
+    @keyframes crBobShadow {
+      0%, 100% { transform: translateX(-50%) scaleX(1);    opacity: 0.30; }
+      50%      { transform: translateX(-50%) scaleX(0.84); opacity: 0.16; }
+    }
     .cr-face {
       position: absolute; inset: 0; border-radius: 16px; overflow: hidden;
       backface-visibility: hidden; -webkit-backface-visibility: hidden;
     }
     .cr-face-front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Card back (Figma 4274:58224): name, EMV chip + contactless, card number,
+       valid-thru, holder, VISA. Gradient adapts to the front via --cbg. */
     .cr-face-back {
       transform: rotateY(180deg);
-      background: linear-gradient(159deg, #0c2208 0%, #20371a 120%);
+      background: var(--cbg, linear-gradient(154deg, #00132b 0%, #005289 170%));
       color: #fff;
     }
-    .cr-flipcard-dark .cr-face-back { background: linear-gradient(159deg, #18181a 0%, #313134 120%); }
-    .cr-back-brand {
-      position: absolute; top: 16px; left: 18px;
-      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.92);
+    .cr-bk-name {
+      position: absolute; top: 16px; left: 16px;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
+      line-height: 20px; color: rgba(255,255,255,0.8); letter-spacing: -0.1px;
     }
-    .cr-back-strip { position: absolute; top: 46px; left: 0; right: 0; height: 40px; background: rgba(0,0,0,0.82); }
-    .cr-back-cvv {
-      position: absolute; top: 102px; left: 18px; right: 18px; height: 32px;
-      background: rgba(255,255,255,0.92); border-radius: 6px;
-      display: flex; align-items: center; justify-content: space-between; padding: 0 12px;
+    /* chip + contactless wave */
+    .cr-bk-chiprow {
+      position: absolute; top: 78px; left: 20px;
+      display: flex; align-items: center; gap: 9px;
     }
-    .cr-back-cvv-lbl { font-family: 'Geist', sans-serif; font-size: 9px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(0,0,0,0.5); }
-    .cr-back-cvv-val { font-family: 'Geist Mono', ui-monospace, monospace; font-size: 15px; font-weight: 700; letter-spacing: 2px; color: #000; }
-    .cr-back-note { position: absolute; bottom: 14px; left: 18px; right: 18px; font-family: 'Geist', sans-serif; font-size: 10px; line-height: 14px; color: rgba(255,255,255,0.55); }
+    .cr-bk-chip {
+      width: 31px; height: 24px; border-radius: 5px; flex-shrink: 0;
+      background: linear-gradient(132deg, #e9ddc6 0%, #cabda4 48%, #ddd0ba 100%);
+      box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.28), inset 0 1px 1px rgba(255,255,255,0.5);
+      position: relative; overflow: hidden;
+    }
+    /* EMV contact lines */
+    .cr-bk-chip::before {
+      content: ''; position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32)) 0 50% / 100% 0.5px no-repeat,
+        linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32)) 34% 0 / 0.5px 100% no-repeat,
+        linear-gradient(rgba(0,0,0,0.32), rgba(0,0,0,0.32)) 66% 0 / 0.5px 100% no-repeat;
+    }
+    .cr-bk-chip::after {
+      content: ''; position: absolute; left: 34%; right: 34%; top: 31%; bottom: 31%;
+      border: 0.5px solid rgba(0,0,0,0.3); border-radius: 2px;
+      background: linear-gradient(135deg, #ded2bb, #c7baa2);
+    }
+    .cr-bk-wave { transform: rotate(0deg); }
+    /* card number */
+    .cr-bk-num {
+      position: absolute; left: 20px; top: 112px;
+      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 16px; font-weight: 600;
+      letter-spacing: 0.2px; color: rgba(255,255,255,0.92);
+    }
+    /* valid thru */
+    .cr-bk-valid {
+      position: absolute; right: 16px; top: 92px;
+      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+    }
+    .cr-bk-valid-lbl {
+      font-family: 'Geist', sans-serif; font-size: 8px; font-weight: 600;
+      letter-spacing: 0.6px; text-transform: uppercase; color: rgba(255,255,255,0.55);
+    }
+    .cr-bk-valid-val {
+      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 17px; font-weight: 600;
+      color: rgba(255,255,255,0.92); letter-spacing: 0.3px;
+    }
+    /* cardholder */
+    .cr-bk-holder {
+      position: absolute; left: 20px; top: 146px;
+      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; font-weight: 500;
+      letter-spacing: 0.4px; text-transform: uppercase; color: rgba(255,255,255,0.78);
+    }
+    .cr-face-back img.cr-bk-visa {
+      position: absolute; right: 16px; bottom: 16px; width: 43px; height: 14px;
+      object-fit: contain; opacity: 0.95;
+    }
     @media (prefers-reduced-motion: reduce) {
       .cr-tilt { transition: none; }
       .cr-flip { transition: transform 0.2s ease; }
+      .cr-flipcard.cr-active .cr-tilt { animation: none; }
+      .cr-flipcard.cr-active::after { animation: none; opacity: 0.24; }
     }
     .cr-carousel-add {
       background: var(--surface-subtle);
@@ -7047,47 +7174,31 @@
     /* Frozen card preview inside the frozen sheet */
     .cr-frozen-card { position: relative; width: 286px; height: 180px; border-radius: 16px; overflow: hidden; }
     .cr-frozen-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    /* Frozen preview uses the same real frost artwork + rising turbulent mask as
+       the carousel card, so the sheet matches the live freeze exactly */
     .cr-frozen-frost {
       position: absolute; inset: 0;
-      /* frost is denser at the edges (icing creeps in from the rim) and clearer toward the centre */
-      background:
-        radial-gradient(125% 95% at 50% 46%, rgba(255,255,255,0) 28%, rgba(224,239,250,0.42) 70%, rgba(190,216,234,0.74) 100%),
-        linear-gradient(135deg, rgba(226,240,251,0.5) 0%, rgba(196,219,236,0.46) 100%);
-      backdrop-filter: blur(7px); -webkit-backdrop-filter: blur(7px);
+      background: url('assets/card-frost.webp') center/cover no-repeat,
+                  linear-gradient(154deg, #00132b 0%, #005289 170%);
+      --frost-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='640'%3E%3Cdefs%3E%3ClinearGradient%20id='lg'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.40'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.60'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3Cfilter%20id='r'%20x='-20%'%20y='-20%'%20width='140%'%20height='140%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.016%200.038'%20numOctaves='2'%20seed='8'%20result='n'/%3E%3CfeDisplacementMap%20in='SourceGraphic'%20in2='n'%20scale='72'%20xChannelSelector='R'%20yChannelSelector='G'/%3E%3C/filter%3E%3C/defs%3E%3Crect%20width='300'%20height='640'%20fill='url(%23lg)'%20filter='url(%23r)'/%3E%3C/svg%3E");
     }
-    /* crystalline ice spokes radiating from the snowflake (masked so they fade before the corners) */
-    .cr-frozen-frost::before {
-      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-      transform: scale(0.55); transform-origin: 50% 46%;
-      background: repeating-conic-gradient(from 6deg at 50% 46%, rgba(255,255,255,0) 0deg, rgba(255,255,255,0) 7deg, rgba(255,255,255,0.24) 8.2deg, rgba(255,255,255,0) 9.6deg);
-      -webkit-mask: radial-gradient(circle at 50% 46%, #000 8%, rgba(0,0,0,0.55) 38%, transparent 64%);
-      mask: radial-gradient(circle at 50% 46%, #000 8%, rgba(0,0,0,0.55) 38%, transparent 64%);
+    .cr-frozen-card img.cr-frost-snow {
+      position: absolute; left: 18px; bottom: 20px; top: auto;
+      width: 66px; height: 66px; object-fit: contain; transform: none; z-index: 1; pointer-events: none;
+      filter: drop-shadow(0 2px 10px rgba(40,100,150,0.28));
     }
-    /* frost nucleation blooms — ice forms at scattered points across the surface */
-    .cr-frozen-frost::after {
-      content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
-      background:
-        radial-gradient(44px 30px at 20% 32%, rgba(255,255,255,0.55), transparent 72%),
-        radial-gradient(52px 36px at 76% 24%, rgba(255,255,255,0.5), transparent 72%),
-        radial-gradient(48px 32px at 66% 74%, rgba(255,255,255,0.46), transparent 72%),
-        radial-gradient(40px 28px at 28% 70%, rgba(255,255,255,0.44), transparent 72%);
+    /* Freeze-over: frost creeps up from the bottom with the same natural,
+       turbulent rising front as the carousel card. The mask is only present
+       while icing (.cr-frz-icing); at rest the full frost shows with no mask
+       so the displaced edges never leave gaps over the card. */
+    .cr-frozen-card.cr-frz-icing .cr-frozen-frost {
+      -webkit-mask-image: var(--frost-mask); mask-image: var(--frost-mask);
+      -webkit-mask-size: 100% 235%; mask-size: 100% 235%;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+      animation: crFrostRise 1600ms cubic-bezier(0.22,0.7,0.24,1) both,
+                 crFrostSet 1700ms ease-out both;
     }
-    .cr-frozen-snow {
-      position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-      filter: drop-shadow(0 2px 10px rgba(120,170,210,0.55));
-    }
-    /* diagonal ice sheen sweep */
-    .cr-frozen-card::after {
-      content: ""; position: absolute; inset: 0; pointer-events: none;
-      background: linear-gradient(115deg, transparent 32%, rgba(255,255,255,0.6) 48%, transparent 64%);
-      transform: translateX(-130%);
-    }
-    /* Freeze-over: ice spreads diagonally across the surface, blooms nucleate, crystals fan out */
-    #crFrozenSheet.open .cr-frozen-frost { animation: crFreezeWipe 1100ms cubic-bezier(0.22,0.61,0.36,1) both; }
-    #crFrozenSheet.open .cr-frozen-frost::after { animation: crBloom 900ms var(--ease-out) 220ms both; }
-    #crFrozenSheet.open .cr-frozen-frost::before { animation: crCrystals 1100ms var(--ease-out) 320ms both; }
-    #crFrozenSheet.open .cr-frozen-snow { animation: crSnowIn 800ms var(--ease-spring) 360ms both; }
-    #crFrozenSheet.open .cr-frozen-card::after { animation: crIceSheen 1100ms var(--ease-out) 720ms both; }
+    .cr-frozen-card.cr-frz-icing .cr-frozen-snow { animation: crFrostSnowIn 760ms var(--ease-spring) 900ms both; }
     /* diagonal spread: frosted region grows from the top-left corner across the card */
     @keyframes crFreezeWipe {
       0%   { clip-path: polygon(0 0, 6% 0, -24% 100%, -30% 100%); opacity: 0.55; }
@@ -7102,25 +7213,129 @@
     }
     @keyframes crIceSheen { from { transform: translateX(-130%); } to { transform: translateX(130%); } }
 
-    /* Frost overlay on the live carousel card when frozen */
+    /* Frozen card overlay — the real Figma frost artwork (photographic ice
+       crystals, dense top-right, smooth light-blue lower-left) + blue snowflake.
+       The whole card reads as frosted-over, matching the design exactly. */
     .cr-card-frost {
-      position: absolute; inset: 0; display: none; align-items: center; justify-content: center; overflow: hidden;
-      background:
-        radial-gradient(125% 95% at 50% 50%, rgba(255,255,255,0) 28%, rgba(224,239,250,0.42) 70%, rgba(190,216,234,0.74) 100%),
-        linear-gradient(135deg, rgba(226,240,251,0.5), rgba(196,219,236,0.46));
-      backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+      position: absolute; inset: 0; display: none; overflow: hidden;
+      background: url('assets/card-frost.webp') center/cover no-repeat,
+                  linear-gradient(154deg, #00132b 0%, #005289 170%);
+      /* roughened rising-frost mask (jagged turbulent front, scrolled in) */
+      --frost-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='640'%3E%3Cdefs%3E%3ClinearGradient%20id='lg'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.40'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.60'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3Cfilter%20id='r'%20x='-20%'%20y='-20%'%20width='140%'%20height='140%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.016%200.038'%20numOctaves='2'%20seed='8'%20result='n'/%3E%3CfeDisplacementMap%20in='SourceGraphic'%20in2='n'%20scale='72'%20xChannelSelector='R'%20yChannelSelector='G'/%3E%3C/filter%3E%3C/defs%3E%3Crect%20width='300'%20height='640'%20fill='url(%23lg)'%20filter='url(%23r)'/%3E%3C/svg%3E");
     }
-    .cr-card-frost .ico { filter: drop-shadow(0 2px 10px rgba(120,170,210,0.5)); }
-    .cr-carousel.is-frozen .cr-active .cr-card-frost { display: flex; animation: crFreezeWipe 950ms cubic-bezier(0.22,0.61,0.36,1) both; }
-    .cr-carousel.is-frozen .cr-active .cr-card-frost .ico { animation: crSnowIn 780ms var(--ease-spring) 300ms both; }
+    /* Blue snowflake — lower-left, matching the Figma placement.
+       (higher specificity than the generic .cr-carousel-item img sizing rule) */
+    .cr-card-frost img.cr-frost-snow {
+      position: absolute; left: 18px; bottom: 20px;
+      width: 66px; height: 66px; object-fit: contain; z-index: 1; pointer-events: none;
+      filter: drop-shadow(0 2px 10px rgba(40,100,150,0.28));
+    }
+    /* Frozen card keeps its name (top-left) and VISA mark (bottom-right),
+       per Figma 4269:58138 — tinted to read on the light frost */
+    .cr-frost-name {
+      position: absolute; top: 16px; left: 16px; z-index: 1; pointer-events: none;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
+      line-height: 20px; letter-spacing: -0.1px; color: #3f87b7;
+    }
+    .cr-frost-visa {
+      position: absolute; right: 16px; bottom: 16px; width: 43px; height: 14px;
+      z-index: 1; pointer-events: none;
+      background: #3f87b7;
+      -webkit-mask: url('assets/visa-white.svg') center / contain no-repeat;
+      mask: url('assets/visa-white.svg') center / contain no-repeat;
+    }
+    /* Cold-light flash that sweeps up as the ice forms (sits above the frost,
+       unmasked, so it glows across the whole card briefly) */
+    .cr-frost-flash {
+      position: absolute; inset: 0; z-index: 3; pointer-events: none; opacity: 0;
+      border-radius: 16px; mix-blend-mode: screen;
+      background: radial-gradient(125% 95% at 50% 100%,
+        rgba(220,242,255,0.9) 0%, rgba(176,222,240,0.32) 42%, rgba(176,222,240,0) 72%);
+    }
+
+    /* Per-card frozen state: any iced card shows its frost (default-frozen
+       cards stay frosted; the active card ices over on Freeze) */
+    .cr-flipcard.cr-iced .cr-card-frost { display: block; }
+
+    /* Freeze: the frost artwork creeps UP from the bottom with an irregular,
+       turbulent leading edge (natural frosting, not a straight wipe). The
+       oversized jagged mask is scrolled into place with an organic ease-out. */
+    .cr-flipcard.cr-freezing .cr-card-frost,
+    .cr-flipcard.cr-thawing .cr-card-frost {
+      -webkit-mask-image: var(--frost-mask); mask-image: var(--frost-mask);
+      -webkit-mask-size: 100% 235%; mask-size: 100% 235%;
+      -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat;
+    }
+    /* Frost rises with a jagged front (crFrostRise) while the ice "sets" with a
+       brief cold over-brightness that settles (crFrostSet) — reads as light
+       catching on forming crystals, not a flat wipe. */
+    .cr-flipcard.cr-freezing .cr-card-frost {
+      animation: crFrostRise 1600ms cubic-bezier(0.22,0.7,0.24,1) both,
+                 crFrostSet 1700ms ease-out both;
+    }
+    .cr-flipcard.cr-freezing .cr-frost-snow {
+      animation: crFrostSnowIn 760ms var(--ease-spring) 900ms both;
+    }
+    /* Cold-light flash sweeping up with the frost front */
+    .cr-flipcard.cr-freezing .cr-frost-flash {
+      animation: crFreezeFlash 1500ms ease-out both;
+    }
+    /* Name + VISA settle in once the frost has covered their area */
+    .cr-flipcard.cr-freezing .cr-frost-name,
+    .cr-flipcard.cr-freezing .cr-frost-visa {
+      animation: crFrostLabelIn 600ms var(--ease-out) 720ms both;
+    }
+    /* Unfreeze: frost melts back down, clearing from the top first */
+    .cr-flipcard.cr-thawing .cr-card-frost {
+      animation: crFrostMelt 820ms cubic-bezier(0.4,0,0.5,1) both;
+    }
+    .cr-flipcard.cr-thawing .cr-frost-snow { animation: crFrostSnowOut 360ms var(--ease-out) both; }
+    @keyframes crFrostRise {
+      0%   { -webkit-mask-position: 50% 0%;   mask-position: 50% 0%; }
+      100% { -webkit-mask-position: 50% 100%; mask-position: 50% 100%; }
+    }
+    @keyframes crFrostSet {
+      0%   { filter: brightness(1.28) saturate(0.65) contrast(0.96); }
+      55%  { filter: brightness(1.08) saturate(0.85) contrast(0.99); }
+      100% { filter: brightness(1) saturate(1) contrast(1); }
+    }
+    @keyframes crFrostMelt {
+      0%   { -webkit-mask-position: 50% 100%; mask-position: 50% 100%; }
+      100% { -webkit-mask-position: 50% 0%;   mask-position: 50% 0%; }
+    }
+    @keyframes crFrostSnowIn {
+      0%   { opacity: 0; transform: scale(0.2) rotate(-120deg); filter: drop-shadow(0 0 0 rgba(150,215,245,0)); }
+      55%  { opacity: 1; transform: scale(1.14) rotate(10deg); filter: drop-shadow(0 0 18px rgba(150,215,245,0.95)); }
+      78%  { transform: scale(0.96) rotate(-2deg); }
+      100% { opacity: 1; transform: scale(1) rotate(0deg); filter: drop-shadow(0 2px 10px rgba(40,100,150,0.28)); }
+    }
+    @keyframes crFrostSnowOut {
+      from { opacity: 1; } to { opacity: 0; }
+    }
+    @keyframes crFreezeFlash {
+      0%   { opacity: 0; transform: translateY(34%) scale(1.05); }
+      35%  { opacity: 0.9; }
+      70%  { opacity: 0.4; }
+      100% { opacity: 0; transform: translateY(-12%) scale(1); }
+    }
+    @keyframes crFrostLabelIn {
+      0%   { opacity: 0; transform: translateY(4px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
     @media (prefers-reduced-motion: reduce) {
-      #crFrozenSheet.open .cr-frozen-frost,
-      #crFrozenSheet.open .cr-frozen-frost::before,
-      #crFrozenSheet.open .cr-frozen-frost::after,
-      #crFrozenSheet.open .cr-frozen-snow,
-      #crFrozenSheet.open .cr-frozen-card::after,
-      .cr-carousel.is-frozen .cr-active .cr-card-frost,
-      .cr-carousel.is-frozen .cr-active .cr-card-frost .ico { animation: none; }
+      .cr-frozen-card.cr-frz-icing .cr-frozen-frost,
+      .cr-frozen-card.cr-frz-icing .cr-frozen-snow,
+      .cr-flipcard.cr-freezing .cr-card-frost,
+      .cr-flipcard.cr-thawing .cr-card-frost,
+      .cr-flipcard.cr-freezing .cr-frost-snow,
+      .cr-flipcard.cr-thawing .cr-frost-snow,
+      .cr-flipcard.cr-freezing .cr-frost-flash,
+      .cr-flipcard.cr-freezing .cr-frost-name,
+      .cr-flipcard.cr-freezing .cr-frost-visa { animation: none; }
+      .cr-frozen-card.cr-frz-icing .cr-frozen-frost,
+      .cr-flipcard.cr-freezing .cr-card-frost,
+      .cr-flipcard.cr-thawing .cr-card-frost { -webkit-mask-image: none; mask-image: none; }
+      .cr-flipcard.cr-freezing .cr-frost-flash { opacity: 0; }
     }
     /* PIN sheet */
     .cr-pin-body {
@@ -9984,71 +10199,55 @@
     .ctpl-acct-list { overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 32px; }
     .ctpl-merchant-custom { padding-bottom: 32px; }
 
-    /* ── Face ID sheet — Apple light-mode style ────────────── */
+    /* ── Face ID — iOS top-of-screen badge ─────────────────── */
     .fsc-overlay {
       position: absolute; inset: 0; z-index: 500;
-      display: flex; align-items: flex-end;
+      display: flex; justify-content: center; align-items: flex-start;
       pointer-events: none; opacity: 0;
-      transition: opacity 0.2s ease;
+      transition: opacity 0.22s ease;
     }
     .fsc-overlay.open { opacity: 1; pointer-events: auto; }
 
+    /* Faint dim so the badge reads against any screen, no heavy blur */
     .fsc-bg {
       position: absolute; inset: 0;
-      background: rgba(0,0,0,0.35);
-      backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
-    }
-
-    /* Sheet card */
-    .fsc-sheet {
-      position: relative; z-index: 1; width: 100%;
-      background: #f2f2f7;
-      border-radius: 20px 20px 0 0;
-      padding: 28px 24px 36px;
-      display: flex; flex-direction: column; align-items: center; gap: 0;
-      transform: translateY(100%);
-      transition: transform 0.38s cubic-bezier(0.32,0.72,0,1);
-    }
-    .fsc-overlay.open .fsc-sheet { transform: translateY(0); }
-
-    /* Drag handle */
-    .fsc-sheet::before {
-      content: ''; display: block;
-      width: 36px; height: 4px; border-radius: 2px;
       background: rgba(0,0,0,0.18);
-      position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+      transition: opacity 0.22s ease;
     }
 
-    /* App icon */
-    .fsc-app-icon {
-      width: 60px; height: 60px; border-radius: 14px;
-      overflow: hidden; margin-bottom: 16px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.14);
-      position: relative;
+    /* Black rounded badge that drops in from the top (the iOS notch auth) */
+    .fsc-badge {
+      position: relative; z-index: 1;
+      margin-top: 8px;
+      width: 132px; padding: 14px 0 13px;
+      display: flex; flex-direction: column; align-items: center; gap: 7px;
+      background: #1c1c1e;
+      border-radius: 26px;
+      box-shadow: 0 18px 40px -16px rgba(0,0,0,0.55), inset 0 0 0 0.5px rgba(255,255,255,0.06);
+      transform: translateY(-150%) scale(0.92);
+      opacity: 0;
+      transition: transform 0.5s cubic-bezier(0.32,0.72,0,1), opacity 0.3s ease;
     }
-    .fsc-app-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .fsc-app-icon-fallback {
-      display: none; width: 100%; height: 100%;
-      background: #46882b; align-items: center; justify-content: center;
-      font-family: 'Geist', sans-serif; font-size: 26px; font-weight: 700; color: #fff;
+    .fsc-overlay.open .fsc-badge {
+      transform: translateY(0) scale(1); opacity: 1;
     }
 
-    /* Glyph */
+    /* Glyph / checkmark stack */
     .fsc-glyph-wrap {
-      position: relative; width: 72px; height: 72px;
-      color: rgba(0,0,0,0.82);
-      margin-bottom: 20px;
+      position: relative; width: 52px; height: 52px;
+      display: flex; align-items: center; justify-content: center;
+      color: #30d158;  /* iOS green Face ID glyph */
     }
     .fsc-glyph, .fsc-check {
-      position: absolute; inset: 0; width: 100%; height: 100%;
+      position: absolute; width: 52px; height: 52px;
     }
     .fsc-glyph {
-      opacity: 0; transform: scale(0.88);
-      transition: opacity 0.28s var(--ease-out), transform 0.28s var(--ease-out);
+      opacity: 0; transform: scale(0.9);
+      transition: opacity 0.26s var(--ease-out), transform 0.26s var(--ease-out);
     }
     .fsc-overlay.fsc-scanning .fsc-glyph {
       opacity: 1; transform: scale(1);
-      animation: fscBreathe 1.0s ease-in-out infinite;
+      animation: fscBreathe 1.05s ease-in-out infinite;
     }
     .fsc-feat { stroke-dasharray: 60; stroke-dashoffset: 60; }
     .fsc-overlay.fsc-scanning .fsc-feat {
@@ -10056,52 +10255,41 @@
     }
     @keyframes fscDraw  { to { stroke-dashoffset: 0; } }
     @keyframes fscBreathe {
-      0%, 100% { opacity: 0.45; }
+      0%, 100% { opacity: 0.5; }
       50%      { opacity: 1; }
     }
 
-    /* Checkmark */
-    .fsc-check { opacity: 0; color: #46882b; }
+    /* Checkmark — pops in green on success */
+    .fsc-check { opacity: 0; color: #30d158; transform: scale(0.5); }
     #fscCheckPath { stroke-dasharray: 110; stroke-dashoffset: 110; }
     .fsc-overlay.fsc-done .fsc-glyph {
-      opacity: 0; transform: scale(0.72); animation: none;
-      transition: opacity 0.18s ease, transform 0.18s ease;
+      opacity: 0; transform: scale(0.7); animation: none;
+      transition: opacity 0.16s ease, transform 0.16s ease;
     }
-    .fsc-overlay.fsc-done .fsc-glyph-wrap { color: #46882b; }
-    .fsc-overlay.fsc-done .fsc-check { opacity: 1; }
+    .fsc-overlay.fsc-done .fsc-check {
+      opacity: 1; transform: scale(1);
+      transition: opacity 0.18s ease 0.06s,
+                  transform 0.34s var(--ease-spring, cubic-bezier(0.34,1.56,0.64,1)) 0.06s;
+    }
     .fsc-overlay.fsc-done #fscCheckPath {
-      animation: fscDraw 0.36s var(--ease-out) 0.04s forwards;
+      animation: fscDraw 0.32s var(--ease-out) 0.1s forwards;
     }
 
-    /* Labels */
-    .fsc-label {
-      font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 600;
-      color: rgba(0,0,0,0.85); letter-spacing: -0.2px;
-      margin-bottom: 6px;
-    }
-    .fsc-sub-label {
-      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400;
-      color: rgba(0,0,0,0.45); margin-bottom: 28px;
+    /* Badge label */
+    .fsc-badge-label {
+      font-family: 'Geist', -apple-system, sans-serif;
+      font-size: 13px; font-weight: 500; letter-spacing: -0.1px;
+      color: rgba(255,255,255,0.92); margin: 0;
       transition: color 0.3s ease;
     }
-    .fsc-overlay.fsc-done .fsc-sub-label { color: #46882b; }
-
-    /* Cancel button */
-    .fsc-cancel-btn {
-      width: 100%; height: 50px; border-radius: 12px;
-      border: none; cursor: pointer;
-      background: #fff;
-      font-family: 'Geist', sans-serif; font-size: 16px; font-weight: 500;
-      color: rgba(0,0,0,0.75);
-      transition: background 0.12s ease, transform 0.1s ease;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .fsc-cancel-btn:active { background: rgba(0,0,0,0.06); transform: scale(0.98); }
+    .fsc-overlay.fsc-done .fsc-badge-label { color: #30d158; }
 
     @media (prefers-reduced-motion: reduce) {
-      .fsc-sheet { transition: none; }
+      .fsc-badge { transition: opacity 0.2s ease; transform: translateY(0) scale(1); }
+      .fsc-overlay.open .fsc-badge { transform: translateY(0) scale(1); }
       .fsc-overlay.fsc-scanning .fsc-glyph { animation: none; opacity: 1; transform: scale(1); }
       .fsc-overlay.fsc-scanning .fsc-feat { animation: none; stroke-dashoffset: 0; }
+      .fsc-overlay.fsc-done .fsc-check { transition: opacity 0.15s ease; }
       .fsc-overlay.fsc-done #fscCheckPath { animation: none; stroke-dashoffset: 0; }
     }
 
