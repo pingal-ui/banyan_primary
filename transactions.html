@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=226">
+  <link rel="stylesheet" href="styles.css?v=227">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -130,108 +130,33 @@
           </div>
         </div>
 
-        <!-- FX / remittance opportunity -->
+        <!-- ── Where your money stands ── -->
         <section class="home-sec">
-          <div class="home-eyebrow">Sending money home looks cheap today — the rupee just hit a <b>3-month low</b>.</div>
-          <div class="home-fx-card">
-            <span class="home-fx-symbol" aria-hidden="true">
-              <svg viewBox="0 0 48 48"><path fill="#4285F4" d="M45.12 24.5c0-1.56-.14-3.06-.4-4.5H24v8.51h11.84c-.51 2.75-2.06 5.08-4.39 6.64v5.52h7.11c4.16-3.83 6.56-9.47 6.56-16.17z"/><path fill="#34A853" d="M24 46c5.94 0 10.92-1.97 14.56-5.33l-7.11-5.52c-1.97 1.32-4.49 2.1-7.45 2.1-5.73 0-10.58-3.87-12.31-9.07H4.34v5.7C7.96 41.07 15.4 46 24 46z"/><path fill="#FBBC05" d="M11.69 28.18C11.25 26.86 11 25.45 11 24s.25-2.86.69-4.18v-5.7H4.34C2.85 17.09 2 20.45 2 24s.85 6.91 2.34 9.88l7.35-5.7z"/><path fill="#EA4335" d="M24 10.75c3.23 0 6.13 1.11 8.41 3.29l6.31-6.31C34.91 4.18 29.93 2 24 2 15.4 2 7.96 6.93 4.34 14.12l7.35 5.7c1.73-5.2 6.58-9.07 12.31-9.07z"/></svg>
-            </span>
-            <div class="home-fx-info">
-              <span class="home-fx-rate">₹94.70 to the dollar</span>
-              <span class="home-fx-sub">A 3-month low — money goes further home today.</span>
+          <div class="home-story" onclick="showAccounts()">
+            <div class="home-story-txt">
+              <div class="home-eyebrow">Your total balance is <b>$15,600</b>.</div>
+              <p class="home-story-sub">$13,200 by month end, post bills &amp; scheduled payments.</p>
             </div>
-            <button class="home-fx-send" onclick="openHomeAgent()">
-              <span>Send</span>
-              <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:12px;color:#fff"></span>
-            </button>
+            <div class="home-story-thumb"><img src="assets/home-story-balance.webp" alt=""></div>
           </div>
         </section>
 
-        <!-- ── Pending actions ── -->
+        <!-- ── Sending money home ── -->
         <section class="home-sec">
-          <div class="home-notif" id="homeNotif">
-            <div class="home-notif-deck" id="homeNotifDeck">
-              <div class="home-ncard2 home-ncard2--netflix">
-                <div class="home-ncard2-ic"><img src="assets/home-netflix-symbol.webp" alt=""></div>
-                <div class="home-ncard2-texts">
-                  <p class="home-ncard2-title"><span>Netflix went up by </span><span class="home-ncard-red">$2.00</span></p>
-                  <p class="home-ncard2-sub">Your charge is now $17.99 for April, up from $15.99.</p>
-                </div>
-                <button class="home-ncard-btn">
-                  <span class="ico ol" style="--ico:url('Icons/Leaf.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
-                  <span>Review</span>
-                </button>
-              </div>
-              <div class="home-ncard2 home-ncard2--short">
-                <div class="home-ncard2-ic"><img src="assets/home-coins.webp" alt=""></div>
-                <div class="home-ncard2-texts">
-                  <p class="home-ncard2-title">Running short of balance</p>
-                  <p class="home-ncard2-sub">$356 short to pay Maya Sarini on May 25.</p>
-                </div>
-                <button class="home-ncard-btn">
-                  <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
-                  <span>Balance</span>
-                </button>
-              </div>
-              <div class="home-ncard2 home-ncard2--ananya">
-                <div class="home-ncard2-ic home-ncard2-ic--av"><img src="assets/home-rec-ananya.webp" alt=""></div>
-                <div class="home-ncard2-texts">
-                  <p class="home-ncard2-title">Send money to Ananya</p>
-                  <p class="home-ncard2-sub">$50 is sent monthly, on or before the 18th</p>
-                </div>
-                <button class="home-ncard-btn" onclick="openHomeAgent()">
-                  <span>Send now</span>
-                  <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
-                </button>
-              </div>
+          <div class="home-story" onclick="openHomeAgent()">
+            <div class="home-story-txt">
+              <div class="home-eyebrow"><b>₹94.70</b> to the dollar.</div>
+              <p class="home-story-sub">The rupee just hit a 3-month low. More money goes home today.</p>
             </div>
-            <div class="home-notif-toggle-wrap">
-              <button class="home-notif-toggle" id="homeNotifToggle" aria-expanded="false" onclick="toggleHomeNotif()">
-                <span class="home-notif-toggle-label">Show all 3</span>
-                <span class="home-notif-toggle-caret" aria-hidden="true"></span>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- ── Where your money is right now ── -->
-        <section class="home-sec">
-          <div class="home-eyebrow">Despite all that, you're still sitting <b>10% above</b> where you were in mid-May.</div>
-          <div class="home-acctsum">
-            <div class="home-acctsum-balrow">
-              <div class="home-acctsum-info">
-                <span class="home-acctsum-healthy">Balance is 10% higher than on May 15.</span>
-                <span class="home-acctsum-proj"><b>$13,200</b> by month end<br>post bills &amp; scheduled payments</span>
-              </div>
-              <span class="home-acctsum-total"><span class="s">$</span><span class="b">15,600</span></span>
-            </div>
-            <div class="home-acctsum-accts">
-              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'USD Checking',num:'1678 0987 9876 3214',balInt:'137,978',balDec:'.00'})">
-                <div class="home-acctsum-ic"><img src="assets/space-usd-checking.webp" alt=""></div>
-                <span class="home-acctsum-nm">USD Checking</span><span class="home-acctsum-am">$12,600.00</span>
-              </div>
-              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'Thailand holiday',num:'1678 0987 9876 7654',balInt:'37,978',balDec:'.00',showCases:true,pendingAmt:'$12,450'})">
-                <div class="home-acctsum-ic"><img src="assets/space-thailand.webp" alt=""></div>
-                <span class="home-acctsum-nm">Thailand trip</span><span class="home-acctsum-am">$800.00</span>
-              </div>
-              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'Mom\'s expenses',num:'1678 0987 9876 8745',balInt:'10,120',balDec:'.00'})">
-                <div class="home-acctsum-ic"><img src="assets/space-moms.webp" alt=""></div>
-                <span class="home-acctsum-nm">Mom's expenses</span><span class="home-acctsum-am">$10,120.00</span>
-              </div>
-              <div class="home-acctsum-pill home-acctsum-pill--solid" onclick="showAccountDetail({name:'Wedding',num:'1678 0987 9876 8746',balInt:'50,768',balDec:'.00'})">
-                <div class="home-acctsum-ic"><img src="assets/space-wedding.webp" alt=""></div>
-                <span class="home-acctsum-nm">Wedding</span><span class="home-acctsum-am">$50,768.00</span>
-              </div>
-            </div>
+            <div class="home-story-thumb"><img src="assets/home-story-fx.webp" alt=""></div>
           </div>
         </section>
 
         <!-- ── What happened recently ── -->
         <section class="home-sec">
-          <div class="home-eyebrow"><b>4 payments</b> left your account since you last looked — two Lyft rides didn't go through.</div>
+          <div class="home-eyebrow">Since you last looked — <b>4 payments</b>, $2,400 spent.</div>
+          <p class="home-story-sub">Two payments to Lyft didn't go through. One payment to Zara is on hold.</p>
           <div class="home-recent">
-            <div class="home-recent-head">4 new payments.<br>$2,400 spent.</div>
             <div class="home-recent-list">
 
               <div class="home-recent-daydiv"><span>Jul 27</span><div class="home-recent-line"></div></div>

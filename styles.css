@@ -5348,6 +5348,25 @@
     .home-eyebrow b { font-weight: 600; color: var(--ink); }
     .home-sec-head .home-eyebrow { padding: 0; }
 
+    /* ── Editorial story row: serif headline + sub, with a thumbnail ── */
+    .home-story {
+      display: flex; align-items: center; gap: 16px;
+      cursor: pointer; -webkit-tap-highlight-color: transparent;
+      transition: opacity 140ms var(--ease-out);
+    }
+    .home-story:active { opacity: 0.6; }
+    .home-story-txt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 5px; }
+    .home-story-txt .home-eyebrow { max-width: none; }
+    .home-story-sub {
+      margin: 0; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400;
+      line-height: 18px; color: var(--ink-soft);
+    }
+    .home-story-thumb {
+      flex-shrink: 0; width: 66px; height: 80px; border-radius: 14px; overflow: hidden;
+      box-shadow: 0 6px 16px -8px rgba(30,24,18,0.3);
+    }
+    .home-story-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
     /* ── The Banyan Daily (masthead) ── */
     .home-daily {
       padding: 24px 16px 8px;
