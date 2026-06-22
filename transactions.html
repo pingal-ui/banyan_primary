@@ -6,8 +6,9 @@
   <title>Banyan – Transactions</title>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=168">
+  <link rel="stylesheet" href="styles.css?v=200">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -98,13 +99,11 @@
       <!-- ── Main content ── -->
       <div class="home-main">
 
-        <!-- ── Today's brief ── -->
+        <!-- ── Today's edition ── -->
         <div class="home-brief2">
-          <div class="home-brief2-head">
-            <span class="home-brief2-eyebrow">Today's brief</span>
-            <span class="home-brief2-date">Thursday, June 18</span>
-          </div>
-          <h2 class="home-brief2-headline">Here's what's worth your<br>attention today.</h2>
+          <div class="home-brief2-dateline">Thursday, June 18 · Today's edition</div>
+          <h2 class="home-brief2-headline">Here's what's worth your attention today.</h2>
+          <div class="home-brief2-rule"></div>
         </div>
 
         <!-- FX / remittance opportunity -->
@@ -126,39 +125,9 @@
         </section>
 
         <!-- ── Pending actions ── -->
-        <section class="home-sec">
-          <div class="home-sec-head">
-            <span class="home-eyebrow">You have actions pending on you</span>
-            <div class="home-rec-controls">
-              <button class="home-rec-ctrl"><span class="ico" style="--ico:url('Icons/CaretCircleLeft.svg');--sz:20px;color:rgba(0,0,0,0.40)"></span></button>
-              <button class="home-rec-ctrl"><span class="ico" style="--ico:url('Icons/CaretCircleRight.svg');--sz:20px;color:rgba(0,0,0,0.40)"></span></button>
-            </div>
-          </div>
-          <div class="home-rec-row">
-            <div class="home-rec-card" onclick="openHomeAgent()">
-              <div class="home-rec-icon"><span class="ico ol" style="--ico:url('Icons/ArrowsLeftRight.svg');--sz:16px;color:#fff"></span></div>
-              <div class="home-rec-info">
-                <span class="home-rec-title">Approve transfers</span>
-                <span class="home-rec-sub">$2,105 · 2 payments</span>
-              </div>
-            </div>
-            <div class="home-rec-card" onclick="openHomeAgent()">
-              <div class="home-rec-av">
-                <img src="assets/home-rec-ananya.webp" alt="">
-                <div class="home-rec-av-blur"></div>
-                <span>AK</span>
-              </div>
-              <div class="home-rec-info">
-                <span class="home-rec-title">Send to Ananya</span>
-                <span class="home-rec-sub">$500 monthly</span>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- ── Things that need attention ── -->
         <section class="home-sec">
-          <div class="home-eyebrow">There are things that need your attention</div>
+          <div class="home-eyebrow">3 items need you to <b>act</b> on them — review, approve and add balance.</div>
           <div class="home-notif" id="homeNotif">
             <div class="home-notif-deck" id="homeNotifDeck">
               <div class="home-ncard2 home-ncard2--netflix">
@@ -206,7 +175,7 @@
 
         <!-- ── Where your money is right now ── -->
         <section class="home-sec">
-          <div class="home-eyebrow">Here is where your money is right now</div>
+          <div class="home-eyebrow">Despite all that, you're still sitting <b>10% above</b> where you were in mid-May.</div>
           <div class="home-acctsum">
             <div class="home-acctsum-balrow">
               <div class="home-acctsum-info">
@@ -238,7 +207,7 @@
 
         <!-- ── What happened recently ── -->
         <section class="home-sec">
-          <div class="home-eyebrow">What happened recently</div>
+          <div class="home-eyebrow"><b>4 payments</b> left your account since you last looked — two Lyft rides didn't go through.</div>
           <div class="home-recent">
             <div class="home-recent-head">4 new payments.<br>$2,400 spent.</div>
             <div class="home-recent-list">
@@ -692,6 +661,31 @@
 
     </div><!-- /.cr-scroll -->
 
+    <!-- Space switcher bottom bar (Figma 3213-46823) — expandable tabs -->
+    <div class="cr-spaces" role="group" aria-label="Switch space">
+      <div class="cr-spaces-pill" id="crSpacesPill">
+        <button class="cr-space cr-space-sel" type="button" aria-pressed="true" onclick="crSelectSpace(this)">
+          <span class="cr-space-av"><img src="assets/space-all.webp" alt=""></span>
+          <span class="cr-space-lbl">All spaces</span>
+        </button>
+        <button class="cr-space" type="button" aria-pressed="false" onclick="crSelectSpace(this)">
+          <span class="cr-space-av"><img src="assets/space-usd-checking.webp" alt=""></span>
+          <span class="cr-space-lbl">USD Checking</span>
+        </button>
+        <button class="cr-space" type="button" aria-pressed="false" onclick="crSelectSpace(this)">
+          <span class="cr-space-av"><img src="assets/space-thailand.webp" alt=""></span>
+          <span class="cr-space-lbl">Thailand holiday</span>
+        </button>
+        <button class="cr-space" type="button" aria-pressed="false" onclick="crSelectSpace(this)">
+          <span class="cr-space-av"><img src="assets/space-moms.webp" alt=""></span>
+          <span class="cr-space-lbl">Mom's expenses</span>
+        </button>
+      </div>
+      <button class="cr-ai-btn" type="button" aria-label="Ask Banyan AI" onclick="openAgent()">
+        <span class="cr-ai-orb"><video src="ai-orb.mp4" autoplay loop muted playsinline></video></span>
+      </button>
+    </div>
+
   </div><!-- /#cards -->
 
 
@@ -937,6 +931,9 @@
 
           <div style="height:156px;flex-shrink:0"></div>
         </div><!-- /.ctpl-setup-scroll -->
+
+        <!-- Progressive blur: strong under the pinned pill at the top, fading to 0 lower down -->
+        <div class="ctpl-top-blur" aria-hidden="true"></div>
 
         <!-- Floating pill CTA -->
         <div class="ctpl2-cta-wrap">
@@ -1443,7 +1440,7 @@
     <!-- Bottom actions — fixed to bottom of screen -->
     <div class="smr-bottom">
       <button class="smr-note-btn">Add a note (optional)</button>
-      <button class="smr-confirm-btn" onclick="smGoToProgress()">Confirm and pay</button>
+      <button class="smr-confirm-btn" onclick="smShowFaceScan()">Confirm and pay</button>
     </div>
 
   </div><!-- /#sm-review -->
@@ -1961,6 +1958,30 @@
     </div><!-- /.sms-scroll -->
   </div><!-- /#sm-success -->
 
+  <!-- Face ID overlay — Apple faceid glyph -->
+  <div id="faceScanOverlay" class="fsc-overlay">
+    <div class="fsc-bg"></div>
+    <div class="fsc-glyph-wrap" id="fscGlyphWrap">
+      <!-- faceid SF Symbol: corner brackets + eyes / nose / smile -->
+      <svg class="fsc-glyph" id="fscGlyph" viewBox="0 0 100 100" fill="none"
+           stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round">
+        <path class="fsc-frame" d="M8 30 V20 Q8 8 20 8 H30"/>
+        <path class="fsc-frame" d="M70 8 H80 Q92 8 92 20 V30"/>
+        <path class="fsc-frame" d="M92 70 V80 Q92 92 80 92 H70"/>
+        <path class="fsc-frame" d="M30 92 H20 Q8 92 8 80 V70"/>
+        <path class="fsc-feat" d="M34 38 V46"/>
+        <path class="fsc-feat" d="M66 38 V46"/>
+        <path class="fsc-feat" d="M50 39 V54 H56"/>
+        <path class="fsc-feat" d="M37 64 Q50 73 63 64"/>
+      </svg>
+      <!-- success checkmark, drawn on auth -->
+      <svg class="fsc-check" id="fscCheck" viewBox="0 0 100 100" fill="none"
+           stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+        <path id="fscCheckPath" d="M26 52 L43 69 L75 33"/>
+      </svg>
+    </div>
+    <p class="fsc-title" id="fscTitle">Face ID</p>
+  </div>
 
 
   <!-- ══════════════════════════════════════
@@ -2769,14 +2790,13 @@
   </div>
 
 
-  <!-- ══ Reversal reason form ══════════════════════════════ -->
+  <!-- ══ Reversal / refund-tracking form ═══════════════════ -->
   <div class="dispute-overlay" id="reversalOverlay">
     <div class="dispute-sheet">
       <div class="filter-handle"></div>
       <div class="filter-header" style="height:auto;padding:20px 20px 16px;align-items:flex-start">
         <div style="display:flex;flex-direction:column;gap:4px;flex:1">
-          <span class="filter-title">Request a reversal</span>
-          <span style="font-size:13px;font-weight:500;color:rgba(0,0,0,0.50);line-height:18px">We'll contact the beneficiary's bank. Reversals are not guaranteed and typically take 5–10 business days.</span>
+          <span class="filter-title">Expecting a refund</span>
         </div>
         <button class="filter-close" onclick="closeReversalForm()">
           <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
@@ -2784,7 +2804,7 @@
       </div>
       <div class="dispute-body" id="reversalBody"></div>
       <div class="dispute-cta-bar">
-        <button class="dispute-submit" id="reversalSubmit" onclick="submitReversal()">Request reversal</button>
+        <button class="dispute-submit ready" id="reversalSubmit" onclick="submitReversal()">Start tracking</button>
       </div>
     </div>
   </div>
@@ -2949,7 +2969,7 @@
     <!-- Top nav bar -->
     <nav class="ag-nav" aria-label="Agent navigation">
       <button class="ag-nav-btn ag-nav-menu" aria-label="Menu">
-        <span class="ico ol" style="--ico:url('Icons/List.svg');--sz:18px" aria-hidden="true"></span>
+        <span class="ico ol" style="--ico:url('Icons/DotsNine.svg');--sz:18px" aria-hidden="true"></span>
       </button>
       <button class="ag-usecase-btn" id="agUseCaseBtn" onclick="agToggleUseCaseMenu(event)" aria-haspopup="menu" aria-expanded="false">
         <span class="ag-usecase-label" id="agUseCaseLabel">Use cases</span>
@@ -3050,6 +3070,9 @@
     <!-- Input card -->
     <div class="ag-input-card" id="agentInputCard">
       <label for="agentField" class="visually-hidden">Message Banyan</label>
+      <button class="ag-input-btn ag-input-plus" aria-label="Attach file">
+        <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span>
+      </button>
       <textarea
         id="agentField"
         placeholder="Ask Banyan..."
@@ -3061,18 +3084,13 @@
         oninput="agentOnInput(this)"
         onkeydown="agentKeydown(event)"
       ></textarea>
-      <div class="ag-input-actions" role="group" aria-label="Message actions">
-        <button class="ag-input-btn" aria-label="Attach file">
-          <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.45)" aria-hidden="true"></span>
+      <div class="ag-input-btns-r" role="group" aria-label="Message actions">
+        <button class="ag-input-btn" aria-label="Voice input">
+          <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:14px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span>
         </button>
-        <div class="ag-input-btns-r">
-          <button class="ag-input-btn" aria-label="Voice input">
-            <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:12px;color:rgba(0,0,0,0.45)" aria-hidden="true"></span>
-          </button>
-          <button class="ag-input-btn ag-send" id="agentSend" aria-label="Send message" aria-disabled="true" onclick="agentSend()">
-            <span class="ico ol" style="--ico:url('Icons/ArrowUp.svg');--sz:12px;color:rgba(0,0,0,0.35)" aria-hidden="true"></span>
-          </button>
-        </div>
+        <button class="ag-input-btn ag-send" id="agentSend" aria-label="Send message" aria-disabled="true" onclick="agentSend()">
+          <span class="ico ol" style="--ico:url('Icons/ArrowUp.svg');--sz:14px;color:rgba(0,0,0,0.5)" aria-hidden="true"></span>
+        </button>
       </div>
     </div>
 
@@ -3917,6 +3935,6 @@
 
 </div>
 
-  <script src="app.js?v=107"></script>
+  <script src="app.js?v=125"></script>
 </body>
 </html>

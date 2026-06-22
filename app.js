@@ -843,7 +843,7 @@ function _agRenderTransferStatus(aiDiv, msgs, td, refNum) {
     if (s.status === 'done') {
       iconInner = '<svg width="11" height="8" viewBox="0 0 11 8" fill="none" aria-hidden="true"><path d="M1 4l3 3 6-6" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
     } else if (s.status === 'active') {
-      iconInner = '<div style="width:8px;height:8px;border-radius:50%;background:var(--brand-primary)"></div>';
+      iconInner = '<div style="width:6px;height:6px;border-radius:50%;background:#fff"></div>';
     }
     html += '<div class="ag-tx-stage ' + cls + '">';
     html +=   '<div class="ag-tx-stage-icon">' + iconInner + '</div>';
@@ -890,9 +890,9 @@ function _agRenderReceiptV2(aiDiv, msgs, td, refNum) {
   card.className = 'ag-receipt-card-v2';
   var html = '<div class="ag-receipt-v2-head">';
   html += '<div class="ag-receipt-v2-circle" id="agRcCircle">';
-  html +=   '<svg width="20" height="15" viewBox="0 0 20 15" fill="none" aria-hidden="true"><path d="M2 7.5l5.5 5.5L18 2" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  html +=   '<svg viewBox="0 0 44 44" fill="none" aria-hidden="true"><polyline points="8,22 18,32 36,14" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   html += '</div>';
-  html += '<div class="ag-receipt-v2-sent">Sent</div>';
+  html += '<div class="ag-receipt-v2-sent">Successfully transferred</div>';
   html += '<div class="ag-receipt-v2-amount">' + td.fromSym + td.amount.toFixed(2) + '</div>';
   html += '</div>';
   html += '<div class="ag-receipt-v2-body">';
@@ -923,140 +923,80 @@ function _agRenderReceiptV2(aiDiv, msgs, td, refNum) {
 function _agRenderTransfer(aiDiv, msgs, data) {
   var d = data;
   var fromSym = d.fromAccount.sym;
-  var intPart = Math.floor(d.amount);
-  var decStr  = '.' + d.amount.toFixed(2).split('.')[1];
   var toSym   = d.recip.sym;
-  var rateStr = d.rateInfo.rate.toFixed(4);
-  var fromFrom = d.fromAccount.flag;
+  var rateStr = d.rateInfo.rate.toFixed(2);
+  var firstName = d.recip.name.split(' ')[0];
 
+  // Mirrors the normal send-money review screen: frosted glass card,
+  // centered recipient, label/value amount rows, green pill confirm.
   var card = document.createElement('div');
-  card.className = 'ag-ui-card ag-transfer-card';
+  card.className = 'ag-ui-card ag-tr2-card';
 
-  var html = '<div class="ag-transfer-header">';
-  html +=   '<div class="ag-transfer-flag-row">';
-  html +=     '<span class="ag-transfer-flag">' + fromFrom + '</span>';
-  html +=     '<span class="ag-transfer-corridor">Sending · ' + d.fromCur + ' to ' + d.recip.currency + '</span>';
+  var html = '<div class="ag-tr2-inner">';
+  // Recipient — centered glass avatar
+  html +=   '<div class="ag-tr2-recip ag-stagger-item">';
+  html +=     '<div class="ag-tr2-av" style="background:' + d.recip.color + '" aria-hidden="true"><span class="ag-tr2-av-glass"></span><span class="ag-tr2-av-txt">' + d.recip.initials + '</span></div>';
+  html +=     '<div class="ag-tr2-recip-name">' + _agEscape(d.recip.name) + ' ' + d.recip.flag + '</div>';
+  html +=     '<div class="ag-tr2-recip-sub">' + _agEscape(d.recip.bank) + ' · ' + d.recip.currency + '</div>';
   html +=   '</div>';
-  html +=   '<div class="ag-transfer-amount-row">';
-  html +=     '<span class="ag-transfer-currency-sym">' + fromSym + '</span>';
-  html +=     '<span class="ag-transfer-amount-int" id="agTxInt">0</span>';
-  html +=     '<span class="ag-transfer-amount-dec">' + decStr + '</span>';
-  html +=   '</div>';
-  html +=   '<div class="ag-transfer-subline">Recipient gets <strong>' + toSym + d.convertedAmt + '</strong></div>';
-  html += '</div>';
-
-  html += '<div class="ag-transfer-recipient ag-stagger-item">';
-  html +=   '<div class="ag-transfer-avatar" style="background:' + d.recip.color + '" aria-hidden="true">' + d.recip.initials + '</div>';
-  html +=   '<div class="ag-transfer-recip-info">';
-  html +=     '<div class="ag-transfer-recip-name">' + _agEscape(d.recip.name) + ' ' + d.recip.flag + '</div>';
-  html +=     '<div class="ag-transfer-recip-bank">' + _agEscape(d.recip.bank) + '</div>';
-  html +=   '</div>';
-  html +=   '<span class="ag-transfer-recip-change">Change</span>';
-  html += '</div>';
-
-  html += '<div class="ag-transfer-breakdown">';
-  html +=   '<div class="ag-transfer-row ag-stagger-item">';
-  html +=     '<span class="ag-transfer-row-label">Exchange rate</span>';
-  html +=     '<span class="ag-transfer-row-value rate-badge">1 ' + d.fromCur + ' = ' + rateStr + ' ' + d.recip.currency + '</span>';
-  html +=   '</div>';
-  html +=   '<div class="ag-transfer-row ag-stagger-item">';
-  html +=     '<span class="ag-transfer-row-label">Transfer fee</span>';
-  html +=     '<span class="ag-transfer-row-value">' + fromSym + d.feeAmt.toFixed(2) + '</span>';
-  html +=   '</div>';
-  // Expandable details
-  html +=   '<div class="ag-transfer-more-rows" id="agTxMore">';
-  html +=     '<div class="ag-transfer-row"><span class="ag-transfer-row-label">Mid-market rate</span><span class="ag-transfer-row-value">1 ' + d.fromCur + ' = ' + (d.rateInfo.rate + 0.0012).toFixed(4) + ' ' + d.recip.currency + '</span></div>';
-  html +=     '<div class="ag-transfer-row"><span class="ag-transfer-row-label">Banyan markup</span><span class="ag-transfer-row-value">0.45%</span></div>';
-  html +=     '<div class="ag-transfer-row"><span class="ag-transfer-row-label">Estimated arrival</span><span class="ag-transfer-row-value">1 business day</span></div>';
-  html +=   '</div>';
-  html +=   '<div class="ag-transfer-divider"></div>';
-  html +=   '<div class="ag-transfer-row total ag-stagger-item">';
-  html +=     '<span class="ag-transfer-row-label">Total debited</span>';
-  html +=     '<span class="ag-transfer-row-value">' + fromSym + d.totalDebited + '</span>';
+  // Amounts
+  html +=   '<div class="ag-tr2-amounts">';
+  html +=     '<div class="ag-tr2-group">';
+  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">You are sending</span><span class="ag-tr2-val">' + fromSym + d.amount.toFixed(2) + '</span></div>';
+  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">Banyan\'s fees</span><span class="ag-tr2-val">' + fromSym + d.feeAmt.toFixed(2) + '</span></div>';
+  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">Exchange rate</span><span class="ag-tr2-val">' + fromSym + '1 = ' + toSym + rateStr + '</span></div>';
+  html +=     '</div>';
+  html +=     '<div class="ag-tr2-divider"></div>';
+  html +=     '<div class="ag-tr2-group">';
+  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">' + _agEscape(firstName) + ' receives</span><span class="ag-tr2-val">' + toSym + d.convertedAmt + '</span></div>';
+  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">Estimated arrival</span><span class="ag-tr2-val">Within 2 hours</span></div>';
+  html +=       '<div class="ag-tr2-row total ag-stagger-item"><span class="ag-tr2-lbl">Total debited</span><span class="ag-tr2-val">' + fromSym + d.totalDebited + '</span></div>';
+  html +=     '</div>';
   html +=   '</div>';
   html += '</div>';
-  html += '<div class="ag-transfer-freshness">Rate as of just now · refreshes every 60s</div>';
-  html += '<button class="ag-transfer-toggle" id="agTxToggle" type="button">Show full breakdown <span class="ag-transfer-toggle-arrow">▾</span></button>';
 
   card.innerHTML = html;
 
-  // Slide-to-confirm + alternative actions (Edit amount · Change recipient)
-  var slideWrap = document.createElement('div');
-  slideWrap.className = 'ag-slide-wrap';
-  slideWrap.innerHTML =
-    '<div class="ag-slide-freshness">Rate locked for 60 seconds</div>' +
-    '<div class="ag-slide-track" role="button" aria-label="Slide to send ' + fromSym + d.amount.toFixed(2) + ' to ' + d.recip.name + '">' +
-      '<div class="ag-slide-fill"></div>' +
-      '<div class="ag-slide-thumb">' +
-        '<span class="ag-slide-thumb-icon">' +
-          '<svg width="16" height="12" viewBox="0 0 16 12" fill="none" aria-hidden="true">' +
-            '<path d="M3 6h10M10 2l4 4-4 4" stroke="#fff" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/>' +
-          '</svg>' +
-        '</span>' +
-      '</div>' +
-      '<span class="ag-slide-label">Slide to send ' + fromSym + d.amount.toFixed(2) + '</span>' +
-    '</div>' +
-    '<div class="ag-slide-alts">' +
-      '<button class="ag-slide-alt-chip" data-alt="amount">Edit amount</button>' +
-      '<button class="ag-slide-alt-chip" data-alt="recipient">Change recipient</button>' +
-    '</div>';
+  // Confirm actions — mirrors the review screen's bottom (ghost edit + green pill)
+  var actions = document.createElement('div');
+  actions.className = 'ag-tr2-actions';
+  actions.innerHTML =
+    '<div class="ag-tr2-freshness">Rate locked for 60 seconds</div>' +
+    '<button class="ag-tr2-edit-btn" type="button">Edit amount or recipient</button>' +
+    '<button class="ag-tr2-confirm-btn" type="button">Confirm and send ' + fromSym + d.amount.toFixed(2) + '</button>';
 
-  // Wire alt chips: "Edit amount" → restart, "Change recipient" → recipient selector
-  slideWrap.querySelectorAll('.ag-slide-alt-chip').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      var action = btn.getAttribute('data-alt');
-      if (action === 'recipient') { agentSendText('Show my recipients'); }
-      else { agentSendText('Send money'); }
-    });
+  var td = { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip,
+             convertedAmt: d.convertedAmt, totalDebited: d.totalDebited, sym: d.recip.sym };
+
+  actions.querySelector('.ag-tr2-edit-btn').addEventListener('click', function() {
+    agentSendText('Send money');
+  });
+  actions.querySelector('.ag-tr2-confirm-btn').addEventListener('click', function() {
+    actions.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+    actions.style.transition = 'opacity 180ms ease-out';
+    actions.style.opacity = '0';
+    setTimeout(function() {
+      actions.remove();
+      var refNum = 'BNY-' + (10000 + Math.floor(Math.random() * 90000 % 90000));
+      _agRenderTransferStatus(aiDiv, msgs, td, refNum);
+    }, 200);
   });
 
-  // Capture transfer data in closure and wire up the slide
-  (function(wrap, td) {
-    var track = wrap.querySelector('.ag-slide-track');
-    _agInitSlide(track, function() {
-      // Freeze alt chips immediately
-      wrap.querySelectorAll('.ag-slide-alt-chip').forEach(function(b) { b.disabled = true; });
-      setTimeout(function() {
-        wrap.style.transition = 'opacity 180ms ease-out';
-        wrap.style.opacity = '0';
-        setTimeout(function() {
-          wrap.remove();
-          var refNum = 'BNY-' + (10000 + Math.floor(Math.random() * 90000 % 90000));
-          _agRenderTransferStatus(aiDiv, msgs, td, refNum);
-        }, 200);
-      }, 80);
-    });
-  })(slideWrap, { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip,
-                   convertedAmt: d.convertedAmt, totalDebited: d.totalDebited, sym: d.recip.sym });
-
-  // Expand toggle
-  var toggleBtn = card.querySelector('#agTxToggle');
-  var moreEl = card.querySelector('#agTxMore');
-  if (toggleBtn && moreEl) {
-    toggleBtn.addEventListener('click', function() {
-      var open = moreEl.classList.toggle('open');
-      toggleBtn.classList.toggle('open', open);
-      var arrow = toggleBtn.querySelector('.ag-transfer-toggle-arrow');
-      if (arrow) arrow.textContent = open ? '▴' : '▾';
-    });
-  }
-
-  // Stream ctx → card slides in → second ctx streams → slide control appears
-  _agAddCtx(aiDiv, 'Here\'s your transfer to ' + d.recip.name + '. You\'re sending ' + fromSym + d.amount.toFixed(2) + ', and they\'ll receive it in ' + d.recip.currency + ' — take a look at the details before you confirm.', function() {
+  // Stream ctx → card slides in → second ctx streams → confirm appears
+  _agAddCtx(aiDiv, 'Here\'s your transfer to ' + d.recip.name + '. You\'re sending ' + fromSym + d.amount.toFixed(2) + ', and they\'ll receive it in ' + d.recip.currency + ' — take a look before you confirm.', function() {
     setTimeout(function() {
       aiDiv.appendChild(card);
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
           card.classList.add('ui-in');
-          _agStagger(card, '.ag-stagger-item', 80);
-          _agCountUp(card.querySelector('#agTxInt'), 0, intPart, 650);
+          _agStagger(card, '.ag-stagger-item', 70);
         });
       });
       setTimeout(function() {
-        _agAddCtx(aiDiv, 'That\'s at today\'s rate of ' + rateStr + ', with a flat ' + fromSym + d.feeAmt.toFixed(2) + ' fee — no hidden charges on top.', function() {
+        _agAddCtx(aiDiv, 'That\'s at today\'s rate of ' + fromSym + '1 = ' + toSym + rateStr + ', with a ' + fromSym + d.feeAmt.toFixed(2) + ' fee — no hidden charges on top.', function() {
           setTimeout(function() {
-            aiDiv.appendChild(slideWrap);
-            setTimeout(function() { slideWrap.classList.add('s-in'); }, 40);
+            aiDiv.appendChild(actions);
+            setTimeout(function() { actions.classList.add('s-in'); }, 40);
           }, 80);
         });
       }, 300);
@@ -2105,6 +2045,32 @@ function _agRenderPayeeVerify(aiDiv, msgs) {
 }
 
 // ── TEXT (typewriter) ─────────────────────────────────
+// Feedback row shown under a completed AI answer (thumbs up/down · copy · flag)
+function _agFeedbackRow(answerText) {
+  var row = document.createElement('div');
+  row.className = 'ag-feedback';
+  var btns = [
+    { ic: 'ThumbsUp.svg',   label: 'Good response' },
+    { ic: 'ThumbsDown.svg', label: 'Bad response' },
+    { ic: 'Copy.svg',       label: 'Copy' },
+    { ic: 'Flag.svg',       label: 'Report' },
+  ];
+  row.innerHTML = btns.map(function(b) {
+    return '<button class="ag-feedback-btn" aria-label="' + b.label + '">' +
+      '<span class="ico ol" style="--ico:url(\'Icons/' + b.ic + '\');--sz:16px;color:rgba(0,0,0,0.45)" aria-hidden="true"></span>' +
+    '</button>';
+  }).join('');
+  // copy + simple pressed-state feedback
+  var copyBtn = row.children[2];
+  if (copyBtn) copyBtn.addEventListener('click', function() {
+    if (navigator.clipboard && answerText) { navigator.clipboard.writeText(answerText).catch(function(){}); }
+  });
+  [row.children[0], row.children[1], row.children[3]].forEach(function(btn) {
+    if (btn) btn.addEventListener('click', function() { btn.classList.toggle('is-on'); });
+  });
+  return row;
+}
+
 function _agRenderText(aiDiv, msgs, responseText) {
   var textEl = document.createElement('div');
   textEl.className = 'ag-msg-ai-text';
@@ -2122,6 +2088,10 @@ function _agRenderText(aiDiv, msgs, responseText) {
       cursor.style.transition = 'opacity 400ms ease';
       cursor.style.opacity = '0';
       setTimeout(function() { if (cursor.parentNode) cursor.remove(); }, 420);
+      // reveal the feedback row once the answer has fully landed
+      var fb = _agFeedbackRow(responseText);
+      aiDiv.appendChild(fb);
+      requestAnimationFrame(function() { fb.classList.add('visible'); });
     }
   }
   setTimeout(typeChar, 60);
@@ -2463,8 +2433,19 @@ function closeHomeAgent() {
 }
 
 function agentOnInput(input) {
-  input.style.height = '60px';
-  input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+  input.style.height = '34px';
+  const next = Math.min(input.scrollHeight, 132);
+  input.style.height = next + 'px';
+  const card = document.getElementById('agentInputCard');
+  const multiline = next > 34;
+  if (card) card.classList.toggle('is-multiline', multiline);
+  // Lift the suggestion chips so they keep clear of the growing input.
+  // extra = textarea growth + (when wrapped) the button row that drops below.
+  const screen = document.getElementById('agent-screen');
+  if (screen) {
+    const extra = (next - 34) + (multiline ? 42 : 0);
+    screen.style.setProperty('--ag-input-extra', extra + 'px');
+  }
   const sendBtn = document.getElementById('agentSend');
   if (!sendBtn) return;
   const hasText = input.value.trim().length > 0;
@@ -2535,7 +2516,10 @@ function agentSend() {
   msgs.appendChild(userDiv);
   requestAnimationFrame(function() { requestAnimationFrame(function() { userDiv.classList.add('visible'); }); });
 
-  f.value = ''; f.style.height = 'auto';
+  f.value = ''; f.style.height = '34px';
+  const inputCard = document.getElementById('agentInputCard');
+  if (inputCard) inputCard.classList.remove('is-multiline');
+  if (screen) screen.style.setProperty('--ag-input-extra', '0px');
   const sendBtn = document.getElementById('agentSend');
   if (sendBtn) { sendBtn.classList.remove('active'); sendBtn.setAttribute('aria-disabled', 'true'); }
   // First message: sit at top (spacer is collapsing). Subsequent: scroll to show new bubble.
@@ -4751,6 +4735,18 @@ function renderCrTxSection() {
   container.appendChild(outer);
 }
 
+// Space switcher (Figma 3213-46823): expandable tabs — the tapped space
+// expands to show its label, the others collapse to icon-only.
+function crSelectSpace(btn) {
+  var pill = document.getElementById('crSpacesPill');
+  if (!pill) return;
+  pill.querySelectorAll('.cr-space').forEach(function(b) {
+    var on = b === btn;
+    b.classList.toggle('cr-space-sel', on);
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  });
+}
+
 function showCards(filter) {
   _cardsFilter = filter || 'all';
   _cardsOrigin = _activeScreen();
@@ -5455,6 +5451,9 @@ function _ctplSetMiniShown(v) {
   var nav = document.querySelector('#create-card .ctpl-nav');
   if (mini) mini.classList.toggle('is-visible', v);
   if (nav) nav.classList.toggle('ctpl-nav-hidden', v);
+  // Top progressive blur appears together with the mini pill
+  var panel = document.getElementById('ctplSetupPanel');
+  if (panel) panel.classList.toggle('ctpl-blur-on', v);
 }
 // Featured-card neighbours: switch templates from the setup screen
 var _ctplCurIdx = 0;
@@ -6087,10 +6086,27 @@ function crPinBackspace() {
   _pinEntry = _pinEntry.slice(0, -1);
   _crUpdatePinUI();
 }
+const CR_CURRENT_PIN = '0000'; // prototype: the existing card PIN
+function _crPinError() {
+  // Shake dots + clear, with error-state haptic
+  const dotsEl = document.getElementById('crPinDots');
+  document.querySelectorAll('.cr-pin-dot').forEach(d => d.classList.add('error'));
+  dotsEl.classList.add('shake');
+  if (navigator.vibrate) navigator.vibrate([80, 40, 80]);
+  setTimeout(() => {
+    dotsEl.classList.remove('shake');
+    _pinEntry = ''; _crUpdatePinUI();
+    document.querySelectorAll('.cr-pin-dot').forEach(d => d.classList.remove('error'));
+  }, 450);
+}
 function _crAdvancePin() {
   if (_pinStep === 0) {
-    // Accept any 4 digits as the "current PIN" for prototype
-    _pinStep = 1; _pinEntry = ''; _crUpdatePinUI();
+    // Verify the current PIN — must be 0000
+    if (_pinEntry === CR_CURRENT_PIN) {
+      _pinStep = 1; _pinEntry = ''; _crUpdatePinUI();
+    } else {
+      _crPinError();
+    }
   } else if (_pinStep === 1) {
     _pinNew = _pinEntry;
     _pinStep = 2; _pinEntry = ''; _crUpdatePinUI();
@@ -6099,14 +6115,7 @@ function _crAdvancePin() {
       document.getElementById('crPinEntry').style.display  = 'none';
       document.getElementById('crPinSuccess').style.display = '';
     } else {
-      // Mismatch: shake dots + clear
-      const dotsEl = document.getElementById('crPinDots');
-      document.querySelectorAll('.cr-pin-dot').forEach(d => d.classList.add('error'));
-      dotsEl.classList.add('shake');
-      setTimeout(() => {
-        dotsEl.classList.remove('shake');
-        _pinEntry = ''; _crUpdatePinUI();
-      }, 450);
+      _crPinError();
     }
   }
 }
@@ -7448,7 +7457,44 @@ function smGoToProgress() {
   }, 750);
 }
 
+// Shared AudioContext, unlocked on the first user gesture (autoplay policy)
+let _audioCtx = null;
+function _getAudioCtx() {
+  if (!_audioCtx) {
+    try { _audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e) { return null; }
+  }
+  if (_audioCtx.state === 'suspended') _audioCtx.resume();
+  return _audioCtx;
+}
+// Prime/resume the context on the first tap so later playback isn't blocked
+document.addEventListener('pointerdown', function primeAudio() {
+  _getAudioCtx();
+  document.removeEventListener('pointerdown', primeAudio);
+}, { once: true });
+
+function playSuccessSound() {
+  const ctx = _getAudioCtx();
+  if (!ctx) return;
+  try {
+    const notes = [523.25, 659.25, 783.99, 1046.50]; // C5 E5 G5 C6
+    notes.forEach(function(freq, i) {
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      const t = ctx.currentTime + i * 0.1;
+      gain.gain.setValueAtTime(0, t);
+      gain.gain.linearRampToValueAtTime(0.22, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+      osc.start(t); osc.stop(t + 0.35);
+    });
+  } catch(e) {}
+}
+
 function smGoToSuccess() {
+  playSuccessSound();
   const dollars = smCents / 100;
   const inr     = Math.round(dollars * SM_EXRATE);
   const intPart = Math.floor(dollars).toLocaleString('en-US');
@@ -7635,12 +7681,14 @@ let _disputeTx     = null;
 let _disputeReason = null;
 
 const DISPUTE_REASONS = [
-  { id:'unauthorized', label:'I didn\'t authorise this' },
-  { id:'not_received', label:'Item not received' },
-  { id:'wrong_amount', label:'Wrong amount charged' },
-  { id:'duplicate',    label:'Duplicate charge' },
-  { id:'not_as_desc',  label:'Not as described' },
-  { id:'other',        label:'Other',  full:true },
+  { id:'FRAUD_CARD_PRESENT',     label:'Card present fraud' },
+  { id:'FRAUD_CARD_NOT_PRESENT', label:'Card not present fraud' },
+  { id:'FRAUD_OTHER',            label:'Other fraud' },
+  { id:'GOODS_SERVICES_NOT_RECEIVED', label:'Item not received' },
+  { id:'GOODS_SERVICES_NOT_AS_DESCRIBED', label:'Not as described' },
+  { id:'INCORRECT_AMOUNT',       label:'Wrong amount charged' },
+  { id:'DUPLICATE_PROCESSING',   label:'Duplicate charge' },
+  { id:'OTHER',                  label:'Other' },
 ];
 
 function openDisputeForm(tx) {
@@ -7658,11 +7706,28 @@ function openDisputeForm(tx) {
   rowWrap.appendChild(row);
   body.appendChild(rowWrap);
 
-  // ── Banyan DS RadioGroup — "What happened?" ──────────────────
+  // ── Amount field — pre-filled from tx, editable ──────────────
+  const amtWrap = document.createElement('div');
+  amtWrap.className = 'bds-input-wrap';
+  // tx.amt is [dollars, cents] display array; tx.amount is raw cents if present
+  const txDollars = tx.amt ? `${tx.amt[0]}.${String(tx.amt[1]).padStart(2,'0')}` :
+                    tx.amount ? (Math.abs(tx.amount) / 100).toFixed(2) : '0.00';
+  amtWrap.innerHTML = `
+    <div class="bds-field-label">Dispute amount</div>
+    <div class="dispute-amount-row">
+      <span class="dispute-amount-currency">${tx.currency ?? 'USD'}</span>
+      <input class="bds-input dispute-amount-input" id="disputeAmount"
+        type="number" inputmode="decimal" min="0.01" step="0.01"
+        value="${txDollars}">
+    </div>
+  `;
+  body.appendChild(amtWrap);
+
+  // ── Banyan DS RadioGroup — "Reason" ──────────────────────────
   const rgWrap = document.createElement('div');
   const rgLabel = document.createElement('div');
   rgLabel.className = 'bds-field-label';
-  rgLabel.textContent = 'What happened?';
+  rgLabel.textContent = 'Reason';
   rgWrap.appendChild(rgLabel);
 
   const radioList = document.createElement('div');
@@ -7681,12 +7746,13 @@ function openDisputeForm(tx) {
   rgWrap.appendChild(radioList);
   body.appendChild(rgWrap);
 
-  // ── Banyan DS Textarea (Large) — "Anything else?" ───────────────
+  // ── Banyan DS Textarea — customer note ───────────────────────
   const taWrap = document.createElement('div');
   taWrap.className = 'bds-input-wrap';
   taWrap.innerHTML = `
+    <div class="bds-field-label">Additional details</div>
     <textarea class="bds-textarea" id="disputeNotes"
-      placeholder="Anything else? (optional)"></textarea>
+      placeholder="Describe what happened (optional)"></textarea>
   `;
   body.appendChild(taWrap);
 
@@ -7718,21 +7784,11 @@ function submitDispute() {
   journeyStep(tx, 'dispute');
 }
 
-/* ── Reversal reason form ────────────────────────────── */
-let _reversalTx     = null;
-let _reversalReason = null;
-
-const REVERSAL_REASONS = [
-  { id:'wrong_recipient', label:'Sent to wrong recipient' },
-  { id:'wrong_amount',    label:'Incorrect amount sent' },
-  { id:'duplicate',       label:'Duplicate payment' },
-  { id:'not_needed',      label:'Payment no longer needed' },
-  { id:'other',           label:'Other' },
-];
+/* ── Reversal / refund-tracking form ────────────────── */
+let _reversalTx = null;
 
 function openReversalForm(tx) {
-  _reversalTx     = tx;
-  _reversalReason = null;
+  _reversalTx = tx;
 
   const body = document.getElementById('reversalBody');
   body.innerHTML = '';
@@ -7745,58 +7801,59 @@ function openReversalForm(tx) {
   rowWrap.appendChild(row);
   body.appendChild(rowWrap);
 
-  // RadioGroup — reason
-  const rgWrap = document.createElement('div');
-  const rgLabel = document.createElement('div');
-  rgLabel.className = 'bds-field-label';
-  rgLabel.textContent = 'Reason for reversal';
-  rgWrap.appendChild(rgLabel);
-
-  const radioList = document.createElement('div');
-  radioList.className = 'bds-radio-list';
-  radioList.id = 'reversalRadioList';
-
-  REVERSAL_REASONS.forEach(r => {
-    const rowEl = document.createElement('div');
-    rowEl.className = 'bds-radio-row';
-    rowEl.dataset.id = r.id;
-    rowEl.innerHTML = `<div class="bds-radio-btn"></div><span class="bds-radio-lbl">${r.label}</span>`;
-    rowEl.addEventListener('click', () => selectReversalReason(r.id));
-    radioList.appendChild(rowEl);
-  });
-
-  rgWrap.appendChild(radioList);
-  body.appendChild(rgWrap);
-
-  // Notes textarea
-  const taWrap = document.createElement('div');
-  taWrap.className = 'bds-input-wrap';
-  taWrap.innerHTML = `
-    <textarea class="bds-textarea" id="reversalNotes"
-      placeholder="Additional details (optional)"></textarea>
+  // Expected refund amount
+  const txDollars = tx.amt
+    ? `${tx.amt[0]}.${String(tx.amt[1]).padStart(2,'0')}`
+    : tx.amount ? (Math.abs(tx.amount)/100).toFixed(2) : '0.00';
+  const amtWrap = document.createElement('div');
+  amtWrap.className = 'bds-input-wrap';
+  amtWrap.innerHTML = `
+    <div class="bds-field-label">Expected refund amount</div>
+    <div class="dispute-amount-row">
+      <span class="dispute-amount-currency">${tx.currency ?? 'USD'}</span>
+      <input class="bds-input dispute-amount-input" id="reversalAmount"
+        type="number" inputmode="decimal" min="0.01" step="0.01"
+        value="${txDollars}">
+    </div>
   `;
-  body.appendChild(taWrap);
+  body.appendChild(amtWrap);
 
-  document.getElementById('reversalSubmit').classList.remove('ready');
+  // Expected by date
+  const defaultDate = new Date();
+  defaultDate.setDate(defaultDate.getDate() + 30);
+  const dateStr = defaultDate.toISOString().split('T')[0];
+  const dateWrap = document.createElement('div');
+  dateWrap.className = 'bds-input-wrap';
+  dateWrap.innerHTML = `
+    <div class="bds-field-label">Expected by</div>
+    <div class="reversal-date-row">
+      <svg class="reversal-date-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="2" y="4" width="16" height="14" rx="3"/>
+        <path d="M6 2v4M14 2v4M2 9h16"/>
+      </svg>
+      <input class="reversal-date-input" id="reversalDate" type="date" value="${dateStr}">
+    </div>
+  `;
+  body.appendChild(dateWrap);
+
+  // Helper text
+  const hint = document.createElement('p');
+  hint.className = 'reversal-hint';
+  hint.textContent = "We'll watch for a matching refund that hasn't arrived by this date.";
+  body.appendChild(hint);
+
   document.getElementById('reversalOverlay').classList.add('open');
 }
 
-function selectReversalReason(id) {
-  _reversalReason = id;
-  document.querySelectorAll('#reversalRadioList .bds-radio-row').forEach(p => {
-    p.classList.toggle('sel', p.dataset.id === id);
-  });
-  document.getElementById('reversalSubmit').classList.add('ready');
-}
+
 
 function closeReversalForm() {
   document.getElementById('reversalOverlay').classList.remove('open');
-  _reversalTx     = null;
-  _reversalReason = null;
+  _reversalTx = null;
 }
 
 function submitReversal() {
-  if (!_reversalTx || !_reversalReason) return;
+  if (!_reversalTx) return;
   const tx = _reversalTx;
   closeReversalForm();
   journeyStep(tx, 'reverse');
@@ -9450,4 +9507,38 @@ function _caAppendSummaryCard(aiDiv, msgs, cardName, typeLabel, spaceName, limit
 function caConfirmCreate() {
   closeCardAgent();
   setTimeout(function() { showToast('Card created'); }, 340);
+}
+
+/* ── Face ID (biometric auth before send) ───────────────── */
+function smShowFaceScan() {
+  const overlay = document.getElementById('faceScanOverlay');
+  const title   = document.getElementById('fscTitle');
+
+  // Reset to base state
+  overlay.classList.remove('fsc-scanning', 'fsc-done');
+  title.textContent = 'Face ID';
+
+  overlay.classList.add('open');
+
+  // Phase 1 (next frame): glyph scales in + features draw + breathe
+  requestAnimationFrame(function() {
+    overlay.classList.add('fsc-scanning');
+  });
+
+  // Phase 2 (~1300ms): authenticated — glyph morphs to checkmark
+  setTimeout(function() {
+    overlay.classList.remove('fsc-scanning');
+    overlay.classList.add('fsc-done');
+    title.textContent = 'Done';
+    if (navigator.vibrate) navigator.vibrate(40);
+  }, 1300);
+
+  // Phase 3 (~1750ms): dismiss + proceed to payment progress
+  setTimeout(function() {
+    overlay.classList.remove('open');
+    setTimeout(function() {
+      overlay.classList.remove('fsc-done');
+    }, 240);
+    smGoToProgress();
+  }, 1750);
 }
