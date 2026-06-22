@@ -8272,13 +8272,13 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
         item.classList.toggle('cr-active', i === closestIdx);
         if (i !== closestIdx) item.classList.remove('cr-flipped');
       });
-      // Reflect the active card's frozen state in the Freeze action + lock state
+      // Reflect the active card's frozen state in the Freeze action + lock state.
+      // The "add new card" tile is not a flipcard, so it's never frozen — clear it.
       var activeCard = items[closestIdx];
-      if (activeCard && activeCard.classList.contains('cr-flipcard')) {
-        var frozenNow = activeCard.classList.contains('cr-iced');
-        if (frozenNow !== _cardLocked) { _cardLocked = frozenNow; }
-        if (typeof _crSyncLockUI === 'function') _crSyncLockUI(frozenNow);
-      }
+      var frozenNow = !!(activeCard && activeCard.classList.contains('cr-flipcard')
+                        && activeCard.classList.contains('cr-iced'));
+      if (frozenNow !== _cardLocked) { _cardLocked = frozenNow; }
+      if (typeof _crSyncLockUI === 'function') _crSyncLockUI(frozenNow);
       var isAdd = items[closestIdx] && items[closestIdx].classList.contains('cr-carousel-add');
       if (spendHdr) spendHdr.style.display = isAdd ? 'none'  : '';
       if (tip)      tip.style.display      = isAdd ? 'flex'  : 'none';

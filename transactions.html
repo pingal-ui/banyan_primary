@@ -7,8 +7,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=221">
+  <link rel="stylesheet" href="styles.css?v=226">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -109,9 +110,23 @@
           <div class="home-daily-rule"></div>
           <h2 class="home-daily-hl">3 items need you to act on them</h2>
           <p class="home-daily-sub">Review, approve and add balance.</p>
-          <div class="home-daily-imgs">
-            <div class="home-daily-img-card home-daily-img-card--l"><img src="assets/home-bg.webp" alt=""></div>
-            <div class="home-daily-img-card home-daily-img-card--r"><img src="assets/home-coins.webp" alt=""></div>
+          <div class="home-act-scroll">
+            <button class="home-act-card" onclick="openHomeAgent()">
+              <img class="home-act-bg" src="assets/home-act-netflix.webp" alt="">
+              <div class="home-act-grad"></div>
+              <div class="home-act-texts">
+                <p class="home-act-title">Netflix went up by <span class="home-act-red">$2.00</span></p>
+                <p class="home-act-sub">Your charge is now $17.99 for April, up from $15.99.</p>
+              </div>
+            </button>
+            <button class="home-act-card" onclick="openHomeAgent()">
+              <img class="home-act-bg" src="assets/home-act-cash.webp" alt="">
+              <div class="home-act-grad home-act-grad--grey"></div>
+              <div class="home-act-texts">
+                <p class="home-act-title">Running short of balance</p>
+                <p class="home-act-sub">$356 short to pay Maya Sarini on May 25.</p>
+              </div>
+            </button>
           </div>
         </div>
 
@@ -587,15 +602,18 @@
                     <span class="cr-frost-flash"></span>
                   </div>
                   <div class="cr-face cr-face-back" aria-hidden="true">
-                    <span class="cr-bk-name">Banyan card</span>
+                    <div class="cr-bk-num">1234 56•• •••• ••••</div>
+                    <div class="cr-bk-valid">
+                      <span class="cr-bk-lbl">Valid thru</span>
+                      <span class="cr-bk-val">06/21</span>
+                    </div>
+                    <div class="cr-bk-cvv">
+                      <span class="cr-bk-lbl">CVV</span>
+                      <span class="cr-bk-val">312</span>
+                    </div>
                     <div class="cr-bk-chiprow">
                       <span class="cr-bk-chip"></span>
                       <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
-                    </div>
-                    <div class="cr-bk-num">1234 5678 9101 1121</div>
-                    <div class="cr-bk-valid">
-                      <span class="cr-bk-valid-lbl">Valid thru</span>
-                      <span class="cr-bk-valid-val">06/21</span>
                     </div>
                     <div class="cr-bk-holder">Devanand Patel</div>
                     <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
@@ -616,15 +634,18 @@
                     <span class="cr-frost-flash"></span>
                   </div>
                   <div class="cr-face cr-face-back" aria-hidden="true">
-                    <span class="cr-bk-name">Card 2</span>
+                    <div class="cr-bk-num">4892 11•• •••• ••••</div>
+                    <div class="cr-bk-valid">
+                      <span class="cr-bk-lbl">Valid thru</span>
+                      <span class="cr-bk-val">09/28</span>
+                    </div>
+                    <div class="cr-bk-cvv">
+                      <span class="cr-bk-lbl">CVV</span>
+                      <span class="cr-bk-val">887</span>
+                    </div>
                     <div class="cr-bk-chiprow">
                       <span class="cr-bk-chip"></span>
                       <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
-                    </div>
-                    <div class="cr-bk-num">4892 1145 7732 0098</div>
-                    <div class="cr-bk-valid">
-                      <span class="cr-bk-valid-lbl">Valid thru</span>
-                      <span class="cr-bk-valid-val">09/28</span>
                     </div>
                     <div class="cr-bk-holder">Devanand Patel</div>
                     <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
@@ -645,15 +666,18 @@
                     <span class="cr-frost-flash"></span>
                   </div>
                   <div class="cr-face cr-face-back" aria-hidden="true">
-                    <span class="cr-bk-name">Travel card</span>
+                    <div class="cr-bk-num">5167 38•• •••• ••••</div>
+                    <div class="cr-bk-valid">
+                      <span class="cr-bk-lbl">Valid thru</span>
+                      <span class="cr-bk-val">08/30</span>
+                    </div>
+                    <div class="cr-bk-cvv">
+                      <span class="cr-bk-lbl">CVV</span>
+                      <span class="cr-bk-val">167</span>
+                    </div>
                     <div class="cr-bk-chiprow">
                       <span class="cr-bk-chip"></span>
                       <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
-                    </div>
-                    <div class="cr-bk-num">5167 3810 1139 5591</div>
-                    <div class="cr-bk-valid">
-                      <span class="cr-bk-valid-lbl">Valid thru</span>
-                      <span class="cr-bk-valid-val">08/30</span>
                     </div>
                     <div class="cr-bk-holder">Devanand Patel</div>
                     <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
@@ -3997,7 +4021,7 @@
 
 </div>
 
-  <script src="app.js?v=137"></script>
+  <script src="app.js?v=138"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

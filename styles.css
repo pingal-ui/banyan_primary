@@ -5372,24 +5372,53 @@
     }
     .home-daily-rule { height: 1.5px; background: var(--ink); margin-bottom: 16px; }
     .home-daily-hl {
-      margin: 0 0 6px;
-      font-family: 'Geist', sans-serif; font-size: 22px; font-weight: 700; line-height: 1.18;
-      letter-spacing: -0.4px; color: var(--ink); text-wrap: balance;
+      margin: 0 0 4px;
+      font-family: 'DM Serif Display', Georgia, serif; font-size: 21px; font-weight: 400; line-height: 1.2;
+      letter-spacing: 0; color: var(--ink); text-wrap: balance;
     }
     .home-daily-sub {
-      margin: 0 0 16px;
-      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 400; line-height: 1.4;
+      margin: 0 0 14px;
+      font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400; line-height: 18px;
       color: var(--ink-soft);
     }
-    .home-daily-imgs {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-      margin: 0 0 4px;
+    /* Action cards — image-led, horizontally scrollable, text overlaid at the foot */
+    .home-act-scroll {
+      display: flex; gap: 8px; margin: 0 -16px 2px; padding: 0 16px 2px;
+      overflow-x: auto; -webkit-overflow-scrolling: touch; scroll-snap-type: x mandatory;
+      scrollbar-width: none;
     }
-    .home-daily-img-card {
-      border-radius: 12px; overflow: hidden; aspect-ratio: 1 / 1;
+    .home-act-scroll::-webkit-scrollbar { display: none; }
+    .home-act-card {
+      position: relative; flex: 0 0 auto; width: 216px; height: 216px;
+      border-radius: 20px; overflow: hidden; scroll-snap-align: start;
+      background: #0a090e; border: none; padding: 0; cursor: pointer;
+      text-align: left; -webkit-tap-highlight-color: transparent;
+      transition: transform 160ms var(--ease-out);
     }
-    .home-daily-img-card img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
+    .home-act-card:active { transform: scale(0.97); }
+    .home-act-bg {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      object-fit: cover; display: block; pointer-events: none;
+    }
+    .home-act-grad {
+      position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0,0,0,0) 46%, rgba(0,0,0,0.95) 100%);
+    }
+    .home-act-grad--grey {
+      background: linear-gradient(to bottom, rgba(67,67,67,0) 37%, #434343 100%);
+    }
+    .home-act-texts {
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 1;
+      display: flex; flex-direction: column; gap: 4px; padding: 40px 16px 16px;
+    }
+    .home-act-title {
+      margin: 0; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
+      line-height: 20px; color: #fff;
+    }
+    .home-act-red { color: #ff6b6b; }
+    .home-act-sub {
+      margin: 0; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 400;
+      line-height: 18px; color: rgba(255,255,255,0.6);
     }
     /* FX / remittance card */
     .home-fx-card {
@@ -6325,12 +6354,28 @@
       background: var(--cbg, linear-gradient(154deg, #00132b 0%, #005289 170%));
       color: #fff;
     }
-    .cr-bk-name {
-      position: absolute; top: 16px; left: 16px;
-      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600;
-      line-height: 20px; color: rgba(255,255,255,0.8); letter-spacing: -0.1px;
+    /* masked card number — top-left */
+    .cr-bk-num {
+      position: absolute; left: 20px; top: 41px;
+      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; font-weight: 600;
+      letter-spacing: -0.3px; color: rgba(255,255,255,0.62);
     }
-    /* chip + contactless wave */
+    /* VALID THRU / CVV — top-right, label over value, right-aligned */
+    .cr-bk-valid, .cr-bk-cvv {
+      position: absolute; top: 25px;
+      display: flex; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right;
+    }
+    .cr-bk-valid { right: 64px; }
+    .cr-bk-cvv   { right: 18px; }
+    .cr-bk-lbl {
+      font-family: 'Geist', sans-serif; font-size: 8px; font-weight: 600;
+      letter-spacing: 0.5px; text-transform: uppercase; color: rgba(255,255,255,0.55); line-height: 1;
+    }
+    .cr-bk-val {
+      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 15px; font-weight: 600;
+      color: rgba(255,255,255,0.62); letter-spacing: 0.2px; line-height: 1;
+    }
+    /* chip + contactless wave — mid-left */
     .cr-bk-chiprow {
       position: absolute; top: 78px; left: 20px;
       display: flex; align-items: center; gap: 9px;
@@ -6355,33 +6400,14 @@
       background: linear-gradient(135deg, #ded2bb, #c7baa2);
     }
     .cr-bk-wave { transform: rotate(0deg); }
-    /* card number */
-    .cr-bk-num {
-      position: absolute; left: 20px; top: 112px;
-      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 16px; font-weight: 600;
-      letter-spacing: 0.2px; color: rgba(255,255,255,0.92);
-    }
-    /* valid thru */
-    .cr-bk-valid {
-      position: absolute; right: 16px; top: 92px;
-      display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
-    }
-    .cr-bk-valid-lbl {
-      font-family: 'Geist', sans-serif; font-size: 8px; font-weight: 600;
-      letter-spacing: 0.6px; text-transform: uppercase; color: rgba(255,255,255,0.55);
-    }
-    .cr-bk-valid-val {
-      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 17px; font-weight: 600;
-      color: rgba(255,255,255,0.92); letter-spacing: 0.3px;
-    }
-    /* cardholder */
+    /* cardholder — bottom-left */
     .cr-bk-holder {
-      position: absolute; left: 20px; top: 146px;
-      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 14px; font-weight: 500;
-      letter-spacing: 0.4px; text-transform: uppercase; color: rgba(255,255,255,0.78);
+      position: absolute; left: 20px; bottom: 16px;
+      font-family: 'Geist Mono', ui-monospace, monospace; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.3px; text-transform: uppercase; color: rgba(255,255,255,0.62);
     }
     .cr-face-back img.cr-bk-visa {
-      position: absolute; right: 16px; bottom: 16px; width: 43px; height: 14px;
+      position: absolute; right: 16px; bottom: 17px; width: 43px; height: 14px;
       object-fit: contain; opacity: 0.95;
     }
     @media (prefers-reduced-motion: reduce) {
@@ -7180,7 +7206,7 @@
       position: absolute; inset: 0;
       background: url('assets/card-frost.webp') center/cover no-repeat,
                   linear-gradient(154deg, #00132b 0%, #005289 170%);
-      --frost-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='640'%3E%3Cdefs%3E%3ClinearGradient%20id='lg'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.40'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.60'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3Cfilter%20id='r'%20x='-20%'%20y='-20%'%20width='140%'%20height='140%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.016%200.038'%20numOctaves='2'%20seed='8'%20result='n'/%3E%3CfeDisplacementMap%20in='SourceGraphic'%20in2='n'%20scale='72'%20xChannelSelector='R'%20yChannelSelector='G'/%3E%3C/filter%3E%3C/defs%3E%3Crect%20width='300'%20height='640'%20fill='url(%23lg)'%20filter='url(%23r)'/%3E%3C/svg%3E");
+      --frost-mask: linear-gradient(to top, #000 0 42%, rgba(0,0,0,0.55) 58%, transparent 74%);
     }
     .cr-frozen-card img.cr-frost-snow {
       position: absolute; left: 18px; bottom: 20px; top: auto;
@@ -7221,7 +7247,7 @@
       background: url('assets/card-frost.webp') center/cover no-repeat,
                   linear-gradient(154deg, #00132b 0%, #005289 170%);
       /* roughened rising-frost mask (jagged turbulent front, scrolled in) */
-      --frost-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='300'%20height='640'%3E%3Cdefs%3E%3ClinearGradient%20id='lg'%20x1='0'%20y1='0'%20x2='0'%20y2='1'%3E%3Cstop%20offset='0'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.40'%20stop-color='%23fff'%20stop-opacity='0'/%3E%3Cstop%20offset='0.60'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3Cstop%20offset='1'%20stop-color='%23fff'%20stop-opacity='1'/%3E%3C/linearGradient%3E%3Cfilter%20id='r'%20x='-20%'%20y='-20%'%20width='140%'%20height='140%'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.016%200.038'%20numOctaves='2'%20seed='8'%20result='n'/%3E%3CfeDisplacementMap%20in='SourceGraphic'%20in2='n'%20scale='72'%20xChannelSelector='R'%20yChannelSelector='G'/%3E%3C/filter%3E%3C/defs%3E%3Crect%20width='300'%20height='640'%20fill='url(%23lg)'%20filter='url(%23r)'/%3E%3C/svg%3E");
+      --frost-mask: linear-gradient(to top, #000 0 42%, rgba(0,0,0,0.55) 58%, transparent 74%);
     }
     /* Blue snowflake — lower-left, matching the Figma placement.
        (higher specificity than the generic .cr-carousel-item img sizing rule) */
