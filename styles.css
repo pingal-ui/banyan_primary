@@ -6366,6 +6366,47 @@
       backface-visibility: hidden; -webkit-backface-visibility: hidden;
     }
     .cr-face-front img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+    /* ── Card fronts (Figma 4091:62348 physical / 4091:62313 virtual) ── */
+    .cr-face-front .cr-front-bg { position: absolute; inset: 0; }
+    /* Virtual: navy gradient + large translucent people mark + diagonal sheen */
+    .cr-front-virtual {
+      background: linear-gradient(154deg, #00132b 0%, #005289 170%);
+    }
+    .cr-front-virtual::after {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(122deg, transparent 36%, rgba(255,255,255,0.07) 50%, transparent 62%);
+    }
+    .cr-front-people {
+      position: absolute; left: -6px; bottom: -44px; width: 142px; height: 142px; z-index: 0; pointer-events: none;
+      background: rgba(255,255,255,0.13);
+      -webkit-mask: url('assets/card-users-four.svg') center / contain no-repeat;
+      mask: url('assets/card-users-four.svg') center / contain no-repeat;
+    }
+    /* Overlay container holding brand / holder / visa */
+    .cr-front-ov { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+    .cr-front-ov--physical {
+      background:
+        linear-gradient(108deg, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0.12) 40%, transparent 62%),
+        linear-gradient(0deg, rgba(0,0,0,0.34) 0%, transparent 32%);
+    }
+    .cr-front-brand {
+      position: absolute; top: 16px; left: 16px;
+      display: flex; align-items: center; gap: 2px;
+      font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; line-height: 20px; color: #fff;
+    }
+    .cr-front-leaf { flex-shrink: 0; }
+    .cr-front-holder {
+      position: absolute; left: 16px; bottom: 16px;
+      font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600;
+      letter-spacing: 1px; text-transform: uppercase; color: #fff; line-height: 13px;
+    }
+    .cr-face-front .cr-front-visa {
+      position: absolute; right: 16px; bottom: 16px; width: 43px; height: 14px; z-index: 1;
+      background: #fff;
+      -webkit-mask: url('assets/visa-white.svg') center / contain no-repeat;
+      mask: url('assets/visa-white.svg') center / contain no-repeat;
+    }
     /* Card back (Figma 4274:58224): name, EMV chip + contactless, card number,
        valid-thru, holder, VISA. Gradient adapts to the front via --cbg. */
     .cr-face-back {

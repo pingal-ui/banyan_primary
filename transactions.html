@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=227">
+  <link rel="stylesheet" href="styles.css?v=228">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -518,7 +518,15 @@
               <div class="cr-tilt">
                 <div class="cr-flip">
                   <div class="cr-face cr-face-front">
-                    <img src="assets/card-front.webp" alt="Banyan – Physical">
+                    <img class="cr-front-bg" src="assets/card-physical-front.webp" alt="Banyan – Physical">
+                    <div class="cr-front-ov cr-front-ov--physical">
+                      <span class="cr-front-brand">
+                        <span class="cr-front-leaf ico ol" style="--ico:url('Icons/Leaf.svg');--sz:15px;color:#fff"></span>
+                        <span>Banyan</span>
+                      </span>
+                      <span class="cr-front-holder">Devanand Patel</span>
+                      <span class="cr-front-visa"></span>
+                    </div>
                     <div class="cr-card-frost">
                       <span class="cr-frost-name">Banyan card</span>
                       <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
@@ -549,10 +557,14 @@
             <div class="cr-carousel-item cr-flipcard cr-flipcard-dark" style="--cbg:linear-gradient(154deg,#18181a 0%,#3a3a40 170%)">
               <div class="cr-tilt">
                 <div class="cr-flip">
-                  <div class="cr-face cr-face-front">
-                    <img src="assets/card-back.webp" alt="Card 2 – Virtual">
+                  <div class="cr-face cr-face-front cr-front-virtual">
+                    <span class="cr-front-people"></span>
+                    <div class="cr-front-ov">
+                      <span class="cr-front-brand"><span>Household</span></span>
+                      <span class="cr-front-visa"></span>
+                    </div>
                     <div class="cr-card-frost">
-                      <span class="cr-frost-name">Card 2</span>
+                      <span class="cr-frost-name">Household</span>
                       <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
                       <span class="cr-frost-visa"></span>
                     </div>
@@ -3946,7 +3958,7 @@
 
 </div>
 
-  <script src="app.js?v=138"></script>
+  <script src="app.js?v=139"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

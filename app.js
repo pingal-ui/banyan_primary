@@ -8206,7 +8206,7 @@ document.getElementById('expScroll').addEventListener('scroll', function() {
       { int: '0',      dec: '.00' },  // Travel card (frozen)
       null                             // Create a new card
     ];
-    var CARD_NAMES = ['Banyan card', 'Card 2', 'Travel card', ''];
+    var CARD_NAMES = ['Banyan card', 'Household', 'Travel card', ''];
 
     function update() {
       var items = carousel.querySelectorAll('.cr-carousel-item');
