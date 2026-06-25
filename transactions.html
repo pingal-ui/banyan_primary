@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=228">
+  <link rel="stylesheet" href="styles.css?v=248">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -130,6 +130,19 @@
           </div>
         </div>
 
+        <!-- ── Notifications digest (switchable categories) ── -->
+        <section class="home-sec home-digest">
+          <div class="home-digest-head">
+            <button class="home-digest-drop" id="digestDrop" onclick="toggleDigestMenu(event)" aria-haspopup="listbox" aria-expanded="false">
+              <span class="home-digest-cat" id="digestCatLabel">Needs your action</span>
+              <span class="home-digest-caret" aria-hidden="true"></span>
+            </button>
+            <div class="home-digest-menu" id="digestMenu" role="listbox"></div>
+          </div>
+          <p class="home-digest-desc" id="digestDesc"></p>
+          <div class="home-digest-list" id="digestList"></div>
+        </section>
+
         <!-- ── Where your money stands ── -->
         <section class="home-sec">
           <div class="home-story" onclick="showAccounts()">
@@ -229,7 +242,7 @@
               <div class="home-recent-cta-wrap">
                 <button class="home-recent-cta" onclick="showList()">
                   <span>See all transactions</span>
-                  <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+                  <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:16px;color:var(--brand-primary)"></span>
                 </button>
               </div>
             </div>
@@ -268,8 +281,8 @@
                 <span class="acct-hero-dec">.00</span>
               </div>
             </div>
-            <button class="acct-hero-btn">
-              <span class="ico ol" style="--ico:url('Icons/ArrowsLeftRight.svg');--sz:14px;color:rgba(0,0,0,0.80)"></span>
+            <button class="btn btn--secondary btn--sm">
+              <span class="ico ol" style="--ico:url('Icons/ArrowsLeftRight.svg');color:rgba(0,0,0,0.80)"></span>
               <span>Transfer between spaces</span>
             </button>
           </div>
@@ -277,7 +290,13 @@
 
         <!-- ── SPACEs card ── -->
         <div class="acct-spaces">
-          <div class="acct-spaces-hdr">SPACEs &bull; 4</div>
+          <div class="acct-spaces-hdr">
+            <span class="acct-spaces-hdr-lbl">Spaces &bull; 4</span>
+            <button class="btn btn--secondary btn--sm">
+              <span class="ico ol" style="--ico:url('Icons/Plus.svg');color:rgba(0,0,0,0.70)"></span>
+              <span>Add a new space</span>
+            </button>
+          </div>
 
           <div class="acct-spaces-inner">
             <div class="acct-spaces-list">
@@ -363,21 +382,28 @@
               </div>
 
             </div><!-- /.acct-spaces-list -->
-
-            <!-- Add a new space -->
-            <button class="acct-add-btn">
-              <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:16px;color:rgba(0,0,0,0.60)"></span>
-              <span>Add a new space</span>
-            </button>
-
           </div><!-- /.acct-spaces-inner -->
         </div><!-- /.acct-spaces -->
 
         <!-- ── Show archived spaces ── -->
         <div class="acct-archived-wrap">
-          <button class="acct-archived-btn">
+          <div class="acct-archived-list" id="acctArchivedList">
+            <div class="acct-spaces-inner">
+              <div class="acct-row acct-row--archived" onclick="showAccountDetail({name:'Europe 2024',num:'1678 0987 9876 1102',balInt:'0',balDec:'.00',archived:true})" style="cursor:pointer">
+                <div class="acct-av">
+                  <div class="acct-av-inner"><img src="assets/space-thailand.webp" alt="Europe 2024"></div>
+                </div>
+                <div class="acct-info">
+                  <div class="acct-name">Europe 2024</div>
+                  <div class="acct-meta"><span class="acct-num">** 1102</span></div>
+                </div>
+                <div class="acct-amount">$0<span class="dec">.00</span></div>
+              </div>
+            </div>
+          </div>
+          <button class="acct-archived-btn" onclick="toggleArchivedSpaces(this)">
             <span>Show archived spaces</span>
-            <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:14px;color:rgba(0,0,0,0.60)"></span>
+            <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:14px;color:rgba(0,0,0,0.60);transition:transform 0.2s var(--ease-out)"></span>
           </button>
         </div>
 
@@ -635,19 +661,19 @@
         <!-- Action buttons: Controls | Freeze | More (Controls hidden when frozen) -->
         <div class="cr-actions" id="crActions">
           <div class="cr-action-item" id="crControlsAction" onclick="openCardControls()">
-            <button class="cr-action-btn">
+            <button class="btn btn--secondary btn--md btn--icon">
               <span class="ico ol" style="--ico:url('Icons/SlidersHorizontal.svg');--sz:16px;color:var(--text-primary)"></span>
             </button>
             <span class="cr-action-lbl">Controls</span>
           </div>
           <div class="cr-action-item" id="crLockActionItem" onclick="openCrLockSheet()">
-            <button class="cr-action-btn" id="crLockActionBtn">
+            <button class="btn btn--secondary btn--md btn--icon" id="crLockActionBtn">
               <span class="ico ol" id="crLockActionIco" style="--ico:url('Icons/Snowflake.svg');--sz:16px;color:var(--text-primary)"></span>
             </button>
             <span class="cr-action-lbl" id="crLockActionLbl">Freeze</span>
           </div>
           <div class="cr-action-item" onclick="openCrPinSheet()">
-            <button class="cr-action-btn">
+            <button class="btn btn--secondary btn--md btn--icon">
               <span class="ico ol" style="--ico:url('Icons/DotsThree.svg');--sz:16px;color:var(--text-primary)"></span>
             </button>
             <span class="cr-action-lbl">More</span>
@@ -1097,7 +1123,7 @@
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div class="bene-sheet-hdr">
             <span class="bene-sheet-label">Your beneficiaries</span>
-            <button class="bene-sheet-add">
+            <button class="bene-sheet-add" onclick="openAddBene()">
               <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add new
             </button>
@@ -1236,6 +1262,251 @@
     </div>
 
   </div><!-- /#sm-landing -->
+
+
+  <!-- Shared scrim behind the add-beneficiary bottom sheets -->
+  <div class="bene-scrim" id="beneScrim" onclick="closeAddBene()"></div>
+
+  <!-- ══════════════════════════════════════
+       ADD A BENEFICIARY — first modal (Figma 1731-44234)
+  ══════════════════════════════════════ -->
+  <div class="screen bsheet hr" id="addBene">
+    <div class="bm-grabber"></div>
+    <div class="abene-nav">
+      <button class="btn btn--secondary btn--md btn--icon" onclick="closeAddBene()" aria-label="Back">
+        <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');color:rgba(0,0,0,0.80)"></span>
+      </button>
+      <span class="abene-title">Add a beneficiary</span>
+      <span class="abene-nav-spacer"></span>
+    </div>
+
+    <div class="abene-scroll">
+      <!-- Chat-screenshot illustration -->
+      <div class="abene-illus">
+        <img class="abene-illus-img" src="assets/abene-chat.webp" alt="Example chat with bank account details">
+      </div>
+
+      <h2 class="abene-headline">Have a screenshot or<br>the specifics in a message?</h2>
+
+      <div class="abene-actions">
+        <button class="btn btn--secondary btn--xl btn--icon" onclick="showToast('Open camera')" aria-label="Take a photo">
+          <span class="ico ol" style="--ico:url('Icons/Camera.svg');color:rgba(0,0,0,0.80)"></span>
+        </button>
+        <button class="btn btn--secondary btn--xl btn--icon" onclick="showToast('Upload a screenshot')" aria-label="Upload">
+          <span class="ico ol" style="--ico:url('Icons/Export.svg');color:rgba(0,0,0,0.80)"></span>
+        </button>
+      </div>
+
+      <div class="abene-or"><span>OR</span></div>
+
+      <label class="abene-paste" for="abenePaste">
+        <input id="abenePaste" type="text" placeholder="Paste your account details" autocomplete="off">
+      </label>
+
+      <div class="abene-manual-card">
+        <button class="abene-manual-btn" onclick="openBeneManual()">
+          <span>Enter account details manually</span>
+          <span class="ico ol" style="--ico:url('Icons/CaretDoubleDown.svg');--sz:18px;color:var(--brand-primary)"></span>
+        </button>
+      </div>
+    </div>
+  </div><!-- /#addBene -->
+
+
+  <!-- ══════════════════════════════════════
+       ADD A BENEFICIARY — manual flow, India (Figma 2140-59591)
+  ══════════════════════════════════════ -->
+  <div class="screen bsheet hr" id="beneManual">
+    <div class="bm-grabber"></div>
+    <div class="abene-nav">
+      <button class="btn btn--secondary btn--md btn--icon" onclick="bmBack()" aria-label="Back">
+        <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');color:rgba(0,0,0,0.80)"></span>
+      </button>
+      <span class="abene-title">Add a beneficiary</span>
+      <button class="btn btn--secondary btn--md btn--icon" onclick="closeBeneManual()" aria-label="Close">
+        <span class="ico ol" style="--ico:url('Icons/X.svg');color:rgba(0,0,0,0.80)"></span>
+      </button>
+    </div>
+
+    <div class="bm-scroll" id="bmScroll">
+
+      <!-- ── Section 1: Country ── -->
+      <div class="bm-sec" id="bmSecCountry" data-step="0">
+        <button class="bm-sec-bar" onclick="bmGoStep(0)">
+          <span class="bm-sec-bar-lbl bm-bar-active">Country selection</span>
+          <span class="bm-sec-bar-done"><span class="bm-sec-flag">🇮🇳</span> Sending money to <b>India</b></span>
+          <span class="bm-sec-check ico ol" style="--ico:url('Icons/CheckCircle.svg');--sz:18px"></span>
+          <span class="bm-sec-lock ico ol" style="--ico:url('Icons/Lock.svg');--sz:14px"></span>
+        </button>
+        <div class="bm-sec-body"><div class="bm-sec-body-inner">
+          <p class="bm-q">Where will you be sending the money?</p>
+          <div class="bm-country-grid">
+            <button class="bm-country" onclick="bmSelectCountry('United States','🇺🇸')">
+              <span class="bm-country-flag">🇺🇸</span><span class="bm-country-name">United states</span>
+            </button>
+            <button class="bm-country" onclick="bmSelectCountry('India','🇮🇳')">
+              <span class="bm-country-flag">🇮🇳</span><span class="bm-country-name">India</span>
+            </button>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── Section 2: Account details ── -->
+      <div class="bm-sec is-locked" id="bmSecAccount" data-step="1">
+        <button class="bm-sec-bar" onclick="bmGoStep(1)">
+          <span class="bm-sec-bar-lbl bm-bar-active">Account details</span>
+          <span class="bm-sec-bar-done">Account details added · <b>Bank &amp; UPI</b></span>
+          <span class="bm-sec-check ico ol" style="--ico:url('Icons/CheckCircle.svg');--sz:18px"></span>
+          <span class="bm-sec-lock ico ol" style="--ico:url('Icons/Lock.svg');--sz:14px"></span>
+        </button>
+        <div class="bm-sec-body"><div class="bm-sec-body-inner">
+          <p class="bm-help">Details will be auto-verified once entered. The recipient <b>may receive ₹1</b> during this verification process.</p>
+
+          <!-- Bank account sub-card -->
+          <div class="bm-method is-open" id="bmBankCard">
+            <button class="bm-method-bar" onclick="bmToggleMethod('bank')">
+              <span class="bm-method-check"><span class="ico ol" style="--ico:url('Icons/Check.svg');--sz:12px;color:#fff"></span></span>
+              <span class="bm-method-lbl">Bank account</span>
+              <span class="bm-method-caret ico ol" style="--ico:url('Icons/CaretUp.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+            </button>
+            <div class="bm-method-body">
+              <label class="bm-field">
+                <span class="bm-field-lbl">Account number</span>
+                <input id="bmAcctNum" type="text" placeholder="Enter account number" inputmode="numeric">
+              </label>
+              <div class="bm-field-row">
+                <label class="bm-field" id="bmIfscField">
+                  <span class="bm-field-lbl">IFSC</span>
+                  <input id="bmIfsc" type="text" placeholder="Enter IFSC" autocapitalize="characters" onblur="bmTryVerify()" onchange="bmTryVerify()">
+                </label>
+                <label class="bm-field bm-field--select">
+                  <span class="bm-field-lbl">Account type</span>
+                  <select id="bmAcctType"><option>Savings</option><option>Current</option></select>
+                  <span class="bm-field-caret ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+                </label>
+              </div>
+              <div class="bm-ifsc-err" id="bmIfscErr">Enter a valid IFSC</div>
+
+              <!-- verify states -->
+              <div class="bm-verify bm-verify--loading" id="bmVerifyLoading">
+                <span class="bm-verify-orb"></span>
+                <span>Finding beneficiary details…</span>
+              </div>
+              <div class="bm-verify bm-verify--ok" id="bmVerifyOk">
+                <div class="bm-verify-ok-info">
+                  <span class="bm-verify-badge"><span class="ico ol" style="--ico:url('Icons/ShieldCheck.svg');--sz:11px;color:#7ee08a"></span> Verified</span>
+                  <span class="bm-verify-name">Byomkesh Bakshi</span>
+                  <span class="bm-verify-bank">ICICI Bank · MG Road, Bengaluru Branch</span>
+                </div>
+                <span class="bm-verify-banklogo"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:18px;color:#fff"></span></span>
+              </div>
+              <div class="bm-verify bm-verify--fail" id="bmVerifyFail">
+                <div class="bm-verify-fail-info">
+                  <span class="bm-verify-badge bm-verify-badge--fail"><span class="ico ol" style="--ico:url('Icons/ShieldWarning.svg');--sz:11px;color:#ff9b9b"></span> Verification failed</span>
+                  <span class="bm-verify-failtext">You can still continue, but please make sure your bank details are correct.</span>
+                </div>
+                <span class="bm-verify-warn ico ol" style="--ico:url('Icons/Warning.svg');--sz:22px;color:#fff"></span>
+              </div>
+              <label class="bm-field bm-field--name" id="bmManualNameField">
+                <input id="bmManualName" type="text" placeholder="Add beneficiary name">
+              </label>
+            </div>
+          </div>
+
+          <!-- UPI sub-card -->
+          <div class="bm-method" id="bmUpiCard">
+            <button class="bm-method-bar" onclick="bmToggleMethod('upi')">
+              <span class="bm-method-check bm-method-check--empty"></span>
+              <span class="bm-method-lbl">UPI</span>
+              <span class="bm-method-caret ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:16px;color:rgba(0,0,0,0.4)"></span>
+            </button>
+            <div class="bm-method-body">
+              <label class="bm-field">
+                <span class="bm-field-lbl">UPI ID</span>
+                <input id="bmUpi" type="text" placeholder="name@bank">
+              </label>
+            </div>
+          </div>
+        </div></div>
+      </div>
+
+      <!-- ── Section 3: About the beneficiary ── -->
+      <div class="bm-sec is-locked" id="bmSecAbout" data-step="2">
+        <button class="bm-sec-bar" onclick="bmGoStep(2)">
+          <span class="bm-sec-bar-lbl bm-bar-active">About the beneficiary</span>
+          <span class="bm-sec-bar-done">About the beneficiary</span>
+          <span class="bm-sec-check ico ol" style="--ico:url('Icons/CheckCircle.svg');--sz:18px"></span>
+          <span class="bm-sec-lock ico ol" style="--ico:url('Icons/Lock.svg');--sz:14px"></span>
+        </button>
+        <div class="bm-sec-body"><div class="bm-sec-body-inner">
+          <label class="bm-field">
+            <span class="bm-field-lbl">Nickname</span>
+            <input id="bmNickname" type="text" value="Byomkesh Bakshi">
+          </label>
+          <p class="bm-field-help">Prefilled from beneficiary name</p>
+          <div class="bm-add-links" id="bmAddLinks">
+            <button class="bm-add-link" onclick="bmAddContact('phone')"><span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:13px;color:var(--brand-primary)"></span> Phone number</button>
+            <button class="bm-add-link" onclick="bmAddContact('email')"><span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:13px;color:var(--brand-primary)"></span> Email ID</button>
+          </div>
+          <label class="bm-field bm-extra" id="bmPhoneField" style="display:none">
+            <span class="bm-field-lbl">Phone number (optional)</span>
+            <input id="bmPhone" type="tel" value="+91 7893463421">
+          </label>
+          <label class="bm-field bm-extra" id="bmEmailField" style="display:none">
+            <span class="bm-field-lbl">Email ID (optional)</span>
+            <input id="bmEmail" type="email" value="byomkesh@mmpd.com">
+          </label>
+        </div></div>
+      </div>
+
+    </div><!-- /.bm-scroll -->
+
+    <div class="bm-footer">
+      <button class="bm-upload-link" onclick="showToast('Upload a file instead')">
+        <span class="ico ol" style="--ico:url('Icons/CaretDoubleUp.svg');--sz:16px;color:var(--brand-primary)"></span>
+        <span>Upload a file instead</span>
+      </button>
+      <button class="btn btn--primary btn--xl bm-next" id="bmNextBtn" onclick="bmSaveNext()">Save and Next</button>
+    </div>
+  </div><!-- /#beneManual -->
+
+
+  <!-- ══════════════════════════════════════
+       ADD A BENEFICIARY — success (Figma 2140-59591)
+  ══════════════════════════════════════ -->
+  <div class="screen bsheet hr" id="beneSuccess">
+    <div class="bs-hero">
+      <button class="btn btn--secondary btn--md btn--icon" onclick="closeBeneSuccess()" aria-label="Back">
+        <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');color:rgba(0,0,0,0.80)"></span>
+      </button>
+      <button class="btn btn--secondary btn--md btn--icon" onclick="showToast('More')" aria-label="More">
+        <span class="ico ol" style="--ico:url('Icons/DotsThreeVertical.svg');color:rgba(0,0,0,0.80)"></span>
+      </button>
+    </div>
+    <div class="bs-scroll">
+      <div class="bs-check"><span class="ico ol" style="--ico:url('Icons/Check.svg');--sz:34px;color:#fff"></span></div>
+      <div class="bs-created">Beneficiary created</div>
+      <div class="bs-name">Byomkesh Bakshi</div>
+      <div class="bs-contact">+91 7893463421&nbsp;&nbsp;·&nbsp;&nbsp;byomkesh@mmpd.com</div>
+
+      <div class="bs-seg">
+        <button class="bs-seg-opt active">Bank account</button>
+        <button class="bs-seg-opt">UPI</button>
+      </div>
+      <div class="bs-details">
+        <div class="bs-row"><span>Account holder</span><b>Byomkesh Bakshi</b></div>
+        <div class="bs-row"><span>Bank</span><b>ICICI Bank</b></div>
+        <div class="bs-row"><span>Account number</span><b>1234 5678 9098 7654</b></div>
+        <div class="bs-row"><span>Account type</span><b>Savings</b></div>
+      </div>
+    </div>
+    <div class="bs-footer">
+      <button class="btn btn--secondary btn--xl bs-done" onclick="closeBeneSuccess()">Done</button>
+      <button class="btn btn--primary btn--xl bs-send" onclick="bmSendMoney()">Send money
+        <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');color:#fff"></span>
+      </button>
+    </div>
+  </div><!-- /#beneSuccess -->
 
 
   <!-- ══════════════════════════════════════
@@ -2419,11 +2690,11 @@
 
     <!-- Pinned top nav — stays constant while content scrolls -->
     <div class="ad-header-nav" id="adHeaderNav">
-      <button class="ad-nav-pill" onclick="closeAccountDetail()">
+      <button class="btn btn--secondary btn--md btn--icon" onclick="closeAccountDetail()">
         <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');color:rgba(0,0,0,0.80)"></span>
       </button>
       <span class="ad-nav-title" id="adNavTitle">USD Checking</span>
-      <button class="ad-nav-pill" onclick="openAdOptionsSheet()">
+      <button class="btn btn--secondary btn--md btn--icon" onclick="openAdOptionsSheet()">
         <span class="ico ol" style="--ico:url('Icons/DotsThree.svg');color:rgba(0,0,0,0.80)"></span>
       </button>
     </div>
@@ -2449,10 +2720,10 @@
       <div id="adCasesWrap" style="display:none">
         <!-- Floating nav over cards -->
         <div class="ad-cases-nav">
-          <button class="ad-nav-pill" onclick="closeAccountDetail()">
+          <button class="btn btn--secondary btn--md btn--icon" onclick="closeAccountDetail()">
             <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');color:rgba(0,0,0,0.80)"></span>
           </button>
-          <button class="ad-nav-pill" onclick="openAdOptionsSheet()">
+          <button class="btn btn--secondary btn--md btn--icon" onclick="openAdOptionsSheet()">
             <span class="ico ol" style="--ico:url('Icons/DotsThree.svg');color:rgba(0,0,0,0.80)"></span>
           </button>
         </div>
@@ -2478,6 +2749,7 @@
                 <span class="ad-acct-accordion-lbl" id="adAcctAccordionLbl">Show account details</span>
                 <span class="ico ol ad-acct-accordion-caret" style="--ico:url('Icons/CaretDown.svg');--sz:12px;color:rgba(0,0,0,0.40)"></span>
               </div>
+              <span class="ad-archived-badge" id="adArchivedBadge">Archived</span>
               <span id="adAcctNum" style="display:none">1678 0987 9876 3214</span>
             </div>
           </div>
@@ -2492,8 +2764,8 @@
               <span class="ad-bal-int" id="adBalInt">137,978</span>
               <span class="ad-bal-dec" id="adBalDec">.00</span>
             </div>
-            <button class="ad-add-funds-btn">
-              <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:12px;color:rgba(0,0,0,0.80)"></span>
+            <button class="btn btn--secondary btn--xs">
+              <span class="ico ol" style="--ico:url('Icons/Plus.svg');color:rgba(0,0,0,0.80)"></span>
               <span>Add funds</span>
             </button>
           </div>
@@ -2738,11 +3010,11 @@
       <!-- Compact nav (slides in on scroll-up) -->
       <div id="compactNav">
         <div class="compact-bar">
-          <button class="list-nav-btn" onclick="goBack()" aria-label="Back">
+          <button class="btn btn--secondary btn--md btn--icon" onclick="goBack()" aria-label="Back">
             <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
           </button>
           <span class="compact-title">Transactions</span>
-          <button class="list-nav-btn" aria-label="Download">
+          <button class="btn btn--secondary btn--md btn--icon" aria-label="Download">
             <span class="ico ol" style="--ico:url('Icons/FileArrowDown.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
           </button>
         </div>
@@ -2752,13 +3024,33 @@
       <!-- Full nav (collapses on scroll-up) -->
       <div id="fullNav">
         <div class="list-nav-bar">
-          <button class="list-nav-btn" onclick="goBack()" aria-label="Back">
+          <button class="btn btn--secondary btn--md btn--icon" onclick="goBack()" aria-label="Back">
             <span class="ico ol" style="--ico:url('Icons/ArrowLeft.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
           </button>
-          <span class="list-nav-title">Transactions</span>
-          <button class="list-nav-btn" aria-label="Download">
-            <span class="ico ol" style="--ico:url('Icons/FileArrowDown.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+          <div class="list-nav-spacer"></div>
+          <button class="btn btn--secondary btn--md btn--icon" onclick="toggleListSearch()" aria-label="Search">
+            <span class="ico ol" style="--ico:url('Icons/MagnifyingGlass.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
           </button>
+          <button class="btn btn--secondary btn--md btn--icon filter-btn-wrap" id="filterBtnWrap" onclick="openFilterSheet()" aria-label="Filter">
+            <span class="ico ol" style="--ico:url('Icons/Funnel.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+            <div class="filter-active-dot"></div>
+          </button>
+          <button class="btn btn--secondary btn--md btn--icon" aria-label="More">
+            <span class="ico ol" style="--ico:url('Icons/DotsThreeVertical.svg');--sz:16px;color:rgba(0,0,0,0.80)"></span>
+          </button>
+        </div>
+        <h1 class="list-title-big">Transactions</h1>
+        <div class="ltabs" role="tablist">
+          <button class="ltab" role="tab" onclick="switchTab('analysis',this)">Analysis</button>
+          <button class="ltab active" role="tab" onclick="switchTab('recent',this)">Recent</button>
+          <button class="ltab" role="tab" onclick="switchTab('scheduled',this)">Upcoming</button>
+        </div>
+        <!-- Collapsible search row (toggled by the top search icon) -->
+        <div class="list-search-wrap" id="listSearchWrap">
+          <label class="list-search-field" for="txSearch">
+            <span class="ico ol" style="--ico:url('Icons/MagnifyingGlass.svg');--sz:18px;color:rgba(0,0,0,0.40);flex-shrink:0"></span>
+            <input id="txSearch" type="search" placeholder="Search transactions…" autocomplete="off" spellcheck="false" class="list-search-input">
+          </label>
         </div>
         <!-- Active filter chips — lives inside fullNav so it collapses with it -->
         <div class="active-filters-row" id="activeFiltersRow"></div>
@@ -2775,16 +3067,8 @@
     </div>
   </div><!-- /#list -->
 
-  <!-- Bottom search/filter bar — phone-level; shown via CSS sibling selector when #list.on -->
-  <div class="list-bottom-bar">
-    <label class="list-search-field" for="txSearch">
-      <span class="ico ol" style="--ico:url('Icons/MagnifyingGlass.svg');--sz:18px;color:rgba(0,0,0,0.40);flex-shrink:0"></span>
-      <input id="txSearch" type="search" placeholder="Search..." autocomplete="off" spellcheck="false" class="list-search-input">
-    </label>
-    <button class="list-bar-btn filter-btn-wrap" id="filterBtnWrap" aria-label="Filter">
-      <span class="ico ol" style="--ico:url('Icons/Funnel.svg');--sz:16px;color:rgba(0,0,0,0.60)"></span>
-      <div class="filter-active-dot"></div>
-    </button>
+  <!-- Floating Ask-Banyan orb — phone-level; shown via CSS sibling selector when #list.on -->
+  <div class="list-bottom-bar list-bottom-bar--orb">
     <button class="list-bar-btn list-bar-orb" aria-label="Ask Banyan" onclick="openAgent()">
       <div class="list-bar-orb-inner">
         <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
@@ -3958,7 +4242,7 @@
 
 </div>
 
-  <script src="app.js?v=139"></script>
+  <script src="app.js?v=148"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

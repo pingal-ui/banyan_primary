@@ -35,6 +35,10 @@ function goBack() {
     document.getElementById('list').className = 'screen on';
     showNav(false); setSbLight(false); return;
   }
+  if (prev === 'beneficiaries') {
+    document.getElementById('beneficiaries').className = 'screen on';
+    showNav(false); setSbLight(false); return;
+  }
   showHome();
 }
 
@@ -3161,10 +3165,20 @@ function dateHeader(label) {
 
 /* ── Render list (two-section layout) ───────────────── */
 function renderList(tab) {
-  const rawData = tab === 'recent' ? RECENT : SCHEDULED;
-  const data = tab === 'recent' ? applyFilters(rawData) : rawData;
   const list = document.getElementById('txList');
   list.innerHTML = '';
+  if (tab === 'analysis') {
+    const empty = document.createElement('div');
+    empty.className = 'tx-analysis-empty';
+    empty.innerHTML =
+      '<div class="tx-an-icon"><span class="ico ol" style="--ico:url(\'Icons/ChartBar.svg\');--sz:28px;color:var(--brand-primary)"></span></div>' +
+      '<div class="tx-an-title">Spending insights</div>' +
+      '<div class="tx-an-sub">A breakdown of where your money went is on the way.</div>';
+    list.appendChild(empty);
+    return;
+  }
+  const rawData = tab === 'recent' ? RECENT : SCHEDULED;
+  const data = tab === 'recent' ? applyFilters(rawData) : rawData;
 
   // Flat layout when filters/search are active
   if (tab === 'recent' && isFiltering()) {
@@ -3202,7 +3216,7 @@ function renderList(tab) {
     const newBar = document.createElement('div');
     newBar.className = 'new-tx-bar';
     newBar.innerHTML = `
-      <span class="new-tx-bar-text">${newCount} new transactions</span>
+      <span class="new-tx-bar-text">${newCount} new transactions since last login</span>
       <span class="ico ol" style="--ico:url('Icons/ArrowDown.svg');--sz:12px;color:var(--brand-primary);flex-shrink:0"></span>
       <div class="new-tx-bar-line"></div>`;
     sec1Inner.appendChild(newBar);
@@ -4284,6 +4298,7 @@ function closeDetail() {
 function setSbLight(on) {
   document.getElementById('globalSb').classList.toggle('lt', on);
 }
+var _txLoading = false, _txLoadTimer = null;
 function showList() {
   _navStack.push(_activeScreen());
   ['home','explore','accounts','account-detail','cards'].forEach(function(id) {
@@ -4293,6 +4308,39 @@ function showList() {
   setSbLight(false);
   showNav(false);
   if (typeof _TW !== 'undefined') _TW.start();
+  startTxLoading();
+}
+
+/* Skeleton loading — transactions stream in over 10s, then the real list renders */
+function startTxLoading() {
+  if (_txLoadTimer) clearTimeout(_txLoadTimer);
+  _txLoading = true;
+  renderTxSkeleton();
+  _txLoadTimer = setTimeout(function() {
+    _txLoading = false;
+    renderList(activeTab);
+    var list = document.getElementById('txList');
+    if (list) list.classList.add('tx-revealed');
+  }, 10000);
+}
+function renderTxSkeleton() {
+  var list = document.getElementById('txList');
+  if (!list) return;
+  list.classList.remove('tx-revealed');
+  var groups = [{ d: true, rows: 3 }, { d: true, rows: 2 }, { d: true, rows: 3 }];
+  var h = '<div class="tx-skel">';
+  groups.forEach(function(g) {
+    h += '<div class="tx-skel-date"></div>';
+    for (var i = 0; i < g.rows; i++) {
+      h += '<div class="tx-skel-row">' +
+             '<div class="tx-skel-av"></div>' +
+             '<div class="tx-skel-lines"><div class="tx-skel-l1"></div><div class="tx-skel-l2"></div></div>' +
+             '<div class="tx-skel-amt"></div>' +
+           '</div>';
+    }
+  });
+  h += '</div>';
+  list.innerHTML = h;
 }
 /* ── Render embedded tx section (Home + Account Detail) ─ */
 /* ── Per-container segmented tab state ──────────────── */
@@ -4442,7 +4490,7 @@ function renderEmbeddedTxSection(containerId, spaceTxns) {
   ['recent', 'scheduled'].forEach(t => {
     const opt = document.createElement('button');
     opt.className = 'emb-tx-seg-opt' + (tab === t ? ' active' : '');
-    opt.textContent = t.charAt(0).toUpperCase() + t.slice(1);
+    opt.textContent = t === 'scheduled' ? 'Upcoming' : (t.charAt(0).toUpperCase() + t.slice(1));
     opt.onclick = (e) => {
       e.stopPropagation();
       _embTab[containerId] = t;
@@ -4477,7 +4525,7 @@ function renderEmbeddedTxSection(containerId, spaceTxns) {
       newRow.className = 'emb-tx-new-row';
       const pill = document.createElement('div');
       pill.className = 'emb-tx-new-pill';
-      pill.innerHTML = newTxns.length + ' new transaction' + (newTxns.length !== 1 ? 's' : '')
+      pill.innerHTML = newTxns.length + ' new transaction' + (newTxns.length !== 1 ? 's' : '') + ' since last login'
         + `<span class="ico ol" style="--ico:url('Icons/ArrowDown.svg');--sz:11px;color:var(--brand-primary)"></span>`;
       newRow.appendChild(pill);
       const dashed = document.createElement('div');
@@ -6348,6 +6396,8 @@ let _currentAdAcctName = 'all';
 function showAccountDetail(acct) {
   _currentAdAcctName = acct.name;
   var mainCard  = document.getElementById('adMainCard');
+  // Archived spaces render colourless, with no balance/Add-funds and an ARCHIVED badge
+  document.getElementById('account-detail').classList.toggle('ad-archived', !!acct.archived);
 
   // adCasesWrap (old full-card scroll) is never shown — always hide it
   document.getElementById('adCasesWrap').style.display = 'none';
@@ -6420,14 +6470,26 @@ function showAccountDetail(acct) {
   document.getElementById('accounts').className       = 'screen hl';
   document.getElementById('home').className           = 'screen hl';
   document.getElementById('account-detail').className = 'screen on';
+  if (acct.archived) document.getElementById('account-detail').classList.add('ad-archived');
   showNav(false);
   setSbLight(false);
 }
 
 function closeAccountDetail() {
   document.getElementById('account-detail').className = 'screen hr';
+  document.getElementById('account-detail').classList.remove('ad-archived');
   showNav(true); showNavAi(true);
   goBack();
+}
+
+function toggleArchivedSpaces(btn) {
+  var wrap = document.getElementById('acctArchivedList');
+  if (!wrap) return;
+  var open = wrap.classList.toggle('open');
+  if (btn) {
+    btn.querySelector('span:first-child').textContent = open ? 'Hide archived spaces' : 'Show archived spaces';
+    var caret = btn.querySelector('.ico'); if (caret) caret.style.transform = open ? 'rotate(180deg)' : '';
+  }
 }
 
 function openAdSheet() {
@@ -6519,6 +6581,148 @@ function openBeneSheet() {
 function closeBeneSheet() {
   document.getElementById('bene-sheet-scrim').classList.remove('open');
   document.getElementById('bene-sheet').classList.remove('open');
+}
+
+/* Add-beneficiary journey is a bottom sheet stack over the current screen */
+function _beneSheetShow(id) {
+  document.getElementById('beneScrim').classList.add('open');
+  ['addBene','beneManual','beneSuccess'].forEach(function(s) {
+    var el = document.getElementById(s);
+    if (el) el.className = 'screen bsheet ' + (s === id ? 'on' : 'hr');
+  });
+  setSbLight(false);
+}
+function _beneSheetHideAll() {
+  ['addBene','beneManual','beneSuccess'].forEach(function(s) {
+    var el = document.getElementById(s); if (el) el.className = 'screen bsheet hr';
+  });
+  document.getElementById('beneScrim').classList.remove('open');
+}
+function openAddBene() {
+  closeBeneSheet();
+  _beneSheetShow('addBene');
+}
+function closeAddBene() {
+  _beneSheetHideAll();
+}
+
+/* ── Add beneficiary — manual flow (India) ── */
+var _bmStep = 0, _bmVerified = false, _bmVerifyTimer = null;
+function openBeneManual() {
+  document.getElementById('addBene').className = 'screen hl';
+  _bmStep = 0; _bmVerified = false;
+  // reset verify states + extra fields
+  ['bmVerifyLoading','bmVerifyOk','bmVerifyFail'].forEach(function(id){ document.getElementById(id).classList.remove('show'); });
+  document.getElementById('bmManualNameField').classList.remove('show');
+  document.getElementById('bmIfscErr').classList.remove('show');
+  document.getElementById('bmIfscField').classList.remove('has-error');
+  document.getElementById('bmPhoneField').style.display = 'none';
+  document.getElementById('bmEmailField').style.display = 'none';
+  document.getElementById('bmAddLinks').style.display = '';
+  // clear entered details so the user fills them; Savings preselected
+  document.getElementById('bmAcctNum').value = '';
+  document.getElementById('bmIfsc').value = '';
+  document.getElementById('bmAcctType').value = 'Savings';
+  document.getElementById('bmNickname').value = '';
+  // country not yet chosen → lock account/about
+  document.querySelectorAll('.bm-country').forEach(function(c){ c.classList.remove('sel'); });
+  _bmSetStep(0, /*countryChosen*/ false);
+  document.getElementById('bmScroll').scrollTop = 0;
+  _beneSheetShow('beneManual');
+  showNav(false);
+}
+function bmBack() {
+  // step back to the first "Add a beneficiary" sheet
+  if (_bmVerifyTimer) clearTimeout(_bmVerifyTimer);
+  _beneSheetShow('addBene');
+}
+function closeBeneManual() {
+  if (_bmVerifyTimer) clearTimeout(_bmVerifyTimer);
+  _beneSheetHideAll();
+}
+function _bmSetStep(n, countryChosen) {
+  _bmStep = n;
+  var secs = ['bmSecCountry','bmSecAccount','bmSecAbout'];
+  secs.forEach(function(id, i) {
+    var el = document.getElementById(id);
+    el.classList.remove('is-done','is-locked');
+    if (i < n) el.classList.add('is-done');
+    else if (i > n) {
+      // account unlocks once country chosen; about once verified handled by step advance
+      if (!(i === 1 && countryChosen)) el.classList.add('is-locked');
+      else el.classList.add('is-locked');
+    }
+  });
+  var btn = document.getElementById('bmNextBtn');
+  // On the account step, the user must enter details first — gate Next until verified
+  btn.classList.toggle('is-disabled', n === 1 && !_bmVerified);
+}
+/* Verify only once the IFSC is entered */
+function bmTryVerify() {
+  if (_bmVerified) return;
+  var ifsc = (document.getElementById('bmIfsc').value || '').trim();
+  if (!ifsc) return;
+  _bmStartVerify();
+}
+function bmGoStep(n) {
+  var el = document.getElementById(['bmSecCountry','bmSecAccount','bmSecAbout'][n]);
+  if (el.classList.contains('is-locked')) return;
+  _bmSetStep(n, true);
+}
+function bmSelectCountry(name, flag) {
+  document.querySelectorAll('.bm-country').forEach(function(c){ c.classList.remove('sel'); });
+  if (window.event && window.event.currentTarget) window.event.currentTarget.classList.add('sel');
+  var done = document.querySelector('#bmSecCountry .bm-sec-bar-done');
+  done.innerHTML = '<span class="bm-sec-flag">' + flag + '</span> Sending money to <b>' + name + '</b>';
+  haptic(8);
+  setTimeout(function(){ _bmSetStep(1, true); document.getElementById('bmScroll').scrollTop = 0; }, 180);
+}
+function bmToggleMethod(which) {
+  var card = document.getElementById(which === 'bank' ? 'bmBankCard' : 'bmUpiCard');
+  card.classList.toggle('is-open');
+  var caret = card.querySelector('.bm-method-caret');
+  caret.style.setProperty('--ico', card.classList.contains('is-open') ? "url('Icons/CaretUp.svg')" : "url('Icons/CaretDown.svg')");
+}
+function _bmStartVerify() {
+  if (_bmVerifyTimer) clearTimeout(_bmVerifyTimer);
+  document.getElementById('bmVerifyOk').classList.remove('show');
+  document.getElementById('bmVerifyFail').classList.remove('show');
+  document.getElementById('bmManualNameField').classList.remove('show');
+  document.getElementById('bmVerifyLoading').classList.add('show');
+  document.getElementById('bmNextBtn').classList.add('is-disabled');
+  _bmVerifyTimer = setTimeout(function() {
+    document.getElementById('bmVerifyLoading').classList.remove('show');
+    document.getElementById('bmVerifyOk').classList.add('show');
+    document.getElementById('bmNextBtn').classList.remove('is-disabled');
+    _bmVerified = true;
+    var nm = document.getElementById('bmNickname'); if (nm) nm.value = 'Byomkesh Bakshi';
+  }, 1500);
+}
+function bmAddContact(type) {
+  document.getElementById(type === 'phone' ? 'bmPhoneField' : 'bmEmailField').style.display = 'flex';
+  // hide that add-link
+  var links = document.querySelectorAll('#bmAddLinks .bm-add-link');
+  links[type === 'phone' ? 0 : 1].style.display = 'none';
+  if (![].slice.call(links).some(function(l){ return l.style.display !== 'none'; }))
+    document.getElementById('bmAddLinks').style.display = 'none';
+}
+function bmSaveNext() {
+  if (document.getElementById('bmNextBtn').classList.contains('is-disabled')) return;
+  haptic(8);
+  if (_bmStep === 0) { _bmSetStep(1, true); }
+  else if (_bmStep === 1) { _bmSetStep(2, true); document.getElementById('bmScroll').scrollTop = 9999; }
+  else { openBeneSuccess(); }
+}
+function openBeneSuccess() {
+  _beneSheetShow('beneSuccess');
+}
+function closeBeneSuccess() {
+  _beneSheetHideAll();
+}
+function bmSendMoney() {
+  _beneSheetHideAll();
+  if (typeof smGoToAmount === 'function')
+    smGoToAmount('Byomkesh Bakshi','BB','linear-gradient(135deg,#f08a24,#e2231a)','••7654 · ICICI');
 }
 
 function smCloseAll() {
@@ -7928,7 +8132,17 @@ function switchTab(tab, el) {
   activeTab = tab;
   document.querySelectorAll('.ltab').forEach(t => t.classList.remove('active'));
   el.classList.add('active');
+  if (_txLoading) return;   // keep the skeleton until loading completes
   renderList(tab);
+}
+
+function toggleListSearch() {
+  const wrap = document.getElementById('listSearchWrap');
+  if (!wrap) return;
+  const open = wrap.classList.toggle('open');
+  const input = document.getElementById('txSearch');
+  if (open && input) { setTimeout(function() { input.focus(); }, 60); }
+  else if (input) { input.value = ''; input.dispatchEvent(new Event('input')); input.blur(); }
 }
 
 /* ── Filter sheet ─────────────────────────────────────── */
@@ -8807,7 +9021,10 @@ function benPay() {
   benCloseDetail();
 }
 
-function benOpenAdd() {}
+function benOpenAdd() {
+  // Open the "Add a beneficiary" bottom sheet over the beneficiaries screen
+  openAddBene();
+}
 
 /* ── Keyboard-aware agent input ────────────────────────────────────────────
    Strategy: track the visual viewport in real-time with NO transition
@@ -9619,4 +9836,120 @@ function fscCancel() {
   setTimeout(function() {
     overlay.classList.remove('fsc-scanning', 'fsc-done');
   }, 400);
+}
+
+/* ── Home notifications digest (switchable categories) ───────── */
+var HOME_DIGEST = [
+  { cat: 'Needs your action',
+    desc: 'The most important — you can actually do something here.',
+    items: [
+      { h: 'Payment needs approval', t: 'Your ₹50,000 transfer to Rohan is ready to send. Review and approve.' },
+      { h: 'Scheduled payment coming up', t: 'Your rent payment to Priya is scheduled for tomorrow.' },
+      { h: 'Add funds before payment', t: 'Your India electricity bill is due in 2 days. Add $120 to your Banyan account to pay it on time.' },
+      { h: 'Beneficiary needs verification', t: "Rohan's bank details need one more check before you can send money." },
+      { h: 'Physical card activation pending', t: 'Your physical card has arrived. Activate it to start using it in stores and ATMs.' },
+      { h: 'Set card PIN', t: 'Set a PIN so your card is ready for contactless payments and ATM use.' },
+      { h: 'KYC / document pending', t: 'We need one document to keep your account active.' },
+      { h: 'Failed payment retry', t: "Your payment to HDFC Bank didn't go through. You can try again now." },
+      { h: 'Refund confirmation', t: "Your expected refund from Amazon hasn't arrived yet. Keep tracking or mark it resolved." }
+    ] },
+  { cat: 'Money movement updates',
+    desc: 'Status items — not always something you need to act on.',
+    items: [
+      { h: 'India transfer update', t: 'Your ₹25,000 payment to Mom is being sent to her bank.' },
+      { h: 'Payment completed', t: 'Your transfer to Rohan was deposited today.' },
+      { h: 'Payment delayed', t: "Your payment to ICICI Bank is taking longer than usual. We're watching it." },
+      { h: 'Payment returned', t: 'Your payment was returned and the amount has been credited back.' },
+      { h: 'Exchange rate movement', t: 'The USD-INR rate is better than yesterday. Sending $1,000 now gives ₹830 more.' },
+      { h: 'Saved recipient activity', t: 'You sent money to Mom around this time last month.' }
+    ] },
+  { cat: 'Account health',
+    desc: 'Stay aware of your money without having to dig for it.',
+    items: [
+      { h: 'Low balance', t: 'Your Banyan balance is lower than usual.' },
+      { h: 'Large debit', t: '$1,200 was spent from your primary account yesterday.' },
+      { h: 'Incoming money', t: 'Your salary deposit arrived today.' },
+      { h: 'Interest earned', t: 'You earned $12.40 in interest this month.' },
+      { h: 'Space balance warning', t: 'Your Bills space may not have enough for upcoming payments.' },
+      { h: 'Account statement ready', t: 'Your May statement is ready.' }
+    ] },
+  { cat: 'Card controls & spend',
+    desc: 'Especially handy with virtual and purpose-based cards.',
+    items: [
+      { h: 'Virtual card created', t: 'Your Travel card is ready to use digitally.' },
+      { h: 'Spend limit nearing', t: 'Your Groceries card has used 80% of its monthly limit.' },
+      { h: 'Card frozen', t: "Your Shopping card is frozen. New transactions won't go through." },
+      { h: 'Suspicious transaction', t: 'We noticed an unusual card payment at 2:14 AM. Review it.' },
+      { h: 'Merchant restriction blocked a payment', t: 'Your Single Store card blocked a payment outside the allowed merchant.' },
+      { h: 'Subscription detected', t: 'Netflix charged your Entertainment card today.' },
+      { h: 'Trial ending', t: 'Your free trial may renew in 2 days.' }
+    ] }
+];
+var _digestActive = 0;
+
+function _digestEscape(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function renderDigest() {
+  var cat = HOME_DIGEST[_digestActive];
+  if (!cat) return;
+  var lbl = document.getElementById('digestCatLabel');
+  var desc = document.getElementById('digestDesc');
+  var list = document.getElementById('digestList');
+  var menu = document.getElementById('digestMenu');
+  if (!lbl || !list) return;
+  lbl.textContent = cat.cat;
+  if (desc) desc.textContent = cat.desc;
+  // build menu once
+  if (menu && !menu.childElementCount) {
+    HOME_DIGEST.forEach(function(c, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = c.cat;
+      b.setAttribute('role', 'option');
+      b.onclick = function(e) { e.stopPropagation(); selectDigest(i); };
+      menu.appendChild(b);
+    });
+  }
+  if (menu) {
+    Array.prototype.forEach.call(menu.children, function(b, i) {
+      b.classList.toggle('sel', i === _digestActive);
+    });
+  }
+  // build the item list
+  var html = '';
+  cat.items.forEach(function(it) {
+    html += '<button type="button" class="home-digest-item" onclick="openHomeAgent()">' +
+            '<p class="home-digest-item-h">' + _digestEscape(it.h) + '</p>' +
+            '<p class="home-digest-item-t">' + _digestEscape(it.t) + '</p>' +
+            '</button>';
+  });
+  list.innerHTML = html;
+}
+function toggleDigestMenu(e) {
+  if (e) e.stopPropagation();
+  var head = document.querySelector('.home-digest-head');
+  var drop = document.getElementById('digestDrop');
+  if (!head) return;
+  var open = head.classList.toggle('open');
+  if (drop) drop.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function selectDigest(i) {
+  _digestActive = i;
+  renderDigest();
+  var head = document.querySelector('.home-digest-head');
+  var drop = document.getElementById('digestDrop');
+  if (head) head.classList.remove('open');
+  if (drop) drop.setAttribute('aria-expanded', 'false');
+}
+// close the menu when tapping elsewhere
+document.addEventListener('click', function(e) {
+  var head = document.querySelector('.home-digest-head.open');
+  if (head && !head.contains(e.target)) head.classList.remove('open');
+});
+// initial render
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', renderDigest);
+} else {
+  renderDigest();
 }
