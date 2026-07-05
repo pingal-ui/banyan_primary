@@ -79,19 +79,57 @@ function _morphIndicator(fromIndex, toIndex) {
   var CONTRACT = { easing: Motion.spring({ stiffness: 480, damping: 22, mass: 0.6 }) };
 
   // Droplet physics: squash vertically as it elongates, spring back as it lands
-  Motion.animate(indicator, { x: stretchLeft, width: stretchWidth, scaleY: 0.88 }, STRETCH)
-    .finished.then(function() {
-      Motion.animate(indicator, { x: toX, width: TAB_W, scaleY: 1 }, CONTRACT);
-    });
+  _indAnim = Motion.animate(indicator, { x: stretchLeft, width: stretchWidth, scaleY: 0.88 }, STRETCH);
+  _indAnim.finished.then(function() {
+    _indAnim = Motion.animate(indicator, { x: toX, width: TAB_W, scaleY: 1 }, CONTRACT);
+  }).catch(function(){});
 }
+var _indAnim = null; // current bnav indicator animation (so slot-sync can supersede it)
 
 function showNav(visible) {
   const nav = document.getElementById('globalNav');
   if (nav) nav.classList.toggle('bnav-hidden', !visible);
 }
-function showNavAi(visible) {
+function showNavAi(visible, instant) {
   var slot = document.getElementById('bnavAiSlot');
-  if (slot) slot.classList.toggle('visible', visible);
+  if (!slot) return;
+  var changed = slot.classList.contains('visible') !== visible;
+  if (instant) {
+    // Snap the slot to its final width with no transition, so a following
+    // setNavActive() reads the already-shifted tab offsets (no morph race).
+    var prev = slot.style.transition;
+    slot.style.transition = 'none';
+    slot.classList.toggle('visible', visible);
+    void slot.offsetWidth; // force reflow → width applies now
+    slot.style.transition = prev || '';
+    return;
+  }
+  slot.classList.toggle('visible', visible);
+  if (changed) _syncIndicatorForSlot(); // animated (scroll) path → realign after settle
+}
+/* The AI orb slot (between Pay and Spaces) grows 0→60px on scroll/navigation,
+   shifting Spaces/Explore. Re-align the active-tab indicator once the slot's
+   width transition actually ends (offsetLeft is only final then). */
+function _syncIndicatorForSlot() {
+  var slot = document.getElementById('bnavAiSlot');
+  if (!slot) return;
+  var snap = function() {
+    var indicator = document.getElementById('bnavIndicator');
+    var tab = document.getElementById('bnav' + _currentNavTab);
+    if (!indicator || !tab || typeof Motion === 'undefined') return;
+    // Supersede any in-flight morph animation (it targeted the pre-shift position)
+    if (_indAnim && _indAnim.stop) { try { _indAnim.stop(); } catch (e) {} }
+    _indAnim = Motion.animate(indicator, { x: tab.offsetLeft, width: 68, scaleY: 1 },
+      { easing: Motion.spring({ stiffness: 480, damping: 24, mass: 0.6 }) });
+  };
+  var done = false;
+  var handler = function(e) {
+    if (e.propertyName !== 'width') return;
+    done = true; slot.removeEventListener('transitionend', handler); snap();
+  };
+  slot.addEventListener('transitionend', handler);
+  // Fallback if transitionend never fires (e.g. no actual width change)
+  setTimeout(function() { if (!done) { slot.removeEventListener('transitionend', handler); snap(); } }, 280);
 }
 
 /* ══════════════════════════════════════════════════════
@@ -234,7 +272,7 @@ function _agRouteQuery(text) {
   if (/\b(emma|liam)\b|allowance|family|my (kid|child|teen|son|daughter)|(approve|pending).{0,16}(request|purchase)/.test(t)) return _agScenarioFamily(t);
   if (/payee|beneficiar|same vendor|vendor.{0,16}(last|paid)|verify.{0,12}(payee|vendor|recipient)|account number.{0,12}correct|is this the same/.test(t)) return _agScenarioPayee();
   // Chip phrases — exact or close matches first
-  if (/due this week|what.{0,10}due|upcoming|bills?\s+(this|due)|payments? due/.test(t)) return _agScenarioUpcoming();
+  if (/due this week|what.{0,10}due|upcoming|scheduled|schedule.{0,10}payment|payments? due/.test(t)) return _agScenarioUpcoming();
   if (/recent spending|show.{0,8}spend|spending|last month|dining|categor/.test(t)) return _agScenarioSpendUI();
   if (/beneficiar|recipient|who can i pay|pick.{0,8}receiv/.test(t)) return _agScenarioRecipientSelect();
   if (/bescom|electricity|utility|bill status/.test(t)) return _agScenarioBillStatus();
@@ -242,6 +280,8 @@ function _agRouteQuery(text) {
   if (/\b(send|transfer|pay |remit|wire)\b/.test(t))    return _agScenarioTransfer(t);
   if (/\b(rate|exchange|convert|fx|corridor)\b/.test(t)) return _agScenarioRate(t);
   if (/\b(balance|how much|available|account|funds)\b/.test(t)) return _agScenarioBalance(t);
+  // Escalate to a human support case when the Agent can't resolve it
+  if (/\b(human|person|representative|talk to (someone|a human|support)|speak to|raise (a )?(ticket|case|complaint)|open (a )?(ticket|case)|support ticket|file a complaint|not resolved|didn'?t (help|work|resolve)|still (not|an issue|broken|happening)|escalate|complain)\b/.test(t)) return _agScenarioSupportEscalate();
   return _agScenarioDefault();
 }
 
@@ -527,7 +567,47 @@ function _agCurrencyFlag(cur) {
 // Renders: spinner + shimmer "Banyan is thinking" + Xs timer
 //          scrolling card with step text auto-advancing
 // On complete: rolls up, fires onComplete
-function _agRunSteps(aiDiv, steps, msgs, onComplete) {
+// Split text into per-character spans for the shimmer-wave thinking animation
+function _agShimmerWave(el, text) {
+  if (!el) return;
+  el.textContent = '';
+  var frag = document.createDocumentFragment();
+  for (var i = 0; i < text.length; i++) {
+    var s = document.createElement('span');
+    s.className = 'ag-sw';
+    s.style.setProperty('--i', i);
+    s.textContent = text[i];
+    frag.appendChild(s);
+  }
+  el.appendChild(frag);
+}
+
+// Roll the thinking label to new text: old line rolls up + out, new rolls in from below
+function _agRollLabel(labelEl, text) {
+  if (!labelEl) return;
+  var line = document.createElement('span');
+  line.className = 'ag-think-line';
+  _agShimmerWave(line, text);
+  var prev = labelEl.querySelector('.ag-think-line');
+  labelEl.appendChild(line);
+  if (!prev) return; // first line — appear in place
+  // Old line rolls up and out
+  prev.classList.add('ag-think-line--out');
+  setTimeout(function() { if (prev.parentNode) prev.remove(); }, 380);
+  // New line starts below, then rolls up into place
+  line.classList.add('ag-think-line--in');
+  void line.offsetWidth; // force reflow so the transition runs
+  line.classList.remove('ag-think-line--in');
+}
+
+// Generic reasoning steps for turns that don't define their own
+var _AG_DEFAULT_STEPS = [
+  { id: 'd1', label: 'Understanding your request' },
+  { id: 'd2', label: 'Reviewing your accounts' },
+  { id: 'd3', label: 'Putting together an answer' },
+];
+function _agRunSteps(aiDiv, steps, msgs, onComplete, totalMs) {
+  if (!steps || !steps.length) steps = _AG_DEFAULT_STEPS;
   // ── Build the block ──────────────────────────────────────────────────────
   var block = document.createElement('div');
   block.className = 'ag-think-block';
@@ -537,23 +617,16 @@ function _agRunSteps(aiDiv, steps, msgs, onComplete) {
     '<div class="ag-think-header">' +
       '<div class="ag-think-spinner" aria-hidden="true"></div>' +
       '<span class="ag-think-label">Banyan is thinking</span>' +
-      '<span class="ag-think-timer">0s</span>' +
     '</div>';
 
   aiDiv.appendChild(block);
 
-  var timerEl  = block.querySelector('.ag-think-timer');
   var labelEl  = block.querySelector('.ag-think-label');
-
-  // ── Timer ────────────────────────────────────────────────────────────────
-  var elapsed = 0;
-  var timerInterval = setInterval(function() {
-    elapsed++;
-    timerEl.textContent = elapsed + 's';
-  }, 1000);
+  labelEl.textContent = '';
+  _agRollLabel(labelEl, 'Banyan is thinking'); // first line appears in place
 
   // ── Step sequencing ──────────────────────────────────────────────────────
-  var TOTAL_TARGET  = 10000;
+  var TOTAL_TARGET  = totalMs || 10000;
   var COLLAPSE_COST = 600;
   var perStep       = Math.floor((TOTAL_TARGET - COLLAPSE_COST) / steps.length);
   var DWELL_BASE    = Math.floor(perStep * 0.85);
@@ -562,13 +635,12 @@ function _agRunSteps(aiDiv, steps, msgs, onComplete) {
 
   // Swap the shimmer label to the current step text
   function appendStep(label) {
-    labelEl.textContent = label;
+    _agRollLabel(labelEl, label);
   }
 
   function runNext() {
     if (idx >= steps.length) {
       // All steps done — roll up
-      clearInterval(timerInterval);
       _agCollapseThink(block, onComplete);
       return;
     }
@@ -589,14 +661,11 @@ function _agRunSteps(aiDiv, steps, msgs, onComplete) {
 function _agCollapseThink(block, onComplete) {
   var aiDiv   = block.parentElement;
   var label   = block.querySelector('.ag-think-label');
-  var timer   = block.querySelector('.ag-think-timer');
   var spinner = block.querySelector('.ag-think-spinner');
 
-  // 1. Fade out text + timer only
-  label.style.transition = 'opacity 200ms ease';
-  timer.style.transition = 'opacity 200ms ease';
-  label.style.opacity    = '0';
-  timer.style.opacity    = '0';
+  // 1. Roll the current thinking line up and out (same motion as step changes)
+  var curLine = label.querySelector('.ag-think-line') || label;
+  curLine.classList.add('ag-think-line--out');
 
   setTimeout(function() {
     // 2. Detach spinner before collapsing block
@@ -636,7 +705,7 @@ function _agCollapseThink(block, onComplete) {
         setTimeout(function() { trail.remove(); }, 500);
       }, 3200);
     }, 400);
-  }, 220);
+  }, 300);
 }
 
 // ── Count-up helpers ───────────────────────────────────
@@ -713,6 +782,33 @@ function _agAddCtx(aiDiv, text, onDone) {
   setTimeout(typeChar, 40);
   return el;
 }
+// Typed intro line, then a staggered bulleted list — for enumerated answers
+// that are hard to parse as a paragraph.
+function _agAddList(aiDiv, intro, items, onDone) {
+  function buildList() {
+    var list = document.createElement('ul');
+    list.className = 'ag-reply-list';
+    items.forEach(function(t) {
+      var li = document.createElement('li');
+      li.className = 'ag-reply-li';
+      li.textContent = t;
+      list.appendChild(li);
+    });
+    aiDiv.appendChild(list);
+    if (_agGalleryMode) {
+      [].forEach.call(list.children, function(li) { li.classList.add('s-in'); });
+      if (onDone) requestAnimationFrame(function() { requestAnimationFrame(onDone); });
+      return;
+    }
+    var kids = [].slice.call(list.children);
+    kids.forEach(function(li, k) {
+      setTimeout(function() { li.classList.add('s-in'); }, 90 + k * 110);
+    });
+    setTimeout(function() { if (onDone) onDone(); }, 90 + kids.length * 110 + 260);
+  }
+  if (intro) { _agAddCtx(aiDiv, intro, buildList); }
+  else buildList();
+}
 // Part 3: follow-up list (next actions)
 function _agAddFollowups(aiDiv, msgs, chips) {
   if (_agGalleryMode) return; // gallery shows cards only, no next-step chips
@@ -738,6 +834,10 @@ function _agAddFollowups(aiDiv, msgs, chips) {
   });
   wrap.appendChild(list);
   aiDiv.appendChild(wrap);
+  // Keep the feedback row (which commits as soon as the reply text settles) at
+  // the very bottom of the message, below the card and these follow-ups.
+  var _fb = aiDiv.querySelector(':scope > .ag-feedback');
+  if (_fb) aiDiv.appendChild(_fb);
   setTimeout(function() {
     requestAnimationFrame(function() {
       wrap.classList.add('s-in');
@@ -907,7 +1007,9 @@ function _agRenderReceiptV2(aiDiv, msgs, td, refNum) {
   html += '<div class="ag-receipt-v2-body">';
   html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Recipient</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.recip.name) + ' ' + td.recip.flag + '</span></div>';
   html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">They receive</span><span class="ag-receipt-v2-row-val">' + (td.sym || td.recip.sym) + td.convertedAmt + '</span></div>';
-  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Arrival</span><span class="ag-receipt-v2-row-val">Within 2 hours</span></div>';
+  if (td.fromSpace) html += '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">From</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.fromSpace) + '</span></div>';
+  if (td.purpose)   html += '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Purpose</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.purpose) + '</span></div>';
+  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Arrival</span><span class="ag-receipt-v2-row-val">' + (td.scheduled ? _agEscape(td.timing.label) : 'Within 2 hours') + '</span></div>';
   html +=   '<div class="ag-receipt-v2-ref"><span class="ag-receipt-v2-ref-label">Reference</span><span class="ag-receipt-v2-ref-val">' + _agEscape(refNum) + '</span></div>';
   html += '</div>';
   card.innerHTML = html;
@@ -928,6 +1030,41 @@ function _agRenderReceiptV2(aiDiv, msgs, td, refNum) {
   ]);
 }
 
+// ── SCHEDULED TRANSFER CONFIRMATION ───────────────────
+function _agRenderScheduled(aiDiv, msgs, td, refNum) {
+  var card = document.createElement('div');
+  card.className = 'ag-receipt-card-v2';
+  var html = '<div class="ag-receipt-v2-head">';
+  html += '<div class="ag-receipt-v2-circle ag-rc-scheduled" id="agRcCircle">';
+  html +=   '<svg viewBox="0 0 44 44" fill="none" aria-hidden="true"><circle cx="22" cy="22" r="13" stroke="#fff" stroke-width="3"/><path d="M22 15v8l5 3" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  html += '</div>';
+  html += '<div class="ag-receipt-v2-sent">Transfer scheduled</div>';
+  html += '<div class="ag-receipt-v2-amount">' + td.fromSym + td.amount.toFixed(2) + '</div>';
+  html += '</div>';
+  html += '<div class="ag-receipt-v2-body">';
+  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Recipient</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.recip.name) + ' ' + td.recip.flag + '</span></div>';
+  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">They receive</span><span class="ag-receipt-v2-row-val">' + (td.sym || td.recip.sym) + td.convertedAmt + '</span></div>';
+  if (td.fromSpace) html += '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">From</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.fromSpace) + '</span></div>';
+  if (td.purpose)   html += '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Purpose</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.purpose) + '</span></div>';
+  html +=   '<div class="ag-receipt-v2-row"><span class="ag-receipt-v2-row-label">Sends</span><span class="ag-receipt-v2-row-val">' + _agEscape(td.timing.label) + '</span></div>';
+  html +=   '<div class="ag-receipt-v2-ref"><span class="ag-receipt-v2-ref-label">Reference</span><span class="ag-receipt-v2-ref-val">' + _agEscape(refNum) + '</span></div>';
+  html += '</div>';
+  card.innerHTML = html;
+  _agAddCtx(aiDiv, 'Scheduled — I\'ll send ' + td.fromSym + td.amount.toFixed(2) + ' to ' + td.recip.name + ' ' + td.timing.label.toLowerCase() + ', from your ' + td.fromSpace + '. You can change or cancel it any time before then.', function() {
+    setTimeout(function() {
+      aiDiv.appendChild(card);
+      requestAnimationFrame(function() { requestAnimationFrame(function() {
+        card.classList.add('ui-in');
+        setTimeout(function() { var c = card.querySelector('#agRcCircle'); if (c) c.classList.add('rc-in'); }, 100);
+      }); });
+      _agAddFollowups(aiDiv, msgs, [
+        { label: 'View upcoming', text: 'Show upcoming transfers' },
+        { label: 'Send another', text: 'Send money' }
+      ]);
+    }, 120);
+  });
+}
+
 // ── TRANSFER SUMMARY CARD ─────────────────────────────
 function _agRenderTransfer(aiDiv, msgs, data) {
   var d = data;
@@ -935,81 +1072,261 @@ function _agRenderTransfer(aiDiv, msgs, data) {
   var toSym   = d.recip.sym;
   var rateStr = d.rateInfo.rate.toFixed(2);
   var firstName = d.recip.name.split(' ')[0];
+  var amtInt = Math.round(d.amount);
+  var amtStr = d.amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var fromLast4 = (d.fromAccount.num || '').replace(/[^0-9]/g, '');
+  var fromName = 'Checking ' + fromLast4;
+  var fromBal = fromSym + d.fromAccount.balanceStr;
+  var recipAcct = (d.recip.bank || '').match(/\d{3,}/);
+  var recipSub = (recipAcct ? recipAcct[0] : '7654') + ' (' + (d.recip.bankShort || (d.recip.bank || '').split(' ·')[0] || 'HDFC Bank') + ')';
+  var purpose = 'Family and Personal';
 
-  // Mirrors the normal send-money review screen: frosted glass card,
-  // centered recipient, label/value amount rows, green pill confirm.
+  var googleG = '<svg viewBox="0 0 48 48" width="13" height="13" aria-hidden="true" style="flex-shrink:0">' +
+    '<path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>' +
+    '<path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>' +
+    '<path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.28-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>' +
+    '<path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>';
+  var arrowSvg = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="rgba(0,0,0,0.35)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
   var card = document.createElement('div');
-  card.className = 'ag-ui-card ag-tr2-card';
-
-  var html = '<div class="ag-tr2-inner">';
-  // Recipient — centered glass avatar
-  html +=   '<div class="ag-tr2-recip ag-stagger-item">';
-  html +=     '<div class="ag-tr2-av" style="background:' + d.recip.color + '" aria-hidden="true"><span class="ag-tr2-av-glass"></span><span class="ag-tr2-av-txt">' + d.recip.initials + '</span></div>';
-  html +=     '<div class="ag-tr2-recip-name">' + _agEscape(d.recip.name) + ' ' + d.recip.flag + '</div>';
-  html +=     '<div class="ag-tr2-recip-sub">' + _agEscape(d.recip.bank) + ' · ' + d.recip.currency + '</div>';
+  card.className = 'ag-ui-card ag-sm2-card';
+  var html = '';
+  // From → To route
+  html += '<div class="ag-sm2-route ag-stagger-item">';
+  html +=   '<div class="ag-sm2-acct">';
+  html +=     '<span class="ag-sm2-acct-av"><img class="ag-sm2-from-av" src="assets/space-usd-checking.webp" alt=""></span>';
+  html +=     '<span class="ag-sm2-acct-txt"><span class="ag-sm2-acct-name ag-sm2-from-name">' + _agEscape(fromName) + '</span><span class="ag-sm2-acct-sub ag-sm2-from-sub">' + _agEscape(fromBal) + '</span></span>';
   html +=   '</div>';
-  // Amounts
-  html +=   '<div class="ag-tr2-amounts">';
-  html +=     '<div class="ag-tr2-group">';
-  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">You are sending</span><span class="ag-tr2-val">' + fromSym + d.amount.toFixed(2) + '</span></div>';
-  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">Banyan\'s fees</span><span class="ag-tr2-val">' + fromSym + d.feeAmt.toFixed(2) + '</span></div>';
-  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">Exchange rate</span><span class="ag-tr2-val">' + fromSym + '1 = ' + toSym + rateStr + '</span></div>';
-  html +=     '</div>';
-  html +=     '<div class="ag-tr2-divider"></div>';
-  html +=     '<div class="ag-tr2-group">';
-  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">' + _agEscape(firstName) + ' receives</span><span class="ag-tr2-val">' + toSym + d.convertedAmt + '</span></div>';
-  html +=       '<div class="ag-tr2-row ag-stagger-item"><span class="ag-tr2-lbl">Estimated arrival</span><span class="ag-tr2-val">Within 2 hours</span></div>';
-  html +=       '<div class="ag-tr2-row total ag-stagger-item"><span class="ag-tr2-lbl">Total debited</span><span class="ag-tr2-val">' + fromSym + d.totalDebited + '</span></div>';
-  html +=     '</div>';
+  html +=   '<span class="ag-sm2-arrow">' + arrowSvg + '</span>';
+  html +=   '<div class="ag-sm2-acct">';
+  html +=     '<span class="ag-sm2-recip-av" style="background:' + d.recip.color + '">' + d.recip.initials + '</span>';
+  html +=     '<span class="ag-sm2-acct-txt"><span class="ag-sm2-acct-name">' + _agEscape(d.recip.name) + '</span><span class="ag-sm2-acct-sub">' + _agEscape(recipSub) + '</span></span>';
   html +=   '</div>';
   html += '</div>';
-
+  // Amount panel
+  html += '<div class="ag-sm2-panel ag-stagger-item">';
+  html +=   '<div class="ag-sm2-rows">';
+  html +=     '<div class="ag-sm2-row"><span class="ag-sm2-l">You are sending</span><span class="ag-sm2-v">' + fromSym + amtStr + '</span></div>';
+  html +=     '<div class="ag-sm2-row"><span class="ag-sm2-l">Banyan’s fees</span><span class="ag-sm2-v"><span class="ag-sm2-free">Free</span> <s>' + fromSym + d.feeAmt.toFixed(2) + '</s></span></div>';
+  html +=     '<div class="ag-sm2-row"><span class="ag-sm2-l">Exchange rate</span><span class="ag-sm2-v ag-sm2-rate">' + googleG + fromSym + '1 = ' + toSym + rateStr + '</span></div>';
+  html +=   '</div>';
+  html +=   '<div class="ag-sm2-div"></div>';
+  html +=   '<div class="ag-sm2-rows">';
+  html +=     '<div class="ag-sm2-row"><span class="ag-sm2-l">' + _agEscape(firstName) + ' receives</span><span class="ag-sm2-v">' + toSym + d.convertedAmt + '</span></div>';
+  html +=     '<div class="ag-sm2-row"><span class="ag-sm2-l ag-sm2-arrival-l">Estimated arrival</span><span class="ag-sm2-v ag-sm2-arrival-v">Today, 9:44 AM PT</span></div>';
+  html +=     '<div class="ag-sm2-row"><span class="ag-sm2-l">Purpose</span><span class="ag-sm2-v ag-sm2-purpose-v">' + purpose + '</span></div>';
+  html +=   '</div>';
+  html +=   '<div class="ag-sm2-btns">';
+  html +=     '<button class="ag-sm2-edit" type="button">Edit details</button>';
+  html +=     '<button class="ag-sm2-send" type="button">Send ' + fromSym + amtInt + '</button>';
+  html +=   '</div>';
+  html += '</div>';
   card.innerHTML = html;
 
-  // Confirm actions — mirrors the review screen's bottom (ghost edit + green pill)
-  var actions = document.createElement('div');
-  actions.className = 'ag-tr2-actions';
-  actions.innerHTML =
-    '<div class="ag-tr2-freshness">Rate locked for 60 seconds</div>' +
-    '<button class="ag-tr2-edit-btn" type="button">Edit amount or recipient</button>' +
-    '<button class="ag-tr2-confirm-btn" type="button">Confirm and send ' + fromSym + d.amount.toFixed(2) + '</button>';
-
   var td = { amount: d.amount, fromSym: fromSym, fromCur: d.fromCur, recip: d.recip,
-             convertedAmt: d.convertedAmt, totalDebited: d.totalDebited, sym: d.recip.sym };
+             convertedAmt: d.convertedAmt, totalDebited: d.totalDebited, sym: d.recip.sym,
+             fromSpace: fromName, purpose: purpose, scheduled: false };
 
-  actions.querySelector('.ag-tr2-edit-btn').addEventListener('click', function() {
-    agentSendText('Send money');
-  });
-  actions.querySelector('.ag-tr2-confirm-btn').addEventListener('click', function() {
-    actions.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
-    actions.style.transition = 'opacity 180ms ease-out';
-    actions.style.opacity = '0';
+  // Expose the live card so the purpose/space/schedule action sheets can edit it in place
+  _agActiveTransfer = { card: card, td: td, fromSym: fromSym, amtInt: amtInt };
+
+  card.querySelector('.ag-sm2-edit').addEventListener('click', function() { agOpenEditSheet(); });
+  card.querySelector('.ag-sm2-send').addEventListener('click', function() {
+    card.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+    card.style.transition = 'opacity 180ms ease-out'; card.style.opacity = '0';
+    var alt = aiDiv.querySelector('.ag-sm2-alt'); if (alt) { alt.style.transition = 'opacity 180ms ease-out'; alt.style.opacity = '0'; }
     setTimeout(function() {
-      actions.remove();
+      card.remove(); if (alt) alt.remove();
       var refNum = 'BNY-' + (10000 + Math.floor(Math.random() * 90000 % 90000));
       _agRenderTransferStatus(aiDiv, msgs, td, refNum);
     }, 200);
   });
 
-  // Stream ctx → card slides in → second ctx streams → confirm appears
-  _agAddCtx(aiDiv, 'Here\'s your transfer to ' + d.recip.name + '. You\'re sending ' + fromSym + d.amount.toFixed(2) + ', and they\'ll receive it in ' + d.recip.currency + ' — take a look before you confirm.', function() {
+  // "Here is what you can do alternatively" — suggestion rows
+  var alt = document.createElement('div');
+  alt.className = 'ag-sm2-alt';
+  var altItems = ['Change payment purpose', 'Change the space to be paid from', 'Schedule the payment for later'];
+  var elbow = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 4v4a1 1 0 0 0 1 1h6M9 6l3 3-3 3" stroke="rgba(0,0,0,0.4)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var altHtml = '<div class="ag-sm2-alt-head">Here is what you can do alternatively</div><div class="ag-sm2-alt-list">';
+  altItems.forEach(function(t) {
+    altHtml += '<button class="ag-sm2-alt-row" type="button" data-text="' + _agEscape(t) + '"><span class="ag-sm2-alt-ic">' + elbow + '</span><span class="ag-sm2-alt-label">' + _agEscape(t) + '</span></button>';
+  });
+  altHtml += '</div>';
+  alt.innerHTML = altHtml;
+  alt.querySelectorAll('.ag-sm2-alt-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var t = row.getAttribute('data-text');
+      if (/purpose/i.test(t))       agOpenPurposeSheet();
+      else if (/space/i.test(t))    agOpenSpaceSheet();
+      else if (/schedule/i.test(t)) agOpenScheduleSheet();
+      else                          agentSendText(t);
+    });
+  });
+
+  // Stream intro ctx → card → rate line → alternatives
+  _agAddCtx(aiDiv, 'Ready to send ' + fromSym + amtStr + ' to ' + d.recip.name + '. They’ll receive ' + toSym + d.convertedAmt + ' at the current rate. The rate will be the same for 5 mins.', function() {
     setTimeout(function() {
       aiDiv.appendChild(card);
       requestAnimationFrame(function() {
         requestAnimationFrame(function() {
           card.classList.add('ui-in');
-          _agStagger(card, '.ag-stagger-item', 70);
+          _agStagger(card, '.ag-stagger-item', 90);
         });
       });
       setTimeout(function() {
-        _agAddCtx(aiDiv, 'That\'s at today\'s rate of ' + fromSym + '1 = ' + toSym + rateStr + ', with a ' + fromSym + d.feeAmt.toFixed(2) + ' fee — no hidden charges on top.', function() {
-          setTimeout(function() {
-            aiDiv.appendChild(actions);
-            setTimeout(function() { actions.classList.add('s-in'); }, 40);
-          }, 80);
-        });
-      }, 300);
+        aiDiv.appendChild(alt);
+        requestAnimationFrame(function() { alt.classList.add('s-in'); });
+      }, 500);
     }, 120);
+  });
+}
+
+// ── Transfer edit sheets: purpose · space · schedule ───────────────────
+var _agActiveTransfer = null;
+
+var _AG_PURPOSES = [
+  { icon: '🏠', label: 'Family and Personal' },
+  { icon: '🏥', label: 'Medical' },
+  { icon: '💡', label: 'Utility bills and Taxes' },
+  { icon: '🎓', label: 'Education' },
+  { icon: '🛡️', label: 'Insurance and Travel' },
+  { icon: '💼', label: 'Business services' }
+];
+var _AG_SPACES = [
+  { av: 'assets/space-usd-checking.webp', name: 'USD Checking',     last4: '3214', bal: '$137,978.00' },
+  { av: 'assets/space-thailand.webp',     name: 'Thailand holiday', last4: '7654', bal: '$37,978.00' },
+  { av: 'assets/space-moms.webp',         name: "Mom's expenses",   last4: '8745', bal: '$10,120.00' },
+  { av: 'assets/space-wedding.webp',      name: 'Wedding',          last4: '8746', bal: '$50,768.00' }
+];
+var _AG_SCHEDULE = [
+  { icon: '⚡️', label: 'Send now',          sub: 'Arrives today, 9:44 AM PT', arrival: 'Today, 9:44 AM PT', now: true },
+  { icon: '🌅', label: 'Tomorrow morning',  sub: 'Jul 5 · around 9:00 AM',    arrival: 'Jul 5, ~9:00 AM' },
+  { icon: '📅', label: 'This weekend',      sub: 'Jul 6',                     arrival: 'Jul 6, ~9:00 AM' },
+  { icon: '🗓️', label: 'Next Monday',       sub: 'Jul 7',                     arrival: 'Jul 7, ~9:00 AM' }
+];
+var _agActCheck = '<svg class="ag-act-check" viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="9" stroke="#46882B" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="#46882B" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+function _agOpenActionSheet(title, rowsHtml, onPick) {
+  var scrim = document.getElementById('agActScrim');
+  var sheet = document.getElementById('agActSheet');
+  var list  = document.getElementById('agActList');
+  var t     = document.getElementById('agActTitle');
+  if (!scrim || !sheet || !list) return;
+  if (t) t.textContent = title;
+  list.innerHTML = rowsHtml;
+  list.querySelectorAll('.ag-act-row').forEach(function(row) {
+    row.onclick = function() { onPick(+row.getAttribute('data-i')); };
+  });
+  scrim.classList.add('show');
+  requestAnimationFrame(function() { sheet.classList.add('show'); });
+  haptic(6);
+}
+function agCloseActionSheet() {
+  var scrim = document.getElementById('agActScrim');
+  var sheet = document.getElementById('agActSheet');
+  if (sheet) sheet.classList.remove('show');
+  if (scrim) scrim.classList.remove('show');
+}
+
+var _agActChev = '<svg class="ag-act-chev" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6 4l4 4-4 4" stroke="rgba(0,0,0,0.3)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+// "Edit details" → choose what to change, then drill into that sheet
+function agOpenEditSheet() {
+  if (!_agActiveTransfer) return;
+  var td = _agActiveTransfer.td;
+  var nameEl = _agActiveTransfer.card.querySelector('.ag-sm2-from-name');
+  var opts = [
+    { icon: '🏷️', label: 'Change payment purpose', sub: td.purpose, fn: agOpenPurposeSheet },
+    { icon: '🪙', label: 'Change the space',        sub: nameEl ? nameEl.textContent : 'USD Checking', fn: agOpenSpaceSheet },
+    { icon: '🗓️', label: 'Schedule for later',      sub: td.scheduled ? (td.scheduleLabel || 'Scheduled') : 'Send now', fn: agOpenScheduleSheet }
+  ];
+  var rows = opts.map(function(o, i) {
+    return '<button class="ag-act-row" type="button" data-i="' + i + '">' +
+      '<span class="ag-act-ic">' + o.icon + '</span>' +
+      '<span class="ag-act-info"><span class="ag-act-label">' + _agEscape(o.label) + '</span>' +
+        '<span class="ag-act-sub">' + _agEscape(o.sub) + '</span></span>' +
+      _agActChev + '</button>';
+  }).join('');
+  _agOpenActionSheet('Edit details', rows, function(i) {
+    agCloseActionSheet();
+    setTimeout(opts[i].fn, 260); // let the sheet close before drilling in
+  });
+}
+
+// Reuse the exact send-money "Purpose of payment" sheet (#purposeSheet) so the
+// agent's purpose selection is identical to the send-money experience.
+var _agPurposeMode = false;
+var _agPendingPurpose = null;
+function _agApplyPurpose(label) {
+  if (!_agActiveTransfer) return;
+  _agActiveTransfer.td.purpose = label;
+  var v = _agActiveTransfer.card.querySelector('.ag-sm2-purpose-v');
+  if (v) v.textContent = label;
+  haptic(8);
+}
+function agOpenPurposeSheet() {
+  if (!_agActiveTransfer) return;
+  _agPurposeMode = true;
+  _agPendingPurpose = null;
+  // Build the professional group on first use, then reflect the current pick.
+  var wrap = document.getElementById('purposeProfRows');
+  if (wrap && wrap.children.length === 0) smBuildProfRows('');
+  var cur = _agActiveTransfer.td.purpose;
+  document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) {
+    var lbl = (r.querySelector('.purpose-row-lbl') || {}).textContent || '';
+    r.classList.toggle('sel', lbl === cur);
+  });
+  document.getElementById('purposeScrim').classList.add('open');
+  document.getElementById('purposeSheet').classList.add('open');
+}
+
+function agOpenSpaceSheet() {
+  if (!_agActiveTransfer) return;
+  var nameEl = _agActiveTransfer.card.querySelector('.ag-sm2-from-name');
+  var cur = nameEl ? nameEl.textContent : '';
+  var rows = _AG_SPACES.map(function(s, i) {
+    var sel = (cur === s.name || cur.indexOf(s.last4) > -1) ? ' sel' : '';
+    return '<button class="ag-act-row' + sel + '" type="button" data-i="' + i + '">' +
+      '<span class="ag-act-ic"><img loading="lazy" decoding="async" src="' + s.av + '" alt=""></span>' +
+      '<span class="ag-act-info"><span class="ag-act-label">' + _agEscape(s.name) + '</span>' +
+        '<span class="ag-act-sub">•• ' + s.last4 + ' · ' + s.bal + '</span></span>' +
+      _agActCheck + '</button>';
+  }).join('');
+  _agOpenActionSheet('Pay from space', rows, function(i) {
+    var s = _AG_SPACES[i];
+    var c = _agActiveTransfer.card;
+    var n = c.querySelector('.ag-sm2-from-name'); if (n) n.textContent = s.name;
+    var sub = c.querySelector('.ag-sm2-from-sub'); if (sub) sub.textContent = s.bal;
+    var av = c.querySelector('.ag-sm2-from-av'); if (av) av.src = s.av;
+    _agActiveTransfer.td.fromSpace = s.name;
+    agCloseActionSheet(); haptic(8);
+  });
+}
+
+function agOpenScheduleSheet() {
+  if (!_agActiveTransfer) return;
+  var scheduled = _agActiveTransfer.td.scheduled;
+  var rows = _AG_SCHEDULE.map(function(o, i) {
+    var sel = (!scheduled && o.now) || (scheduled && _agActiveTransfer.td.scheduleLabel === o.label) ? ' sel' : '';
+    return '<button class="ag-act-row' + sel + '" type="button" data-i="' + i + '">' +
+      '<span class="ag-act-ic">' + o.icon + '</span>' +
+      '<span class="ag-act-info"><span class="ag-act-label">' + _agEscape(o.label) + '</span>' +
+        '<span class="ag-act-sub">' + _agEscape(o.sub) + '</span></span>' +
+      _agActCheck + '</button>';
+  }).join('');
+  _agOpenActionSheet('When to send', rows, function(i) {
+    var o = _AG_SCHEDULE[i];
+    var c = _agActiveTransfer.card;
+    var lbl = c.querySelector('.ag-sm2-arrival-l');
+    var val = c.querySelector('.ag-sm2-arrival-v');
+    var send = c.querySelector('.ag-sm2-send');
+    if (lbl) lbl.textContent = o.now ? 'Estimated arrival' : 'Scheduled for';
+    if (val) val.textContent = o.arrival;
+    if (send) send.textContent = o.now ? ('Send ' + _agActiveTransfer.fromSym + _agActiveTransfer.amtInt)
+                                       : 'Schedule ' + _agActiveTransfer.fromSym + _agActiveTransfer.amtInt;
+    _agActiveTransfer.td.scheduled = !o.now;
+    _agActiveTransfer.td.scheduleLabel = o.label;
+    agCloseActionSheet(); haptic(8);
   });
 }
 
@@ -1064,15 +1381,21 @@ function _agRenderBalance(aiDiv, msgs, data) {
   var acct = _AG_DATA.accounts[0]; // USD Checking — the only account in the app
   var card = document.createElement('div');
   card.className = 'ag-ui-card ag-balance-card';
-  var html = '<div class="ag-balance-body">';
-  html += '<div class="ag-balance-label">' + _agEscape(acct.name) + ' ' + acct.flag + ' · ' + acct.num + '</div>';
+  var html = '';
+  // Blurred space/mountain backdrop that fades into the card (Figma 3502-2742)
+  html += '<div class="ag-balance-bg" aria-hidden="true"><img loading="lazy" decoding="async" src="assets/acct-det-hero-bg.webp?v=2" alt=""></div>';
+  html += '<div class="ag-balance-body">';
+  html += '<div class="ag-balance-head">';
+  html +=   '<span class="ag-balance-av"><img loading="lazy" decoding="async" src="assets/space-usd-checking.webp" alt=""></span>';
+  html +=   '<span class="ag-balance-label">' + _agEscape(acct.name) + ' ' + acct.num + '</span>';
+  html += '</div>';
   html += '<div class="ag-balance-amount-row">';
   html +=   '<span class="ag-balance-sym">' + acct.sym + '</span>';
   html +=   '<span class="ag-balance-int" id="agBalInt">0</span>';
   html +=   '<span class="ag-balance-dec">.00</span>';
   html += '</div>';
-  html += '<div class="ag-balance-sub">Available balance · no pending holds</div>';
-  html += '<div class="ag-balance-chips"><span class="ag-balance-chip positive">No unusual activity</span><span class="ag-balance-chip">Just updated</span></div>';
+  html += '<div class="ag-balance-divider"></div>';
+  html += '<div class="ag-balance-chips"><span class="ag-balance-chip positive">No unusual activity</span><span class="ag-balance-chip">No pending holds</span></div>';
   html += '</div>';
   card.innerHTML = html;
   _agAddCtx(aiDiv, 'Here\'s your USD Checking balance, updated just now — no pending holds or reserved amounts.', function() {
@@ -1228,16 +1551,16 @@ function _agRenderRecipientSelect(aiDiv, msgs) {
   html +=   '<span class="ag-card-header-meta">Tap to pay</span>';
   html += '</div>';
   var _blobMap = {
-    'ms': 'assets/blob-purple-v2.png',
-    'rr': 'assets/blob-purple-v2.png',
-    'ak': 'assets/blob-purple-v2.png',
-    'sm': 'assets/blob-orange-v2.png',
-    'dp': 'assets/blob-green-v2.png',
-    'aa': 'assets/blob-orange-v2.png',
-    'kw': 'assets/blob-green-v2.png',
+    'ms': 'assets/blob-purple-v2.webp',
+    'rr': 'assets/blob-purple-v2.webp',
+    'ak': 'assets/blob-purple-v2.webp',
+    'sm': 'assets/blob-orange-v2.webp',
+    'dp': 'assets/blob-green-v2.webp',
+    'aa': 'assets/blob-orange-v2.webp',
+    'kw': 'assets/blob-green-v2.webp',
   };
   _AG_DATA.recipients.forEach(function(r) {
-    var blob = _blobMap[r.id] || 'assets/blob-purple-v2.png';
+    var blob = _blobMap[r.id] || 'assets/blob-purple-v2.webp';
     html += '<div class="ben-row ag-stagger-item" data-recip-id="' + r.id + '" style="padding:10px 20px;cursor:pointer;">';
     html +=   '<div class="ben-row-left">';
     html +=     '<div class="sm-l-av" style="width:32px;height:32px;background:rgba(255,255,255,0.12);border-radius:999px;flex-shrink:0">';
@@ -1473,26 +1796,27 @@ function _agRenderFlaggedAlert(aiDiv, msgs, data) {
   var fl = _AG_DATA.flagged;
   var card = data.card;
   var el = document.createElement('div');
-  el.className = 'ag-ui-card';
-  var html = '<div class="ag-alert-head ag-stagger-item">' +
-    '<div class="ag-alert-icon"><span class="ico" style="--ico:url(\'Icons/ShieldWarning.svg\');--sz:18px;color:#C17C14"></span></div>' +
-    '<div class="ag-alert-head-text">' +
-      '<span class="ag-alert-title">Possible duplicate charge</span>' +
-      '<span class="ag-alert-merchant">' + card.name + ' · ' + card.network + ' ' + card.last4 + '</span>' +
-    '</div></div>';
+  el.className = 'ag-ui-card ag-dup-card';
+  var cardType = (card.name || '').replace(/\s*card$/i, ''); // "Dining card" → "Dining"
+  var html = '<div class="ag-dup-head ag-stagger-item">' +
+    '<div class="ag-dup-head-text">' +
+      '<span class="ag-dup-title">Possible duplicate charge</span>' +
+      '<span class="ag-dup-sub">Same amount, same merchant · ' + _agEscape(fl.gap) + '</span>' +
+    '</div>' +
+    '<div class="ag-dup-cardtype"><span class="ico ol" style="--ico:url(\'Icons/CreditCard.svg\');--sz:16px;color:rgba(0,0,0,0.5)" aria-hidden="true"></span><span>' + _agEscape(cardType) + '</span></div>' +
+  '</div>';
+  html += '<div class="ag-dup-rows">';
   fl.charges.forEach(function(c) {
-    html += '<div class="ag-charge-row ag-stagger-item">' +
-      '<span class="ag-charge-dot"></span>' +
-      '<div class="ag-charge-info">' +
-        '<span class="ag-charge-merch">' + _agEscape(c.merch) + '</span>' +
-        '<span class="ag-charge-time">' + _agEscape(c.time) + '</span>' +
+    html += '<div class="ag-dup-row ag-stagger-item">' +
+      '<span class="ag-dup-av">🍔</span>' +
+      '<div class="ag-dup-info">' +
+        '<span class="ag-dup-merch">' + _agEscape(c.merch) + '</span>' +
+        '<span class="ag-dup-time">' + _agEscape(c.time) + '</span>' +
       '</div>' +
-      '<span class="ag-charge-amt">' + _agEscape(c.amount) + '</span>' +
+      '<span class="ag-dup-amt">−' + _agEscape(c.amount) + '</span>' +
     '</div>';
   });
-  html += '<div class="ag-charge-gap ag-stagger-item">' +
-    '<span class="ico" style="--ico:url(\'Icons/Clock.svg\');--sz:13px;color:#875610"></span>' +
-    'Both posted · ' + fl.gap + '</div>';
+  html += '</div>';
   el.innerHTML = html;
   _agAddCtx(aiDiv, 'I noticed two charges from ' + fl.merchant + ' for ' + fl.amount + ' within 3 minutes on your ' + card.name.toLowerCase() + '. That may be a duplicate charge.', function() {
     _agRevealCard(aiDiv, el, function() {
@@ -1741,11 +2065,14 @@ function _agRenderAfford(aiDiv, msgs, data) {
 function _agRenderAffordWhy(aiDiv, msgs) {
   var el = document.createElement('div'); el.className = 'ag-ui-card';
   var pts = ['Rent and insurance both clear early in the month', 'Two predicted subscriptions renew before your paycheck', 'Your average grocery spend is included as a predicted outflow'];
-  var html = _agCardHeaderHTML("What's driving the dip", '3 factors') + '<div class="ag-reason-list">';
+  var html = '<div class="ag-driver">' +
+    '<div class="ag-driver-hd ag-stagger-item">' + pts.length + ' factors driving the dip</div>' +
+    '<div class="ag-driver-sep ag-stagger-item"></div>' +
+    '<div class="ag-driver-list">';
   pts.forEach(function(p) {
-    html += '<div class="ag-reason-row ag-stagger-item"><span class="ag-reason-check" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url(\'Icons/Clock.svg\');--sz:11px;color:#C17C14"></span></span><span class="ag-reason-text">' + _agEscape(p) + '</span></div>';
+    html += '<div class="ag-driver-row ag-stagger-item"><span class="ag-driver-dot"></span><span class="ag-driver-txt">' + _agEscape(p) + '</span></div>';
   });
-  html += '</div>';
+  html += '</div></div>';
   el.innerHTML = html;
   _agAddCtx(aiDiv, "Here's what's pulling your month-end down. I'm treating the renewals and groceries as predictions, not confirmed.", function() {
     _agRevealCard(aiDiv, el, function() {
@@ -2059,25 +2386,78 @@ function _agFeedbackRow(answerText) {
   var row = document.createElement('div');
   row.className = 'ag-feedback';
   var btns = [
-    { ic: 'ThumbsUp.svg',   label: 'Good response' },
-    { ic: 'ThumbsDown.svg', label: 'Bad response' },
-    { ic: 'Copy.svg',       label: 'Copy' },
-    { ic: 'Flag.svg',       label: 'Report' },
+    { ic: 'Copy.svg',       label: 'Copy reply',    act: 'copy' },
+    { ic: 'ThumbsUp.svg',   label: 'Good response', act: 'up'   },
+    { ic: 'ThumbsDown.svg', label: 'Bad response',  act: 'down' },
+    { ic: 'Flag.svg',       label: 'Flag message',  act: 'flag' },
   ];
   row.innerHTML = btns.map(function(b) {
-    return '<button class="ag-feedback-btn" aria-label="' + b.label + '">' +
+    return '<button class="ag-feedback-btn" data-act="' + b.act + '" aria-label="' + b.label + '">' +
       '<span class="ico ol" style="--ico:url(\'Icons/' + b.ic + '\');--sz:16px;color:rgba(0,0,0,0.45)" aria-hidden="true"></span>' +
     '</button>';
   }).join('');
-  // copy + simple pressed-state feedback
-  var copyBtn = row.children[2];
-  if (copyBtn) copyBtn.addEventListener('click', function() {
+  var copyB = row.querySelector('[data-act="copy"]');
+  var upB   = row.querySelector('[data-act="up"]');
+  var downB = row.querySelector('[data-act="down"]');
+  var flagB = row.querySelector('[data-act="flag"]');
+
+  copyB.addEventListener('click', function() {
+    haptic(6);
     if (navigator.clipboard && answerText) { navigator.clipboard.writeText(answerText).catch(function(){}); }
+    showToast('Copied to clipboard');
   });
-  [row.children[0], row.children[1], row.children[3]].forEach(function(btn) {
-    if (btn) btn.addEventListener('click', function() { btn.classList.toggle('is-on'); });
+  upB.addEventListener('click', function() {
+    haptic(8);
+    downB.classList.remove('is-on');
+    upB.classList.toggle('is-on');
+    if (upB.classList.contains('is-on')) showToast('Thanks for the feedback');
+  });
+  downB.addEventListener('click', function() {
+    haptic(8);
+    upB.classList.remove('is-on');
+    downB.classList.toggle('is-on');
+    if (downB.classList.contains('is-on')) showToast("Thanks — we'll use this to improve");
+  });
+  flagB.addEventListener('click', function() {
+    haptic(10);
+    flagB.classList.toggle('is-flagged');
+    showToast(flagB.classList.contains('is-flagged') ? 'Message flagged for review' : 'Flag removed');
   });
   return row;
+}
+
+// Plain text of a reply (for copy), minus the label, cursor, thinking + footer chrome
+function _agReplyText(aiDiv) {
+  var clone = aiDiv.cloneNode(true);
+  clone.querySelectorAll('.ag-msg-ai-label, .ag-feedback, .ag-cursor, .ag-think-block, .ag-think-trail')
+       .forEach(function(n) { n.remove(); });
+  return (clone.textContent || '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
+// Attach the copy / thumbs / flag footer to a reply once its content settles.
+// A reply can stream in over time (typewriter, cards, follow-ups), so we wait
+// until DOM mutations on the bubble go quiet, then append the bar at the bottom.
+function _agAppendFooter(aiDiv) {
+  if (_agGalleryMode) return;            // gallery shows cards only
+  if (aiDiv._agFooterArmed) return;
+  aiDiv._agFooterArmed = true;
+  var timer, committed = false;
+  function commit() {
+    if (committed) return; committed = true;
+    obs.disconnect();
+    if (aiDiv.querySelector(':scope > .ag-feedback')) return;
+
+    var fb = _agFeedbackRow(_agReplyText(aiDiv));
+    aiDiv.appendChild(fb);
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() { fb.classList.add('visible'); });
+    });
+  }
+  function arm() { clearTimeout(timer); timer = setTimeout(commit, 650); }
+  var obs = new MutationObserver(arm);
+  obs.observe(aiDiv, { childList: true, subtree: true, characterData: true });
+  arm();
+  setTimeout(commit, 12000);             // safety cap for long/animated replies
 }
 
 function _agRenderText(aiDiv, msgs, responseText) {
@@ -2097,10 +2477,7 @@ function _agRenderText(aiDiv, msgs, responseText) {
       cursor.style.transition = 'opacity 400ms ease';
       cursor.style.opacity = '0';
       setTimeout(function() { if (cursor.parentNode) cursor.remove(); }, 420);
-      // reveal the feedback row once the answer has fully landed
-      var fb = _agFeedbackRow(responseText);
-      aiDiv.appendChild(fb);
-      requestAnimationFrame(function() { fb.classList.add('visible'); });
+      // footer (copy/thumbs/flag) is attached generically by _agAppendFooter
     }
   }
   setTimeout(typeChar, 60);
@@ -2224,10 +2601,12 @@ function agCloseUseCaseMenu() {
 }
 // Jump-to-latest: show a floating button when scrolled up from the bottom
 var _agJumpBound = false;
+var _agSuppressJump = false; // muted during the programmatic stick-to-top scroll
 function _agUpdateJump() {
   var msgs = document.getElementById('agentMsgs');
   var jump = document.getElementById('agentJump');
   if (!msgs || !jump) return;
+  if (_agSuppressJump) { jump.classList.remove('is-visible'); return; }
   var fromBottom = msgs.scrollHeight - msgs.scrollTop - msgs.clientHeight;
   jump.classList.toggle('is-visible', fromBottom > 120);
 }
@@ -2265,11 +2644,500 @@ function agPickUseCase(key) {
     _agRenderGallery();
     return;
   }
+  if (_AG_SCRIPTS[key]) {
+    if (lbl) lbl.textContent = _AG_SCRIPT_LABELS[key] || 'Use cases';
+    agPlayScript(key);
+    return;
+  }
   var uc = _AG_USECASES[key];
   if (!uc) return;
   if (lbl) lbl.textContent = uc.label;
   _agResetConvo();
   setTimeout(function() { agentSendText(uc.seed); }, 80);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   Scripted use-case conversations — exact example dialogues, played
+   back turn-by-turn using the same message primitives as a live chat.
+   A turn is { u: 'user line' } or { a: ['agent line', ...] } (a cluster
+   of consecutive agent messages typed one after another).
+══════════════════════════════════════════════════════════════════ */
+var _AG_SCRIPT_LABELS = {
+  forecast:  "What's coming up",
+  pay:       'Pay someone safely',
+  protect:   'Protect my card & spend',
+  explain:   'What is this charge?',
+  autopilot: 'Financial autopilot'
+};
+var _AG_LEAF_SVG = '<span class="ag-msg-ai-leaf"><svg viewBox="0 0 24 24" width="14" height="14" fill="#46882B" aria-hidden="true"><path d="M6.05 8.05c-2.73 2.73-2.73 7.17-.02 9.9 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/></svg></span>';
+
+var _AG_SCRIPTS = {
+  forecast: [
+    { u: 'Will I have enough money this week?' },
+    { a: [
+      'I’m checking your balances, scheduled payments, and predicted recurring payments.',
+      'You have $4,250 available in checking. I see $3,100 due over the next 7 days: rent, utilities, and Amex.',
+      'The main risk is your Amex payment posting one day earlier than usual. If that happens, checking could dip to about $720.'
+    ], card: { type: 'forecast', title: 'Checking · next 7 days', low: '$1,150', lowDay: 'Thu',
+               points: [4250, 3600, 2450, 1150, 1900, 2050, 2000], days: ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+               cushion: 1000, risk: 'If Amex posts early: ~$720' } },
+    { u: 'What should I do?' },
+    { a: [{ intro: 'You have 3 good options:', list: [
+        'Move $500 from Savings now',
+        'Delay the Amex payment, if allowed',
+        'Keep card spend about $300 lower this week'
+      ] }] },
+    { u: 'Move $500 from Savings.' },
+    { a: ['Confirming this transfer — it should keep checking above $1,200 through the week.'],
+      card: { type: 'transfer', fromAv: 'space-usd-checking.webp', from: 'Savings ••2204', fromSub: '$8,900.00',
+              toAv: 'space-usd-checking.webp', to: 'Checking ••8812', toSub: '$4,250.00',
+              rows: [{ l: 'Amount', v: '$500.00' }, { l: 'Arrives', v: 'Today' }] } },
+    { u: 'Confirm.' },
+    { a: ['Done — $500 moved to Checking. I’ll keep watching this week’s balance and let you know if the forecast changes.'] },
+    { sep: 'Proactive alert' },
+    { a: ['You have rent, utilities, and Amex due this week. If everything posts on time, your lowest checking balance will be about $1,150 on Thursday. If Amex posts early, you may dip below your usual cushion. Want options?'] }
+  ],
+
+  pay: [
+    { u: 'Pay my landlord $2,400 on the 1st of every month.' },
+    { a: [
+      'I found Green Street Properties as your saved landlord. Your last rent payment was $2,400 from Checking ending 8812. Should I use the same recipient and account?'
+    ] },
+    { u: 'Yes.' },
+    { a: [
+      'Got it — same-day arrival by bank transfer. Please review before I schedule it.'
+    ], card: { type: 'transfer', fromAv: 'space-usd-checking.webp', from: 'Checking ••8812', fromSub: '$146,000.00',
+               to: 'Green Street Properties', toInitials: 'GS', toColor: 'linear-gradient(145deg,#46882b,#2d5a16)',
+               rows: [{ l: 'Amount', v: '$2,400.00' }, { l: 'Frequency', v: 'Monthly · from Aug 1' }, { l: 'Memo', v: 'Rent' }, { l: 'Arrival', v: 'Same day' }] } },
+    { u: 'Confirm.' },
+    { a: ['Scheduled. I’ll remind you before the first payment and tell you if your balance may not cover it.'] },
+    { sep: 'Repeat a past payment' },
+    { u: 'Send the same amount as last month to my cleaner.' },
+    { a: ['Last month you sent $180 to Maya Cleaning from Checking. Want to send $180 again today?'],
+      card: { type: 'transfer', fromAv: 'space-usd-checking.webp', from: 'Checking ••8812', fromSub: '$146,000.00',
+              to: 'Maya Cleaning', toInitials: 'MC', toColor: 'linear-gradient(145deg,#D85090,#962858)',
+              rows: [{ l: 'Amount', v: '$180.00' }, { l: 'Arrival', v: 'Today' }] } },
+    { u: 'Yes.' },
+    { a: ['Confirming $180 to Maya Cleaning from Checking ending 8812. Estimated arrival: today.'] },
+    { u: 'Confirm.' },
+    { a: ['Sent.'] },
+    { sep: 'Pay an invoice' },
+    { u: 'Pay this invoice.' },
+    { a: [
+      'I found an invoice for $742.18 from Brightline Dental, due July 15. I don’t see this recipient saved yet.',
+      'Before I can pay it, I need to add Brightline Dental as a recipient using the payment details on the invoice. Please review them.'
+    ] },
+    { u: 'Looks good.' },
+    { a: ['Recipient saved. Do you want to pay now or schedule it for the due date?'] }
+  ],
+
+  protect: [
+    { u: 'I don’t recognize this $89 charge.' },
+    { a: [
+      'I found this charge. It’s from a merchant you’ve used before, but the amount is higher than usual.',
+      'Do you want to freeze the card while we check?'
+    ], card: { type: 'charge', av: '📦', merch: 'Amazon Marketplace', sub: 'Everyday card · Today, 9:42 AM', amount: '$89.14', flag: 'Higher than your usual $12–$45 at this merchant' } },
+    { u: 'Yes.' },
+    { a: ['Confirming: freeze Everyday card ending 4421. New purchases will be declined until you unfreeze it.'] },
+    { u: 'Confirm.' },
+    { a: ['Card frozen. Do you want to mark the Amazon charge as unauthorized or wait until it settles?'] },
+    { u: 'Mark it unauthorized.' },
+    { a: ['I’ll flag it as unauthorized. Since it’s still pending, the final dispute may begin once it posts.'] },
+    { sep: 'Control a card’s spend' },
+    { u: 'Block Roblox on Emma’s card.' },
+    { a: ['I found Emma’s Teen card. Roblox transactions appear under gaming / digital goods. Do you want to block Roblox specifically or block all gaming merchants?'] },
+    { u: 'Just Roblox.' },
+    { a: ['Confirming: block future Roblox purchases on Emma’s Teen card ending 1098. Existing pending charges won’t be reversed.'] },
+    { u: 'Confirm.' },
+    { a: ['Done. I’ll let you know if a Roblox charge is attempted.'] }
+  ],
+
+  explain: [
+    { u: 'What is this $126 charge?' },
+    { a: [
+      'Here’s the charge. It looks like the final posted version of your Delta purchase on July 3, not a duplicate.',
+      'No action is needed right now. If another Delta charge for the same amount posts, I’ll flag it as a possible duplicate.'
+    ], card: { type: 'charge', av: '✈️', merch: 'Delta Airlines', sub: 'Travel card · Yesterday', amount: '$126.08', status: 'Pending' } },
+    { u: 'Track it.' },
+    { a: ['Done — I’ll watch for another Delta charge with the same amount over the next 7 days.'] },
+    { sep: 'A payment that failed' },
+    { u: 'Why did my payment to Maya fail?' },
+    { a: [
+      'Your $180 payment to Maya Cleaning failed yesterday because the source account did not have enough available balance when the payment was attempted.',
+      'At the time, Checking had $92 available. You needed $180.',
+      'You can retry from Savings, move money to Checking first, or schedule it for Friday after your deposit.'
+    ] },
+    { u: 'Retry Friday.' },
+    { a: ['Confirming: retry $180 to Maya Cleaning on Friday from Checking ending 8812.'] },
+    { sep: 'A missing refund' },
+    { u: 'Did I get refunded for the Zara return?' },
+    { a: [
+      'I found a $94.32 Zara purchase from June 22. I don’t see a matching refund yet.',
+      'Most card refunds arrive within 5–10 business days. This purchase was 9 business days ago, so it’s worth tracking.',
+      'Do you want me to track an expected $94.32 refund for the next 7 days?'
+    ] },
+    { u: 'Yes.' },
+    { a: ['Tracking it. I’ll notify you when the refund arrives or if it’s still missing after 7 days.'] }
+  ],
+
+  autopilot: [
+    { u: 'Warn me if checking drops below $1,500.' },
+    { a: [
+      'I can watch Checking and alert you if the available balance drops below $1,500.',
+      'Do you only want an alert, or should I also suggest a transfer when that happens?'
+    ] },
+    { u: 'Suggest a transfer.' },
+    { a: ['Got it. If Checking drops below $1,500, I’ll suggest moving money from Savings, but I won’t move anything without your confirmation.'] },
+    { sep: 'When the rule triggers' },
+    { a: ['Checking dropped to $1,420 after your Amex payment. Move $300 from Savings to restore your cushion?'],
+      card: { type: 'transfer', fromAv: 'space-usd-checking.webp', from: 'Savings ••2204', fromSub: '$8,900.00',
+              toAv: 'space-usd-checking.webp', to: 'Checking ••8812', toSub: '$1,420.00',
+              rows: [{ l: 'Amount', v: '$300.00' }, { l: 'Arrives', v: 'Today' }] } },
+    { u: 'Yes.' },
+    { a: ['Confirming: move $300 from Savings ending 2204 to Checking ending 8812 today.'] },
+    { u: 'Confirm.' },
+    { a: ['Done — Checking is now projected to stay above $1,700 through Friday.'] },
+    { sep: 'Automate your paycheck' },
+    { u: 'When my paycheck lands, move 20% to Savings.' },
+    { a: [
+      'I can watch for your paycheck deposit and suggest moving 20% to Savings when it arrives.',
+      'Your last paycheck was $4,800, so that would have moved about $960. Should I use Savings ending 2204?'
+    ] },
+    { u: 'Yes.' },
+    { a: ['Should this happen automatically, or should I ask you each time?'] },
+    { u: 'Ask me each time.' },
+    { a: ['Done. When payroll lands, I’ll ask before moving 20% to Savings.'] },
+    { sep: 'Adjust a schedule' },
+    { u: 'Pause rent this month.' },
+    { a: ['I found your monthly rent payment to Green Street Properties for $2,400, scheduled for Aug 1. Do you want to skip only the Aug 1 payment or pause the whole schedule?'] },
+    { u: 'Just this month.' },
+    { a: ['Confirming: skip the Aug 1 rent payment only. Future monthly rent payments will continue.'] },
+    { u: 'Confirm.' },
+    { a: ['Done. I’ll remind you before the next rent payment resumes on Sep 1.'] }
+  ]
+};
+
+/* ── Center UI cards for scripted messages (styling from Figma 3502-2736) ── */
+function _agCardBalanceHTML(c) {
+  var chips = (c.chips || []).map(function(x) {
+    return '<span class="ag-balance-chip' + (x.pos ? ' positive' : '') + '">' + _agEscape(x.t) + '</span>';
+  }).join('');
+  return '<div class="ag-balance-bg" aria-hidden="true"><img loading="lazy" decoding="async" src="assets/acct-det-hero-bg.webp?v=2" alt=""></div>' +
+    '<div class="ag-balance-body">' +
+      '<div class="ag-balance-head ag-stagger-item"><span class="ag-balance-av"><img loading="lazy" decoding="async" src="assets/space-usd-checking.webp" alt=""></span>' +
+        '<span class="ag-balance-label">' + _agEscape(c.label) + '</span></div>' +
+      '<div class="ag-balance-amount-row ag-stagger-item"><span class="ag-balance-sym">$</span><span class="ag-balance-int">' + _agEscape(c.balance) + '</span><span class="ag-balance-dec">' + _agEscape(c.dec || '.00') + '</span></div>' +
+      '<div class="ag-balance-divider"></div>' +
+      '<div class="ag-balance-chips ag-stagger-item">' + chips + '</div>' +
+    '</div>';
+}
+function _agCardForecastHTML(c) {
+  var pts = c.points || [], n = pts.length, days = c.days || [];
+  var W = 296, H = 104, padX = 4, padTop = 16, padBot = 26;
+  var vals = pts.concat(c.cushion != null ? [c.cushion] : []);
+  var max = Math.max.apply(null, vals), min = Math.min.apply(null, vals);
+  var range = (max - min) || 1;
+  var innerW = W - padX * 2, innerH = H - padTop - padBot;
+  var X = function(i) { return padX + (n <= 1 ? 0 : (i / (n - 1)) * innerW); };
+  var Y = function(v) { return padTop + (1 - (v - min) / range) * innerH; };
+  var line = pts.map(function(v, i) { return (i ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1); }).join(' ');
+  var baseY = (padTop + innerH).toFixed(1);
+  var area = line + ' L' + X(n - 1).toFixed(1) + ' ' + baseY + ' L' + X(0).toFixed(1) + ' ' + baseY + ' Z';
+  var lowIdx = pts.indexOf(Math.min.apply(null, pts));
+  var cushY = c.cushion != null ? Y(c.cushion).toFixed(1) : null;
+  var lx = X(lowIdx).toFixed(1), ly = Y(pts[lowIdx]).toFixed(1);
+  var dayLabels = days.map(function(d, i) {
+    return '<span class="ag-fc-day' + (i === lowIdx ? ' is-low' : '') + '">' + _agEscape(d) + '</span>';
+  }).join('');
+  var cushLine = cushY ? '<line class="ag-fc-cushion" x1="' + padX + '" y1="' + cushY + '" x2="' + (W - padX) + '" y2="' + cushY + '"/>' : '';
+  return '<div class="ag-fc-head ag-stagger-item">' +
+      '<span class="ag-fc-title">' + _agEscape(c.title || 'Forecast') + '</span>' +
+      '<span class="ag-fc-low"><span class="ag-fc-low-label">Projected low</span>' +
+        '<span class="ag-fc-low-val">' + _agEscape(c.low) + '</span></span>' +
+    '</div>' +
+    '<div class="ag-fc-chart ag-stagger-item">' +
+      '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" aria-hidden="true">' +
+        '<defs><linearGradient id="agFcFill" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0" stop-color="var(--brand-primary)" stop-opacity="0.16"/>' +
+          '<stop offset="1" stop-color="var(--brand-primary)" stop-opacity="0"/>' +
+        '</linearGradient></defs>' +
+        '<path d="' + area + '" fill="url(#agFcFill)"/>' +
+        cushLine +
+        '<path d="' + line + '" fill="none" stroke="var(--brand-primary)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<circle cx="' + lx + '" cy="' + ly + '" r="3.5" fill="var(--brand-primary)" stroke="#fff" stroke-width="1.5"/>' +
+      '</svg>' +
+      '<div class="ag-fc-days">' + dayLabels + '</div>' +
+    '</div>' +
+    (c.risk ? '<div class="ag-fc-risk ag-stagger-item">' + _agEscape(c.risk) + '</div>' : '');
+}
+function _agCardTransferHTML(d) {
+  var arrow = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h13M13 6l6 6-6 6" stroke="rgba(0,0,0,0.35)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function party(av, initials, color, name, sub) {
+    var avHtml = av
+      ? '<span class="ag-sm2-acct-av"><img loading="lazy" decoding="async" src="assets/' + av + '" alt=""></span>'
+      : '<span class="ag-sm2-recip-av" style="background:' + (color || 'linear-gradient(145deg,#8a8a8a,#5a5a5a)') + '">' + _agEscape(initials || '') + '</span>';
+    return '<div class="ag-sm2-acct">' + avHtml +
+      '<span class="ag-sm2-acct-txt"><span class="ag-sm2-acct-name">' + _agEscape(name) + '</span>' +
+      (sub ? '<span class="ag-sm2-acct-sub">' + _agEscape(sub) + '</span>' : '') + '</span></div>';
+  }
+  var rows = (d.rows || []).map(function(r) {
+    return '<div class="ag-sm2-row"><span class="ag-sm2-l">' + _agEscape(r.l) + '</span><span class="ag-sm2-v">' + _agEscape(r.v) + '</span></div>';
+  }).join('');
+  return '<div class="ag-sm2-route ag-stagger-item">' +
+      party(d.fromAv, d.fromInitials, d.fromColor, d.from, d.fromSub) +
+      '<span class="ag-sm2-arrow">' + arrow + '</span>' +
+      party(d.toAv, d.toInitials, d.toColor, d.to, d.toSub) +
+    '</div>' +
+    '<div class="ag-sm2-panel ag-stagger-item"><div class="ag-sm2-rows">' + rows + '</div></div>';
+}
+function _agCardChargeHTML(d) {
+  var right = '<span class="ag-sc-charge-amt">' + _agEscape(d.amount) + '</span>' +
+    (d.status ? '<span class="ag-sc-charge-status">' + _agEscape(d.status) + '</span>' : '');
+  return '<div class="ag-sc-charge-row ag-stagger-item">' +
+      '<span class="ag-sc-charge-av">' + (d.av || '💳') + '</span>' +
+      '<div class="ag-sc-charge-info"><span class="ag-sc-charge-merch">' + _agEscape(d.merch) + '</span>' +
+        '<span class="ag-sc-charge-sub">' + _agEscape(d.sub) + '</span></div>' +
+      '<div class="ag-sc-charge-right">' + right + '</div>' +
+    '</div>' +
+    (d.flag ? '<div class="ag-sc-charge-flag ag-stagger-item">' + _agEscape(d.flag) + '</div>' : '');
+}
+function _agScriptCard(card) {
+  if (!card) return null;
+  var el = document.createElement('div');
+  el.className = 'ag-ui-card';
+  if (card.type === 'balance')      { el.classList.add('ag-balance-card'); el.innerHTML = _agCardBalanceHTML(card); }
+  else if (card.type === 'forecast'){ el.classList.add('ag-fc-card');      el.innerHTML = _agCardForecastHTML(card); }
+  else if (card.type === 'transfer'){ el.classList.add('ag-sm2-card');     el.innerHTML = _agCardTransferHTML(card); }
+  else if (card.type === 'charge')  { el.classList.add('ag-sc-charge');    el.innerHTML = _agCardChargeHTML(card); }
+  else return null;
+  return el;
+}
+
+// Custom eased scroll for the stick-to-top motion. Native `behavior:'smooth'`
+// eases inconsistently across engines and can feel abrupt; this uses a long,
+// gentle easeInOutCubic so the question glides up and settles.
+function _agSmoothScrollTo(el, target, duration, onDone) {
+  if (!el) { if (onDone) onDone(); return; }
+  var start = el.scrollTop;
+  var dist = target - start;
+  if (_prefersReduced || Math.abs(dist) < 1) {
+    el.scrollTop = target; if (onDone) onDone(); return;
+  }
+  var dur = duration || 680;
+  var t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now());
+  var ease = function(t) { return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; };
+  function step(now) {
+    var p = Math.min(1, (now - t0) / dur);
+    el.scrollTop = start + dist * ease(p);
+    if (p < 1) requestAnimationFrame(step);
+    else if (onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+function _agScriptScrollBottom() {
+  var msgs = document.getElementById('agentMsgs');
+  if (!msgs) return;
+  msgs.scrollTo({ top: msgs.scrollHeight, behavior: _prefersReduced ? 'auto' : 'smooth' });
+}
+function _agScriptUser(text) {
+  var msgs = document.getElementById('agentMsgs');
+  var d = document.createElement('div');
+  d.className = 'ag-msg-user';
+  d.innerHTML = '<div class="ag-msg-user-bubble">' + _agEscape(text) + '</div>';
+  msgs.appendChild(d);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { d.classList.add('visible'); }); });
+  return d;
+}
+function _agScriptSep(text) {
+  var msgs = document.getElementById('agentMsgs');
+  var d = document.createElement('div');
+  d.className = 'ag-script-sep';
+  d.textContent = text;
+  msgs.appendChild(d);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { d.classList.add('s-in'); }); });
+}
+function _agScriptAgent(lines, card, onDone, userDiv) {
+  var msgs = document.getElementById('agentMsgs');
+  var ai = document.createElement('div');
+  ai.className = 'ag-msg-ai';
+  ai.innerHTML = '<div class="ag-msg-ai-label"><span class="ag-msg-ai-name">Banyan AI</span></div>'
+    .replace('<span class="ag-msg-ai-name">', _AG_LEAF_SVG + '<span class="ag-msg-ai-name">');
+  // Release height reserved under earlier answers so they collapse to natural
+  // spacing before we anchor the new exchange.
+  msgs.querySelectorAll('.ag-msg-ai').forEach(function(el) { el.style.minHeight = ''; });
+  msgs.appendChild(ai);
+  // When this exchange started with a user question, stick it to the top
+  // (same behavior as agentSend): reserve height below the answer so the
+  // question can scroll up and anchor near the header, then stream below it.
+  if (userDiv) {
+    ai.style.minHeight = Math.max(0, msgs.clientHeight - userDiv.offsetHeight - 112) + 'px';
+  }
+  // Content-flow scroll: anchored exchanges hold position (content fills the
+  // reserved space below); unanchored ones (proactive alerts) track the bottom.
+  var flow = userDiv ? function() {} : _agScriptScrollBottom;
+  // Reveal the message container, but keep the "Banyan AI" header hidden until
+  // the thinking animation has played out (header replaces the thinking block).
+  requestAnimationFrame(function() {
+    requestAnimationFrame(function() { ai.classList.add('visible'); });
+  });
+  var i = 0;
+  function typeLine() {
+    if (i >= lines.length) {
+      // Center UI card (preferred) rendered once the framing text has landed
+      var el = _agScriptCard(card);
+      if (el) {
+        ai.appendChild(el);
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
+          el.classList.add('ui-in');
+          _agStagger(el, '.ag-stagger-item', 80);
+        }); });
+        flow();
+      }
+      // Copy / thumbs / flag bar, same as a live reply. Its observer commits
+      // after the followups settle, so it lands at the bottom of the message.
+      _agAppendFooter(ai);
+      if (onDone) onDone(ai);
+      return;
+    }
+    var line = lines[i];
+    var advance = function() { i++; setTimeout(typeLine, 320); };
+    if (line && typeof line === 'object' && line.list) {
+      _agAddList(ai, line.intro, line.list, advance);
+    } else {
+      _agAddCtx(ai, line, advance);
+    }
+    flow();
+  }
+  // Anchor the exchange before the thinking animation plays.
+  if (userDiv) {
+    _agSuppressJump = true;
+    var jmp = document.getElementById('agentJump'); if (jmp) jmp.classList.remove('is-visible');
+    var target = Math.max(0, userDiv.offsetTop - 20); // +12px breathing room from top
+    _agSmoothScrollTo(msgs, target, 680, function() {
+      _agSuppressJump = false; if (typeof _agUpdateJump === 'function') _agUpdateJump();
+    });
+  } else {
+    _agScriptScrollBottom();
+  }
+  _agRunSteps(ai, _AG_DEFAULT_STEPS, msgs, function() {
+    var lbl = ai.querySelector('.ag-msg-ai-label');
+    if (lbl) {
+      lbl.classList.add('show');
+      requestAnimationFrame(function() { requestAnimationFrame(function() { lbl.classList.add('in'); }); });
+    }
+    typeLine();
+  }, 3200);
+  return ai;
+}
+
+/* Interactive stepper: play one exchange, then surface the NEXT ideal question
+   in "Here's what you can do next". The user taps it to ask it themselves. */
+var _agScriptTurns = null;
+var _agScriptPos = 0;
+var _agScriptKey = null;
+// Contextual alternatives so "what you can do next" always offers ≥2 options.
+// These route through the normal agent (leaving the guided script).
+var _AG_SCRIPT_ALT = {
+  forecast:  [{ l: 'Show upcoming payments', t: 'Show upcoming transfers' }, { l: 'Check my balance', t: 'What is my balance?' }],
+  pay:       [{ l: 'Show recent spending', t: 'Show recent spending' }, { l: 'Check my balance', t: 'What is my balance?' }],
+  protect:   [{ l: 'Check my balance', t: 'What is my balance?' }, { l: 'Show recent spending', t: 'Show recent spending' }],
+  explain:   [{ l: 'Anything I should review?', t: 'Anything I should review?' }, { l: 'Show recent spending', t: 'Show recent spending' }],
+  autopilot: [{ l: 'Show upcoming payments', t: 'Show upcoming transfers' }, { l: 'Check my balance', t: 'What is my balance?' }]
+};
+function agPlayScript(key) {
+  var turns = _AG_SCRIPTS[key];
+  if (!turns) return;
+  _agResetConvo();
+  var screen = document.getElementById('agent-screen');
+  if (screen) screen.classList.add('ag-convo');
+  _homeAgentConvo = true;
+  _agBindJump();
+  _agScriptTurns = turns;
+  _agScriptPos = 0;
+  _agScriptKey = key;
+  setTimeout(_agRunScriptSegment, 140);
+}
+// Render one segment: [optional sep] + [optional user turn] + its agent cluster
+function _agRunScriptSegment() {
+  var turns = _agScriptTurns;
+  if (!turns) return;
+  var p = _agScriptPos;
+  if (p >= turns.length) return;
+  if (turns[p] && turns[p].sep !== undefined) { _agScriptSep(turns[p].sep); p++; }
+  var hasUser = p < turns.length && turns[p].u !== undefined;
+  var userDiv = null;
+  if (hasUser) { userDiv = _agScriptUser(turns[p].u); p++; }
+  var lines = [];
+  var card = null;
+  while (p < turns.length && turns[p].a !== undefined) {
+    lines = lines.concat(turns[p].a);
+    if (turns[p].card) card = turns[p].card;
+    p++;
+  }
+  var nextPos = p;
+  _agScriptPos = nextPos;
+  var delay = hasUser ? 620 : 260;
+  setTimeout(function() {
+    if (!lines.length) { _agOfferNextSegment(nextPos, null); return; }
+    _agScriptAgent(lines, card, function(ai) { _agOfferNextSegment(nextPos, ai); }, userDiv);
+  }, delay);
+}
+// Present a scripted turn as a natural action label: drop a single trailing
+// period (keep ellipses / question marks) so it reads like a suggestion.
+function _agActionLabel(text) {
+  if (!text) return text;
+  return text.replace(/([^.])\.$/, '$1');
+}
+// The tappable label that advances to the segment beginning at `pos`
+function _agSegmentTrigger(pos) {
+  var turns = _agScriptTurns;
+  if (!turns || pos >= turns.length) return null;
+  if (turns[pos].sep !== undefined) {
+    if (pos + 1 < turns.length && turns[pos + 1].u !== undefined) return turns[pos + 1].u;
+    return turns[pos].sep;
+  }
+  if (turns[pos].u !== undefined) return turns[pos].u;
+  return 'Continue';
+}
+function _agOfferNextSegment(nextPos, ai) {
+  var trig = _agSegmentTrigger(nextPos);
+  var alts = (_AG_SCRIPT_ALT[_agScriptKey] || []).slice();
+  // Build the option set — the scripted next turn (advances the flow, the user
+  // taps it themselves — never auto-played) plus contextual alternatives.
+  var rows = [];
+  if (trig) rows.push({ label: _agActionLabel(trig), advance: true });
+  for (var k = 0; k < alts.length && rows.length < 3; k++) {
+    if (rows.length && rows[0].label === _agActionLabel(alts[k].l)) continue;
+    rows.push({ label: _agActionLabel(alts[k].l), text: alts[k].t });
+  }
+  if (rows.length < 2) return; // nothing meaningful left to offer
+
+  var host = ai || document.getElementById('agentMsgs');
+  var wrap = document.createElement('div');
+  wrap.className = 'ag-followup-wrap';
+  var header = document.createElement('div');
+  header.className = 'ag-followup-header';
+  header.textContent = "Here's what you can do next";
+  wrap.appendChild(header);
+  var list = document.createElement('div');
+  list.className = 'ag-followup-list';
+  rows.forEach(function(r) {
+    var btn = document.createElement('button');
+    btn.className = 'ag-followup-row';
+    btn.type = 'button';
+    btn.innerHTML = '<span class="ag-followup-arrow" aria-hidden="true">↳</span>' +
+      '<span class="ag-followup-label">' + _agEscape(r.label) + '</span>';
+    btn.addEventListener('click', function() {
+      wrap.remove(); // consume the suggestions
+      if (r.advance) { _agRunScriptSegment(); }      // continue the guided script
+      else { _agScriptTurns = null; agentSendText(r.text); } // hand off to normal agent
+    });
+    list.appendChild(btn);
+  });
+  wrap.appendChild(list);
+  host.appendChild(wrap);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { wrap.classList.add('s-in'); }); });
+  _agScriptScrollBottom();
 }
 
 // ── Card-styles gallery: every component, laid out at once ──
@@ -2442,24 +3310,260 @@ function closeHomeAgent() {
 }
 
 function agentOnInput(input) {
+  const card = document.getElementById('agentInputCard');
+  // Detect wrapping at the CURRENT width first. Once the text needs a second
+  // line, commit to the multiline layout and keep it (sticky) until the field
+  // is emptied — otherwise the layout would oscillate: going multiline widens
+  // the textarea, the text fits on one line again, and it snaps back.
+  input.style.height = '34px';
+  if (card) {
+    if (input.scrollHeight > 34) card.classList.add('is-multiline');
+    else if (!input.value.trim()) card.classList.remove('is-multiline');
+  }
+  const multiline = !!(card && card.classList.contains('is-multiline'));
+  // Re-measure height in the (now possibly full-width) layout so the textarea
+  // isn't left taller than its content after the switch.
   input.style.height = '34px';
   const next = Math.min(input.scrollHeight, 132);
   input.style.height = next + 'px';
-  const card = document.getElementById('agentInputCard');
-  const multiline = next > 34;
-  if (card) card.classList.toggle('is-multiline', multiline);
-  // Lift the suggestion chips so they keep clear of the growing input.
-  // extra = textarea growth + (when wrapped) the button row that drops below.
-  const screen = document.getElementById('agent-screen');
-  if (screen) {
-    const extra = (next - 34) + (multiline ? 42 : 0);
-    screen.style.setProperty('--ag-input-extra', extra + 'px');
+  agUpdateInputExtra();
+  agSyncSend();
+}
+
+// Lift the suggestion chips so they clear the growing input.
+// extra = textarea growth + (wrapped) button row + (attachments) their row.
+function agUpdateInputExtra() {
+  var screen = document.getElementById('agent-screen');
+  var f = document.getElementById('agentField');
+  var card = document.getElementById('agentInputCard');
+  if (!screen || !f || !card) return;
+  var next = parseInt(f.style.height, 10) || 34;
+  var multiline = card.classList.contains('is-multiline');
+  var attach = card.classList.contains('has-attach') ? 96 : 0;
+  var extra = (next - 34) + (multiline ? 42 : 0) + attach;
+  screen.style.setProperty('--ag-input-extra', extra + 'px');
+}
+
+// Send button is active when there's text OR at least one attachment.
+function agSyncSend() {
+  var send = document.getElementById('agentSend');
+  var f = document.getElementById('agentField');
+  var card = document.getElementById('agentInputCard');
+  if (!send) return;
+  var active = (f && f.value.trim().length > 0) || (card && card.classList.contains('has-attach'));
+  if (active) { send.classList.add('active'); send.removeAttribute('aria-disabled'); }
+  else { send.classList.remove('active'); send.setAttribute('aria-disabled', 'true'); }
+}
+
+// ── Attachments (uploaded image / file chips above the input) ──
+// The "+" opens an iOS-style picker; chosen photos/files become chips.
+function agAttachFiles() {
+  var scrim = document.getElementById('agPickerScrim');
+  var sheet = document.getElementById('agPickerSheet');
+  if (!scrim || !sheet) return;
+  // reset any prior selection
+  sheet.querySelectorAll('.ag-picker-photo.sel, .ag-picker-file.sel').forEach(function(el) { el.classList.remove('sel'); });
+  agPickerUpdateAdd();
+  // wire selection toggles once
+  if (!sheet._wired) {
+    sheet._wired = true;
+    sheet.querySelectorAll('.ag-picker-photo, .ag-picker-file').forEach(function(btn) {
+      btn.addEventListener('click', function() { btn.classList.toggle('sel'); agPickerUpdateAdd(); });
+    });
   }
-  const sendBtn = document.getElementById('agentSend');
-  if (!sendBtn) return;
-  const hasText = input.value.trim().length > 0;
-  if (hasText) { sendBtn.classList.add('active'); sendBtn.removeAttribute('aria-disabled'); }
-  else { sendBtn.classList.remove('active'); sendBtn.setAttribute('aria-disabled', 'true'); }
+  scrim.classList.add('show');
+  requestAnimationFrame(function() { sheet.classList.add('show'); });
+}
+function agCloseAttachSheet() {
+  var scrim = document.getElementById('agPickerScrim');
+  var sheet = document.getElementById('agPickerSheet');
+  if (sheet) sheet.classList.remove('show');
+  if (scrim) scrim.classList.remove('show');
+}
+function agPickerUpdateAdd() {
+  var sheet = document.getElementById('agPickerSheet');
+  var addBtn = document.getElementById('agPickerAdd');
+  if (!sheet || !addBtn) return;
+  var n = sheet.querySelectorAll('.ag-picker-photo.sel, .ag-picker-file.sel').length;
+  addBtn.disabled = n === 0;
+  addBtn.textContent = n > 0 ? 'Add ' + n : 'Add';
+}
+function agConfirmAttach() {
+  var sheet = document.getElementById('agPickerSheet');
+  var card = document.getElementById('agentInputCard');
+  var wrap = document.getElementById('agAttach');
+  if (!sheet || !card || !wrap) return;
+  sheet.querySelectorAll('.ag-picker-photo.sel').forEach(function(p) {
+    wrap.appendChild(_agMakeAttachImage(p.getAttribute('data-src')));
+  });
+  sheet.querySelectorAll('.ag-picker-file.sel').forEach(function(f) {
+    wrap.appendChild(_agMakeAttachFile(f.getAttribute('data-name'), 'PDF'));
+  });
+  if (wrap.children.length) card.classList.add('has-attach');
+  agUpdateInputExtra();
+  agSyncSend();
+  agCloseAttachSheet();
+}
+function _agAttachRemoveBtn() {
+  var b = document.createElement('button');
+  b.type = 'button'; b.className = 'ag-attach-x'; b.setAttribute('aria-label', 'Remove attachment');
+  b.innerHTML = '<span class="ico ol" style="--ico:url(\'Icons/X.svg\');--sz:12px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span>';
+  b.addEventListener('click', function() {
+    var item = b.closest('.ag-attach-item');
+    var wrap = document.getElementById('agAttach');
+    if (item) item.remove();
+    if (wrap && wrap.children.length === 0) {
+      var card = document.getElementById('agentInputCard');
+      if (card) card.classList.remove('has-attach');
+    }
+    agUpdateInputExtra();
+    agSyncSend();
+  });
+  return b;
+}
+function _agMakeAttachImage(src) {
+  var d = document.createElement('div');
+  d.className = 'ag-attach-item ag-attach-img';
+  var img = document.createElement('img'); img.src = src; img.alt = 'Uploaded image';
+  d.appendChild(img);
+  d.appendChild(_agAttachRemoveBtn());
+  return d;
+}
+function _agMakeAttachFile(name, badge) {
+  var d = document.createElement('div');
+  d.className = 'ag-attach-item ag-attach-file';
+  d.innerHTML = '<span class="ag-attach-fname">' + _agEscape(name) + '</span>' +
+    '<span class="ag-attach-badge">' + _agEscape(badge) + '</span>';
+  d.appendChild(_agAttachRemoveBtn());
+  return d;
+}
+
+// ── Voice dictation (ChatGPT-style) ──
+// Tap the waveform → listen + live transcript; Stop drops it into the input.
+var _agRec = null, _agVoiceFinal = '', _agVoiceSim = null;
+function _agBuildWave() {
+  var w = document.getElementById('agVoiceWave');
+  if (!w) return;
+  w.innerHTML = '';
+  for (var i = 0; i < 34; i++) {
+    var b = document.createElement('i');
+    b.style.animationDuration = (620 + Math.floor(Math.random() * 620)) + 'ms';
+    b.style.animationDelay = '-' + Math.floor(Math.random() * 800) + 'ms';
+    w.appendChild(b);
+  }
+}
+function agVoiceStart() {
+  var card = document.getElementById('agentInputCard');
+  var screen = document.getElementById('agent-screen');
+  if (!card) return;
+  _agVoiceFinal = '';
+  card.classList.add('is-listening');
+  if (screen) screen.classList.add('ag-listening'); // reveals the orb + veil
+  _agBuildWave();
+  haptic(8);
+  _agEnterConvo();          // show the conversation so the live bubble is visible
+  _agVoiceRender('', '');   // seed the live "Listening…" bubble in the message area
+
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (SR) {
+    try {
+      _agRec = new SR();
+      _agRec.lang = 'en-US';
+      _agRec.interimResults = true;
+      _agRec.continuous = true;
+      _agRec.onresult = function(e) {
+        var interim = '';
+        for (var i = e.resultIndex; i < e.results.length; i++) {
+          var t = e.results[i][0].transcript;
+          if (e.results[i].isFinal) _agVoiceFinal += t;
+          else interim += t;
+        }
+        _agVoiceRender(_agVoiceFinal, interim);
+      };
+      _agRec.onerror = function() { _agVoiceSimulate(); };
+      _agRec.start();
+      return;
+    } catch (e) { /* fall through to simulate */ }
+  }
+  // No speech recognition (or blocked) — simulate a live transcript so the
+  // experience is still demonstrable in the prototype.
+  _agVoiceSimulate();
+}
+// Ensure the conversation layout is active so the live bubble is visible
+function _agEnterConvo() {
+  if (_homeAgentConvo) return;
+  var screen = document.getElementById('agent-screen');
+  var msgs = document.getElementById('agentMsgs');
+  var spacer = msgs && msgs.querySelector('.ag-msgs-spacer');
+  if (spacer) {
+    var h = spacer.offsetHeight;
+    spacer.style.flex = 'none'; spacer.style.height = h + 'px';
+    void spacer.offsetHeight;
+    spacer.style.transition = 'height 520ms var(--ease-spring)';
+    requestAnimationFrame(function() { spacer.style.height = '0'; });
+  }
+  _homeAgentConvo = true;
+  if (screen) screen.classList.add('ag-convo');
+}
+// The live transcript shows as a forming user bubble in the message area
+function _agVoiceLiveBubble() {
+  var msgs = document.getElementById('agentMsgs');
+  var wrap = document.getElementById('agVoiceLive');
+  if (!wrap && msgs) {
+    wrap = document.createElement('div');
+    wrap.className = 'ag-msg-user visible ag-voice-live';
+    wrap.id = 'agVoiceLive';
+    wrap.innerHTML = '<div class="ag-msg-user-bubble"></div>';
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+  return wrap ? wrap.querySelector('.ag-msg-user-bubble') : null;
+}
+function _agVoiceRender(finalT, interim) {
+  var b = _agVoiceLiveBubble();
+  if (!b) return;
+  if (!finalT && !interim) b.innerHTML = '<span class="ag-voice-interim">Listening…</span>';
+  else b.innerHTML = _agEscape(finalT) + (interim ? '<span class="ag-voice-interim">' + _agEscape(interim) + '</span>' : '');
+  var msgs = document.getElementById('agentMsgs');
+  if (msgs) msgs.scrollTop = msgs.scrollHeight;
+}
+function _agVoiceSimulate() {
+  var sample = "Can I afford a $1,200 flight next month without dipping into my savings?";
+  var el = document.getElementById('agVoiceText');
+  if (el) el.classList.remove('placeholder');
+  var i = 0;
+  clearInterval(_agVoiceSim);
+  _agVoiceSim = setInterval(function() {
+    if (i <= sample.length) {
+      _agVoiceFinal = sample.slice(0, i);
+      _agVoiceRender(_agVoiceFinal, '');
+      i += 2;
+    } else { clearInterval(_agVoiceSim); }
+  }, 45);
+}
+function _agVoiceTeardown() {
+  if (_agRec) { try { _agRec.stop(); } catch (e) {} _agRec = null; }
+  clearInterval(_agVoiceSim); _agVoiceSim = null;
+  var card = document.getElementById('agentInputCard');
+  if (card) card.classList.remove('is-listening');
+  var screen = document.getElementById('agent-screen');
+  if (screen) screen.classList.remove('ag-listening');
+  var live = document.getElementById('agVoiceLive');
+  if (live) live.remove();
+}
+// Stop → the dictated text (already shown as the bubble) is sent
+function agVoiceStop() {
+  var text = (_agVoiceFinal || '').trim();
+  _agVoiceTeardown();
+  if (text) {
+    var f = document.getElementById('agentField');
+    if (f) { f.value = text; agentSend(); }
+  }
+}
+function agVoiceCancel() {
+  if (_agRec) { try { _agRec.abort(); } catch (e) {} _agRec = null; }
+  _agVoiceFinal = '';
+  _agVoiceTeardown();
 }
 
 function agentKeydown(e) {
@@ -2477,6 +3581,7 @@ function agentChip(el) {
 }
 // Send a text programmatically (follow-up chips)
 function agentSendText(text) {
+  if (text === '__opencases__') { openSupportCases(); return; }
   const f = document.getElementById('agentField');
   if (!f) return;
   f.value = text; agentOnInput(f);
@@ -2495,6 +3600,11 @@ function agentSend() {
 
   // Capture BEFORE the state flip so we can distinguish first vs subsequent
   var isFirstMsg = !_homeAgentConvo;
+
+  // Mute the jump-to-latest button up front — the view is about to animate to
+  // the top and we don't want it to flash mid-transition.
+  _agSuppressJump = true;
+  var _jmp0 = document.getElementById('agentJump'); if (_jmp0) _jmp0.classList.remove('is-visible');
 
   // On first send: collapse the spacer so the user bubble sits at the top
   // of the visible area, matching the Claude.ai conversation layout
@@ -2518,6 +3628,10 @@ function agentSend() {
   // Route first — no rendering yet
   const scenario = _agRouteQuery(text);
 
+  // Release any height previously reserved under the last answer, so older
+  // exchanges collapse to their natural spacing before the new one is added.
+  msgs.querySelectorAll('.ag-msg-ai').forEach(function(el) { el.style.minHeight = ''; });
+
   // User bubble
   const userDiv = document.createElement('div');
   userDiv.className = 'ag-msg-user';
@@ -2527,7 +3641,10 @@ function agentSend() {
 
   f.value = ''; f.style.height = '34px';
   const inputCard = document.getElementById('agentInputCard');
-  if (inputCard) inputCard.classList.remove('is-multiline');
+  if (inputCard) inputCard.classList.remove('is-multiline', 'has-attach', 'is-listening');
+  if (typeof _agVoiceTeardown === 'function') _agVoiceTeardown();
+  const attachWrap = document.getElementById('agAttach');
+  if (attachWrap) attachWrap.innerHTML = '';
   if (screen) screen.style.setProperty('--ag-input-extra', '0px');
   const sendBtn = document.getElementById('agentSend');
   if (sendBtn) { sendBtn.classList.remove('active'); sendBtn.setAttribute('aria-disabled', 'true'); }
@@ -2538,22 +3655,43 @@ function agentSend() {
   const aiDiv = document.createElement('div');
   aiDiv.className = 'ag-msg-ai';
   aiDiv.innerHTML =
-    '<div class="ag-msg-ai-label" aria-hidden="true">' +
-      '<div class="ag-msg-ai-dot-wrap"><div class="ag-msg-ai-dot"></div></div>' +
-      '<span class="ag-msg-ai-name">Banyan</span>' +
+    '<div class="ag-msg-ai-label">' +
+      '<span class="ag-msg-ai-leaf"><svg viewBox="0 0 24 24" width="14" height="14" fill="#46882B" aria-hidden="true"><path d="M6.05 8.05c-2.73 2.73-2.73 7.17-.02 9.9 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/></svg></span>' +
+      '<span class="ag-msg-ai-name">Banyan AI</span>' +
     '</div>';
   msgs.appendChild(aiDiv);
+  // Reserve enough height under the new answer so the new question can always
+  // scroll up and stick to the top (ChatGPT-style), even for short replies.
+  if (!isFirstMsg) {
+    aiDiv.style.minHeight = Math.max(0, msgs.clientHeight - userDiv.offsetHeight - 112) + 'px';
+  }
   setTimeout(function() {
     requestAnimationFrame(function() {
       aiDiv.classList.add('visible');
-      // Anchor view to the top of the AI response — don't chase the bottom as content grows
-      msgs.scrollTop = aiDiv.offsetTop - 16;
+      // Stick the new exchange to the top: the user's question anchors near the
+      // header, the answer streams below it — smooth-scrolled, not a jump.
+      var target = isFirstMsg ? 0 : (userDiv.offsetTop - 8);
+      // Mute the jump-to-latest button while the view animates to the top
+      _agSuppressJump = true;
+      var jmp = document.getElementById('agentJump'); if (jmp) jmp.classList.remove('is-visible');
+      _agSmoothScrollTo(msgs, target, 680, function() {
+        _agSuppressJump = false; _agUpdateJump();
+      });
     });
   }, 50);
+
+  // Remember the reasoning steps so they can be reviewed after the answer
+  aiDiv._agThinkSteps = (scenario.steps || []).map(function(s) { return s.label; });
 
   // Thinking steps → answer handoff
   setTimeout(function() {
     var runRender = function() {
+      // Bring in the "Banyan AI" header now that loading/thinking is done
+      var _lbl = aiDiv.querySelector('.ag-msg-ai-label');
+      if (_lbl && !_agGalleryMode) {
+        _lbl.classList.add('show');
+        requestAnimationFrame(function() { requestAnimationFrame(function() { _lbl.classList.add('in'); }); });
+      }
       if      (scenario.type === 'transfer')        { _agRenderTransfer(aiDiv, msgs, scenario.data); }
       else if (scenario.type === 'fx_rate')         { _agRenderFXRate(aiDiv, msgs, scenario.data); }
       else if (scenario.type === 'balance')         { _agRenderBalance(aiDiv, msgs, scenario.data); }
@@ -2589,13 +3727,15 @@ function agentSend() {
       else if (scenario.type === 'payee')           { _agRenderPayee(aiDiv, msgs); }
       else if (scenario.type === 'payee_confidence'){ _agRenderPayeeConfidence(aiDiv, msgs); }
       else if (scenario.type === 'payee_verify')    { _agRenderPayeeVerify(aiDiv, msgs); }
+      else if (scenario.type === 'support_escalate') { _agRenderSupportEscalate(aiDiv, msgs); }
       else { _agRenderText(aiDiv, msgs, scenario.responseText); }
+      _agAppendFooter(aiDiv);   // copy / thumbs / flag bar on every reply
       _agResponseIdx++;
     };
-    // Quick conversational turns skip the long "thinking" block; the
-    // typewriter context line carries the responsiveness instead.
-    if (scenario.fast) { setTimeout(runRender, 340); }
-    else { _agRunSteps(aiDiv, scenario.steps, msgs, runRender); }
+    // Show the thinking animation on every conversation. Quick turns get a
+    // shorter think; richer flows keep the full ~10s reasoning.
+    var _steps = (scenario.steps && scenario.steps.length) ? scenario.steps : _AG_DEFAULT_STEPS;
+    _agRunSteps(aiDiv, _steps, msgs, runRender, scenario.fast ? 2600 : 10000);
   }, 90);
 
   setTimeout(function() { f.focus(); }, 130);
@@ -2608,6 +3748,30 @@ function _agEscape(str) {
 
 /* ── AI Agent ───────────────────────────────────────── */
 let _agentOpen = false;
+
+// ── Contact support screen ──
+function openSupport() {
+  haptic(8);
+  var s = document.getElementById('support-screen');
+  if (!s) return;
+  s.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(function() { s.classList.add('on'); });
+}
+function closeSupport() {
+  var s = document.getElementById('support-screen');
+  if (!s) return;
+  s.classList.remove('on');
+  s.setAttribute('aria-hidden', 'true');
+}
+function openSupportChat() {
+  closeSupport();
+  setTimeout(function() {
+    if (typeof openHomeAgent === 'function') openHomeAgent();
+    else if (typeof openAgent === 'function') openAgent();
+    var f = document.getElementById('agentField');
+    if (f) setTimeout(function() { f.focus(); }, 300);
+  }, 260);
+}
 
 function openAgent() {
   haptic(8);
@@ -4388,7 +5552,7 @@ function buildEmbAvatar(tx) {
   const badge = document.createElement('div');
   badge.className = 'emb-tx-av-badge';
   badge.innerHTML = (METHOD_ICONS[tx.method] || METHOD_ICONS.wire)
-    .replace('<svg', '<svg style="width:12px;height:12px;fill:var(--text-tertiary)"');
+    .replace('<svg', '<svg style="width:12px;height:12px;fill:rgba(0,0,0,0.4);color:rgba(0,0,0,0.4)"');
   container.appendChild(badge);
   return container;
 }
@@ -4590,7 +5754,6 @@ function showHome() {
   var _hbs = document.getElementById('homeHeroBlurScroll'); if (_hbs) _hbs.style.opacity = '0';
   var _hai = document.querySelector('#home .home-ai'); if (_hai) _hai.style.setProperty('--ai-bg-op', '0.60');
   var _hgh = document.getElementById('homeGreetingHalo'); if (_hgh) _hgh.style.opacity = '1';
-  var _bas = document.getElementById('bnavAiSlot'); if (_bas) _bas.classList.remove('visible');
   var _hnt = document.getElementById('homeNotif');
   if (_hnt) {
     _hnt.classList.remove('expanded');
@@ -4600,7 +5763,8 @@ function showHome() {
   }
   document.querySelector('#home .home-scroll').classList.remove('home-fade-top');
   setSbLight(true); // white status-bar text over the hero photo
-  showNav(true); showNavAi(true);
+  showNav(true);
+  showNavAi(false, true); // orb hidden at home top; scroll reveals it
   setNavActive(0);
   _smOrigin = 'home';
   renderEmbeddedTxSection('homeTxList');
@@ -4624,7 +5788,8 @@ function showExplore() {
   document.getElementById('accounts').className = 'screen hb';
   document.getElementById('explore').className  = 'screen on';
   setSbLight(false);
-  showNav(true); showNavAi(true);
+  showNav(true);
+  showNavAi(true, true); // slot at final width first → setNavActive reads correct offsets
   setNavActive(3);
   _smOrigin = 'explore';
 }
@@ -4657,7 +5822,8 @@ function showAccounts() {
   document.getElementById('accounts').className = 'screen on';
   document.querySelector('#accounts .acct-scroll').scrollTop = 0;
   setSbLight(false);
-  showNav(true); showNavAi(true);
+  showNav(true);
+  showNavAi(true, true); // slot at final width first → setNavActive reads correct offsets
   setNavActive(2);
   _smOrigin = 'accounts';
 }
@@ -6463,6 +7629,7 @@ function showAccountDetail(acct) {
   document.getElementById('adScroll').classList.remove('ad-fade-top');
   document.getElementById('adMainCard').style.opacity = '';
   var _hw = document.getElementById('adHeroBgWrap'); if (_hw) _hw.style.transform = 'scale(1.25)';
+  var _hc = document.querySelector('#adMainCard .ad-header-center-inner'); if (_hc) _hc.style.transform = '';
   var _hb = document.getElementById('adHeroBlurTop'); if (_hb) _hb.style.opacity = '0';
   document.getElementById('adScroll').style.setProperty('--ad-sheet-op', '0.4');
   // Slide in
@@ -6781,7 +7948,7 @@ function renderSmLBubbles() {
       if (upiRow)        acctStr = upiRow[1];
       else if (acctRow)  acctStr = acctRow[1] + (bankRow ? ' · ' + bankRow[1] : '');
     }
-    var photo = b.photo || 'assets/blob-purple-v2.png';
+    var photo = b.photo || 'assets/blob-purple-v2.webp';
     var inset = size >= 80 ? '4px' : '2px';
     var fs = Math.round(size * 0.31);
 
@@ -7452,11 +8619,13 @@ function smwGoToSuccess() {
   if(prgCard) prgCard.style.cssText='transition:none;opacity:0';
   var sucSections = sucCard ? sucCard.querySelectorAll('.smp-sec-status,.smp-sec-txn') : [];
   var sucBottom = successEl.querySelector('.sms-bottom');
-  sucSections.forEach(function(el){el.style.cssText='transition:none;opacity:0;transform:translateY(20px)';});
+  // Receipt-unfurl entrance (shared with #sm-success)
+  successEl.classList.remove('sms-unfurl');
+  void successEl.offsetWidth; // force reflow so the animation replays
   if(sucBottom) sucBottom.style.cssText='transition:none;opacity:0;transform:translateY(40px)';
   requestAnimationFrame(function(){requestAnimationFrame(function(){
-    sucSections.forEach(function(el,i){el.style.cssText='transition:opacity 0.28s ease '+(0.10+i*0.06)+'s,transform 0.36s '+spring+' '+(0.10+i*0.06)+'s;opacity:1;transform:translateY(0)';});
-    if(sucBottom) sucBottom.style.cssText='transition:opacity 0.28s ease 0.22s,transform 0.38s '+spring+' 0.22s;opacity:1;transform:translateY(0)';
+    successEl.classList.add('sms-unfurl');
+    if(sucBottom) sucBottom.style.cssText='transition:opacity 0.3s ease 0.85s,transform 0.42s '+spring+' 0.85s;opacity:1;transform:translateY(0)';
   });});
   setTimeout(function(){
     successEl.style.cssText=''; reviewEl.className='screen hl';
@@ -7782,9 +8951,19 @@ function smGoToSuccess() {
   if (subEl) subEl.textContent = firstName + ' has received the money in their ' + (smRecipient.bankShort || 'HDFC Bank') + ' account.';
 
   document.getElementById('sm-progress').className = 'screen hl';
-  document.getElementById('sm-success').className  = 'screen on';
+  var sucScreen = document.getElementById('sm-success');
+  sucScreen.className  = 'screen on';
+
+  // Receipt-unfurl entrance: reset, then re-trigger on next frame
+  sucScreen.classList.remove('sms-unfurl');
+  var sucScroll = sucScreen.querySelector('.sms-scroll');
+  if (sucScroll) sucScroll.scrollTop = 0;
+  void sucScreen.offsetWidth; // force reflow so the animation replays
+  requestAnimationFrame(function() { sucScreen.classList.add('sms-unfurl'); });
+
 }
 
+// TEMP: replay the unfurl on whichever success screen is currently on (remove before commit)
 function smDone() {
   document.querySelector('.phone').scrollTop = 0;
   SM_SCREENS.forEach(id => document.getElementById(id).className = 'screen hr');
@@ -7876,10 +9055,21 @@ function smClosePurposeSheet() {
   document.getElementById('purposeSheetInvoice').classList.remove('open');
   var si = document.getElementById('purposeSearch'); if (si) si.value = '';
   smFilterPurpose('');
+  _agPurposeMode = false;
+  _agPendingPurpose = null;
 }
 
 /* Pick a common purpose row (no invoice needed) */
 function smPickPurpose(el, label, code) {
+  // Agent flow reuses this sheet — apply to the agent card without touching
+  // send-money state.
+  if (_agPurposeMode) {
+    document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) { r.classList.remove('sel'); });
+    el.classList.add('sel');
+    _agApplyPurpose((el.querySelector('.purpose-row-lbl') || {}).textContent || label);
+    setTimeout(smClosePurposeSheet, 200);
+    return;
+  }
   _purposeCode = code;
   _purposeLabel = label;
   // Update sheet rows
@@ -7892,6 +9082,13 @@ function smPickPurpose(el, label, code) {
 
 /* Pick a professional/business service (invoice required) */
 function smPickProf(label, code) {
+  if (_agPurposeMode) {
+    document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) { r.classList.remove('sel'); });
+    document.querySelectorAll('#purposeProfRows .purpose-row').forEach(function(r) { if (r.dataset.code === code) r.classList.add('sel'); });
+    _agPendingPurpose = label;
+    smOpenPurposeInvoice(label);
+    return;
+  }
   _purposeCode = code;
   _purposeLabel = label;
   document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) { r.classList.remove('sel'); });
@@ -7924,6 +9121,7 @@ function smClosePurposeInvoice() {
   document.getElementById('purposeSheetInvoice').classList.remove('open');
 }
 function smConfirmPurposeInvoice() {
+  if (_agPurposeMode && _agPendingPurpose) _agApplyPurpose(_agPendingPurpose);
   smClosePurposeSheet();
 }
 function purposeSimulateUpload() {
@@ -8303,7 +9501,13 @@ renderEmbeddedTxSection('homeTxList');
       // Fade greeting halo — starts at 60px scroll, gone by 240px
       if (homeGreetingHalo) homeGreetingHalo.style.opacity = Math.max(0, 1 - Math.max(0, s - 60) / 180).toFixed(3);
       // Show AI orb in nav once greeting/AI input area has scrolled away
-      if (bnavAiSlot) bnavAiSlot.classList.toggle('visible', s >= 220);
+      if (bnavAiSlot) {
+        var _slotNow = s >= 220;
+        if (bnavAiSlot.classList.contains('visible') !== _slotNow) {
+          bnavAiSlot.classList.toggle('visible', _slotNow);
+          _syncIndicatorForSlot(); // keep active-tab indicator aligned
+        }
+      }
       ticking = false;
     });
   }, { passive: true });
@@ -8365,6 +9569,7 @@ setTimeout(layoutHomeNotifDeck, 0);
   var mainCard = document.getElementById('adMainCard');
   var heroWrap = document.getElementById('adHeroBgWrap');
   var heroBlurTop = document.getElementById('adHeroBlurTop');
+  var heroCenter = mainCard ? mainCard.querySelector('.ad-header-center-inner') : null;
   var ticking = false;
   function onAdScroll() {
     var st = adScroll.scrollTop;
@@ -8381,8 +9586,15 @@ setTimeout(layoutHomeNotifDeck, 0);
     requestAnimationFrame(function() {
       var s = Math.max(adScroll.scrollTop, 0);
       var p = Math.min(s / 240, 1); // 0 at top → 1 by 240px
-      // Zoom out: 1.25 (rest) → 1.0 (device width)
-      if (heroWrap) heroWrap.style.transform = 'scale(' + (1.25 - p * 0.25).toFixed(4) + ')';
+      // Scroll-expansion feel: hero media scales down + parallax-drifts up as you
+      // scroll down, and expands back on scroll up. (1.25 rest → 1.0 device width)
+      if (heroWrap) heroWrap.style.transform =
+        'translateY(' + (p * -18).toFixed(1) + 'px) scale(' + (1.25 - p * 0.25).toFixed(4) + ')';
+      // Header block recedes with depth (scale + lift), not just opacity
+      if (heroCenter) {
+        var pc = Math.min(s / 120, 1); // faster collapse for the centred content
+        heroCenter.style.transform = 'translateY(' + (pc * -20).toFixed(1) + 'px) scale(' + (1 - pc * 0.06).toFixed(4) + ')';
+      }
       // Final state: top region blurs up to 40px
       if (heroBlurTop) heroBlurTop.style.opacity = p.toFixed(3);
       ticking = false;
@@ -8734,16 +9946,16 @@ const _TW = (function() {
 
 /* ── Beneficiaries ───────────────────────────────── */
 const BENS = [
-  { id:'ar', photo:'assets/blob-purple-v2.png', blob:'photo', ini:'AR', name:'Ananya Rao',    alias:'Ananya', rel:'Sister',  loc:'Bengaluru',  bg:'linear-gradient(135deg,#c2185b,#e91e8c)', fav:true,  corp:false,
+  { id:'ar', photo:'assets/blob-purple-v2.webp', blob:'photo', ini:'AR', name:'Ananya Rao',    alias:'Ananya', rel:'Sister',  loc:'Bengaluru',  bg:'linear-gradient(135deg,#c2185b,#e91e8c)', fav:true,  corp:false,
     rails:{ 'US Bank':{ badge:'United States · ACH · USD', rows:[['Account holder','Ananya Rao'],['Bank','JPMorgan Chase'],['Routing (ABA)','021000021'],['Account no.','•••• 4421'],['Type','Checking']] } },
     contact:[['Full name','Ananya Rao'],['Saved as','Ananya'],['Phone','+91 98455 20193'],['Email','ananya.rao@gmail.com']] },
 
-  { id:'jc', photo:'assets/blob-orange-v2.png', blob:'photo', ini:'JC', name:'James Carter',  alias:'James',  rel:'Friend',  loc:'New York',   bg:'linear-gradient(135deg,#1565c0,#1e88e5)', fav:true,  corp:false,
+  { id:'jc', photo:'assets/blob-orange-v2.webp', blob:'photo', ini:'JC', name:'James Carter',  alias:'James',  rel:'Friend',  loc:'New York',   bg:'linear-gradient(135deg,#1565c0,#1e88e5)', fav:true,  corp:false,
     rails:{ 'India Bank':{ badge:'India · NEFT · INR', rows:[['Account holder','James Carter'],['Bank','ICICI Bank'],['IFSC','ICIC0001234'],['Account no.','•••• 7731'],['Type','NRO Savings']] },
             'UPI':{ badge:'India · UPI · INR', rows:[['UPI ID','james.carter@icici'],['Registered to','James Carter']] } },
     contact:[['Full name','James Carter'],['Saved as','James'],['Phone','+1 212 555 0182'],['Email','james.carter@email.com']] },
 
-  { id:'ps', photo:'assets/blob-orange-v2.png', blob:'photo', ini:'PS', name:'Priya Sharma',  alias:'Priya',  rel:'Cousin',  loc:'Mumbai',     bg:'linear-gradient(135deg,#00695c,#00897b)', fav:true,  corp:false,
+  { id:'ps', photo:'assets/blob-orange-v2.webp', blob:'photo', ini:'PS', name:'Priya Sharma',  alias:'Priya',  rel:'Cousin',  loc:'Mumbai',     bg:'linear-gradient(135deg,#00695c,#00897b)', fav:true,  corp:false,
     rails:{ 'India Bank':{ badge:'India · IMPS · INR', rows:[['Account holder','Priya Sharma'],['Bank','ICICI Bank'],['IFSC','ICIC0000123'],['Account no.','•••• 3120'],['Type','Savings']] },
             'UPI':{ badge:'India · UPI · INR', rows:[['UPI ID','priya.s@icici'],['Registered to','Priya Sharma']] } },
     contact:[['Full name','Priya Sharma'],['Saved as','Priya'],['Phone','+91 97654 32109'],['Email','priya.sharma@email.com']] },
@@ -8752,19 +9964,19 @@ const BENS = [
     rails:{ 'US Bank':{ badge:'United States · Wire · USD', rows:[['Beneficiary','Tau Holdings Ltd'],['Bank','DBS Bank'],['SWIFT','DBSSSGSG'],['Account no.','•••• 0042'],['Type','Corporate']] } },
     contact:[['Company','Tau Holdings Ltd'],['Contact','ops@tauholdings.sg'],['Phone','+65 6321 8800']] },
 
-  { id:'rm', photo:'assets/blob-purple-v2.png', blob:'photo', ini:'RM', name:'Rahul Mehta',   alias:'Rahul',  rel:'Colleague',loc:'Delhi',      bg:'linear-gradient(135deg,#6a1b9a,#8e24aa)', fav:false, corp:false,
+  { id:'rm', photo:'assets/blob-purple-v2.webp', blob:'photo', ini:'RM', name:'Rahul Mehta',   alias:'Rahul',  rel:'Colleague',loc:'Delhi',      bg:'linear-gradient(135deg,#6a1b9a,#8e24aa)', fav:false, corp:false,
     rails:{ 'US Bank':{ badge:'United States · ACH · USD', rows:[['Account holder','Rahul Mehta'],['Bank','Chase'],['Routing (ABA)','021000021'],['Account no.','•••• 3398'],['Type','Checking']] } },
     contact:[['Full name','Rahul Mehta'],['Saved as','Rahul'],['Phone','+91 99876 33410'],['Email','rahul.m@work.com']] },
 
-  { id:'pm', photo:'assets/blob-purple-v2.png', blob:'photo', ini:'PM', name:'Patrick Mokoena',alias:'Patrick',rel:'Friend', loc:'Nairobi',    bg:'linear-gradient(135deg,#bf360c,#e64a19)', fav:false, corp:false,
+  { id:'pm', photo:'assets/blob-purple-v2.webp', blob:'photo', ini:'PM', name:'Patrick Mokoena',alias:'Patrick',rel:'Friend', loc:'Nairobi',    bg:'linear-gradient(135deg,#bf360c,#e64a19)', fav:false, corp:false,
     rails:{ 'US Bank':{ badge:'United States · Wire · USD', rows:[['Account holder','Patrick Mokoena'],['Bank','Equity Bank'],['SWIFT','EQBLKENX'],['Account no.','•••• 5510'],['Type','Current']] } },
     contact:[['Full name','Patrick Mokoena'],['Saved as','Patrick'],['Phone','+254 722 123456'],['Email','p.mokoena@email.com']] },
 
-  { id:'ns', photo:'assets/blob-orange-v2.png', blob:'photo', ini:'NS', name:'Neha Singh',    alias:'Neha',   rel:'Friend',  loc:'Hyderabad',  bg:'linear-gradient(135deg,#00838f,#0097a7)', fav:false, corp:false,
+  { id:'ns', photo:'assets/blob-orange-v2.webp', blob:'photo', ini:'NS', name:'Neha Singh',    alias:'Neha',   rel:'Friend',  loc:'Hyderabad',  bg:'linear-gradient(135deg,#00838f,#0097a7)', fav:false, corp:false,
     rails:{ 'UPI':{ badge:'India · UPI · INR', rows:[['UPI ID','neha.singh@paytm'],['Registered to','Neha Singh']] } },
     contact:[['Full name','Neha Singh'],['Saved as','Neha'],['Phone','+91 98112 45678']] },
 
-  { id:'ak', photo:'assets/blob-orange-v2.png', blob:'photo', ini:'AK', name:'Akira Kobayashi',alias:'Akira', rel:'Friend',  loc:'Tokyo',      bg:'linear-gradient(135deg,#283593,#3949ab)', fav:false, corp:false,
+  { id:'ak', photo:'assets/blob-orange-v2.webp', blob:'photo', ini:'AK', name:'Akira Kobayashi',alias:'Akira', rel:'Friend',  loc:'Tokyo',      bg:'linear-gradient(135deg,#283593,#3949ab)', fav:false, corp:false,
     rails:{ 'India Bank':{ badge:'India · NEFT · INR', rows:[['Account holder','Akira Kobayashi'],['Bank','HDFC Bank'],['IFSC','HDFC0009087'],['Account no.','•••• 9087'],['Type','NRO Savings']] },
             'UPI':{ badge:'India · UPI · INR', rows:[['UPI ID','akira.k@hdfc'],['Registered to','Akira Kobayashi']] } },
     contact:[['Full name','Akira Kobayashi'],['Saved as','Akira'],['Phone','+81 90-1234-5678'],['Email','akira.k@email.jp']] },
@@ -8800,7 +10012,7 @@ function _benAv(b, size) {
     d.style.cssText = 'width:' + size + 'px;height:' + size + 'px;background:rgba(0,0,0,0.10);border-radius:999px;';
     const ph = document.createElement('img');
     ph.className = 'sm-l-av-photo';
-    ph.src = 'assets/blob-green-v2.png';
+    ph.src = 'assets/blob-green-v2.webp';
     ph.alt = '';
     d.appendChild(ph);
     const glass = document.createElement('div');
@@ -8809,7 +10021,7 @@ function _benAv(b, size) {
     d.appendChild(glass);
     // Centered logo icon
     const logo = document.createElement('img');
-    logo.src = b.logo || 'assets/blob-amzpay.png';
+    logo.src = b.logo || 'assets/blob-amzpay.webp';
     logo.alt = '';
     const logoSz = Math.round(size * 0.55);
     logo.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:' + logoSz + 'px;height:' + logoSz + 'px;object-fit:contain;border-radius:' + Math.round(size*0.15) + 'px;z-index:3';
@@ -8840,7 +10052,7 @@ function _benAv(b, size) {
   d.style.cssText = 'width:' + size + 'px;height:' + size + 'px;background:rgba(255,255,255,0.12);border-radius:' + radius + ';';
   const ph = document.createElement('img');
   ph.className = 'sm-l-av-photo';
-  ph.src = b.photo || 'assets/blob-purple-v2.png';
+  ph.src = b.photo || 'assets/blob-purple-v2.webp';
   ph.alt = '';
   d.appendChild(ph);
   const glass = document.createElement('div');
@@ -9952,4 +11164,410 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', renderDigest);
 } else {
   renderDigest();
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   SUPPORT CASE EXPERIENCE (prototype, mock-backed)
+   AI-first: tickets appear only when the Agent escalates / human
+   follow-up is needed. Customer-safe copy; no internal risk labels.
+   ═══════════════════════════════════════════════════════════════════ */
+
+// Customer-facing statuses (maps onto the product's customer ticket statuses)
+var _SUP_STATUS = {
+  open:                { label: 'Open',          cls: 'sup-st-open' },
+  waiting_on_customer: { label: 'Action needed', cls: 'sup-st-wait' },
+  in_review:           { label: 'In review',     cls: 'sup-st-review' },
+  resolved:            { label: 'Resolved',      cls: 'sup-st-resolved' },
+  closed:              { label: 'Closed',        cls: 'sup-st-closed' },
+  cancelled:           { label: 'Cancelled',     cls: 'sup-st-closed' },
+};
+// Intake channels — structured so email/voice extend cleanly later
+var _SUP_CHANNEL = {
+  chat:     { label: 'Started in Agent chat', icon: 'ChatCircle.svg' },
+  email:    { label: 'Started by email',      icon: 'EnvelopeOpen.svg' },
+  voice:    { label: 'Started by phone',      icon: 'Phone.svg' },
+  internal: { label: 'Opened by Banyan',      icon: 'ShieldCheck.svg' },
+};
+
+// Seeded mock cases — one per channel, covering key statuses + a regulated case
+var _supportCases = [
+  {
+    id: 'BNY-48213', title: 'Two Uber Eats charges you didn’t recognize',
+    status: 'in_review', channel: 'chat', regulated: true,
+    receivedAt: 'Today, 7:20 PM', lastUpdate: '2h ago', waitingOnCustomer: false,
+    summary: 'You reported two Uber Eats charges of $42.18 posted 3 minutes apart on your dining card that you didn’t recognize.',
+    context: [
+      { type: 'card', label: 'Banyan Visa •• 4821' },
+      { type: 'transaction', label: 'Uber Eats · $42.18 · 7:12 PM' },
+      { type: 'transaction', label: 'Uber Eats · $42.18 · 7:15 PM' },
+    ],
+    timeline: [
+      { kind: 'intake', channel: 'chat', ts: 'Today, 7:20 PM', text: 'Reported through the Banyan Agent after it flagged a possible duplicate charge.' },
+      { kind: 'system', ts: 'Today, 7:20 PM', text: 'We recorded when we received your report and opened a case to review it.' },
+      { kind: 'human', author: 'Priya · Banyan Support', ts: 'Today, 8:05 PM', text: 'Thanks for flagging this. We’ve started reviewing both charges and will update you within 1 business day. Your card is safe to keep using.' },
+    ],
+  },
+  {
+    id: 'BNY-47981', title: 'Transfer to Rohan hasn’t arrived',
+    status: 'waiting_on_customer', channel: 'email', regulated: false,
+    receivedAt: 'Yesterday, 10:02 AM', lastUpdate: '1d ago', waitingOnCustomer: true,
+    summary: 'Your $1,000 transfer to Rohan Rathod shows as sent but hasn’t landed in their HDFC account.',
+    context: [
+      { type: 'payment', label: 'Transfer · $1,000.00 → ₹91,780' },
+      { type: 'recipient', label: 'Rohan Rathod · HDFC •• 7654' },
+    ],
+    requested: 'Could you confirm the last 4 digits of Rohan’s account and the date they expected it? That helps us trace it with the receiving bank.',
+    timeline: [
+      { kind: 'intake', channel: 'email', ts: 'Yesterday, 10:02 AM', text: 'Received by email at support@banyan.fi.', excerpt: 'Hi, I sent $1,000 to Rohan two days ago and he still hasn’t received it. The app says it was sent. Can you help?' },
+      { kind: 'system', ts: 'Yesterday, 10:03 AM', text: 'We opened a case and attached your transfer details.' },
+      { kind: 'human', author: 'Marcus · Banyan Support', ts: 'Yesterday, 3:40 PM', text: 'We’re tracing this with our banking partner. To move faster, we need a couple of details from you.' },
+      { kind: 'requested', ts: 'Yesterday, 3:40 PM', text: 'Could you confirm the last 4 digits of Rohan’s account and the date they expected it?' },
+    ],
+  },
+  {
+    id: 'BNY-47420', title: 'Couldn’t change your travel card PIN',
+    status: 'resolved', channel: 'voice', regulated: false,
+    receivedAt: 'Jun 24, 2:15 PM', lastUpdate: '4d ago', waitingOnCustomer: false,
+    summary: 'You called because the app wouldn’t let you set a new PIN on your travel card.',
+    context: [ { type: 'card', label: 'Banyan Visa •• 4821' } ],
+    callSummary: '3 min call. You couldn’t save a new PIN — the confirm step kept erroring. Agent reset the PIN flow and confirmed a new PIN was set successfully before the call ended.',
+    timeline: [
+      { kind: 'intake', channel: 'voice', ts: 'Jun 24, 2:15 PM', text: 'Received by phone. Call summary and recording reference attached.' },
+      { kind: 'human', author: 'Dana · Banyan Support', ts: 'Jun 24, 2:22 PM', text: 'Cleared the stuck PIN-change and confirmed your new PIN saved. Anything else, just reply here — no need to call back.' },
+      { kind: 'resolved', ts: 'Jun 24, 2:23 PM', text: 'Marked resolved. You can reopen this if it happens again.' },
+    ],
+  },
+];
+
+function _supEl(id) { return document.getElementById(id); }
+function _supIco(name, sz, color) {
+  return '<span class="ico ol" style="--ico:url(\'Icons/' + name + '\');--sz:' + (sz || 16) + 'px;color:' + (color || 'rgba(0,0,0,0.55)') + '" aria-hidden="true"></span>';
+}
+function _supOpenScreen(id) {
+  var s = _supEl(id); if (!s) return;
+  s.setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(function() { s.classList.add('on'); });
+}
+function _supCloseScreen(id) {
+  var s = _supEl(id); if (!s) return;
+  s.classList.remove('on'); s.setAttribute('aria-hidden', 'true');
+}
+
+/* ── Case list ─────────────────────────────────────────── */
+function openSupportCases() { haptic(6); renderSupportList(); _supOpenScreen('support-cases'); }
+function closeSupportCases() { _supCloseScreen('support-cases'); }
+
+function renderSupportList() {
+  var body = _supEl('supportCasesBody'); if (!body) return;
+  if (!_supportCases.length) {
+    body.innerHTML =
+      '<div class="sup-empty">' +
+        '<div class="sup-empty-ic">' + _supIco('ChatCircle.svg', 26, 'var(--brand-primary)') + '</div>' +
+        '<div class="sup-empty-title">No support cases yet</div>' +
+        '<div class="sup-empty-sub">If the Banyan Agent can’t resolve something, your support case will appear here with the full conversation and next steps.</div>' +
+        '<button class="sup-empty-btn" type="button" onclick="closeSupportCases()">Ask the Banyan Agent</button>' +
+      '</div>';
+    return;
+  }
+  var open = _supportCases.filter(function(c) { return ['open','waiting_on_customer','in_review'].indexOf(c.status) > -1; });
+  var past = _supportCases.filter(function(c) { return ['resolved','closed','cancelled'].indexOf(c.status) > -1; });
+  var html = '<h1 class="sup-h1">Support</h1><p class="sup-lede">Banyan’s Agent handles most issues instantly. Anything that needs a person shows up here.</p>';
+  if (open.length) html += '<div class="sup-group-label">Active</div>' + open.map(_supRowHtml).join('');
+  if (past.length) html += '<div class="sup-group-label">Past cases</div>' + past.map(_supRowHtml).join('');
+  body.innerHTML = html;
+}
+function _supRowHtml(c) {
+  var st = _SUP_STATUS[c.status] || _SUP_STATUS.open;
+  var ch = _SUP_CHANNEL[c.channel] || _SUP_CHANNEL.chat;
+  var wait = c.waitingOnCustomer;
+  return '<button class="sup-row' + (wait ? ' sup-row-wait' : '') + '" type="button" onclick="openSupportCase(\'' + c.id + '\')">' +
+    '<div class="sup-row-top"><span class="sup-row-title">' + _agEscape(c.title) + '</span>' +
+      '<span class="sup-pill ' + st.cls + '">' + st.label + '</span></div>' +
+    '<div class="sup-row-meta">' + _supIco(ch.icon, 13, 'rgba(0,0,0,0.4)') +
+      '<span>' + c.id + '</span><span class="sup-dot">·</span><span>Updated ' + _agEscape(c.lastUpdate) + '</span></div>' +
+    (wait ? '<div class="sup-row-flag">' + _supIco('Clock.svg', 12, '#875610') + 'Banyan needs a bit more info</div>' : '') +
+  '</button>';
+}
+
+/* ── Case detail ───────────────────────────────────────── */
+function openSupportCase(id) {
+  haptic(6);
+  var c = _supportCases.find(function(x) { return x.id === id; });
+  if (!c) return;
+  renderSupportCase(c);
+  _supOpenScreen('support-case');
+}
+function closeSupportCase() {
+  var bar = _supEl('supComposerBar'); if (bar) bar.hidden = true;
+  _supCloseScreen('support-case');
+}
+
+function renderSupportCase(c) {
+  var nav = _supEl('supCaseNavTitle'); if (nav) nav.textContent = c.id;
+  var st = _SUP_STATUS[c.status] || _SUP_STATUS.open;
+  var ch = _SUP_CHANNEL[c.channel] || _SUP_CHANNEL.chat;
+  var isOpen = ['open','waiting_on_customer','in_review'].indexOf(c.status) > -1;
+
+  var html = '';
+  // Thread subject header (stays document-like; the body below is a chat)
+  html += '<div class="sup-c-head">';
+  html += '<div class="sup-d-top"><span class="sup-d-id">' + c.id + '</span><span class="sup-pill ' + st.cls + '">' + st.label + '</span></div>';
+  html += '<h1 class="sup-c-title">' + _agEscape(c.title) + '</h1>';
+  html += '<div class="sup-c-start">' + _supIco(ch.icon, 12, 'rgba(0,0,0,0.4)') + '<span>' + ch.label + ' · ' + _agEscape(c.receivedAt) + '</span></div>';
+  html += '</div>';
+
+  // ── Chat thread: Banyan/support on the left, the customer on the right ──
+  var chat = '';
+
+  // Opening — Banyan's summary of what it understands
+  chat += _supMsgIn(_agEscape(c.summary), { author: 'Banyan', av: 'leaf' });
+
+  // Attached context, as an attachment bubble from Banyan
+  if (c.context && c.context.length) {
+    chat += _supMsgIn(
+      '<div class="sup-msg-attach-label">Attached to this case</div><div class="sup-chips">' +
+        c.context.map(function(x) { return '<span class="sup-chip">' + _agEscape(x.label) + '</span>'; }).join('') +
+      '</div>', { av: 'leaf' });
+  }
+
+  // Voice call summary, as a Banyan bubble
+  if (c.channel === 'voice' && c.callSummary) {
+    chat += _supMsgIn(
+      '<div class="sup-msg-attach-label">Call summary</div>' + _agEscape(c.callSummary) +
+      '<div class="sup-ref">' + _supIco('Phone.svg', 12, 'rgba(0,0,0,0.4)') + 'Recording reference available to support</div>',
+      { av: 'leaf' });
+  }
+
+  // Regulated / priority protection note (customer-safe wording)
+  if (c.regulated) {
+    chat += _supMsgIn(
+      '<div class="sup-protect-t">We’ve opened a case for this issue</div>' +
+      '<div class="sup-protect-s">Banyan recorded when we received your report and is reviewing the details. You’ll see updates here, and we’ll let you know if we need anything.</div>',
+      { av: 'shield', bubbleCls: 'sup-msg-bubble--note' });
+  }
+
+  // Timeline → chat messages
+  chat += c.timeline.map(function(ev) { return _supChatMsg(ev, ch); }).join('');
+
+  html += '<div class="sup-chat">' + chat + '</div>';
+
+  // Closed/resolved note lives in the scroll; the reply composer is a fixed bar
+  if (!isOpen) {
+    html += '<div class="sup-closed-note">' + _supIco('CheckCircle.svg', 15, 'var(--brand-primary)') +
+      '<span>This case is ' + st.label.toLowerCase() + '. ' + (c.status === 'resolved' ? 'Something still off? ' : '') + '</span>' +
+      (c.status === 'resolved' ? '<button class="sup-reopen" type="button" onclick="supportReopen(\'' + c.id + '\')">Reopen case</button>' : '') +
+    '</div>';
+  }
+
+  var body = _supEl('supportCaseBody');
+  if (body) {
+    body.classList.toggle('has-composer', isOpen); // bottom padding to clear the bar
+    body.innerHTML = html; body.scrollTop = 0;
+  }
+
+  // Sticky composer — starts single-line, grows with content, only when open
+  _supCurrentCaseId = c.id;
+  var bar = _supEl('supComposerBar');
+  if (bar) {
+    bar.hidden = !isOpen;
+    var f = _supEl('supReplyField');
+    if (f) { f.value = ''; f.style.height = 'auto'; }
+  }
+}
+// Banyan / support avatar for left-side (incoming) chat bubbles
+function _supAv(kind) {
+  if (kind === 'shield') return '<span class="sup-msg-ic">' + _supIco('ShieldCheck.svg', 14, 'var(--brand-primary)') + '</span>';
+  // leaf (Banyan)
+  return '<span class="sup-msg-ic"><svg viewBox="0 0 24 24" width="14" height="14" fill="#46882B" aria-hidden="true">' +
+    '<path d="M6.05 8.05c-2.73 2.73-2.73 7.17-.02 9.9 1.47-3.4 4.09-6.24 7.36-7.93-2.77 2.34-4.71 5.61-5.39 9.32 2.6 1.23 5.8.78 7.95-1.37C19.43 14.47 20 4 20 4S9.53 4.57 6.05 8.05z"/></svg></span>';
+}
+// Left-side (Banyan / support) chat bubble
+function _supMsgIn(bodyHtml, opts) {
+  opts = opts || {};
+  var author = opts.author ? '<div class="sup-msg-author">' + _agEscape(opts.author) + '</div>' : '';
+  var time = opts.ts ? '<div class="sup-msg-time">' + _agEscape(opts.ts) + '</div>' : '';
+  var bubbleCls = 'sup-msg-bubble' + (opts.bubbleCls ? ' ' + opts.bubbleCls : '');
+  return '<div class="sup-msg sup-msg--in">' +
+    '<div class="sup-msg-av">' + _supAv(opts.av) + '</div>' +
+    '<div class="sup-msg-col">' + author +
+      '<div class="' + bubbleCls + '">' + bodyHtml + '</div>' + time +
+    '</div></div>';
+}
+// Right-side (customer) chat bubble
+function _supMsgOut(text, ts) {
+  return '<div class="sup-msg sup-msg--out"><div class="sup-msg-col">' +
+    '<div class="sup-msg-bubble sup-msg-bubble--out">' + _agEscape(text) + '</div>' +
+    (ts ? '<div class="sup-msg-time">' + _agEscape(ts) + '</div>' : '') +
+    '</div></div>';
+}
+// Centered system line (neutral events, dividers)
+function _supSysLine(text, ts, ico) {
+  return '<div class="sup-sysline">' + (ico || '') + '<span>' + _agEscape(text) +
+    (ts ? '<span class="sup-sysline-ts"> · ' + _agEscape(ts) + '</span>' : '') + '</span></div>';
+}
+// One timeline event → chat message(s)
+function _supChatMsg(ev, ch) {
+  if (ev.kind === 'intake') {
+    var chIco = _SUP_CHANNEL[ev.channel] ? _SUP_CHANNEL[ev.channel].icon : (ch && ch.icon) || 'ChatCircle.svg';
+    var out = _supSysLine(ev.text, ev.ts, _supIco(chIco, 12, 'rgba(0,0,0,0.4)'));
+    // the customer's own words (e.g. an email) land on the right
+    if (ev.excerpt) out += _supMsgOut(ev.excerpt, ev.ts);
+    return out;
+  }
+  if (ev.kind === 'human') {
+    return _supMsgIn(_agEscape(ev.text), { av: 'shield', author: ev.author || 'Banyan Support', ts: ev.ts });
+  }
+  if (ev.kind === 'customer') {
+    return _supMsgOut(ev.text, ev.ts);
+  }
+  if (ev.kind === 'requested') {
+    return _supMsgIn(
+      '<div class="sup-req-inline">' + _supIco('Clock.svg', 13, '#875610') + 'Banyan needs a bit more info</div>' + _agEscape(ev.text),
+      { av: 'shield', bubbleCls: 'sup-msg-bubble--req', ts: ev.ts });
+  }
+  if (ev.kind === 'resolved') {
+    return _supSysLine(ev.text, ev.ts, _supIco('CheckCircle.svg', 13, 'var(--brand-primary)'));
+  }
+  // system / other → centered system line
+  return _supSysLine(ev.text, ev.ts);
+}
+
+// Auto-grow the reply field (single line → multi-line as content is typed)
+function supReplyGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+function supReplyKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); supportReply(); }
+}
+function supportReply(id) {
+  id = id || _supCurrentCaseId;
+  var c = _supportCases.find(function(x) { return x.id === id; });
+  var f = _supEl('supReplyField');
+  if (!c || !f) return;
+  var val = f.value.trim();
+  if (!val) { f.focus(); return; }
+  f.value = ''; f.style.height = 'auto';
+  c.timeline.push({ kind: 'customer', ts: 'Just now', text: val });
+  c.timeline.push({ kind: 'system', ts: 'Just now', text: 'Banyan received your response. Support will follow up here.' });
+  c.waitingOnCustomer = false;
+  if (c.status === 'waiting_on_customer') c.status = 'in_review';
+  c.lastUpdate = 'just now';
+  haptic(8);
+  renderSupportCase(c);
+  showToast('Reply sent');
+}
+function supportReopen(id) {
+  var c = _supportCases.find(function(x) { return x.id === id; });
+  if (!c) return;
+  c.status = 'in_review'; c.lastUpdate = 'just now';
+  c.timeline.push({ kind: 'system', ts: 'Just now', text: 'You reopened this case. Support will take another look.' });
+  renderSupportCase(c);
+  showToast('Case reopened');
+}
+
+/* ── Ticket creation from an unresolved Agent conversation ── */
+var _supPendingTicket = null;
+var _supCurrentCaseId = null;
+function agOpenTicketCreate(opts) {
+  opts = opts || {};
+  _supPendingTicket = {
+    title: opts.title || 'Support request',
+    summary: opts.summary || 'You asked the Banyan Agent for help and it couldn’t fully resolve the issue.',
+    context: opts.context || [],
+    regulated: !!opts.regulated,
+  };
+  var sheet = _supEl('supCreate');
+  if (!sheet) return;
+  sheet.innerHTML = _supCreateFormHtml(_supPendingTicket);
+  _supEl('supCreateScrim').classList.add('show');
+  requestAnimationFrame(function() { sheet.classList.add('show'); });
+}
+function _supCreateFormHtml(t) {
+  var ctx = t.context.length
+    ? '<div class="sup-chips">' + t.context.map(function(x) { return '<span class="sup-chip">' + _agEscape(x.label) + '</span>'; }).join('') + '</div>'
+    : '<div class="sup-create-empty">No specific transaction attached.</div>';
+  return '<div class="sup-create-grab"></div>' +
+    '<div class="sup-create-title">Create a support ticket</div>' +
+    '<div class="sup-create-sub">A person will review this. Banyan attaches the context below so you don’t have to repeat yourself.</div>' +
+    '<div class="sup-create-label">Issue summary</div>' +
+    '<div class="sup-create-summary">' + _agEscape(t.summary) + '</div>' +
+    '<div class="sup-create-label">Banyan will attach</div>' + ctx +
+    '<div class="sup-create-label">Anything else to add?</div>' +
+    '<textarea id="supCreateNote" class="sup-create-note" rows="3" placeholder="Optional — add any detail that might help"></textarea>' +
+    '<div class="sup-create-actions">' +
+      '<button class="sup-create-cancel" type="button" onclick="closeTicketCreate()">Cancel</button>' +
+      '<button class="sup-create-submit" type="button" onclick="supportCreateTicket()">Create ticket</button>' +
+    '</div>';
+}
+function closeTicketCreate() {
+  var sheet = _supEl('supCreate');
+  if (sheet) sheet.classList.remove('show');
+  var scrim = _supEl('supCreateScrim');
+  if (scrim) scrim.classList.remove('show');
+}
+function supportCreateTicket() {
+  var t = _supPendingTicket; if (!t) return;
+  var noteEl = _supEl('supCreateNote');
+  var note = noteEl ? noteEl.value.trim() : '';
+  var id = 'BNY-' + (48000 + Math.floor(Math.random() * 1900));
+  var tl = [
+    { kind: 'intake', channel: 'chat', ts: 'Just now', text: 'Created from your Banyan Agent conversation. The full chat context is attached for support.' },
+    { kind: 'system', ts: 'Just now', text: t.regulated
+        ? 'We recorded when we received your report and opened a case for review.'
+        : 'We opened a case and attached your conversation. A person will follow up here.' },
+  ];
+  if (note) tl.splice(1, 0, { kind: 'customer', ts: 'Just now', text: note });
+  var c = {
+    id: id, title: t.title, summary: t.summary,
+    status: t.regulated ? 'in_review' : 'open', channel: 'chat', regulated: t.regulated,
+    receivedAt: 'Just now', lastUpdate: 'just now', waitingOnCustomer: false,
+    context: t.context, timeline: tl,
+  };
+  _supportCases.unshift(c);
+  _supPendingTicket = null;
+  // Success state in the same sheet, then hand off to the case
+  var sheet = _supEl('supCreate');
+  if (sheet) {
+    sheet.innerHTML = '<div class="sup-create-grab"></div>' +
+      '<div class="sup-create-success">' +
+        '<div class="sup-success-ic">' + _supIco('CheckCircle.svg', 30, 'var(--brand-primary)') + '</div>' +
+        '<div class="sup-create-title">' + (c.regulated ? 'We’ve opened a case for this issue' : 'Support case created') + '</div>' +
+        '<div class="sup-create-sub">' + (c.regulated
+          ? 'Banyan recorded when we received your report and will review the details. You’ll see updates here.'
+          : 'Ticket ' + id + '. A person will follow up here — no need to repeat yourself.') + '</div>' +
+        '<div class="sup-success-id">' + id + '</div>' +
+        '<button class="sup-create-submit sup-success-btn" type="button" onclick="closeTicketCreate();openSupportCase(\'' + id + '\')">View case</button>' +
+      '</div>';
+  }
+  showToast('Support case ' + id + ' created');
+}
+
+/* Agent render: offer to create a ticket when a conversation is unresolved */
+function _agScenarioSupportEscalate() {
+  return { type: 'support_escalate', fast: true, data: {} };
+}
+function _agRenderSupportEscalate(aiDiv, msgs) {
+  var card = document.createElement('div');
+  card.className = 'ag-ui-card';
+  card.innerHTML =
+    '<div class="ag-alert-head ag-stagger-item"><div class="ag-alert-icon" style="background:rgba(70,136,43,0.12)">' + _supIco('ShieldCheck.svg', 18, 'var(--brand-primary)') + '</div>' +
+      '<div class="ag-alert-head-text"><span class="ag-alert-title">Bring in a person</span><span class="ag-alert-merchant">A support case keeps your full chat context</span></div></div>' +
+    '<div class="ag-charge-gap ag-stagger-item" style="border-top:0.5px solid rgba(0,0,0,0.06);background:transparent;color:var(--text-secondary)">You won’t have to repeat anything you told me.</div>' +
+    '<button class="ag-tr2-confirm-btn ag-stagger-item" style="margin-top:12px" type="button" id="agEscalateBtn">Create a support ticket</button>';
+  _agAddCtx(aiDiv, 'No problem — I can hand this to our support team. They’ll pick up right here with everything from our chat, and reply in your Support cases.', function() {
+    _agRevealCard(aiDiv, card, function() {
+      var btn = card.querySelector('#agEscalateBtn');
+      if (btn) btn.addEventListener('click', function() {
+        agOpenTicketCreate({
+          title: 'Help with an unresolved issue',
+          summary: 'You asked the Banyan Agent for help and wanted a person to follow up. The full conversation is attached.',
+          context: [{ type: 'account', label: 'USD Checking •• 3214' }],
+        });
+      });
+      setTimeout(function() { _agAddFollowups(aiDiv, msgs, [
+        { label: 'View your support cases', text: '__opencases__' },
+      ]); }, 300);
+    });
+  });
 }

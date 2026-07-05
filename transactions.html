@@ -4,12 +4,13 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-visual"/>
   <title>Banyan – Transactions</title>
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Edu+SA+Beginner:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=248">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="image" href="assets/home-bg.webp?v=3" fetchpriority="high">
+  <!-- One combined font request (unused Edu SA Beginner dropped) -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
+  <link rel="stylesheet" href="styles.css?v=354">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -47,7 +48,7 @@
     <!-- Fixed hero photo — zooms out + progressively blurs as content scrolls over it -->
     <div class="home-hero-fixed" id="homeHeroFixed">
       <div class="home-hero-bg-wrap" id="homeHeroBgWrap">
-        <img class="home-hero-bg" src="assets/home-bg.webp?v=3" alt="">
+        <img decoding="async" fetchpriority="high" class="home-hero-bg" src="assets/home-bg.webp?v=3" alt="">
       </div>
       <div class="home-hero-blur home-hero-blur-1"></div>
       <div class="home-hero-blur home-hero-blur-2"></div>
@@ -112,7 +113,7 @@
           <p class="home-daily-sub">Review, approve and add balance.</p>
           <div class="home-act-scroll">
             <button class="home-act-card" onclick="openHomeAgent()">
-              <img class="home-act-bg" src="assets/home-act-netflix.webp" alt="">
+              <img loading="lazy" decoding="async" class="home-act-bg" src="assets/home-act-netflix.webp" alt="">
               <div class="home-act-grad"></div>
               <div class="home-act-texts">
                 <p class="home-act-title">Netflix went up by <span class="home-act-red">$2.00</span></p>
@@ -120,7 +121,7 @@
               </div>
             </button>
             <button class="home-act-card" onclick="openHomeAgent()">
-              <img class="home-act-bg" src="assets/home-act-cash.webp" alt="">
+              <img loading="lazy" decoding="async" class="home-act-bg" src="assets/home-act-cash.webp" alt="">
               <div class="home-act-grad home-act-grad--grey"></div>
               <div class="home-act-texts">
                 <p class="home-act-title">Running short of balance</p>
@@ -150,7 +151,7 @@
               <div class="home-eyebrow">Your total balance is <b>$15,600</b>.</div>
               <p class="home-story-sub">$13,200 by month end, post bills &amp; scheduled payments.</p>
             </div>
-            <div class="home-story-thumb"><img src="assets/home-story-balance.webp" alt=""></div>
+            <div class="home-story-thumb"><img loading="lazy" decoding="async" src="assets/home-story-balance.webp" alt=""></div>
           </div>
         </section>
 
@@ -161,7 +162,7 @@
               <div class="home-eyebrow"><b>₹94.70</b> to the dollar.</div>
               <p class="home-story-sub">The rupee just hit a 3-month low. More money goes home today.</p>
             </div>
-            <div class="home-story-thumb"><img src="assets/home-story-fx.webp" alt=""></div>
+            <div class="home-story-thumb"><img loading="lazy" decoding="async" src="assets/home-story-fx.webp" alt=""></div>
           </div>
         </section>
 
@@ -176,7 +177,7 @@
 
               <div class="home-recent-row">
                 <div class="home-recent-av">
-                  <img src="assets/tx-p2p.webp" alt="">
+                  <img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt="">
                   <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
                 </div>
                 <div class="home-recent-info">
@@ -190,7 +191,7 @@
 
               <div class="home-recent-row home-recent-row--dim">
                 <div class="home-recent-av">
-                  <img src="assets/tx-transport.webp" alt="">
+                  <img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt="">
                   <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
                 </div>
                 <div class="home-recent-info">
@@ -202,7 +203,7 @@
 
               <div class="home-recent-row home-recent-row--dim">
                 <div class="home-recent-av">
-                  <img src="assets/tx-transport.webp" alt="">
+                  <img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt="">
                   <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
                 </div>
                 <div class="home-recent-info">
@@ -216,7 +217,7 @@
 
               <div class="home-recent-row home-recent-row--dim">
                 <div class="home-recent-av">
-                  <img src="assets/tx-shopping.webp" alt="">
+                  <img loading="lazy" decoding="async" src="assets/tx-shopping.webp" alt="">
                   <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
                 </div>
                 <div class="home-recent-info">
@@ -228,7 +229,7 @@
 
               <div class="home-recent-row">
                 <div class="home-recent-av">
-                  <img src="assets/tx-p2p.webp" alt="">
+                  <img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt="">
                   <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
                 </div>
                 <div class="home-recent-info">
@@ -269,7 +270,7 @@
         <!-- ── Balance hero ── -->
         <div class="acct-hero">
           <div class="acct-hero-bg-wrap">
-            <img class="acct-hero-bg" src="assets/acct-hero-bg.webp" alt="">
+            <img loading="lazy" decoding="async" class="acct-hero-bg" src="assets/acct-hero-bg-v2.webp?v=1" alt="">
           </div>
           <div class="acct-hero-overlay"></div>
           <div class="acct-hero-content">
@@ -292,9 +293,9 @@
         <div class="acct-spaces">
           <div class="acct-spaces-hdr">
             <span class="acct-spaces-hdr-lbl">Spaces &bull; 4</span>
-            <button class="btn btn--secondary btn--sm">
-              <span class="ico ol" style="--ico:url('Icons/Plus.svg');color:rgba(0,0,0,0.70)"></span>
-              <span>Add a new space</span>
+            <button class="btn btn--ghost btn--sm">
+              <span class="ico ol" style="--ico:url('Icons/Plus.svg')"></span>
+              <span>Add new</span>
             </button>
           </div>
 
@@ -305,7 +306,7 @@
               <div class="acct-row" onclick="showAccountDetail({name:'USD Checking',num:'1678 0987 9876 3214',balInt:'137,978',balDec:'.00'})" style="cursor:pointer">
                 <div class="acct-av">
                   <div class="acct-av-inner">
-                    <img src="assets/space-usd-checking.webp" alt="USD Checking">
+                    <img loading="lazy" decoding="async" src="assets/space-usd-checking.webp" alt="USD Checking">
                   </div>
                 </div>
                 <div class="acct-info">
@@ -326,7 +327,7 @@
               <div class="acct-row" onclick="showAccountDetail({name:'Thailand holiday',num:'1678 0987 9876 7654',balInt:'37,978',balDec:'.00',showCases:true,pendingAmt:'$12,450'})" style="cursor:pointer">
                 <div class="acct-av">
                   <div class="acct-av-inner">
-                    <img src="assets/space-thailand.webp" alt="Thailand holiday">
+                    <img loading="lazy" decoding="async" src="assets/space-thailand.webp" alt="Thailand holiday">
                   </div>
                 </div>
                 <div class="acct-info">
@@ -353,7 +354,7 @@
               <div class="acct-row" onclick="showAccountDetail({name:'Mom\'s expenses',num:'1678 0987 9876 8745',balInt:'10,120',balDec:'.00'})" style="cursor:pointer">
                 <div class="acct-av">
                   <div class="acct-av-inner">
-                    <img src="assets/space-moms.webp" alt="Mom's expenses">
+                    <img loading="lazy" decoding="async" src="assets/space-moms.webp" alt="Mom's expenses">
                   </div>
                 </div>
                 <div class="acct-info">
@@ -369,7 +370,7 @@
               <div class="acct-row" onclick="showAccountDetail({name:'Wedding',num:'1678 0987 9876 8746',balInt:'50,768',balDec:'.00'})" style="cursor:pointer">
                 <div class="acct-av">
                   <div class="acct-av-inner">
-                    <img src="assets/space-wedding.webp" alt="Wedding">
+                    <img loading="lazy" decoding="async" src="assets/space-wedding.webp" alt="Wedding">
                   </div>
                 </div>
                 <div class="acct-info">
@@ -382,30 +383,47 @@
               </div>
 
             </div><!-- /.acct-spaces-list -->
-          </div><!-- /.acct-spaces-inner -->
-        </div><!-- /.acct-spaces -->
 
-        <!-- ── Show archived spaces ── -->
-        <div class="acct-archived-wrap">
-          <div class="acct-archived-list" id="acctArchivedList">
-            <div class="acct-spaces-inner">
-              <div class="acct-row acct-row--archived" onclick="showAccountDetail({name:'Europe 2024',num:'1678 0987 9876 1102',balInt:'0',balDec:'.00',archived:true})" style="cursor:pointer">
-                <div class="acct-av">
-                  <div class="acct-av-inner"><img src="assets/space-thailand.webp" alt="Europe 2024"></div>
+            <!-- ── Archived spaces (in-card, Figma 4576-75140) ── -->
+            <div class="acct-archived-section">
+              <div class="acct-archived-toggle-group">
+                <div class="acct-archived-divider"></div>
+                <button class="btn btn--ghost btn--secondary btn--sm acct-archived-btn" onclick="toggleArchivedSpaces(this)">
+                  <span>Show archived spaces</span>
+                  <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:14px;transition:transform 0.25s var(--ease-out)"></span>
+                </button>
+              </div>
+              <div class="acct-archived-list" id="acctArchivedList">
+                <div class="acct-spaces-list acct-spaces-list--archived">
+
+                  <div class="acct-row" onclick="showAccountDetail({name:'Europe 2024',num:'1678 0987 9876 1102',balInt:'8,240',balDec:'.00',archived:true})" style="cursor:pointer">
+                    <div class="acct-av">
+                      <div class="acct-av-inner"><img loading="lazy" decoding="async" src="assets/space-thailand.webp" alt="Europe 2024"></div>
+                    </div>
+                    <div class="acct-info">
+                      <div class="acct-name">Europe 2024</div>
+                      <div class="acct-meta"><span class="acct-num">** 1102</span></div>
+                    </div>
+                    <div class="acct-amount">$8,240<span class="dec">.00</span></div>
+                  </div>
+
+                  <div class="acct-row" onclick="showAccountDetail({name:'Japan 2023',num:'1678 0987 9876 0431',balInt:'1,560',balDec:'.00',archived:true})" style="cursor:pointer">
+                    <div class="acct-av">
+                      <div class="acct-av-inner"><img loading="lazy" decoding="async" src="assets/space-moms.webp" alt="Japan 2023"></div>
+                    </div>
+                    <div class="acct-info">
+                      <div class="acct-name">Japan 2023</div>
+                      <div class="acct-meta"><span class="acct-num">** 0431</span></div>
+                    </div>
+                    <div class="acct-amount">$1,560<span class="dec">.00</span></div>
+                  </div>
+
                 </div>
-                <div class="acct-info">
-                  <div class="acct-name">Europe 2024</div>
-                  <div class="acct-meta"><span class="acct-num">** 1102</span></div>
-                </div>
-                <div class="acct-amount">$0<span class="dec">.00</span></div>
               </div>
             </div>
-          </div>
-          <button class="acct-archived-btn" onclick="toggleArchivedSpaces(this)">
-            <span>Show archived spaces</span>
-            <span class="ico ol" style="--ico:url('Icons/CaretDown.svg');--sz:14px;color:rgba(0,0,0,0.60);transition:transform 0.2s var(--ease-out)"></span>
-          </button>
-        </div>
+
+          </div><!-- /.acct-spaces-inner -->
+        </div><!-- /.acct-spaces -->
 
       </div><!-- /.acct-stack -->
     </div><!-- /.acct-scroll -->
@@ -445,15 +463,15 @@
           <div class="exp-section-label">Products</div>
           <div class="exp-icon-grid">
             <div class="exp-icon-item" onclick="showCards('all')">
-              <div class="exp-icon-btn"><img src="assets/2237515d-839d-4361-9453-3e55bdb32872.webp" alt=""></div>
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/2237515d-839d-4361-9453-3e55bdb32872.webp" alt=""></div>
               <span class="exp-icon-label">Cards</span>
             </div>
             <div class="exp-icon-item">
-              <div class="exp-icon-btn"><img src="assets/21a90e51-a06f-4bc8-ac60-0eaf813ff658.webp" alt=""></div>
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/21a90e51-a06f-4bc8-ac60-0eaf813ff658.webp" alt=""></div>
               <span class="exp-icon-label">Tax<br>corner</span>
             </div>
             <div class="exp-icon-item">
-              <div class="exp-icon-btn"><img src="assets/ae0fa466-e82d-4d4f-8b7d-3a7241b186ad.webp" alt=""></div>
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/ae0fa466-e82d-4d4f-8b7d-3a7241b186ad.webp" alt=""></div>
               <span class="exp-icon-label">People<br>corner</span>
             </div>
           </div>
@@ -464,23 +482,23 @@
           <div class="exp-section-label">Others</div>
           <div class="exp-icon-grid">
             <div class="exp-icon-item" onclick="showBeneficiaries()">
-              <div class="exp-icon-btn"><img src="assets/48ab12f2-cc7b-4911-b72d-d11a73c115a6.webp" alt=""></div>
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/48ab12f2-cc7b-4911-b72d-d11a73c115a6.webp" alt=""></div>
               <span class="exp-icon-label">Beneficiaries</span>
             </div>
             <div class="exp-icon-item" onclick="showList()">
-              <div class="exp-icon-btn"><img src="assets/76f381ad-b7bd-4891-94e6-6bf971c2400f.webp" alt=""></div>
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/76f381ad-b7bd-4891-94e6-6bf971c2400f.webp" alt=""></div>
               <span class="exp-icon-label">Transactions</span>
             </div>
             <div class="exp-icon-item">
-              <div class="exp-icon-btn"><img src="assets/e7aebaf4-dd88-4830-8f9f-816102fa93ab.webp" alt=""></div>
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/e7aebaf4-dd88-4830-8f9f-816102fa93ab.webp" alt=""></div>
               <span class="exp-icon-label">Reports</span>
             </div>
             <div class="exp-icon-item">
-              <div class="exp-icon-btn"><img src="assets/5d19b1e6-3c75-46b9-9df4-09f09e652a6a.webp" alt=""></div>
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/5d19b1e6-3c75-46b9-9df4-09f09e652a6a.webp" alt=""></div>
               <span class="exp-icon-label">Profile</span>
             </div>
-            <div class="exp-icon-item">
-              <div class="exp-icon-btn"><img src="assets/7be4181e-4771-4430-b15f-1c36ed348775.webp" alt=""></div>
+            <div class="exp-icon-item" onclick="openSupport()">
+              <div class="exp-icon-btn"><img loading="lazy" decoding="async" src="assets/7be4181e-4771-4430-b15f-1c36ed348775.webp" alt=""></div>
               <span class="exp-icon-label">Contact support</span>
             </div>
           </div>
@@ -518,7 +536,7 @@
         <!-- Spend header (hidden when add card is active) -->
         <div class="cr-spend-hdr" id="crSpendHdr">
           <div class="cr-cardname">
-            <img class="cr-cardname-av" src="assets/space-usd-checking.webp" alt="">
+            <img loading="lazy" decoding="async" class="cr-cardname-av" src="assets/space-usd-checking.webp" alt="">
             <span class="cr-cardname-lbl" id="crCardName">Card name</span>
             <span class="cr-frozen-badge" id="crFrozenBadge">Frozen</span>
           </div>
@@ -544,7 +562,7 @@
               <div class="cr-tilt">
                 <div class="cr-flip">
                   <div class="cr-face cr-face-front">
-                    <img class="cr-front-bg" src="assets/card-physical-front.webp" alt="Banyan – Physical">
+                    <img loading="lazy" decoding="async" class="cr-front-bg" src="assets/card-physical-front.webp" alt="Banyan – Physical">
                     <div class="cr-front-ov cr-front-ov--physical">
                       <span class="cr-front-brand">
                         <span class="cr-front-leaf ico ol" style="--ico:url('Icons/Leaf.svg');--sz:15px;color:#fff"></span>
@@ -555,7 +573,7 @@
                     </div>
                     <div class="cr-card-frost">
                       <span class="cr-frost-name">Banyan card</span>
-                      <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
+                      <img loading="lazy" decoding="async" class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
                       <span class="cr-frost-visa"></span>
                     </div>
                     <span class="cr-frost-flash"></span>
@@ -575,7 +593,7 @@
                       <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
                     </div>
                     <div class="cr-bk-holder">Devanand Patel</div>
-                    <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
+                    <img loading="lazy" decoding="async" class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
                   </div>
                 </div>
               </div>
@@ -591,7 +609,7 @@
                     </div>
                     <div class="cr-card-frost">
                       <span class="cr-frost-name">Household</span>
-                      <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
+                      <img loading="lazy" decoding="async" class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
                       <span class="cr-frost-visa"></span>
                     </div>
                     <span class="cr-frost-flash"></span>
@@ -611,7 +629,7 @@
                       <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
                     </div>
                     <div class="cr-bk-holder">Devanand Patel</div>
-                    <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
+                    <img loading="lazy" decoding="async" class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
                   </div>
                 </div>
               </div>
@@ -620,10 +638,10 @@
               <div class="cr-tilt">
                 <div class="cr-flip">
                   <div class="cr-face cr-face-front">
-                    <img src="assets/card-back.webp" alt="Travel card – frozen">
+                    <img loading="lazy" decoding="async" src="assets/card-back.webp" alt="Travel card – frozen">
                     <div class="cr-card-frost">
                       <span class="cr-frost-name">Travel card</span>
-                      <img class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
+                      <img loading="lazy" decoding="async" class="cr-frost-snow" src="assets/snowflake-frost.svg" alt="">
                       <span class="cr-frost-visa"></span>
                     </div>
                     <span class="cr-frost-flash"></span>
@@ -643,7 +661,7 @@
                       <span class="cr-bk-wave ico ol" style="--ico:url('Icons/ContactlessPayment.svg');--sz:18px;color:rgba(255,255,255,0.72)"></span>
                     </div>
                     <div class="cr-bk-holder">Devanand Patel</div>
-                    <img class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
+                    <img loading="lazy" decoding="async" class="cr-bk-visa" src="assets/visa-white.svg" alt="VISA">
                   </div>
                 </div>
               </div>
@@ -712,19 +730,19 @@
     <div class="cr-spaces" role="group" aria-label="Switch space">
       <div class="cr-spaces-pill" id="crSpacesPill">
         <button class="cr-space cr-space-sel" type="button" aria-pressed="true" onclick="crSelectSpace(this)">
-          <span class="cr-space-av"><img src="assets/space-all.webp" alt=""></span>
+          <span class="cr-space-av"><img loading="lazy" decoding="async" src="assets/space-all.webp" alt=""></span>
           <span class="cr-space-lbl">All spaces</span>
         </button>
         <button class="cr-space" type="button" aria-pressed="false" onclick="crSelectSpace(this)">
-          <span class="cr-space-av"><img src="assets/space-usd-checking.webp" alt=""></span>
+          <span class="cr-space-av"><img loading="lazy" decoding="async" src="assets/space-usd-checking.webp" alt=""></span>
           <span class="cr-space-lbl">USD Checking</span>
         </button>
         <button class="cr-space" type="button" aria-pressed="false" onclick="crSelectSpace(this)">
-          <span class="cr-space-av"><img src="assets/space-thailand.webp" alt=""></span>
+          <span class="cr-space-av"><img loading="lazy" decoding="async" src="assets/space-thailand.webp" alt=""></span>
           <span class="cr-space-lbl">Thailand holiday</span>
         </button>
         <button class="cr-space" type="button" aria-pressed="false" onclick="crSelectSpace(this)">
-          <span class="cr-space-av"><img src="assets/space-moms.webp" alt=""></span>
+          <span class="cr-space-av"><img loading="lazy" decoding="async" src="assets/space-moms.webp" alt=""></span>
           <span class="cr-space-lbl">Mom's expenses</span>
         </button>
       </div>
@@ -886,7 +904,7 @@
             <div class="ctps-line ctps-line--tap" onclick="openCtplAcctPicker()">
               <div class="ctps-line-lbl">Space</div>
               <div class="ctps-box">
-                <img id="ctplAcctIcon" src="assets/space-usd-checking.webp" class="ctps-box-ic" alt="">
+                <img loading="lazy" decoding="async" id="ctplAcctIcon" src="assets/space-usd-checking.webp" class="ctps-box-ic" alt="">
                 <span class="ctps-box-val" id="ctplAcctLabel">USD Checking (•• 7654)</span>
               </div>
             </div>
@@ -1044,7 +1062,7 @@
   <div class="screen hb" id="sm-landing">
 
     <!-- Background image -->
-    <div class="sm-botanical-bg"><img src="beneBG.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="beneBG.webp" alt=""></div>
 
     <!-- Header: back + sending now + compare rate -->
     <div class="sm-l-header">
@@ -1140,7 +1158,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-purple-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-purple-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">AK</span>
               </div>
@@ -1155,7 +1173,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-orange-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-orange-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">RR</span>
               </div>
@@ -1170,7 +1188,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-purple-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-purple-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">SM</span>
               </div>
@@ -1185,7 +1203,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-orange-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-orange-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">DP</span>
               </div>
@@ -1200,7 +1218,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-orange-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-orange-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">MJ</span>
               </div>
@@ -1215,7 +1233,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-purple-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-purple-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">KS</span>
               </div>
@@ -1230,7 +1248,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-orange-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-orange-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">AR</span>
               </div>
@@ -1245,7 +1263,7 @@
           <div class="bene-row">
             <div class="bene-row-left">
               <div class="bene-av" style="background:rgba(255,255,255,0.4)">
-                <img class="bene-av-photo" src="assets/blob-purple-v2.png" alt="">
+                <img loading="lazy" decoding="async" class="bene-av-photo" src="assets/blob-purple-v2.webp" alt="">
                 <div class="bene-av-glass"></div>
                 <span class="bene-av-txt">RV</span>
               </div>
@@ -1283,7 +1301,7 @@
     <div class="abene-scroll">
       <!-- Chat-screenshot illustration -->
       <div class="abene-illus">
-        <img class="abene-illus-img" src="assets/abene-chat.webp" alt="Example chat with bank account details">
+        <img loading="lazy" decoding="async" class="abene-illus-img" src="assets/abene-chat.webp" alt="Example chat with bank account details">
       </div>
 
       <h2 class="abene-headline">Have a screenshot or<br>the specifics in a message?</h2>
@@ -1514,7 +1532,7 @@
   ══════════════════════════════════════ -->
   <div class="screen hr" id="sm-amount">
     <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img src="BG-sendmoney.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
     <!-- Content (above botanical bg by DOM order) -->
     <div class="sma-scroll">
 
@@ -1546,7 +1564,7 @@
         <!-- Recipient -->
         <div class="sm2-recipient">
           <div class="sm2-mini-av" id="smRecipientAvatar">
-            <img class="sm2-mini-av-photo" src="assets/blob-orange-v2.png">
+            <img loading="lazy" decoding="async" class="sm2-mini-av-photo" src="assets/blob-orange-v2.webp">
             <div class="sm2-mini-av-glass"></div>
             <span class="sm2-mini-av-txt" id="smRecipientInitials">RR</span>
           </div>
@@ -1640,7 +1658,7 @@
   ══════════════════════════════════════ -->
   <div class="screen hr" id="sm-review">
     <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img src="BG-sendmoney.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
     <div class="smr-scroll">
 
       <!-- Header: back + close -->
@@ -1661,7 +1679,7 @@
             <!-- Recipient -->
             <div class="smr-recip">
               <div class="smr-av" id="smReviewAvatar">
-                <img class="smr-av-photo" id="smReviewAvPhoto" src="assets/blob-purple-v2.png" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;">
+                <img loading="lazy" decoding="async" class="smr-av-photo" id="smReviewAvPhoto" src="assets/blob-purple-v2.webp" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;">
                 <div class="smr-av-glass"></div>
                 <span class="smr-av-txt" id="smReviewRecipInitials">RR</span>
               </div>
@@ -1692,7 +1710,7 @@
                   <div class="smr-row">
                     <span class="smr-lbl">Exchange rate</span>
                     <div class="smr-exchange">
-                      <img class="smr-g-icon" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt="">
+                      <img loading="lazy" decoding="async" class="smr-g-icon" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt="">
                       <span class="smr-val">$1 = ₹91.78</span>
                     </div>
                   </div>
@@ -1871,7 +1889,7 @@
   ══════════════════════════════════════ -->
   <div class="screen hr" id="sm-progress">
     <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img src="BG-sendmoney.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
     <div class="smp-scroll">
 
       <!-- Card — state controlled by JS: smp-state1 (default) or smp-state2 -->
@@ -2129,7 +2147,7 @@
   ══════════════════════════════════════ -->
   <div class="screen hr" id="sm-success">
     <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img src="BG-sendmoney.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
     <div class="sms-scroll">
 
       <div class="smp-card-wrap" style="padding-top:52px">
@@ -2151,14 +2169,15 @@
           </div>
 
           <!-- Sections -->
-          <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
+          <div class="sms-body" id="smSuccessBody" style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
 
-            <!-- STATUS DETAILS — all 4 done, last one active -->
+            <!-- STATUS DETAILS — minimized (collapsed accordion) -->
             <div class="smp-sec-status" id="smAccStatus_s">
-              <div class="smp-sec-hdr smp-sec-hdr-open">
+              <div class="smp-sec-hdr" style="cursor:pointer" onclick="this.parentElement.classList.toggle('smp-acc-open')">
                 <span class="smp-sec-lbl">Status details</span>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 10L8 6L12 10" stroke="rgba(0,0,0,0.40)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <svg class="smp-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 10L8 6L12 10" stroke="rgba(0,0,0,0.40)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
+              <div class="smp-acc-body">
               <div class="smp-stepper">
                 <!-- Step 1: done -->
                 <div class="smp-step">
@@ -2216,15 +2235,17 @@
                   </div>
                 </div>
               </div>
+              </div>
             </div>
 
-            <!-- TRANSACTION DETAILS (collapsed by default) -->
-            <div class="smp-sec-txn" id="smAccSuccessTxn">
-              <div class="smp-sec-hdr" style="cursor:pointer" onclick="this.parentElement.classList.toggle('smp-acc-open')">
+            <!-- TRANSACTION DETAILS — open, dispenses like a bill -->
+            <div class="smp-sec-txn smp-acc-open" id="smAccSuccessTxn">
+              <div class="smp-sec-hdr smp-sec-hdr-open" style="cursor:pointer" onclick="this.parentElement.classList.toggle('smp-acc-open')">
                 <span class="smp-sec-lbl">Transaction details</span>
                 <svg class="smp-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 10L8 6L12 10" stroke="rgba(0,0,0,0.40)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </div>
-              <div class="smp-acc-body">
+              <div class="smp-acc-body sms-receipt">
+                <div class="sms-receipt-rows">
                 <div class="smp-acc-row"><span class="smp-acc-lbl">Recipient</span><span class="smp-acc-val" id="smSuccessRecip">Rohan Rathod</span></div>
                 <div class="smp-acc-row"><span class="smp-acc-lbl">Paid to</span><span class="smp-acc-val" id="smSuccessAcct">••7654 · HDFC Bank</span></div>
                 <div class="smp-acc-row"><span class="smp-acc-lbl">Amount sent</span><span class="smp-acc-val" id="smSuccessAmt">$1,000.00</span></div>
@@ -2232,6 +2253,7 @@
                 <div class="smp-acc-row"><span class="smp-acc-lbl">Fee</span><span class="smp-acc-val" style="color:var(--brand-primary)">Free</span></div>
                 <div class="smp-acc-row"><span class="smp-acc-lbl">From account</span><span class="smp-acc-val">USD Checking ••3214</span></div>
                 <div class="smp-acc-row" style="padding-bottom:8px"><span class="smp-acc-lbl">Transaction ID</span><span class="smp-acc-val" style="font-size:11px;color:rgba(0,0,0,0.45)">TXN-2026-BNY-8834</span></div>
+                </div>
               </div>
             </div>
 
@@ -2249,6 +2271,7 @@
       </div>
     </div><!-- /.sms-scroll -->
   </div><!-- /#sm-success -->
+
 
   <!-- Face ID sheet — Apple light-mode style -->
   <div id="faceScanOverlay" class="fsc-overlay">
@@ -2282,7 +2305,7 @@
        BENEFICIARIES
   ══════════════════════════════════════ -->
   <div class="screen hr" id="beneficiaries">
-    <div class="sm-botanical-bg"><img src="beneBG.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="beneBG.webp" alt=""></div>
     <div class="ben-scroll" id="benScroll">
 
       <!-- Header: back + title + New button -->
@@ -2363,7 +2386,7 @@
   ══════════════════════════════════════ -->
   <div class="screen hr" id="smw-amount">
     <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img src="BG-sendmoney.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
 
     <div class="smw-scroll">
       <!-- Header: back ← | rate pill + × close -->
@@ -2394,7 +2417,7 @@
           <!-- Recipient section -->
           <div class="smw-recip-section">
             <div class="smw-av" id="smwAvatar" style="background:rgba(255,255,255,0.4)">
-              <img class="smw-av-photo" src="assets/blob-orange-v2.png" alt="">
+              <img loading="lazy" decoding="async" class="smw-av-photo" src="assets/blob-orange-v2.webp" alt="">
               <span class="smw-av-txt" id="smwInitials">MS</span>
               <div class="smw-av-glass"></div>
             </div>
@@ -2429,7 +2452,7 @@
       <div class="smw-acct-row">
         <div class="smw-acct-left">
           <div class="smw-flag-wrap">
-            <img src="assets/d339463a-fec8-422d-9624-4fd7bf582f7e.svg" alt="US">
+            <img loading="lazy" decoding="async" src="assets/d339463a-fec8-422d-9624-4fd7bf582f7e.svg" alt="US">
           </div>
           <span class="smw-acct-name">USD Checking •• 3214</span>
           <div class="smw-acct-caret">
@@ -2484,7 +2507,7 @@
        WITHIN US — TRANSFER IN PROGRESS
   ══════════════════════════════════════ -->
   <div class="screen hr" id="smw-us-progress">
-    <div class="sm-botanical-bg"><img src="beneBG.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="beneBG.webp" alt=""></div>
     <div class="smp-scroll">
 
       <div class="smp-card-wrap" style="padding-top:52px">
@@ -2606,7 +2629,7 @@
        WITHIN US — SUCCESS
   ══════════════════════════════════════ -->
   <div class="screen hr" id="smw-us-success">
-    <div class="sm-botanical-bg"><img src="beneBG.png" alt=""></div>
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="beneBG.webp" alt=""></div>
     <div class="sms-scroll">
 
       <div class="smp-card-wrap" style="padding-top:52px">
@@ -2626,7 +2649,7 @@
             </div>
           </div>
 
-          <div style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
+          <div class="sms-body" id="smwsBody"><div class="sms-feed-inner" style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
 
             <!-- STATUS DETAILS — all done -->
             <div class="smp-sec-status smp-acc-open" id="smwsAccStatus">
@@ -2666,7 +2689,7 @@
               </div>
             </div>
 
-          </div>
+          </div></div>
         </div>
       </div>
 
@@ -2703,7 +2726,7 @@
          Image zooms out on scroll; progressive blur deepens toward the bottom. -->
     <div class="ad-hero-fixed" id="adHeroFixed">
       <div class="ad-hero-bg-wrap" id="adHeroBgWrap">
-        <img class="acct-hero-bg" src="assets/acct-det-hero-bg.webp?v=2" alt="">
+        <img loading="lazy" decoding="async" class="acct-hero-bg" src="assets/acct-det-hero-bg.webp?v=2" alt="">
       </div>
       <!-- Progressive blur: sharp until 20% height, ramps to 60px at the bottom -->
       <div class="ad-hero-blur ad-hero-blur-1"></div>
@@ -2734,42 +2757,29 @@
       <!-- ── Header card (single state) — transparent; fixed photo shows through ── -->
       <div class="ad-header-card" id="adMainCard">
 
-        <!-- Account flag / name / members / accordion — centred block -->
+        <!-- Centred balance header (Figma 4621-30811) -->
         <div class="ad-header-center">
-          <div class="ad-header-center-inner">
-            <div class="ad-flag" id="adAcctFlag"><img src="assets/space-usd-checking.webp" alt=""></div>
-            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;width:100%">
-              <div class="ad-acct-name" id="adAcctName">USD Checking</div>
-              <div class="ad-acct-members">
-                <div class="ad-member" style="background:#6469b6">RR</div>
-                <div class="ad-member" style="background:#a28f30">IK</div>
-                <div class="ad-member" style="background:#5a8c6e">OH</div>
-              </div>
-              <div class="ad-acct-accordion" id="adAcctAccordion" onclick="openAdSheet()">
-                <span class="ad-acct-accordion-lbl" id="adAcctAccordionLbl">Show account details</span>
-                <span class="ico ol ad-acct-accordion-caret" style="--ico:url('Icons/CaretDown.svg');--sz:12px;color:rgba(0,0,0,0.40)"></span>
-              </div>
-              <span class="ad-archived-badge" id="adArchivedBadge">Archived</span>
-              <span id="adAcctNum" style="display:none">1678 0987 9876 3214</span>
+          <div class="ad-header-center-inner ad-balhead">
+            <div class="ad-balhead-row">
+              <span class="ad-balhead-leaf" id="adAcctFlag"><img loading="lazy" decoding="async" src="assets/space-usd-checking.webp" alt=""></span>
+              <span class="ad-balhead-lbl"><span id="adAcctName">USD Checking</span> Balance</span>
             </div>
-          </div>
-        </div>
-
-        <!-- Balance -->
-        <div class="ad-balance-section">
-          <div class="ad-balance-lbl">AVAILABLE BALANCE</div>
-          <div style="display:flex;align-items:center;justify-content:space-between">
             <div class="ad-balance-amount">
               <span class="ad-bal-sym">$</span>
               <span class="ad-bal-int" id="adBalInt">137,978</span>
               <span class="ad-bal-dec" id="adBalDec">.00</span>
             </div>
-            <button class="btn btn--secondary btn--xs">
-              <span class="ico ol" style="--ico:url('Icons/Plus.svg');color:rgba(0,0,0,0.80)"></span>
-              <span>Add funds</span>
+            <button class="btn btn--secondary btn--sm ad-add-money" onclick="openSendMoney && openSendMoney()">
+              <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.80)"></span>
+              <span>Add money</span>
             </button>
+            <span class="ad-archived-badge" id="adArchivedBadge">Archived</span>
+            <span id="adAcctNum" style="display:none">1678 0987 9876 3214</span>
           </div>
-          <!-- Pending transactions line (shown in ad-state-pending) -->
+        </div>
+
+        <!-- Balance section: pending line only (shown in ad-state-pending) -->
+        <div class="ad-balance-section">
           <div class="ad-pending-line" id="adPendingLine">
             <span id="adPendingAmt">$198,987 in pending transactions</span>
             <span class="ico ol" style="--ico:url('Icons/CaretRight.svg');--sz:12px;color:#c17c14"></span>
@@ -2778,7 +2788,7 @@
 
         <!-- Insufficient balance banner (shown in ad-state-warn) -->
         <div class="ad-banner ad-banner--warn" id="adBannerWarn">
-          <img class="ad-banner-icon" src="assets/case-warn-icon.webp" alt="">
+          <img loading="lazy" decoding="async" class="ad-banner-icon" src="assets/case-warn-icon.webp" alt="">
           <div class="ad-banner-body">
             <div class="ad-banner-texts">
               <div class="ad-banner-title">Insufficient balance</div>
@@ -2799,7 +2809,7 @@
 
         <!-- Failed transactions banner (shown in ad-state-error) -->
         <div class="ad-banner ad-banner--error" id="adBannerError">
-          <img class="ad-banner-icon" src="assets/case-error-icon.webp" alt="">
+          <img loading="lazy" decoding="async" class="ad-banner-icon" src="assets/case-error-icon.webp" alt="">
           <div class="ad-banner-body">
             <div class="ad-banner-texts">
               <div class="ad-banner-title" id="adBannerErrorTitle">3 Transactions failed</div>
@@ -2825,7 +2835,7 @@
       </div><!-- /.ad-header-card -->
 
       <!-- ── Transactions card ── -->
-      <div class="home-tx" style="margin-top:-78px">
+      <div class="home-tx" style="margin-top:-53px">
         <div id="adTxList"></div>
       </div>
 
@@ -2846,11 +2856,11 @@
           <div style="position:relative;width:351px;height:263px;margin-bottom:-120px;flex-shrink:0">
             <!-- Back card: Card 2 (virtual, dark) -->
             <div style="position:absolute;top:8px;left:calc(50% - 0.5px);transform:translateX(-50%);width:319px;height:200px;border-radius:16px;overflow:hidden;box-shadow:0px -3.646px 25.52px 0px rgba(0,0,0,0.25)">
-              <img src="assets/0564b0cd-2f4e-4e37-a8f8-f8b152e2bede.webp" style="width:100%;height:100%;object-fit:cover;border-radius:16px" alt="Card 2">
+              <img loading="lazy" decoding="async" src="assets/0564b0cd-2f4e-4e37-a8f8-f8b152e2bede.webp" style="width:100%;height:100%;object-fit:cover;border-radius:16px" alt="Card 2">
             </div>
             <!-- Front card: Banyan physical -->
             <div style="position:absolute;top:35px;left:1px;width:350px;height:220px;border-radius:16px;overflow:hidden">
-              <img src="assets/b029f9f1-2d18-49e3-aaaa-bd21cdf6b5d3.webp" style="width:100%;height:100%;object-fit:cover" alt="Banyan">
+              <img loading="lazy" decoding="async" src="assets/b029f9f1-2d18-49e3-aaaa-bd21cdf6b5d3.webp" style="width:100%;height:100%;object-fit:cover" alt="Banyan">
             </div>
           </div>
 
@@ -2863,7 +2873,7 @@
                  This restores the crisp card image in the arch area on top of the blurred layer. -->
             <div style="position:absolute;top:-108px;left:1px;width:350px;height:220px;overflow:hidden;border-radius:16px;
                         clip-path:path('M 87 108 L 288 108 C 272 108 259 121 251 135 C 239 157 215 172 188 172 C 161 172 137 157 124 135 C 116 121 103 108 87 108 Z')">
-              <img src="assets/b029f9f1-2d18-49e3-aaaa-bd21cdf6b5d3.webp" style="width:100%;height:100%;object-fit:cover" alt="Banyan">
+              <img loading="lazy" decoding="async" src="assets/b029f9f1-2d18-49e3-aaaa-bd21cdf6b5d3.webp" style="width:100%;height:100%;object-fit:cover" alt="Banyan">
             </div>
 
             <!-- Visual frosted tint + gradient border (arch area is transparent in this SVG) -->
@@ -3261,7 +3271,7 @@
 
     <!-- Background layers — decorative, hidden from AT -->
     <div class="ag-bg" aria-hidden="true">
-      <img src="assets/home-bg.webp?v=3" alt="">
+      <img loading="lazy" decoding="async" src="assets/home-bg.webp?v=3" alt="">
       <div class="ag-bg-blur"></div>
       <div class="ag-bg-white"></div>
     </div>
@@ -3272,6 +3282,7 @@
     <!-- Glow orbs — decorative -->
     <div class="ag-glow" aria-hidden="true"></div>
     <div class="ag-glow-inner" aria-hidden="true"></div>
+    <div class="ag-glow-bottom" aria-hidden="true"></div>
 
     <!-- Top nav bar -->
     <nav class="ag-nav" aria-label="Agent navigation">
@@ -3291,77 +3302,52 @@
     <div class="ag-usecase-scrim" id="agUseCaseScrim" onclick="agCloseUseCaseMenu()"></div>
     <div class="ag-usecase-menu" id="agUseCaseMenu" role="menu" aria-label="Switch use case">
       <div class="ag-usecase-menu-head">Agent use cases</div>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('send')">
-        <span class="ag-usecase-ic" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:16px;color:#46882B"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">Send money abroad</span><span class="ag-usecase-s">Transfer with live FX</span></span>
-      </button>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('vigilance')">
-        <span class="ag-usecase-ic" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url('Icons/ShieldWarning.svg');--sz:16px;color:#C17C14"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">Awareness & vigilance</span><span class="ag-usecase-s">Catch unusual activity</span></span>
-      </button>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('bills')">
-        <span class="ag-usecase-ic" style="background:rgba(56,100,200,0.12)"><span class="ico" style="--ico:url('Icons/CalendarCheck.svg');--sz:16px;color:#2f5bb0"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">Bills & recurring</span><span class="ag-usecase-s">Stay ahead of what's due</span></span>
-      </button>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('cashflow')">
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('forecast')">
         <span class="ag-usecase-ic" style="background:rgba(70,136,43,0.12)"><span class="ico" style="--ico:url('Icons/ChartLineUp.svg');--sz:16px;color:#46882B"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">Cashflow & forecast</span><span class="ag-usecase-s">Plan ahead with confidence</span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">What's coming up</span><span class="ag-usecase-s">Will I have enough?</span></span>
       </button>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('goals')">
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('pay')">
+        <span class="ag-usecase-ic" style="background:rgba(56,100,200,0.12)"><span class="ico" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:16px;color:#2f5bb0"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Pay someone safely</span><span class="ag-usecase-s">People, bills, recurring</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('protect')">
+        <span class="ag-usecase-ic" style="background:rgba(193,124,20,0.12)"><span class="ico" style="--ico:url('Icons/ShieldWarning.svg');--sz:16px;color:#C17C14"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Protect my card & spend</span><span class="ag-usecase-s">Freeze, flag, block</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('explain')">
+        <span class="ag-usecase-ic" style="background:rgba(0,150,150,0.12)"><span class="ico" style="--ico:url('Icons/Question.svg');--sz:16px;color:#0a8a8a"></span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">What is this charge?</span><span class="ag-usecase-s">Explain, track, resolve</span></span>
+      </button>
+      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('autopilot')">
         <span class="ag-usecase-ic" style="background:rgba(130,60,180,0.12)"><span class="ico" style="--ico:url('Icons/Target.svg');--sz:16px;color:#823CB4"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">Savings & goals</span><span class="ag-usecase-s">Turn intent into a plan</span></span>
-      </button>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('family')">
-        <span class="ag-usecase-ic" style="background:rgba(217,80,144,0.12)"><span class="ico" style="--ico:url('Icons/UsersThree.svg');--sz:16px;color:#c4477f"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">Family operations</span><span class="ag-usecase-s">Allowance, approvals, cards</span></span>
-      </button>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('payee')">
-        <span class="ag-usecase-ic" style="background:rgba(0,150,150,0.12)"><span class="ico" style="--ico:url('Icons/UserCheck.svg');--sz:16px;color:#0a8a8a"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">Beneficiary & payees</span><span class="ag-usecase-s">Verify before you send</span></span>
-      </button>
-      <div class="ag-usecase-sep" role="separator"></div>
-      <button class="ag-usecase-item" role="menuitem" onclick="agPickUseCase('gallery')">
-        <span class="ag-usecase-ic" style="background:rgba(0,0,0,0.06)"><span class="ico" style="--ico:url('Icons/Cards.svg');--sz:16px;color:var(--text-secondary)"></span></span>
-        <span class="ag-usecase-text"><span class="ag-usecase-t">All card styles</span><span class="ag-usecase-s">Browse every component</span></span>
+        <span class="ag-usecase-text"><span class="ag-usecase-t">Financial autopilot</span><span class="ag-usecase-s">Rules, alerts, automation</span></span>
       </button>
     </div>
 
     <!-- Identity hero — decorative, not read by AT -->
     <div class="ag-hero" id="agHero" aria-hidden="true">
-      <div class="ag-hero-orb">
+      <div class="ag-hero-orb ag-hero-orb--green">
         <div class="ag-hero-orb-inner">
           <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
         </div>
       </div>
-      <span class="ag-hero-name">Banyan</span>
-      <span class="ag-hero-sub">Ask me anything about<br>your accounts</span>
+      <span class="ag-hero-name">I am Anya,<br>Banyan’s AI agent.</span>
+      <span class="ag-hero-sub">What can I do for you today?</span>
     </div>
 
-    <!-- Suggestion chips -->
-    <div class="ag-chips" id="agChips" role="group" aria-label="Suggested questions">
-      <button class="ag-chip" style="transition-delay:280ms" onclick="agentChip(this)" data-text="Send $500 to Maya Sarini">
-        <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/ArrowFatLinesUp.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
-        </div>
-        <span class="ag-chip-label">Send $500 to Maya</span>
+    <!-- Suggested actions (Figma 5266-32174) -->
+    <div class="ag-actions" id="agChips" role="group" aria-label="Suggested actions">
+      <button class="ag-action" style="transition-delay:300ms" onclick="agentChip(this)" data-text="Show my scheduled payments">
+        <span class="ag-action-ic" aria-hidden="true"><img loading="lazy" decoding="async" src="assets/agent-ic-scheduled.webp" alt=""></span>
+        <span class="ag-action-label">Scheduled<br>payments</span>
       </button>
-      <button class="ag-chip" style="transition-delay:340ms" onclick="agentChip(this)" data-text="Freeze my travel card">
-        <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/Snowflake.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
-        </div>
-        <span class="ag-chip-label">Freeze my travel card</span>
+      <button class="ag-action" style="transition-delay:360ms" onclick="agentChip(this)" data-text="Send money">
+        <span class="ag-action-ic" aria-hidden="true"><img loading="lazy" decoding="async" src="assets/agent-ic-send.webp" alt=""></span>
+        <span class="ag-action-label">Send<br>money</span>
       </button>
-      <button class="ag-chip" style="transition-delay:400ms" onclick="agentChip(this)" data-text="Anything I should review?">
-        <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/ShieldWarning.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
-        </div>
-        <span class="ag-chip-label">Anything I should review?</span>
-      </button>
-      <button class="ag-chip" style="transition-delay:460ms" onclick="agentChip(this)" data-text="Show recent spending">
-        <div class="ag-chip-icon" aria-hidden="true">
-          <span class="ico ol" style="--ico:url('Icons/ChartLine.svg');--sz:14px;color:rgba(70,136,43,0.82)"></span>
-        </div>
-        <span class="ag-chip-label">Recent spending</span>
+      <button class="ag-action" style="transition-delay:420ms" onclick="agentChip(this)" data-text="Anything I should review?">
+        <span class="ag-action-ic" aria-hidden="true"><img loading="lazy" decoding="async" src="assets/agent-ic-review.webp" alt=""></span>
+        <span class="ag-action-label">Anything to review</span>
       </button>
     </div>
 
@@ -3374,10 +3360,28 @@
       <div class="ag-msgs-spacer" aria-hidden="true"></div>
     </div>
 
-    <!-- Input card -->
+    <!-- Voice listening: warm veil + glossy green orb above the composer -->
+    <div class="ag-listen-veil" aria-hidden="true"></div>
+    <div class="ag-orb" id="agVoiceOrb" aria-hidden="true"><div class="ag-orb-ball"><video src="ai-orb.mp4" autoplay loop muted playsinline></video></div></div>
+
+    <!-- Input card (floats over the conversation — no bottom scrim/blur band) -->
     <div class="ag-input-card" id="agentInputCard">
       <label for="agentField" class="visually-hidden">Message Banyan</label>
-      <button class="ag-input-btn ag-input-plus" aria-label="Attach file">
+      <!-- Uploaded attachments (images / files) — shown above the input row -->
+      <div class="ag-attach" id="agAttach" aria-label="Attachments"></div>
+
+      <!-- Voice dictation state: stop · live waveform · send -->
+      <div class="ag-voice" id="agVoice" role="group" aria-label="Voice recording">
+        <button class="ag-input-btn ag-voice-stopbtn" type="button" onclick="agVoiceCancel()" aria-label="Stop recording">
+          <span class="ag-voice-sq" aria-hidden="true"></span>
+        </button>
+        <div class="ag-voice-wave" id="agVoiceWave" aria-hidden="true"></div>
+        <button class="ag-input-btn ag-send ag-voice-sendbtn active" type="button" onclick="agVoiceStop()" aria-label="Send">
+          <span class="ico" style="--ico:url('Icons/PaperPlaneTilt.svg');--sz:15px;color:#fff" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <button class="ag-input-btn ag-input-plus" aria-label="Attach file" onclick="agAttachFiles()">
         <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span>
       </button>
       <textarea
@@ -3392,13 +3396,68 @@
         onkeydown="agentKeydown(event)"
       ></textarea>
       <div class="ag-input-btns-r" role="group" aria-label="Message actions">
-        <button class="ag-input-btn" aria-label="Voice input">
-          <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:14px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span>
+        <button class="ag-input-btn" aria-label="Voice input" onclick="agVoiceStart()">
+          <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:14px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span>
         </button>
         <button class="ag-input-btn ag-send" id="agentSend" aria-label="Send message" aria-disabled="true" onclick="agentSend()">
-          <span class="ico ol" style="--ico:url('Icons/ArrowUp.svg');--sz:14px;color:rgba(0,0,0,0.5)" aria-hidden="true"></span>
+          <span class="ico" style="--ico:url('Icons/PaperPlaneTilt.svg');--sz:15px;color:rgba(0,0,0,0.5)" aria-hidden="true"></span>
         </button>
       </div>
+    </div>
+
+    <!-- iOS-style attachment picker — choose photos / files to attach -->
+    <div class="ag-picker-scrim" id="agPickerScrim" onclick="agCloseAttachSheet()"></div>
+    <div class="ag-picker" id="agPickerSheet" role="dialog" aria-modal="true" aria-label="Add attachment">
+      <div class="ag-picker-grab" aria-hidden="true"></div>
+      <div class="ag-picker-title">Add attachment</div>
+
+      <div class="ag-picker-sec-label">Photos</div>
+      <div class="ag-picker-photos">
+        <button class="ag-picker-photo" type="button" data-type="img" data-src="assets/space-thailand.webp">
+          <img loading="lazy" decoding="async" src="assets/space-thailand.webp" alt="Beach photo"><span class="ag-picker-check" aria-hidden="true"></span>
+        </button>
+        <button class="ag-picker-photo" type="button" data-type="img" data-src="assets/space-wedding.webp">
+          <img loading="lazy" decoding="async" src="assets/space-wedding.webp" alt="Wedding photo"><span class="ag-picker-check" aria-hidden="true"></span>
+        </button>
+        <button class="ag-picker-photo" type="button" data-type="img" data-src="assets/space-moms2.webp">
+          <img loading="lazy" decoding="async" src="assets/space-moms2.webp" alt="Family photo"><span class="ag-picker-check" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="ag-picker-sec-label">Files</div>
+      <div class="ag-picker-files">
+        <button class="ag-picker-file" type="button" data-type="pdf" data-name="Bank statement" data-sub="PDF · 248 KB">
+          <span class="ag-picker-file-ic"><span class="ico ol" style="--ico:url('Icons/FilePdf.svg');--sz:18px;color:#C82C2C" aria-hidden="true"></span></span>
+          <span class="ag-picker-file-info"><span class="ag-picker-file-name">Bank statement</span><span class="ag-picker-file-sub">PDF · 248 KB</span></span>
+          <span class="ag-picker-file-check" aria-hidden="true"></span>
+        </button>
+        <button class="ag-picker-file" type="button" data-type="pdf" data-name="Flight invoice" data-sub="PDF · 96 KB">
+          <span class="ag-picker-file-ic"><span class="ico ol" style="--ico:url('Icons/FilePdf.svg');--sz:18px;color:#C82C2C" aria-hidden="true"></span></span>
+          <span class="ag-picker-file-info"><span class="ag-picker-file-name">Flight invoice</span><span class="ag-picker-file-sub">PDF · 96 KB</span></span>
+          <span class="ag-picker-file-check" aria-hidden="true"></span>
+        </button>
+        <button class="ag-picker-file" type="button" data-type="pdf" data-name="Lease agreement" data-sub="PDF · 1.2 MB">
+          <span class="ag-picker-file-ic"><span class="ico ol" style="--ico:url('Icons/FilePdf.svg');--sz:18px;color:#C82C2C" aria-hidden="true"></span></span>
+          <span class="ag-picker-file-info"><span class="ag-picker-file-name">Lease agreement</span><span class="ag-picker-file-sub">PDF · 1.2 MB</span></span>
+          <span class="ag-picker-file-check" aria-hidden="true"></span>
+        </button>
+      </div>
+
+      <div class="ag-picker-actions">
+        <button class="ag-picker-cancel" type="button" onclick="agCloseAttachSheet()">Cancel</button>
+        <button class="ag-picker-add" type="button" id="agPickerAdd" onclick="agConfirmAttach()" disabled>Add</button>
+      </div>
+    </div>
+
+    <!-- Action sheet: change purpose / space / schedule on the transfer card -->
+    <div class="ag-act-scrim" id="agActScrim" onclick="agCloseActionSheet()"></div>
+    <div class="ag-act-sheet" id="agActSheet" role="dialog" aria-modal="true" aria-label="Choose an option">
+      <div class="ag-act-card">
+        <div class="ag-act-grab" aria-hidden="true"></div>
+        <div class="ag-act-title" id="agActTitle">Choose</div>
+        <div class="ag-act-list" id="agActList"></div>
+      </div>
+      <button class="ag-act-cancel" type="button" onclick="agCloseActionSheet()">Cancel</button>
     </div>
 
     <!-- Jump-to-latest — appears when scrolled up from the bottom -->
@@ -3431,7 +3490,7 @@
       <!-- Mini card preview — appears once the user has named the card -->
       <div class="ca-preview" id="caPreview" aria-hidden="true">
         <div class="ca-preview-card">
-          <img src="assets/card-create-preview.webp" alt="" class="ca-preview-img">
+          <img loading="lazy" decoding="async" src="assets/card-create-preview.webp" alt="" class="ca-preview-img">
           <div class="ca-preview-name" id="caPreviewName">New card</div>
           <div class="ca-preview-limit" id="caPreviewLimit" style="display:none"></div>
         </div>
@@ -3560,7 +3619,7 @@
         <div class="ai-context-row" id="aiContextRow">
           <div class="ai-chip">
             <div class="ai-chip-avatar">
-              <img src="assets/space-usd-checking.webp" alt="USD Checking">
+              <img loading="lazy" decoding="async" src="assets/space-usd-checking.webp" alt="USD Checking">
             </div>
             <span class="ai-chip-label">USD Checking</span>
             <button class="ai-chip-close" onclick="aiRemoveChip(this)" aria-label="Remove">
@@ -3620,20 +3679,20 @@
           <!-- Inactive: All spaces / money bag (left) -->
           <div class="bnav-pk-av-wrap" onclick="bnavPaySelect('all')">
             <div class="bnav-pk-av">
-              <div class="bnav-pk-av-inner"><img src="assets/space-all.webp" alt=""></div>
+              <div class="bnav-pk-av-inner"><img loading="lazy" decoding="async" src="assets/space-all.webp" alt=""></div>
             </div>
           </div>
 
           <!-- Active selected account (centre, flex-1) -->
           <div class="bnav-pk-active" id="bnavPkActive" onclick="bnavPaySelect(_bnavPickerSelected)">
-            <div class="bnav-pk-active-av"><img id="bnavPkActiveImg" src="assets/space-usd-checking.webp" alt=""></div>
+            <div class="bnav-pk-active-av"><img loading="lazy" decoding="async" id="bnavPkActiveImg" src="assets/space-usd-checking.webp" alt=""></div>
             <span class="bnav-pk-active-lbl" id="bnavPkActiveLbl">USD Checking</span>
           </div>
 
           <!-- Inactive: Thailand holiday (right) -->
           <div class="bnav-pk-av-wrap" onclick="bnavPaySelect('Thailand holiday')">
             <div class="bnav-pk-av">
-              <div class="bnav-pk-av-inner"><img src="assets/space-thailand.webp" alt=""></div>
+              <div class="bnav-pk-av-inner"><img loading="lazy" decoding="async" src="assets/space-thailand.webp" alt=""></div>
             </div>
           </div>
 
@@ -4076,9 +4135,9 @@
     <div class="cr-sheet-handle"></div>
     <div class="cr-frz-body">
       <div class="cr-frozen-card">
-        <img src="assets/card-back.webp" alt="">
+        <img loading="lazy" decoding="async" src="assets/card-back.webp" alt="">
         <div class="cr-frozen-frost"></div>
-        <img class="cr-frost-snow cr-frozen-snow" src="assets/snowflake-frost.svg" alt="">
+        <img loading="lazy" decoding="async" class="cr-frost-snow cr-frozen-snow" src="assets/snowflake-frost.svg" alt="">
       </div>
       <div class="cr-frz-texts">
         <div class="cr-frz-title">Card frozen</div>
@@ -4148,7 +4207,7 @@
       <!-- Card preview + Virtual/Physical toggle -->
       <div class="cc-card-area">
         <div class="cc-card-preview">
-          <img src="assets/card-create-preview.webp" alt="Card preview" class="cc-card-img">
+          <img loading="lazy" decoding="async" src="assets/card-create-preview.webp" alt="Card preview" class="cc-card-img">
         </div>
         <div class="cc-seg-wrap">
           <div class="cc-seg" id="ccSeg">
@@ -4195,7 +4254,7 @@
         <!-- Account selector -->
         <div class="cc-input-row cc-input-row--icon">
           <div class="cc-acct-icon">
-            <img src="assets/card-create-bank-icon.webp" alt="">
+            <img loading="lazy" decoding="async" src="assets/card-create-bank-icon.webp" alt="">
           </div>
           <div class="cc-input-stack">
             <span class="cc-input-label">Choose where to create the card</span>
@@ -4240,9 +4299,67 @@
   <!-- Toast notification -->
   <div id="toastNotif" class="toast-notif"><span id="toastText"></span></div>
 
+  <!-- Contact support screen -->
+  <div id="support-screen" class="support-screen" role="dialog" aria-modal="true" aria-label="Contact support" aria-hidden="true">
+    <nav class="support-nav" aria-label="Support navigation">
+      <button class="ag-nav-btn" aria-label="Menu"><span class="ico ol" style="--ico:url('Icons/DotsNine.svg');--sz:18px" aria-hidden="true"></span></button>
+      <button class="ag-nav-btn" onclick="closeSupport()" aria-label="Close"><span class="ico ol" style="--ico:url('Icons/X.svg');--sz:14px" aria-hidden="true"></span></button>
+    </nav>
+    <div class="support-body">
+      <div class="support-orb"><video src="ai-orb.mp4" autoplay loop muted playsinline></video></div>
+      <h2 class="support-title">Hi Tony.<br>Looking for help?</h2>
+      <p class="support-sub">Miles, the Banyan AI agent, solves 95% of queries in <b>under a minute</b> and can connect you to a human if needed.</p>
+      <button class="support-input" type="button" onclick="openSupportChat()">
+        <span class="ag-input-btn"><span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span></span>
+        <span class="support-input-ph">Ask Banyan…</span>
+        <span class="ag-input-btn"><span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:14px;color:rgba(0,0,0,0.55)" aria-hidden="true"></span></span>
+      </button>
+      <div class="support-or"><span class="support-or-line"></span><span class="support-or-txt">OR</span><span class="support-or-line"></span></div>
+      <div class="support-actions">
+        <button class="support-act" type="button" onclick="showToast('Opening email to support…')">
+          <span class="ico ol" style="--ico:url('Icons/EnvelopeOpen.svg');--sz:14px;color:var(--text-primary)" aria-hidden="true"></span>Email us
+        </button>
+        <button class="support-act" type="button" onclick="showToast('Callback requested — we’ll ring you shortly')">
+          <span class="ico ol" style="--ico:url('Icons/Phone.svg');--sz:14px;color:var(--text-primary)" aria-hidden="true"></span>Request a callback
+        </button>
+      </div>
+      <button class="support-cases-link" type="button" onclick="openSupportCases()">View your support cases</button>
+    </div>
+  </div>
+
+  <!-- Support: case list -->
+  <div id="support-cases" class="support-screen sup-screen" role="dialog" aria-modal="true" aria-label="Support cases" aria-hidden="true">
+    <nav class="support-nav sup-nav">
+      <button class="ag-nav-btn" onclick="closeSupportCases()" aria-label="Back"><span class="ico ol" style="--ico:url('Icons/CaretLeft.svg');--sz:16px" aria-hidden="true"></span></button>
+      <span class="sup-nav-title">Support</span>
+      <span class="sup-nav-spacer"></span>
+    </nav>
+    <div class="sup-scroll" id="supportCasesBody"></div>
+  </div>
+
+  <!-- Support: case detail -->
+  <div id="support-case" class="support-screen sup-screen" role="dialog" aria-modal="true" aria-label="Support case" aria-hidden="true">
+    <nav class="support-nav sup-nav">
+      <button class="ag-nav-btn" onclick="closeSupportCase()" aria-label="Back"><span class="ico ol" style="--ico:url('Icons/CaretLeft.svg');--sz:16px" aria-hidden="true"></span></button>
+      <span class="sup-nav-title" id="supCaseNavTitle">Case</span>
+      <span class="sup-nav-spacer"></span>
+    </nav>
+    <div class="sup-scroll" id="supportCaseBody"></div>
+    <!-- Sticky reply composer — single line, grows with content -->
+    <div class="sup-composer-bar" id="supComposerBar" hidden>
+      <button class="sup-attach" type="button" onclick="showToast('Attach a file (prototype)')" aria-label="Attach evidence"><span class="ico ol" style="--ico:url('Icons/Paperclip.svg');--sz:15px;color:rgba(0,0,0,0.5)" aria-hidden="true"></span></button>
+      <textarea id="supReplyField" class="sup-reply-input" rows="1" placeholder="Reply to Banyan support…" oninput="supReplyGrow(this)" onkeydown="supReplyKey(event)"></textarea>
+      <button class="sup-send-btn" type="button" onclick="supportReply()" aria-label="Send reply"><span class="ico" style="--ico:url('Icons/PaperPlaneTilt.svg');--sz:15px;color:#fff" aria-hidden="true"></span></button>
+    </div>
+  </div>
+
+  <!-- Ticket creation sheet -->
+  <div class="sup-create-scrim" id="supCreateScrim" onclick="closeTicketCreate()"></div>
+  <div class="sup-create" id="supCreate" role="dialog" aria-modal="true" aria-label="Create support ticket"></div>
+
 </div>
 
-  <script src="app.js?v=148"></script>
+  <script defer src="app.js?v=212"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');
