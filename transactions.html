@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=354">
+  <link rel="stylesheet" href="styles.css?v=434">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -48,7 +48,7 @@
     <!-- Fixed hero photo — zooms out + progressively blurs as content scrolls over it -->
     <div class="home-hero-fixed" id="homeHeroFixed">
       <div class="home-hero-bg-wrap" id="homeHeroBgWrap">
-        <img decoding="async" fetchpriority="high" class="home-hero-bg" src="assets/home-bg.webp?v=3" alt="">
+        <img decoding="async" fetchpriority="high" class="home-hero-bg home-hero-bg--sketch" src="assets/home-hero-kolkata.webp" alt="">
       </div>
       <div class="home-hero-blur home-hero-blur-1"></div>
       <div class="home-hero-blur home-hero-blur-2"></div>
@@ -64,14 +64,17 @@
         <div class="home-hero-av-inner"><span>SR</span></div>
       </div>
       <button class="home-hero-bell">
-        <span class="ico ol" style="--ico:url('Icons/BellRinging.svg');--sz:16px;color:rgba(0,0,0,0.70)"></span>
+        <span class="ico ol" style="--ico:url('Icons/Tray.svg');--sz:18px;color:rgba(0,0,0,0.70)"></span>
       </button>
     </div>
 
     <div class="home-scroll">
 
-      <!-- ── Greeting (over the photo) ── -->
+      <!-- ── Greeting (over the sketch) ── -->
       <div class="home-hero">
+        <div class="home-hero-orb" onclick="openHomeAgent()">
+          <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
+        </div>
         <div class="home-greeting">
           <span class="home-greeting-hi">Hello, Satya</span>
           <span class="home-greeting-ask">What brings you<br>to Banyan today?</span>
@@ -101,160 +104,145 @@
       <!-- ── Main content ── -->
       <div class="home-main">
 
-        <!-- ── The Banyan Daily ── -->
-        <div class="home-daily">
-          <h1 class="home-daily-mast">The Banyan Daily</h1>
-          <div class="home-daily-meta">
-            <span class="home-daily-label">Today's headlines</span>
-            <span class="home-daily-date">THURSDAY, JUNE 18</span>
-          </div>
-          <div class="home-daily-rule"></div>
-          <h2 class="home-daily-hl">3 items need you to act on them</h2>
-          <p class="home-daily-sub">Review, approve and add balance.</p>
-          <div class="home-act-scroll">
-            <button class="home-act-card" onclick="openHomeAgent()">
-              <img loading="lazy" decoding="async" class="home-act-bg" src="assets/home-act-netflix.webp" alt="">
-              <div class="home-act-grad"></div>
-              <div class="home-act-texts">
-                <p class="home-act-title">Netflix went up by <span class="home-act-red">$2.00</span></p>
-                <p class="home-act-sub">Your charge is now $17.99 for April, up from $15.99.</p>
-              </div>
-            </button>
-            <button class="home-act-card" onclick="openHomeAgent()">
-              <img loading="lazy" decoding="async" class="home-act-bg" src="assets/home-act-cash.webp" alt="">
-              <div class="home-act-grad home-act-grad--grey"></div>
-              <div class="home-act-texts">
-                <p class="home-act-title">Running short of balance</p>
-                <p class="home-act-sub">$356 short to pay Maya Sarini on May 25.</p>
-              </div>
-            </button>
+        <!-- ── Checking Balance card (Figma 6163-29639) ── -->
+        <div class="home-bal" onclick="showAccounts()">
+          <div class="home-bal-pattern" aria-hidden="true"></div>
+          <div class="home-bal-inner">
+            <div class="home-bal-hdr">
+              <span class="home-bal-leaf" aria-hidden="true"></span>
+              <span class="home-bal-lbl">Checking Balance</span>
+            </div>
+            <div class="home-bal-amt">
+              <span class="home-bal-sym">$</span><span class="home-bal-int">15,600</span><span class="home-bal-dec">.00</span>
+            </div>
+            <div class="home-bal-actions">
+              <button class="home-bal-btn" onclick="event.stopPropagation(); showAccounts()">
+                <span class="ico ol" style="--ico:url('Icons/ArrowDownLeft.svg');--sz:16px;color:var(--text-primary)"></span>
+                <span>Add funds</span>
+              </button>
+              <button class="home-bal-btn" onclick="event.stopPropagation(); showSendMoney(); setNavActive(1)">
+                <span class="ico ol" style="--ico:url('Icons/ArrowUpRight.svg');--sz:16px;color:var(--text-primary)"></span>
+                <span>Send money</span>
+              </button>
+              <button class="home-bal-more" onclick="event.stopPropagation()" aria-label="More">
+                <span class="ico ol" style="--ico:url('Icons/DotsThreeVertical.svg');--sz:18px;color:var(--text-primary)"></span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- ── Notifications digest (switchable categories) ── -->
-        <section class="home-sec home-digest">
-          <div class="home-digest-head">
-            <button class="home-digest-drop" id="digestDrop" onclick="toggleDigestMenu(event)" aria-haspopup="listbox" aria-expanded="false">
-              <span class="home-digest-cat" id="digestCatLabel">Needs your action</span>
-              <span class="home-digest-caret" aria-hidden="true"></span>
+        <!-- ── Items that need your attention ── -->
+        <section class="home-attn">
+          <h2 class="home-attn-title">Items that need your attention</h2>
+          <div class="home-attn-card">
+            <div class="home-attn-logo"><img loading="lazy" decoding="async" src="assets/netflix-n.webp" alt="Netflix"></div>
+            <div class="home-attn-txt">
+              <p class="home-attn-hl">Netflix up by <span class="home-attn-red">$2.00</span></p>
+              <p class="home-attn-sub">Your charge is now $17.99 for April, up from $15.99.</p>
+            </div>
+            <button class="home-attn-review" onclick="openHomeAgent()">
+              <span class="ico ol" style="--ico:url('Icons/ArrowUUpLeft.svg');--sz:14px;color:#fff"></span>
+              <span>Review</span>
             </button>
-            <div class="home-digest-menu" id="digestMenu" role="listbox"></div>
           </div>
-          <p class="home-digest-desc" id="digestDesc"></p>
-          <div class="home-digest-list" id="digestList"></div>
+          <div class="home-attn-dots"><span class="on"></span><span></span><span></span></div>
         </section>
 
-        <!-- ── Where your money stands ── -->
-        <section class="home-sec">
-          <div class="home-story" onclick="showAccounts()">
-            <div class="home-story-txt">
-              <div class="home-eyebrow">Your total balance is <b>$15,600</b>.</div>
-              <p class="home-story-sub">$13,200 by month end, post bills &amp; scheduled payments.</p>
+        <!-- ── Transactions ── -->
+        <section class="home-txc">
+          <div class="home-txc-hdr">
+            <span class="home-txc-title">Transactions</span>
+            <div class="home-txc-seg">
+              <button class="home-txc-seg-btn on" onclick="homeTxTab(this,'recent')">Recent</button>
+              <button class="home-txc-seg-btn" onclick="homeTxTab(this,'upcoming')">Upcoming</button>
             </div>
-            <div class="home-story-thumb"><img loading="lazy" decoding="async" src="assets/home-story-balance.webp" alt=""></div>
+          </div>
+
+          <div class="home-txc-list">
+            <div class="home-txc-day">
+              <div class="home-txc-daynum">27<span>JUL</span></div>
+              <div class="home-txc-daycol">
+                <div class="home-txc-row">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Maya Sarini</span><span class="home-txc-meta">Completed · Bank transfer</span></div>
+                  <div class="home-txc-amt"><span>- $1,600.00</span><span class="home-txc-inr">- ₹53,878.21</span></div>
+                </div>
+                <div class="home-txc-row">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta">Completed · Card</span></div>
+                  <div class="home-txc-amt"><span>- $1,200.00</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-txc-day">
+              <div class="home-txc-daynum">26<span>JUL</span></div>
+              <div class="home-txc-daycol">
+                <div class="home-txc-row">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-shopping.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Zara</span><span class="home-txc-meta"><span class="home-txc-warn">On hold</span> · Card</span></div>
+                  <div class="home-txc-amt"><span>- $250.00</span></div>
+                </div>
+                <div class="home-txc-row">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Harry Morgan</span><span class="home-txc-meta">Completed · Bank transfer</span></div>
+                  <div class="home-txc-amt"><span>- $50.00</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="home-txc-older">Older transactions. Last seen on 26 Jul.</div>
+
+            <div class="home-txc-day">
+              <div class="home-txc-daynum">26<span>JUL</span></div>
+              <div class="home-txc-daycol">
+                <div class="home-txc-row">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Maya Sarini</span><span class="home-txc-meta">Completed · Bank transfer</span></div>
+                  <div class="home-txc-amt"><span>- $1,600.00</span><span class="home-txc-inr">- ₹53,878.21</span></div>
+                </div>
+                <div class="home-txc-row home-txc-row--dim">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta"><span class="home-txc-err">Failed</span> · Card</span></div>
+                  <div class="home-txc-amt"><span class="home-txc-strike">- $30.00</span></div>
+                </div>
+                <div class="home-txc-row">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta">Completed · Card</span></div>
+                  <div class="home-txc-amt"><span>- $1,200.00</span></div>
+                </div>
+                <div class="home-txc-row home-txc-row--dim">
+                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
+                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta"><span class="home-txc-err">Failed</span> · Card</span></div>
+                  <div class="home-txc-amt"><span class="home-txc-strike">- $30.00</span></div>
+                </div>
+              </div>
+            </div>
+
+            <button class="home-txc-all" onclick="showList()">
+              <span>See all transactions</span>
+              <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:16px;color:var(--text-primary)"></span>
+            </button>
           </div>
         </section>
 
-        <!-- ── Sending money home ── -->
-        <section class="home-sec">
-          <div class="home-story" onclick="openHomeAgent()">
-            <div class="home-story-txt">
-              <div class="home-eyebrow"><b>₹94.70</b> to the dollar.</div>
-              <p class="home-story-sub">The rupee just hit a 3-month low. More money goes home today.</p>
-            </div>
-            <div class="home-story-thumb"><img loading="lazy" decoding="async" src="assets/home-story-fx.webp" alt=""></div>
-          </div>
-        </section>
-
-        <!-- ── What happened recently ── -->
-        <section class="home-sec">
-          <div class="home-eyebrow">Since you last looked — <b>4 payments</b>, $2,400 spent.</div>
-          <p class="home-story-sub">Two payments to Lyft didn't go through. One payment to Zara is on hold.</p>
-          <div class="home-recent">
-            <div class="home-recent-list">
-
-              <div class="home-recent-daydiv"><span>Jul 27</span><div class="home-recent-line"></div></div>
-
-              <div class="home-recent-row">
-                <div class="home-recent-av">
-                  <img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt="">
-                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
-                </div>
-                <div class="home-recent-info">
-                  <div class="home-recent-name">Maya Sarini
-                    <span class="ico ol" style="--ico:url('Icons/CalendarDots.svg');--sz:15px;color:rgba(0,0,0,0.4)"></span>
-                    <span class="ico ol" style="--ico:url('Icons/ArrowUUpLeft.svg');--sz:15px;color:rgba(0,0,0,0.4)"></span>
-                  </div>
-                </div>
-                <div class="home-recent-amt"><span>- $1,600.00</span><span class="home-recent-inr">- ₹53,878.21</span></div>
-              </div>
-
-              <div class="home-recent-row home-recent-row--dim">
-                <div class="home-recent-av">
-                  <img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt="">
-                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
-                </div>
-                <div class="home-recent-info">
-                  <div class="home-recent-name">Lyft</div>
-                  <div class="home-recent-status home-recent-status--err">Failed</div>
-                </div>
-                <div class="home-recent-amt"><span>- $30.00</span></div>
-              </div>
-
-              <div class="home-recent-row home-recent-row--dim">
-                <div class="home-recent-av">
-                  <img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt="">
-                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
-                </div>
-                <div class="home-recent-info">
-                  <div class="home-recent-name">Lyft</div>
-                  <div class="home-recent-status home-recent-status--err">Cancelled</div>
-                </div>
-                <div class="home-recent-amt"><span>- $1,200.00</span></div>
-              </div>
-
-              <div class="home-recent-daydiv"><span>Jul 26</span><div class="home-recent-line"></div></div>
-
-              <div class="home-recent-row home-recent-row--dim">
-                <div class="home-recent-av">
-                  <img loading="lazy" decoding="async" src="assets/tx-shopping.webp" alt="">
-                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
-                </div>
-                <div class="home-recent-info">
-                  <div class="home-recent-name">Zara</div>
-                  <div class="home-recent-status home-recent-status--warn">On hold</div>
-                </div>
-                <div class="home-recent-amt"><span>- $250.00</span></div>
-              </div>
-
-              <div class="home-recent-row">
-                <div class="home-recent-av">
-                  <img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt="">
-                  <div class="home-recent-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:11px;color:rgba(0,0,0,0.6)"></span></div>
-                </div>
-                <div class="home-recent-info">
-                  <div class="home-recent-name">Harry Morgan
-                    <span class="ico ol" style="--ico:url('Icons/ArrowUUpLeft.svg');--sz:15px;color:rgba(0,0,0,0.4)"></span>
-                  </div>
-                </div>
-                <div class="home-recent-amt"><span>- $50.00</span></div>
-              </div>
-
-              <div class="home-recent-cta-wrap">
-                <button class="home-recent-cta" onclick="showList()">
-                  <span>See all transactions</span>
-                  <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:16px;color:var(--brand-primary)"></span>
-                </button>
-              </div>
-            </div>
+        <!-- ── Your cards ── -->
+        <section class="home-yc" onclick="showCards('USD Checking')">
+          <img loading="lazy" decoding="async" class="home-yc-bg" src="assets/home-brief-bg.webp" alt="">
+          <div class="home-yc-fade"></div>
+          <div class="home-yc-content">
+            <span class="home-yc-lbl">Your cards</span>
+            <span class="home-yc-spend-lbl">CARD SPENDS IN MAY</span>
+            <div class="home-yc-amt"><span class="home-yc-sym">$</span><span class="home-yc-int">14,098</span><span class="home-yc-dec">.00</span></div>
+            <button class="home-yc-showall" onclick="event.stopPropagation(); showCards('USD Checking')">
+              <span>Show all</span>
+              <span class="ico ol" style="--ico:url('Icons/ArrowDown.svg');--sz:14px;color:var(--text-primary)"></span>
+            </button>
           </div>
         </section>
 
       </div><!-- /.home-main -->
-
     </div><!-- /.home-scroll -->
-
-
   </div><!-- /#home -->
 
 
@@ -1098,36 +1086,43 @@
           </div>
         </button>
       </div>
-      <div class="sm-l-rate">
+      <div class="sm-l-rate" onclick="openRateSheet()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/>
           <path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/>
           <path d="M3.52 9.52A4.83 4.83 0 013.27 8c0-.53.09-1.04.25-1.52V4.41H.86A8 8 0 000 8c0 1.29.31 2.51.86 3.59l2.66-2.07z" fill="#FBBC04"/>
           <path d="M8 3.18c1.17 0 2.22.4 3.05 1.2l2.28-2.28A8 8 0 00.86 4.41l2.66 2.07C4.15 4.59 5.92 3.18 8 3.18z" fill="#EA4335"/>
         </svg>
-        <span class="sm-l-rate-text">$1 = ₹ 91.78</span>
+        <span class="sm-l-rate-text">$1 = ₹91.78</span>
       </div>
     </div>
 
-    <!-- Title -->
-    <p class="sm-l-title">Send money<br>to a contact or a business</p>
+    <!-- ── Redesigned bene selection (Figma 6498-58790) ── -->
+    <div class="sm-l2-scroll">
+      <p class="sm-l-title sm-l2-title">Send money<br>to a contact or a business</p>
 
-    <!-- Section label -->
-    <p class="sm-l-section">Suggested for you</p>
-
-    <!-- Bubble card -->
-    <div class="sm-l-card">
-      <div class="sm-l-bubbles" id="smLBubbles">
-        <!-- populated from BENS by renderSmLBubbles() -->
+      <!-- Search + Add -->
+      <div class="sm-l2-searchrow">
+        <div class="sm-l2-search" onclick="openBeneSheet()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <span class="sm-l2-search-ph">Search...</span>
+        </div>
+        <button class="sm-l2-add" onclick="openBeneSheet()" aria-label="Add beneficiary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
       </div>
-    </div>
 
-    <!-- Search bar pinned to bottom -->
-    <div class="sm-l-search-wrap">
-      <div class="sm-l-search" onclick="openBeneSheet()" style="cursor:pointer">
-        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:20px;height:20px;flex-shrink:0"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-        <span class="sm-l-search-ph">Search or add beneficiaries</span>
-      </div>
+      <!-- Recommended for you -->
+      <section class="sm-l2-sec">
+        <p class="sm-l2-seclabel">Recommended for you</p>
+        <div class="sm-l2-rec" id="smL2Rec"><!-- cards from BENS --></div>
+      </section>
+
+      <!-- All beneficiaries -->
+      <section class="sm-l2-sec">
+        <p class="sm-l2-seclabel">All beneficiaries</p>
+        <div class="sm-l2-list" id="smL2List"><!-- rows from BENS --></div>
+      </section>
     </div>
 
     <!-- Bene search bottom sheet -->
@@ -1536,120 +1531,112 @@
     <!-- Content (above botanical bg by DOM order) -->
     <div class="sma-scroll">
 
-    <!-- Header -->
-    <div class="sm2-header">
-      <button class="sm2-pill-btn" onclick="smBack('sm-amount')">
-        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+    <!-- Hidden avatar kept for smGoToAmount() compatibility -->
+    <div class="sm2-mini-av" id="smRecipientAvatar" style="display:none" aria-hidden="true">
+      <img loading="lazy" decoding="async" class="sm2-mini-av-photo" src="assets/blob-orange-v2.webp">
+      <span class="sm2-mini-av-txt" id="smRecipientInitials">RR</span>
+    </div>
+
+    <!-- ── India amount entry (Figma 6530-164542) ── -->
+    <div class="sma2-header">
+      <button class="sma2-back" onclick="smBack('sm-amount')" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
-      <div class="sm2-header-right">
-        <div class="sm2-rate-btn">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/>
-            <path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/>
-            <path d="M3.52 9.52A4.83 4.83 0 013.27 8c0-.53.09-1.04.25-1.52V4.41H.86A8 8 0 000 8c0 1.29.31 2.51.86 3.59l2.66-2.07z" fill="#FBBC04"/>
-            <path d="M8 3.18c1.17 0 2.22.4 3.05 1.2l2.28-2.28A8 8 0 00.86 4.41l2.66 2.07C4.15 4.59 5.92 3.18 8 3.18z" fill="#EA4335"/>
-          </svg>
-          <span class="sm2-rate-text">$1 = ₹ 91.78</span>
-        </div>
-        <button class="sm2-pill-btn" onclick="smCloseAll()">
-          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
-        </button>
+      <div class="sma2-rate" onclick="openRateSheet()" style="cursor:pointer">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/><path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/><path d="M3.52 9.52A4.83 4.83 0 013.27 8c0-.53.09-1.04.25-1.52V4.41H.86A8 8 0 000 8c0 1.29.31 2.51.86 3.59l2.66-2.07z" fill="#FBBC04"/><path d="M8 3.18c1.17 0 2.22.4 3.05 1.2l2.28-2.28A8 8 0 00.86 4.41l2.66 2.07C4.15 4.59 5.92 3.18 8 3.18z" fill="#EA4335"/></svg>
+        <span>$1 = ₹91.78</span>
       </div>
     </div>
 
-    <!-- Content card -->
-    <div class="sm2-card">
-      <div class="sm2-card-inner">
+    <h1 class="sma2-title">Enter amount</h1>
 
-        <!-- Recipient -->
-        <div class="sm2-recipient">
-          <div class="sm2-mini-av" id="smRecipientAvatar">
-            <img loading="lazy" decoding="async" class="sm2-mini-av-photo" src="assets/blob-orange-v2.webp">
-            <div class="sm2-mini-av-glass"></div>
-            <span class="sm2-mini-av-txt" id="smRecipientInitials">RR</span>
-          </div>
-          <div class="sm2-recip-name" id="smRecipientName">Rohan Rathod</div>
-          <div class="sm2-recip-acct">
-            <span id="smRecipientSub">•• 7654 · HDFC Bank</span>
-          </div>
-        </div>
+    <!-- FROM / TO connected container (Figma 6655-121713) -->
+    <div class="sma2-fromto">
 
-        <!-- Amount -->
-        <div class="sm2-amount-section">
-          <div class="sm2-usd">
-            <span class="sm2-sym">$</span>
-            <span class="sm2-val" id="smAmountInt">0</span><span class="sm2-dec" id="smAmountDec">.00</span>
-          </div>
-
-          <!-- Switch row -->
-          <div class="sm2-switch-row">
-            <div class="sm2-switch-line"></div>
-            <button class="sm2-switch-btn" id="smSwitchBtn" onclick="smSwitchCurrency()">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 014-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg>
-            </button>
-          </div>
-
-          <!-- INR -->
-          <div class="sm2-inr">
-            <span class="sm2-sym">₹</span>
-            <span class="sm2-val" id="smAmountInrInt">0</span><span class="sm2-dec" id="smAmountInrDec">.00</span>
-          </div>
-        </div>
-
+    <!-- FROM card — whole card opens the account sheet; amount is the caret field -->
+    <div class="sma2-card" onclick="smaOpenFromSheet()" style="cursor:pointer">
+      <div class="sma2-card-top">
+        <button class="sma2-card-lbl" type="button">FROM<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
+        <span class="sma2-card-hint">You send exactly</span>
       </div>
-      <!-- Info tags — outside inner grey area, inside white card -->
-      <div class="smw-tag-area">
-        <span class="smw-tag-item">Arrives in 3 mins</span>
-        <div class="smw-tag-divider"></div>
-        <span class="smw-tag-item">No fee</span>
-        <div class="smw-tag-divider"></div>
-        <span class="smw-tag-item">Sending ₹12k more</span>
+      <div class="sma2-card-bot">
+        <div class="sma2-acct">
+          <span class="sma2-acct-name" id="smaFromName">USD Checking</span>
+          <span class="sma2-acct-bal" id="smaFromBal">$146,000.00</span>
+        </div>
+        <div class="sma2-amt" onclick="smaAmountClick(event,'usd')">
+          <span class="sma2-amt-sym">$</span><span class="sma2-amt-int" id="smAmountInt">0</span><span class="sma2-amt-dec" id="smAmountDec">.00</span>
+        </div>
       </div>
     </div>
 
-    <!-- Spacer -->
-    <div style="flex:1;min-height:8px"></div>
-
-    <!-- Account selector -->
-    <div class="sm2-account-row">
-      <div class="sm2-acct-left">
-        <div class="sm2-flag">🇺🇸</div>
-        <span class="sm2-acct-name">USD Checking •• 3214</span>
-        <span class="ico" style="--ico:url('Icons/CaretCircleUp.svg');--sz:16px;color:rgba(0,0,0,0.5)"></span>
+    <!-- Fee / speed info (inside the container, with dashed connector) -->
+    <div class="sma2-info">
+      <div class="sma2-info-line" aria-hidden="true"></div>
+      <div class="sma2-info-row">
+        <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/SealPercent.svg');--sz:16px;color:#322d0f"></span></span>
+        <span class="sma2-info-txt"><b>Free transfer.</b> No fee charged.</span>
       </div>
-      <span class="sm2-acct-bal">$137,978.00</span>
+      <div class="sma2-info-row">
+        <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/Timer.svg');--sz:16px;color:#322d0f"></span></span>
+        <span class="sma2-info-txt">Most transfers <b>arrive in minutes</b>.</span>
+      </div>
     </div>
 
-    <!-- Send button -->
-    <button class="sm2-send-btn" id="smSendBtn" onclick="smGoToReview()">Review payment <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    <!-- TO card -->
+    <div class="sma2-card">
+      <div class="sma2-card-top">
+        <button class="sma2-card-lbl" type="button" onclick="smBack('sm-amount')">TO<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
+        <span class="sma2-card-hint" id="smToHint">Recipient receives</span>
+      </div>
+      <div class="sma2-card-bot">
+        <div class="sma2-acct">
+          <span class="sma2-acct-name" id="smRecipientName">Rohan Rathod</span>
+          <span class="sma2-acct-bal" id="smRecipientSub">HDFC 8976</span>
+        </div>
+        <div class="sma2-amt" onclick="smaAmountClick(event,'inr')">
+          <span class="sma2-amt-sym">₹</span><span class="sma2-amt-int" id="smAmountInrInt">0</span><span class="sma2-amt-dec" id="smAmountInrDec">.00</span>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- /.sma2-fromto -->
+
+    <!-- Actions: schedule + review -->
+    <div class="sma2-actions">
+      <button class="sma2-cal" type="button" aria-label="Schedule">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
+      </button>
+      <button class="sma2-review" id="smSendBtn" onclick="smGoToReview()">Review payment <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
+    </div>
 
     <!-- Keypad -->
-    <div class="sm2-keypad">
-      <div class="sm2-keyrow" style="top:20px">
-        <button class="sm2-key" onclick="smKey('1')">1</button>
-        <button class="sm2-key" onclick="smKey('2')">2</button>
-        <button class="sm2-key" onclick="smKey('3')">3</button>
-      </div>
-      <div class="sm2-keyrow" style="top:76px">
-        <button class="sm2-key" onclick="smKey('4')">4</button>
-        <button class="sm2-key" onclick="smKey('5')">5</button>
-        <button class="sm2-key" onclick="smKey('6')">6</button>
-      </div>
-      <div class="sm2-keyrow" style="top:132px">
-        <button class="sm2-key" onclick="smKey('7')">7</button>
-        <button class="sm2-key" onclick="smKey('8')">8</button>
-        <button class="sm2-key" onclick="smKey('9')">9</button>
-      </div>
-      <div class="sm2-keyrow" style="top:188px">
-        <button class="sm2-key ghost" onclick="smKey('.')">·</button>
-        <button class="sm2-key" onclick="smKey('0')">0</button>
-        <button class="sm2-key ghost" onclick="smKey('del')">
-          <svg viewBox="0 0 24 24"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
-        </button>
-      </div>
+    <div class="sma2-keypad">
+      <button class="sma2-key" onclick="smKey('1')">1</button>
+      <button class="sma2-key" onclick="smKey('2')">2</button>
+      <button class="sma2-key" onclick="smKey('3')">3</button>
+      <button class="sma2-key" onclick="smKey('4')">4</button>
+      <button class="sma2-key" onclick="smKey('5')">5</button>
+      <button class="sma2-key" onclick="smKey('6')">6</button>
+      <button class="sma2-key" onclick="smKey('7')">7</button>
+      <button class="sma2-key" onclick="smKey('8')">8</button>
+      <button class="sma2-key" onclick="smKey('9')">9</button>
+      <button class="sma2-key sma2-key-ghost" onclick="smKey('.')">.</button>
+      <button class="sma2-key" onclick="smKey('0')">0</button>
+      <button class="sma2-key sma2-key-ghost" onclick="smKey('del')" aria-label="Delete">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+      </button>
     </div>
 
     </div><!-- /.sma-scroll -->
+
+    <!-- FROM account picker bottom sheet -->
+    <div class="sma-fromsheet-scrim" id="smaFromScrim" onclick="smaCloseFromSheet()"></div>
+    <div class="sma-fromsheet" id="smaFromSheet">
+      <div class="sma-fromsheet-grab" aria-hidden="true"></div>
+      <div class="sma-fromsheet-title">Send from</div>
+      <div class="sma-fromsheet-list" id="smaFromList"></div>
+    </div>
   </div><!-- /#sm-amount -->
 
 
@@ -1657,166 +1644,226 @@
        SEND MONEY — REVIEW
   ══════════════════════════════════════ -->
   <div class="screen hr" id="sm-review">
-    <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
     <div class="smr-scroll">
 
-      <!-- Header: back + close -->
+      <!-- Header: back only -->
       <div class="smr-header">
-        <button class="smr-pill-btn" onclick="smBack('sm-review')">
-          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <button class="smr-pill-btn" onclick="showHome()">
-          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <button class="smr-pill-btn" onclick="smBack('sm-review')" aria-label="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
       </div>
 
-      <!-- Card -->
+      <h1 class="smr-title">Review details</h1>
+
+      <!-- Detail card -->
       <div class="smr-card-wrap">
-        <div class="smr-card">
-          <div class="smr-card-inner">
-
-            <!-- Recipient -->
-            <div class="smr-recip">
-              <div class="smr-av" id="smReviewAvatar">
-                <img loading="lazy" decoding="async" class="smr-av-photo" id="smReviewAvPhoto" src="assets/blob-purple-v2.webp" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;">
-                <div class="smr-av-glass"></div>
-                <span class="smr-av-txt" id="smReviewRecipInitials">RR</span>
-              </div>
-              <div class="smr-recip-name" id="smReviewRecipientName">Rohan Rathod</div>
-              <div class="smr-recip-sub">
-                <span class="smr-recip-acct" id="smReviewRecipAcct">•• 7654</span>
-                <span class="smr-recip-dot">·</span>
-                <span class="smr-recip-acct" id="smReviewRecipBank">HDFC Bank</span>
-              </div>
+        <div class="smr-card" id="smReviewCard">
+          <div class="smr-row">
+            <span class="smr-lbl">From</span>
+            <span class="smr-val" id="smReviewFrom">USD Checking 8978</span>
+          </div>
+          <div class="smr-row">
+            <span class="smr-lbl">To</span>
+            <div class="smr-val-stack">
+              <span class="smr-val" id="smReviewRecipientName">Rohan Rathod</span>
+              <span class="smr-val-sub" id="smReviewRecipAcct">HDFC 8978</span>
             </div>
+          </div>
+          <div class="smr-row">
+            <span class="smr-lbl">Sending</span>
+            <span class="smr-val" id="smReviewSending">$1,000.00</span>
+          </div>
+          <div class="smr-row">
+            <span class="smr-lbl">Banyan's fees</span>
+            <div class="smr-fee-group">
+              <span class="smr-free">Free</span>
+              <span class="smr-strike">$2.00</span>
+            </div>
+          </div>
 
-            <!-- Amounts + Purpose -->
-            <div class="smr-amounts">
-              <div class="smr-amounts-inner">
-                <!-- Group 1: sending / fees / rate -->
-                <div class="smr-amounts-group">
-                  <div class="smr-row">
-                    <span class="smr-lbl">You are sending</span>
-                    <span class="smr-val" id="smReviewSending">$1,000.00</span>
-                  </div>
-                  <div class="smr-row">
-                    <span class="smr-lbl">Banyan's fees</span>
-                    <div class="smr-fee-group">
-                      <span class="smr-free">Free</span>
-                      <span class="smr-strike">$2.00</span>
-                    </div>
-                  </div>
-                  <div class="smr-row">
-                    <span class="smr-lbl">Exchange rate</span>
-                    <div class="smr-exchange">
-                      <img loading="lazy" decoding="async" class="smr-g-icon" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt="">
-                      <span class="smr-val">$1 = ₹91.78</span>
-                    </div>
-                  </div>
-                </div>
-                <!-- Divider -->
-                <div class="smr-divider"></div>
-                <!-- Group 2: receives / arrival -->
-                <div class="smr-amounts-group">
-                  <div class="smr-row">
-                    <span class="smr-lbl"><span id="smReviewRecipName2">Rohan</span> receives</span>
-                    <span class="smr-val" id="smReviewReceives">₹91,780.00</span>
-                  </div>
-                  <div class="smr-row">
-                    <span class="smr-lbl">Estimated arrival</span>
-                    <span class="smr-val">Today, 9:44 AM IST</span>
-                  </div>
-                </div>
-              </div>
+          <div class="smr-divider"></div>
 
-              <!-- Purpose — floating-label input row -->
-              <button class="smr-purpose-input" onclick="smOpenPurposeSheet(event)">
-                <span class="smr-purpose-ico" id="smPurposeIco">🏠</span>
-                <div class="smr-purpose-text">
-                  <span class="smr-purpose-sublbl">Purpose of payment</span>
-                  <span class="smr-purpose-val" id="smPurposeDisplayVal">Family and Personal</span>
-                </div>
-                <svg class="smr-purpose-caret" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg>
+          <div class="smr-row">
+            <span class="smr-lbl">Exchange rate</span>
+            <div class="smr-inline">
+              <img loading="lazy" decoding="async" class="smr-g-icon" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt="">
+              <span class="smr-val">$1 = ₹91.78</span>
+            </div>
+          </div>
+          <div class="smr-row">
+            <span class="smr-lbl">Payment method</span>
+            <div class="smr-inline">
+              <span class="ico" style="--ico:url('Icons/GlobeHemisphereWest.svg');--sz:16px;color:#322d0f"></span>
+              <span class="smr-val">International</span>
+            </div>
+          </div>
+          <div class="smr-row">
+            <span class="smr-lbl"><span id="smReviewRecipName2">Rohan</span> receives</span>
+            <span class="smr-val" id="smReviewReceives">₹9,17,800.00</span>
+          </div>
+
+          <div class="smr-divider"></div>
+
+          <div class="smr-row">
+            <span class="smr-lbl">Estimated arrival</span>
+            <span class="smr-val">Today, 9:44 AM IST</span>
+          </div>
+
+          <!-- Note row — appears once a note is saved -->
+          <div class="smr-row smr-note-row" id="smrNoteRow" style="display:none">
+            <div class="smr-note-lblcol">
+              <span class="smr-lbl">Note (optional)</span>
+              <button class="smr-note-edit" type="button" onclick="openReviewNote()">
+                <span class="ico" style="--ico:url('Icons/PencilSimple.svg');--sz:14px;color:rgba(0,0,0,0.6)"></span>Edit
               </button>
             </div>
+            <span class="smr-val smr-note-val" id="smrNoteVal"></span>
+          </div>
+        </div>
+      </div>
 
-          </div><!-- /.smr-card-inner -->
-        </div><!-- /.smr-card -->
-      </div><!-- /.smr-card-wrap -->
+      <!-- Purpose selector + RBI helper -->
+      <div class="smr-purpose-wrap">
+        <button class="smr-purpose-input" onclick="smOpenPurposeSheet(event)">
+          <span class="smr-purpose-ico" id="smPurposeIco">🏠</span>
+          <div class="smr-purpose-text">
+            <span class="smr-purpose-sublbl">Payment purpose - autofilled</span>
+            <span class="smr-purpose-val" id="smPurposeDisplayVal">Family</span>
+          </div>
+          <svg class="smr-purpose-caret" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg>
+        </button>
+        <p class="smr-purpose-help">This needs to be filled in as a part of the RBI guidelines. This sentence can go upto 2 sentences.</p>
+      </div>
 
     </div><!-- /.smr-scroll -->
 
     <!-- Bottom actions — fixed to bottom of screen -->
     <div class="smr-bottom">
-      <button class="smr-note-btn">Add a note (optional)</button>
-      <button class="smr-confirm-btn" onclick="smShowFaceScan()">Confirm and pay</button>
+      <button class="smr-note-btn" onclick="openReviewNote()">Add a note (optional)</button>
+      <button class="smr-confirm-btn" onclick="smShowFaceScan()">Confirm and pay
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
     </div>
 
   </div><!-- /#sm-review -->
 
+  <!-- ── Add a note bottom sheet (Figma 6616-119056) ── -->
+  <div class="rnote-scrim" id="rnoteScrim" onclick="closeReviewNote()"></div>
+  <div class="rnote-sheet" id="rnoteSheet">
+    <button class="rnote-back" type="button" onclick="closeReviewNote()" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <label class="rnote-field">
+      <span class="rnote-field-lbl">Add a note (optional)</span>
+      <textarea class="rnote-input" id="rnoteInput" rows="3" placeholder="Enter your text here..."></textarea>
+    </label>
+    <button class="rnote-save" type="button" onclick="saveReviewNote()">Save note</button>
+  </div>
+
+  <!-- ── Rate comparison bottom sheet (Figma 6524-86698) ── -->
+  <div class="rate-scrim" id="rateScrim" onclick="closeRateSheet()"></div>
+  <div class="rate-sheet" id="rateSheet">
+    <div class="rate-grabber"></div>
+
+    <div class="rate-head">
+      <h2 class="rate-title">Rate comparison</h2>
+      <p class="rate-sub">With Banyan, you always get charged the mid-market rate with absolutely no markup</p>
+    </div>
+
+    <div class="rate-input-wrap">
+      <label class="rate-input">
+        <span class="rate-input-cur">$</span>
+        <input class="rate-input-field" id="rateInputField" type="text" inputmode="decimal" value="1,000.00"
+          oninput="rateInputChange(this)" onblur="rateInputBlur(this)" onfocus="this.select()" aria-label="Amount in USD">
+      </label>
+      <div class="rate-slider" aria-hidden="true">
+        <div class="rate-slider-fill"><span class="rate-slider-knob"></span></div>
+      </div>
+    </div>
+
+    <div class="rate-cmp-wrap">
+      <div class="rate-cmp-row">
+        <div class="rate-cmp-labels">
+          <span>Rate</span>
+          <span>Fee</span>
+        </div>
+        <div class="rate-cmp-cols">
+          <!-- Banyan -->
+          <div class="rate-cmp-col rate-cmp-banyan">
+            <div class="rate-cmp-block">
+              <div class="rate-cmp-head">
+                <span class="rate-cmp-ic rate-cmp-ic-banyan">
+                  <span class="ico" style="--ico:url('Icons/LeafFill.svg');--sz:18px;color:#fff"></span>
+                </span>
+                <span class="rate-cmp-name">Banyan</span>
+              </div>
+              <div class="rate-cmp-lines">
+                <div class="rate-cmp-line">
+                  <svg class="rate-cmp-g" width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/><path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/><path d="M3.52 9.52A4.83 4.83 0 013.27 8c0-.53.09-1.04.25-1.52V4.41H.86A8 8 0 000 8c0 1.29.31 2.51.86 3.59l2.66-2.07z" fill="#FBBC04"/><path d="M8 3.18c1.17 0 2.22.4 3.05 1.2l2.28-2.28A8 8 0 00.86 4.41l2.66 2.07C4.15 4.59 5.92 3.18 8 3.18z" fill="#EA4335"/></svg>
+                  <span class="rate-cmp-val">$1 = ₹91.78</span>
+                </div>
+                <div class="rate-cmp-line"><span class="rate-cmp-free">Free</span></div>
+              </div>
+            </div>
+            <div class="rate-cmp-total">₹9,17,800.00</div>
+          </div>
+          <!-- Banks -->
+          <div class="rate-cmp-col rate-cmp-banks">
+            <div class="rate-cmp-block">
+              <div class="rate-cmp-head">
+                <span class="rate-cmp-ic rate-cmp-ic-bank">
+                  <span class="ico" style="--ico:url('Icons/BankFill.svg');--sz:18px;color:#322d0f"></span>
+                </span>
+                <span class="rate-cmp-name">Banks</span>
+              </div>
+              <div class="rate-cmp-lines">
+                <div class="rate-cmp-line">
+                  <span class="rate-cmp-repeat"><svg viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7l-2-2M12 11H5l2 2"/></svg></span>
+                  <span class="rate-cmp-val">$1 = ₹91.25</span>
+                </div>
+                <div class="rate-cmp-line"><span class="rate-cmp-val">$15.00</span></div>
+              </div>
+            </div>
+            <div class="rate-cmp-total">₹9,12,400.00</div>
+          </div>
+        </div>
+      </div>
+      <div class="rate-cmp-foot">Send ₹6,768 more with Banyan</div>
+    </div>
+  </div>
+
   <!-- ── Purpose of payment bottom sheet (1246-45677) ── -->
   <div class="purpose-scrim" id="purposeScrim" onclick="smClosePurposeSheet()"></div>
-  <div class="purpose-sheet" id="purposeSheet">
-    <div class="purpose-handle"></div>
-    <div class="purpose-hdr">
-      <button class="purpose-back" onclick="smClosePurposeSheet()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.65)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12L6 8l4-4"/></svg>
-      </button>
-      <span class="purpose-title">Purpose of payment</span>
-      <span class="purpose-hdr-spacer"></span>
+  <div class="purpose-sheet purpose2" id="purposeSheet">
+    <button class="purpose2-back" type="button" onclick="smClosePurposeSheet()" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 class="purpose2-title">Select the purpose</h2>
+
+    <div class="purpose2-scroll">
+      <!-- Free-text input -->
+      <label class="purpose2-input" id="purpose2Input">
+        <span class="purpose2-input-lbl">Tell us details of the purpose</span>
+        <textarea class="purpose2-textarea" id="purpose2Text" rows="3" placeholder="Enter your text here..." oninput="smPurposeTextInput()"></textarea>
+        <button class="purpose2-go" id="purpose2Go" type="button" onclick="smPurposeMatch()" aria-label="Match purpose">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </label>
+
+      <!-- Best match (after typing) -->
+      <div class="purpose2-match" id="purpose2Match" style="display:none"></div>
+
+      <!-- Divider label -->
+      <div class="purpose2-divlbl" id="purpose2DivLbl">OR PICK ONE</div>
+
+      <!-- Purpose list -->
+      <div class="purpose2-list" id="purpose2List"></div>
     </div>
 
-    <!-- Search -->
-    <div class="purpose-search-wrap">
-      <div class="purpose-search">
-        <svg class="purpose-search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="7" cy="7" r="5"/><path d="M13 13l-2.9-2.9"/></svg>
-        <input type="text" placeholder="Search..." id="purposeSearch" oninput="smFilterPurpose(this.value)">
-      </div>
-    </div>
-
-    <!-- Grouped rows -->
-    <div class="purpose-list-wrap" id="purposeListWrap">
-      <!-- Commonly used purposes -->
-      <div class="purpose-grp" id="purposeCommonGrp">
-        <div class="purpose-grp-lbl">Commonly used purposes</div>
-        <div class="purpose-grp-rows">
-          <button class="purpose-row sel" data-code="P1301" onclick="smPickPurpose(this,'Family &amp; Personal','P1301')">
-            <span class="purpose-row-icon">🏠</span>
-            <div class="purpose-row-info"><span class="purpose-row-lbl">Family and Personal</span><span class="purpose-row-sub">Sending money to your family or your own account</span></div>
-            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button class="purpose-row" data-code="P1108" onclick="smPickPurpose(this,'Medical','P1108')">
-            <span class="purpose-row-icon">🏥</span>
-            <div class="purpose-row-info"><span class="purpose-row-lbl">Medical</span><span class="purpose-row-sub">Hospital bills and medical treatment</span></div>
-            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button class="purpose-row" data-code="P1109" onclick="smPickPurpose(this,'Utility Bills &amp; Taxes','P1109')">
-            <span class="purpose-row-icon">💡</span>
-            <div class="purpose-row-info"><span class="purpose-row-lbl">Utility bills and Taxes</span><span class="purpose-row-sub">Utilities, tax payments and recurring obligations</span></div>
-            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button class="purpose-row" data-code="P1107" onclick="smPickPurpose(this,'Education','P1107')">
-            <span class="purpose-row-icon">🎓</span>
-            <div class="purpose-row-info"><span class="purpose-row-lbl">Education</span><span class="purpose-row-sub">Tuitions, fees or payments to schools or colleges</span></div>
-            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-          <button class="purpose-row" data-code="P0601" onclick="smPickPurpose(this,'Insurance &amp; Travel','P0601')">
-            <span class="purpose-row-icon">🛡️</span>
-            <div class="purpose-row-info"><span class="purpose-row-lbl">Insurance and Travel</span><span class="purpose-row-sub">Insurance premiums, hotel stays or travel bookings</span></div>
-            <svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <!-- Professional and Business services -->
-      <div class="purpose-grp" id="purposeProfGrp">
-        <div class="purpose-grp-lbl">Professional and Business services</div>
-        <div class="purpose-grp-rows" id="purposeProfRows">
-          <!-- Rendered by JS (smBuildProfRows) -->
-        </div>
-      </div>
-    </div>
+    <button class="purpose2-continue" id="purpose2Continue" type="button" onclick="smPurposeContinue()">
+      <span id="purpose2ContinueTxt">Continue with Family and health</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
   </div>
 
   <!-- ── Supporting document sheet (1265-46345) ── -->
@@ -1888,36 +1935,38 @@
        SEND MONEY — IN PROGRESS
   ══════════════════════════════════════ -->
   <div class="screen hr" id="sm-progress">
-    <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
+    <!-- Warm gradient + Victoria Memorial line-art (Figma 6140-55487) -->
+    <div class="smp2-bg smp2-bg-gold" aria-hidden="true"></div>
+    <div class="smp2-building" id="smpBuildingP" aria-hidden="true">
+      <div class="smp2-building-img smp2-building-img--loading"></div>
+      <div class="smp2-load-blur" id="smpLoadBlurP"></div>
+    </div>
     <div class="smp-scroll">
 
-      <!-- Card — state controlled by JS: smp-state1 (default) or smp-state2 -->
-      <div class="smp-card-wrap" style="padding-top:52px">
-        <div class="smp-card">
+      <div class="smp2-scroll-inner">
 
-          <!-- Hero: mint gradient + money icon + amount + ETA -->
-          <div class="smp-hero" id="smpHero">
-            <div class="smp-hero-bg smp-hero-bg-blue"></div>
-            <div class="smp-hero-bg smp-hero-bg-green"></div>
-            <div class="smp-hero-icon" id="smpHeroIcon">
-            <div class="smp-coin" id="smpCoin">
-              <div class="smp-coin-face smp-coin-front"><span class="smp-coin-sym">$</span></div>
-              <div class="smp-coin-face smp-coin-back"><span class="smp-coin-sym">₹</span></div>
-            </div>
-            <div class="smp-result-icon" id="smpResultIcon">
-              <!-- icon injected by JS -->
-            </div>
+        <!-- Hero: label + amount + ETA -->
+        <div class="smp2-hero">
+          <span class="smp2-lbl smp2-lbl-gold">Transfer in progress</span>
+          <div class="smp2-amount">
+            <span class="smp2-sym">$</span>
+            <span class="smp2-int" id="smProgressInt">1,000</span>
+            <span class="smp2-dec" id="smProgressDec">.00</span>
           </div>
-            <div class="smp-hero-center">
-              <span class="smp-hero-lbl">Transfer in progress</span>
-              <div class="smp-hero-amount">
-                <span class="smp-hero-sym">$</span>
-                <span class="smp-hero-int" id="smProgressInt">1,000</span>
-                <span class="smp-hero-dec" id="smProgressDec">.00</span>
-              </div>
-            </div>
+          <div class="smp2-eta">
+            <span class="ico ol" style="--ico:url('Icons/Timer.svg');--sz:16px;color:rgba(0,0,0,0.55)"></span>
+            <span class="smp2-eta-txt">Estimated arrival: 9:44 AM IST</span>
           </div>
+        </div>
+
+        <div class="smp2-divider"></div>
+
+        <button class="smp2-more-btn" onclick="smpToggleMore(this)">
+          <span>Show more details</span>
+          <svg class="smp2-more-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="rgba(0,0,0,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <div class="smp2-more-body" id="smpMoreP">
 
           <!-- Sections -->
           <div style="display:flex;flex-direction:column;gap:24px;padding:8px 0 0">
@@ -2124,20 +2173,25 @@
             </div>
 
           </div><!-- /sections -->
-        </div><!-- /.smp-card -->
-      </div><!-- /.smp-card-wrap -->
+        </div><!-- /.smp2-more-body -->
+
+      </div><!-- /.smp2-scroll-inner -->
 
     </div><!-- /.smp-scroll -->
 
-    <!-- Simulate / Done — pinned outside scroll so it truly sticks to screen bottom -->
-    <div class="smp-bottom" id="smpBottom">
-      <button class="smp-done-btn" onclick="smGoToSuccess()">Done</button>
-      <button class="smp-sim-btn" onclick="smpSimulateSuccess()" title="Simulate success">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="4,12 9,17 20,7"/></svg>
-      </button>
-      <button class="smp-sim-btn fail" onclick="smpSimulateFailure()" title="Simulate failure">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>
-      </button>
+    <!-- Done — pinned to screen bottom -->
+    <!-- Dev control: animation speed (just above Done) -->
+    <div class="smp2-speed" id="smpSpeed">
+      <div class="smp2-speed-row">
+        <span class="smp2-speed-lbl">Animation speed</span>
+        <span class="smp2-speed-val" id="smpSpeedVal">9.0s</span>
+      </div>
+      <input type="range" class="smp2-speed-range" id="smpSpeedRange" min="3" max="20" step="0.5" value="9"
+        oninput="smpSetTileSpeed(this.value)">
+    </div>
+
+    <div class="smp2-bottom" id="smpBottom">
+      <button class="smp2-btn smp2-btn-primary" onclick="smpMorphToSuccess()">Done</button>
     </div>
   </div><!-- /#sm-progress -->
 
@@ -2146,130 +2200,93 @@
        SEND MONEY — SUCCESS
   ══════════════════════════════════════ -->
   <div class="screen hr" id="sm-success">
-    <!-- Botanical background -->
-    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="BG-sendmoney.webp" alt=""></div>
+    <!-- Green gradient + Victoria Memorial line-art (Figma 6140-55510) -->
+    <div class="smp2-bg smp2-bg-green" aria-hidden="true"></div>
+    <div class="smp2-building" aria-hidden="true">
+      <div class="smp2-building-img smp2-building-img--success"></div>
+      <div class="smp2-load-blur" id="smpLoadBlurS"></div>
+    </div>
     <div class="sms-scroll">
 
-      <div class="smp-card-wrap" style="padding-top:52px">
-        <div class="smp-card">
+      <div class="smp2-scroll-inner">
 
-          <!-- Hero: green gradient + checkmark + amount -->
-          <div class="sms-hero">
-            <div class="sms-hero-icon">
-              <svg viewBox="0 0 44 44"><polyline points="8,22 18,32 36,14"/></svg>
-            </div>
-            <div class="sms-hero-center">
-              <span class="sms-hero-lbl">Successfully transferred</span>
-              <div class="sms-hero-amount">
-                <span class="sms-hero-sym">$</span>
-                <span class="sms-hero-int" id="smSuccessInt">1,000</span>
-                <span class="sms-hero-dec" id="smSuccessDec">.00</span>
-              </div>
-            </div>
+        <div class="sms2-check"><img decoding="async" src="assets/smp-check.webp" alt=""></div>
+
+        <div class="smp2-hero">
+          <span class="smp2-lbl smp2-lbl-green">Successfully transferred</span>
+          <div class="smp2-amount">
+            <span class="smp2-sym">$</span>
+            <span class="smp2-int" id="smSuccessInt">1,000</span>
+            <span class="smp2-dec" id="smSuccessDec">.00</span>
           </div>
+          <div class="smp2-eta"><span class="smp2-eta-txt">Completed in 3 minutes</span></div>
+        </div>
+
+        <div class="smp2-divider"></div>
+
+        <button class="smp2-more-btn" onclick="smpToggleMore(this)">
+          <span>Show more details</span>
+          <svg class="smp2-more-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="rgba(0,0,0,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+
+        <div class="smp2-more-body" id="smpMoreS">
 
           <!-- Sections -->
-          <div class="sms-body" id="smSuccessBody" style="display:flex;flex-direction:column;gap:16px;padding:8px 0 0">
+          <div class="sms-body" id="smSuccessBody" style="padding:8px 0 0">
 
-            <!-- STATUS DETAILS — minimized (collapsed accordion) -->
-            <div class="smp-sec-status" id="smAccStatus_s">
-              <div class="smp-sec-hdr" style="cursor:pointer" onclick="this.parentElement.classList.toggle('smp-acc-open')">
-                <span class="smp-sec-lbl">Status details</span>
-                <svg class="smp-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 10L8 6L12 10" stroke="rgba(0,0,0,0.40)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <!-- Expanded transaction details (Figma 6555-40802) -->
+            <div class="smpd-wrap">
+              <div class="smpd-card">
+                <div class="smpd-row"><span class="smpd-lbl">From</span><span class="smpd-val" id="smpdFrom">USD Checking 8978</span></div>
+                <div class="smpd-row"><span class="smpd-lbl">To</span><div class="smpd-valstack"><span class="smpd-val" id="smpdTo">Rohan Rathod</span><span class="smpd-sub" id="smpdToAcct">HDFC 8978</span></div></div>
+                <div class="smpd-row"><span class="smpd-lbl">Sending</span><span class="smpd-val" id="smpdSending">$1,000.00</span></div>
+                <div class="smpd-row"><span class="smpd-lbl">Banyan's fees</span><span class="smpd-fee"><span class="smpd-free">Free</span><span class="smpd-strike">$2.00</span></span></div>
+                <div class="smpd-row smpd-note-row" id="smpdNoteRow" style="display:none"><span class="smpd-lbl">Notes</span><span class="smpd-val smpd-note" id="smpdNote"></span></div>
+
+                <div class="smpd-divider"></div>
+
+                <div class="smpd-row"><span class="smpd-lbl">Exchange rate</span><span class="smpd-inline"><img class="smpd-g" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt=""><span class="smpd-val">$1 = ₹91.78</span></span></div>
+                <div class="smpd-row"><span class="smpd-lbl">Payment method</span><span class="smpd-inline"><span class="ico" style="--ico:url('Icons/GlobeHemisphereWest.svg');--sz:16px;color:#322d0f"></span><span class="smpd-val">International</span></span></div>
+                <div class="smpd-row"><span class="smpd-lbl">Rohan receives</span><span class="smpd-val" id="smpdReceives">₹9,17,800.00</span></div>
+                <div class="smpd-row"><span class="smpd-lbl">Category</span><span class="smpd-cat">Family<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l3-3 3 3M5 10l3 3 3-3"/></svg></span></div>
+                <div class="smpd-row"><span class="smpd-lbl">Payment purpose</span><span class="smpd-val">Family</span></div>
+
+                <div class="smpd-divider"></div>
+
+                <div class="smpd-row"><span class="smpd-lbl">Created on</span><span class="smpd-val">Today, 9:44 AM IST</span></div>
+                <div class="smpd-row"><span class="smpd-lbl">Transaction ID</span><span class="smpd-val">#0976543456787</span></div>
               </div>
-              <div class="smp-acc-body">
-              <div class="smp-stepper">
-                <!-- Step 1: done -->
-                <div class="smp-step">
-                  <div class="smp-step-spine">
-                    <div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
-                    <div class="smp-vline"></div>
-                  </div>
-                  <div class="smp-step-body">
-                    <div class="smp-step-row">
-                      <span class="smp-step-name">Payment initiated</span>
-                      <span class="smp-step-time">2 mins ago</span>
-                    </div>
-                    <div class="smp-step-sub">We've received your transfer request.</div>
-                  </div>
+
+              <!-- Status summary -->
+              <div class="smpd-status">
+                <button class="smpd-status-toggle" type="button" onclick="this.parentElement.classList.toggle('open')">
+                  <span class="smpd-status-swap"><svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.5)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l3-3 3 3M5 10l3 3 3-3"/></svg></span>
+                  <span class="smpd-status-lbl">Show 3 done statuses</span>
+                  <span class="smpd-status-time">2 MINS AGO</span>
+                </button>
+                <div class="smpd-status-extra">
+                  <div class="smpd-status-item"><span class="smpd-status-dot done"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span><span class="smpd-status-name">Payment initiated</span><span class="smpd-status-time">2 MINS AGO</span></div>
+                  <div class="smpd-status-item"><span class="smpd-status-dot done"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span><span class="smpd-status-name">Transfer processed</span><span class="smpd-status-time">1 MIN AGO</span></div>
+                  <div class="smpd-status-item"><span class="smpd-status-dot done"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span><span class="smpd-status-name">Sent to Rohan's bank</span><span class="smpd-status-time">1 MIN AGO</span></div>
                 </div>
-                <!-- Step 2: done -->
-                <div class="smp-step">
-                  <div class="smp-step-spine">
-                    <div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
-                    <div class="smp-vline"></div>
-                  </div>
-                  <div class="smp-step-body">
-                    <div class="smp-step-row">
-                      <span class="smp-step-name">Transfer processed</span>
-                      <span class="smp-step-time">1 min ago</span>
-                    </div>
-                    <div class="smp-step-sub">By Banyan and our banking partner.</div>
-                  </div>
-                </div>
-                <!-- Step 3: done -->
-                <div class="smp-step">
-                  <div class="smp-step-spine">
-                    <div class="smp-si-check"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></div>
-                    <div class="smp-vline"></div>
-                  </div>
-                  <div class="smp-step-body">
-                    <div class="smp-step-row">
-                      <span class="smp-step-name">Sent to Rohan's bank</span>
-                      <span class="smp-step-time">1 min ago</span>
-                    </div>
-                    <div class="smp-step-sub">The money has reached HDFC Bank.</div>
-                  </div>
-                </div>
-                <!-- Step 4: active (just completed) -->
-                <div class="smp-step">
-                  <div class="smp-step-spine">
-                    <div class="smp-si-active"><div class="smp-si-active-inner"></div></div>
-                  </div>
-                  <div class="smp-step-body" style="padding-bottom:4px">
-                    <div class="smp-step-row">
-                      <span class="smp-step-name active" id="smSuccessRecipStep">Funds in Rohan's account</span>
-                      <span class="smp-step-time">just now</span>
-                    </div>
-                    <div class="smp-step-sub" id="smSuccessRecipSub">Rohan has received the money in their HDFC Bank account.</div>
-                  </div>
-                </div>
-              </div>
+                <div class="smpd-status-item smpd-status-last"><span class="smpd-status-dot done"><svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg></span><span class="smpd-status-name" id="smpdStatusLast">Funds in Rohan's account</span><span class="smpd-status-time">IN 1 MIN</span></div>
               </div>
             </div>
 
-            <!-- TRANSACTION DETAILS — open, dispenses like a bill -->
-            <div class="smp-sec-txn smp-acc-open" id="smAccSuccessTxn">
-              <div class="smp-sec-hdr smp-sec-hdr-open" style="cursor:pointer" onclick="this.parentElement.classList.toggle('smp-acc-open')">
-                <span class="smp-sec-lbl">Transaction details</span>
-                <svg class="smp-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 10L8 6L12 10" stroke="rgba(0,0,0,0.40)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </div>
-              <div class="smp-acc-body sms-receipt">
-                <div class="sms-receipt-rows">
-                <div class="smp-acc-row"><span class="smp-acc-lbl">Recipient</span><span class="smp-acc-val" id="smSuccessRecip">Rohan Rathod</span></div>
-                <div class="smp-acc-row"><span class="smp-acc-lbl">Paid to</span><span class="smp-acc-val" id="smSuccessAcct">••7654 · HDFC Bank</span></div>
-                <div class="smp-acc-row"><span class="smp-acc-lbl">Amount sent</span><span class="smp-acc-val" id="smSuccessAmt">$1,000.00</span></div>
-                <div class="smp-acc-row"><span class="smp-acc-lbl">Recipient receives</span><span class="smp-acc-val" id="smSuccessInr">₹91,780</span></div>
-                <div class="smp-acc-row"><span class="smp-acc-lbl">Fee</span><span class="smp-acc-val" style="color:var(--brand-primary)">Free</span></div>
-                <div class="smp-acc-row"><span class="smp-acc-lbl">From account</span><span class="smp-acc-val">USD Checking ••3214</span></div>
-                <div class="smp-acc-row" style="padding-bottom:8px"><span class="smp-acc-lbl">Transaction ID</span><span class="smp-acc-val" style="font-size:11px;color:rgba(0,0,0,0.45)">TXN-2026-BNY-8834</span></div>
-                </div>
-              </div>
-            </div>
+          </div><!-- /sections -->
+        </div><!-- /.smp2-more-body -->
 
-          </div>
-        </div>
-      </div>
-
-      <!-- Done + Share -->
-      <div class="sms-bottom">
-        <button class="sms-done-btn" onclick="smDone()">Done</button>
-        <button class="sms-share-btn">
-          <svg viewBox="0 0 20 20"><circle cx="15" cy="4" r="2"/><circle cx="5" cy="10" r="2"/><circle cx="15" cy="16" r="2"/><line x1="7" y1="11" x2="13" y2="15"/><line x1="7" y1="9" x2="13" y2="5"/></svg>
-          Share
-        </button>
-      </div>
+      </div><!-- /.smp2-scroll-inner -->
     </div><!-- /.sms-scroll -->
+
+    <!-- Done + Share — pinned to screen bottom -->
+    <div class="smp2-bottom smp2-bottom-2">
+      <button class="smp2-btn smp2-btn-secondary" onclick="smDone()">Done</button>
+      <button class="smp2-btn smp2-btn-primary smp2-btn-share">
+        <svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="15" cy="4" r="2"/><circle cx="5" cy="10" r="2"/><circle cx="15" cy="16" r="2"/><line x1="7" y1="11" x2="13" y2="15"/><line x1="7" y1="9" x2="13" y2="5"/></svg>
+        Share
+      </button>
+    </div>
   </div><!-- /#sm-success -->
 
 
@@ -3653,7 +3670,7 @@
         <span class="bnav-label">Home</span>
       </div>
       <div class="bnav-tab" id="bnav1" onclick="showSendMoney(); setNavActive(1);">
-        <div class="bnav-icon-m" style="--ico:url('Icons/ArrowFatLinesUp.svg')"></div>
+        <div class="bnav-icon-m" style="--ico:url('Icons/PaperPlaneTilt.svg')"></div>
         <span class="bnav-label">Pay</span>
       </div>
       <div class="bnav-ai-slot" id="bnavAiSlot" onclick="openAgent(); event.stopPropagation();">
@@ -4359,7 +4376,7 @@
 
 </div>
 
-  <script defer src="app.js?v=212"></script>
+  <script defer src="app.js?v=260"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

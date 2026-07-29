@@ -52,37 +52,23 @@ function setNavActive(tabIndex) {
   _morphIndicator(prev, tabIndex);
 }
 
-/* ── Indicator morphing ─────────────────────────────────
-   The indicator stretches like a water droplet between tabs:
-   1. Extend toward the target (elongate the "neck")
-   2. Spring-contract to the new tab position               */
+/* ── Limelight indicator ─────────────────────────────────
+   The beam slides to sit centered above the active tab.       */
+var _BNAV_BEAM_W = 44;
+function _limelightX(tab) {
+  return tab.offsetLeft + (tab.offsetWidth - _BNAV_BEAM_W) / 2;
+}
 function _morphIndicator(fromIndex, toIndex) {
   var indicator = document.getElementById('bnavIndicator');
-  var pill = document.getElementById('bnavPill');
-  if (!indicator || !pill || typeof Motion === 'undefined') return;
-  if (fromIndex === toIndex) return;
-
-  var fromTab = document.getElementById('bnav' + fromIndex);
-  var toTab   = document.getElementById('bnav' + toIndex);
-  if (!fromTab || !toTab) return;
-
-  var TAB_W = 68;
-  var fromX = fromTab.offsetLeft;
-  var toX   = toTab.offsetLeft;
-  var goRight = toX > fromX;
-
-  // Stretch: elongate toward the target
-  var stretchLeft  = goRight ? fromX : toX;
-  var stretchWidth = Math.abs(toX - fromX) + TAB_W;
-
-  var STRETCH = { duration: 0.12, easing: [0.3, 0, 0.6, 1] };
-  var CONTRACT = { easing: Motion.spring({ stiffness: 480, damping: 22, mass: 0.6 }) };
-
-  // Droplet physics: squash vertically as it elongates, spring back as it lands
-  _indAnim = Motion.animate(indicator, { x: stretchLeft, width: stretchWidth, scaleY: 0.88 }, STRETCH);
-  _indAnim.finished.then(function() {
-    _indAnim = Motion.animate(indicator, { x: toX, width: TAB_W, scaleY: 1 }, CONTRACT);
-  }).catch(function(){});
+  var toTab = document.getElementById('bnav' + toIndex);
+  if (!indicator || !toTab) return;
+  var x = _limelightX(toTab);
+  if (typeof Motion !== 'undefined') {
+    if (_indAnim && _indAnim.stop) { try { _indAnim.stop(); } catch (e) {} }
+    _indAnim = Motion.animate(indicator, { x: x }, { duration: 0.4, easing: [0.4, 0, 0.2, 1] });
+  } else {
+    indicator.style.transform = 'translateX(' + x + 'px)';
+  }
 }
 var _indAnim = null; // current bnav indicator animation (so slot-sync can supersede it)
 
@@ -117,9 +103,9 @@ function _syncIndicatorForSlot() {
     var indicator = document.getElementById('bnavIndicator');
     var tab = document.getElementById('bnav' + _currentNavTab);
     if (!indicator || !tab || typeof Motion === 'undefined') return;
-    // Supersede any in-flight morph animation (it targeted the pre-shift position)
+    // Supersede any in-flight slide (it targeted the pre-shift position)
     if (_indAnim && _indAnim.stop) { try { _indAnim.stop(); } catch (e) {} }
-    _indAnim = Motion.animate(indicator, { x: tab.offsetLeft, width: 68, scaleY: 1 },
+    _indAnim = Motion.animate(indicator, { x: _limelightX(tab) },
       { easing: Motion.spring({ stiffness: 480, damping: 24, mass: 0.6 }) });
   };
   var done = false;
@@ -1066,6 +1052,30 @@ function _agRenderScheduled(aiDiv, msgs, td, refNum) {
 }
 
 // ── TRANSFER SUMMARY CARD ─────────────────────────────
+// "Here is what you can do alternatively" — shared suggestion rows for the
+// transfer review card (initial render and the purpose-confirm reply).
+function _agBuildTransferAlt() {
+  var alt = document.createElement('div');
+  alt.className = 'ag-sm2-alt';
+  var altItems = ['Change payment purpose', 'Change the space to be paid from', 'Schedule the payment for later'];
+  var elbow = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 4v4a1 1 0 0 0 1 1h6M9 6l3 3-3 3" stroke="rgba(0,0,0,0.4)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var altHtml = '<div class="ag-sm2-alt-head">Here is what you can do alternatively</div><div class="ag-sm2-alt-list">';
+  altItems.forEach(function(t) {
+    altHtml += '<button class="ag-sm2-alt-row" type="button" data-text="' + _agEscape(t) + '"><span class="ag-sm2-alt-ic">' + elbow + '</span><span class="ag-sm2-alt-label">' + _agEscape(t) + '</span></button>';
+  });
+  altHtml += '</div>';
+  alt.innerHTML = altHtml;
+  alt.querySelectorAll('.ag-sm2-alt-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var t = row.getAttribute('data-text');
+      if (/purpose/i.test(t))       agOpenPurposeSheet();
+      else if (/space/i.test(t))    agOpenSpaceSheet();
+      else if (/schedule/i.test(t)) agOpenScheduleSheet();
+      else                          agentSendText(t);
+    });
+  });
+  return alt;
+}
 function _agRenderTransfer(aiDiv, msgs, data) {
   var d = data;
   var fromSym = d.fromAccount.sym;
@@ -1143,25 +1153,7 @@ function _agRenderTransfer(aiDiv, msgs, data) {
   });
 
   // "Here is what you can do alternatively" — suggestion rows
-  var alt = document.createElement('div');
-  alt.className = 'ag-sm2-alt';
-  var altItems = ['Change payment purpose', 'Change the space to be paid from', 'Schedule the payment for later'];
-  var elbow = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M5 4v4a1 1 0 0 0 1 1h6M9 6l3 3-3 3" stroke="rgba(0,0,0,0.4)" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  var altHtml = '<div class="ag-sm2-alt-head">Here is what you can do alternatively</div><div class="ag-sm2-alt-list">';
-  altItems.forEach(function(t) {
-    altHtml += '<button class="ag-sm2-alt-row" type="button" data-text="' + _agEscape(t) + '"><span class="ag-sm2-alt-ic">' + elbow + '</span><span class="ag-sm2-alt-label">' + _agEscape(t) + '</span></button>';
-  });
-  altHtml += '</div>';
-  alt.innerHTML = altHtml;
-  alt.querySelectorAll('.ag-sm2-alt-row').forEach(function(row) {
-    row.addEventListener('click', function() {
-      var t = row.getAttribute('data-text');
-      if (/purpose/i.test(t))       agOpenPurposeSheet();
-      else if (/space/i.test(t))    agOpenSpaceSheet();
-      else if (/schedule/i.test(t)) agOpenScheduleSheet();
-      else                          agentSendText(t);
-    });
-  });
+  var alt = _agBuildTransferAlt();
 
   // Stream intro ctx → card → rate line → alternatives
   _agAddCtx(aiDiv, 'Ready to send ' + fromSym + amtStr + ' to ' + d.recip.name + '. They’ll receive ' + toSym + d.convertedAmt + ' at the current rate. The rate will be the same for 5 mins.', function() {
@@ -1263,6 +1255,68 @@ function _agApplyPurpose(label) {
   var v = _agActiveTransfer.card.querySelector('.ag-sm2-purpose-v');
   if (v) v.textContent = label;
   haptic(8);
+}
+// Confirming a purpose reads as a real conversational turn: the user's choice
+// posts as a message, then the agent re-presents the updated transfer card and
+// asks whether to send now.
+function _agPurposeConfirmTurn(label) {
+  if (!_agActiveTransfer) return;
+  _agApplyPurpose(label);
+  var msgs = document.getElementById('agentMsgs');
+  if (!msgs) return;
+  // Detach the old card + alt list from the previous message; the card moves
+  // into the new reply below.
+  var oldAi = _agActiveTransfer.card.closest('.ag-msg-ai');
+  var oldAlt = oldAi ? oldAi.querySelector('.ag-sm2-alt') : null;
+  if (oldAlt) oldAlt.remove();
+  msgs.querySelectorAll('.ag-msg-ai').forEach(function(el) { el.style.minHeight = ''; });
+  var userDiv = _agScriptUser('Set the purpose to ' + label + '.');
+  var line = 'Done — the purpose is now ' + label + '. Here’s your updated transfer. Should I send it now?';
+  var ai = document.createElement('div');
+  ai.className = 'ag-msg-ai';
+  ai.innerHTML = '<div class="ag-msg-ai-label">' + _AG_LEAF_SVG + '<span class="ag-msg-ai-name">Banyan AI</span></div>';
+  msgs.appendChild(ai);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { ai.classList.add('visible'); }); });
+  ai.style.minHeight = Math.max(0, msgs.clientHeight - userDiv.offsetHeight - 112) + 'px';
+  _agSuppressJump = true;
+  var jmp = document.getElementById('agentJump'); if (jmp) jmp.classList.remove('is-visible');
+  var target = Math.max(0, userDiv.offsetTop - 20);
+  _agSmoothScrollTo(msgs, target, 680, function() {
+    _agSuppressJump = false; if (typeof _agUpdateJump === 'function') _agUpdateJump();
+  });
+  _agRunSteps(ai, _AG_DEFAULT_STEPS, msgs, function() {
+    var lbl = ai.querySelector('.ag-msg-ai-label');
+    if (lbl) { lbl.classList.add('show'); requestAnimationFrame(function() { requestAnimationFrame(function() { lbl.classList.add('in'); }); }); }
+    _agAddCtx(ai, line, function() {
+      _agRelocateTransferCard(ai, msgs);
+      var alt = _agBuildTransferAlt();
+      ai.appendChild(alt);
+      requestAnimationFrame(function() { requestAnimationFrame(function() { alt.classList.add('s-in'); }); });
+      _agAppendFooter(ai);
+    });
+  }, 3200);
+}
+// Move the live transfer card into the given reply and rebind its Send button
+// so the send flow renders its status in the new message (not the original).
+function _agRelocateTransferCard(ai, msgs) {
+  if (!_agActiveTransfer) return;
+  var card = _agActiveTransfer.card;
+  ai.appendChild(card);
+  requestAnimationFrame(function() { requestAnimationFrame(function() { card.classList.add('ui-in'); }); });
+  var send = card.querySelector('.ag-sm2-send');
+  if (send) {
+    var fresh = send.cloneNode(true);            // strip the old aiDiv-bound listener
+    send.parentNode.replaceChild(fresh, send);
+    fresh.addEventListener('click', function() {
+      card.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+      card.style.transition = 'opacity 180ms ease-out'; card.style.opacity = '0';
+      setTimeout(function() {
+        card.remove();
+        var refNum = 'BNY-' + (10000 + Math.floor(Math.random() * 90000 % 90000));
+        _agRenderTransferStatus(ai, msgs, _agActiveTransfer.td, refNum);
+      }, 200);
+    });
+  }
 }
 function agOpenPurposeSheet() {
   if (!_agActiveTransfer) return;
@@ -2452,6 +2506,20 @@ function _agAppendFooter(aiDiv) {
     requestAnimationFrame(function() {
       requestAnimationFrame(function() { fb.classList.add('visible'); });
     });
+    // Keep the footer pinned below trailing content (cards, the "alternatively"
+    // list, follow-up rows) as it streams in. Must stay trail-aware: the
+    // thinking-spinner trail runs its own bottom-pinning observer, so we keep
+    // the footer just *above* the trail (never fight it for last place) —
+    // otherwise the two observers ping-pong forever and freeze the page.
+    var pin = new MutationObserver(function() {
+      var trail = aiDiv.querySelector(':scope > .ag-think-trail');
+      if (trail) {
+        if (trail.previousElementSibling !== fb) aiDiv.insertBefore(fb, trail);
+      } else if (aiDiv.lastElementChild && aiDiv.lastElementChild !== fb) {
+        aiDiv.appendChild(fb);
+      }
+    });
+    pin.observe(aiDiv, { childList: true });
   }
   function arm() { clearTimeout(timer); timer = setTimeout(commit, 650); }
   var obs = new MutationObserver(arm);
@@ -2644,6 +2712,14 @@ function agPickUseCase(key) {
     _agRenderGallery();
     return;
   }
+  // "Pay someone safely" runs the real interactive send-money journey
+  // (transfer review card → edit details / purpose → send), not a scripted playback.
+  if (key === 'pay') {
+    if (lbl) lbl.textContent = _AG_SCRIPT_LABELS.pay;
+    _agResetConvo();
+    setTimeout(function() { agentSendText('Pay Maya $500'); }, 80);
+    return;
+  }
   if (_AG_SCRIPTS[key]) {
     if (lbl) lbl.textContent = _AG_SCRIPT_LABELS[key] || 'Use cases';
     agPlayScript(key);
@@ -2753,7 +2829,7 @@ var _AG_SCRIPTS = {
   ],
 
   explain: [
-    { u: 'What is this $126 charge?' },
+    { u: 'What is this $126 charge on my Travel card? I don’t remember booking anything.' },
     { a: [
       'Here’s the charge. It looks like the final posted version of your Delta purchase on July 3, not a duplicate.',
       'No action is needed right now. If another Delta charge for the same amount posts, I’ll flag it as a possible duplicate.'
@@ -5805,6 +5881,10 @@ let smInrPaise = 0;
 let smDollarInt = 0;   // whole dollars typed
 let smCentStr   = '';  // 0-2 cent digit chars
 let smInCents   = false; // has user pressed '.'?
+let smIntStr    = '';  // USD integer digits as typed (source of truth for caret editing)
+let smCaretIdx  = 0;   // caret position within smIntStr (0..len)
+let smInrStr    = '';  // INR integer digits as typed (when TO is the active input)
+let smInrCaretIdx = 0; // caret position within smInrStr (0..len)
 let smInrRupeeInt = 0;
 let smInrPaisaStr = '';
 let smInrInCents  = false;
@@ -7996,10 +8076,160 @@ function renderSmLBubbles() {
   });
 }
 
+// Redesigned bene selection (Figma 6498-58790): recommended slide-to-pay cards
+// + a full beneficiary list, sourced from BENS.
+function _smBeneAcctLine(b) {
+  var rk = b.rails ? Object.keys(b.rails)[0] : null;
+  if (rk) {
+    var rows = b.rails[rk].rows || [], bank = '', last4 = '';
+    rows.forEach(function(r) {
+      if (/bank/i.test(r[0]) && !bank) bank = r[1];
+      if (/account no/i.test(r[0])) { var m = r[1].match(/(\d{3,4})\s*$/); if (m) last4 = m[1]; }
+    });
+    return (bank || 'Bank') + (last4 ? ' ' + last4 : '');
+  }
+  return b.loc || '';
+}
+function _smBeneSub(b) {
+  var c = b.contact || [], email = '', phone = '';
+  c.forEach(function(r) { if (/email/i.test(r[0])) email = r[1]; if (/phone/i.test(r[0])) phone = r[1]; });
+  return email || phone || '';
+}
+/* Edit a recommended card's amount → open amount entry with it prefilled */
+function smEditCardAmount(id) {
+  if (typeof BENS === 'undefined') return;
+  var b = BENS.filter(function(x){ return x.id === id; })[0];
+  var card = document.querySelector('#smL2Rec .sm-l2-card[data-id="' + id + '"]');
+  var usd = card ? (parseFloat(card.dataset.usd) || 0) : 0;
+  if (b) smGoToAmount(b.name, b.ini, b.bg, _smBeneAcctLine(b));
+  // Prefill the entered amount (smGoToAmount resets it to 0)
+  smCurrencyFlipped = false;
+  smIntStr = usd > 0 ? String(Math.round(usd)) : '';
+  smCaretIdx = smIntStr.length;
+  smCents = Math.round(usd * 100);
+  smInrPaise = Math.round(usd * SM_EXRATE * 100);
+  if (typeof smUpdateAmount === 'function') smUpdateAmount();
+}
+
+function renderSmLanding2() {
+  if (typeof BENS === 'undefined') return;
+  var rec = document.getElementById('smL2Rec'), list = document.getElementById('smL2List');
+  if (!rec || !list) return;
+  var esc = (typeof _agEscape === 'function') ? _agEscape : function(s){ return String(s); };
+  var editSvg = '<svg viewBox="0 0 256 256" fill="rgba(0,0,0,0.6)"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/></svg>';
+  var caretSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
+  var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>';
+  var recs = BENS.filter(function(b){ return b.fav; }).slice(0, 4);
+  var payAmts = ['$100,000.00', '$20,000.00', '$45,000.00', '$12,500.00'];
+  // Compose "$100,000.00" as small symbol · large integer · small decimals
+  function amtHtml(s) {
+    var m = /^(\D*)([\d,]+)(\.\d+)?$/.exec(s) || [];
+    return '<span class="sm-l2-card-cur">' + (m[1] || '$') + '</span>' +
+      '<span class="sm-l2-card-int">' + (m[2] || s) + '</span>' +
+      '<span class="sm-l2-card-dec">' + (m[3] || '') + '</span>';
+  }
+  rec.innerHTML = recs.map(function(b, i) {
+    var acct = _smBeneAcctLine(b);
+    var usdNum = parseFloat(payAmts[i % payAmts.length].replace(/[^0-9.]/g, '')) || 0;
+    return '<div class="sm-l2-card" data-id="' + b.id + '" data-usd="' + usdNum + '">' +
+      '<div class="sm-l2-card-pat" aria-hidden="true"></div>' +
+      '<div class="sm-l2-card-head"><div class="sm-l2-card-name">' + esc(b.name) + '</div>' +
+        '<div class="sm-l2-card-bank">' + esc(acct) + '</div></div>' +
+      '<div class="sm-l2-card-body">' +
+        '<div class="sm-l2-card-payblock">' +
+          '<div class="sm-l2-card-paylbl">You generally pay</div>' +
+          '<div class="sm-l2-card-payrow"><span class="sm-l2-card-amt">' + amtHtml(payAmts[i % payAmts.length]) + '</span>' +
+            '<button class="sm-l2-card-edit" onclick="event.stopPropagation();smEditCardAmount(\'' + b.id + '\')" aria-label="Edit amount">' + editSvg + '</button></div>' +
+        '</div>' +
+        '<button class="sm-l2-slide" type="button"><span class="sm-l2-slide-knob">' + caretSvg + '</span><span class="sm-l2-slide-txt">Slide to pay</span></button>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+  list.innerHTML = BENS.map(function(b) {
+    var sub = _smBeneSub(b);
+    return '<button class="sm-l2-row" type="button" data-id="' + b.id + '">' +
+      '<span class="sm-l2-av" style="background:' + b.bg + '">' + esc(b.ini) + '</span>' +
+      '<span class="sm-l2-rowtxt"><span class="sm-l2-rowname">' + esc(b.name) + '</span>' +
+        (sub ? '<span class="sm-l2-rowsub">' + esc(sub) + '</span>' : '') + '</span>' +
+      '<span class="sm-l2-rowgo">' + arrowSvg + '</span></button>';
+  }).join('');
+  // Tapping a beneficiary (row or card) → amount entry screen
+  function goAmount(id) {
+    var b = BENS.filter(function(x){ return x.id === id; })[0];
+    if (b) smGoToAmount(b.name, b.ini, b.bg, _smBeneAcctLine(b));
+  }
+  // Slide-to-pay confirms with the card's preset amount and jumps straight to review
+  function goPay(id) {
+    var b = BENS.filter(function(x){ return x.id === id; })[0]; if (!b) return;
+    var card = rec.querySelector('.sm-l2-card[data-id="' + id + '"]');
+    var usd = card ? (parseFloat(card.dataset.usd) || 0) : 0;
+    smRecipient = { name: b.name, initials: b.ini, bg: b.bg, account: _smBeneAcctLine(b) };
+    smCurrencyFlipped = false;
+    smCents = Math.round(usd * 100);
+    smInrPaise = Math.round(usd * SM_EXRATE * 100);
+    smIntStr = String(Math.round(usd)); smCaretIdx = smIntStr.length;
+    // Keep the amount screen coherent for back-navigation
+    var rn = document.getElementById('smRecipientName'); if (rn) rn.textContent = b.name;
+    var rs = document.getElementById('smRecipientSub'); if (rs) rs.textContent = _smBeneAcctLine(b);
+    var th = document.getElementById('smToHint'); if (th) th.textContent = b.name.split(' ')[0] + ' receives';
+    if (typeof smUpdateAmount === 'function') smUpdateAmount();
+    document.getElementById('sm-landing').className = 'screen hl';
+    smGoToReview();
+  }
+  rec.querySelectorAll('.sm-l2-slide').forEach(function(track) { _bindSlideToPay(track, goPay); });
+  list.querySelectorAll('.sm-l2-row').forEach(function(btn) { btn.addEventListener('click', function() { goAmount(btn.dataset.id); }); });
+}
+
+/* Drag-to-confirm "Slide to pay" control */
+function _bindSlideToPay(track, onConfirm) {
+  var knob = track.querySelector('.sm-l2-slide-knob');
+  var txt  = track.querySelector('.sm-l2-slide-txt');
+  if (!knob) return;
+  var dragging = false, startX = 0, x = 0, max = 0;
+  function maxTravel() { return track.clientWidth - knob.offsetWidth - 12; /* 6px pad each side */ }
+  function setX(v) {
+    x = Math.max(0, Math.min(maxTravel(), v));
+    knob.style.transform = 'translate(' + x + 'px, -50%)';
+    if (txt) txt.style.opacity = String(Math.max(0, 1 - x / (maxTravel() * 0.6)));
+  }
+  function down(e) {
+    dragging = true; max = maxTravel();
+    track.classList.remove('snap-back'); knob.classList.add('dragging');
+    startX = (e.touches ? e.touches[0].clientX : e.clientX) - x;
+    e.preventDefault();
+  }
+  function move(e) {
+    if (!dragging) return;
+    setX((e.touches ? e.touches[0].clientX : e.clientX) - startX);
+  }
+  function up() {
+    if (!dragging) return;
+    dragging = false; knob.classList.remove('dragging');
+    if (x >= maxTravel() * 0.9) {
+      var id = track.closest('.sm-l2-card').dataset.id;
+      onConfirm(id);
+      // reset for when the user returns
+      track.classList.add('snap-back'); setX(0);
+    } else {
+      track.classList.add('snap-back'); setX(0);
+    }
+  }
+  knob.addEventListener('mousedown', down);
+  knob.addEventListener('touchstart', down, { passive: false });
+  window.addEventListener('mousemove', move);
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('mouseup', up);
+  window.addEventListener('touchend', up);
+  // Tap (no drag) also confirms, for accessibility
+  track.addEventListener('click', function(e) {
+    if (x === 0 && !dragging) onConfirm(track.closest('.sm-l2-card').dataset.id);
+  });
+}
+
 function showSendMoney(from) {
   haptic(8);
   smOrigin = from || _smOrigin || 'home';
-  renderSmLBubbles();
+  renderSmLanding2();
   ['home','accounts','explore'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.className = 'screen hb';
@@ -8117,13 +8347,18 @@ function smGoToAmount(name, initials, bg, account, blobEl) {
   smCurrencyFlipped = false;
   smInrPaise = 0;
   smDollarInt = 0; smCentStr = ''; smInCents = false;
+  smIntStr = ''; smCaretIdx = 0;
+  smInrStr = ''; smInrCaretIdx = 0;
   smInrRupeeInt = 0; smInrPaisaStr = ''; smInrInCents = false;
-  document.getElementById('sm-amount').querySelector('.sm2-amount-section').classList.remove('flipped');
+  var _amtSec = document.querySelector('#sm-amount .sm2-amount-section');
+  if (_amtSec) _amtSec.classList.remove('flipped');
   const switchBtn = document.getElementById('smSwitchBtn');
   if (switchBtn) switchBtn.classList.remove('flipped');
   // Update recipient UI — background matches landing bubble style (semi-transparent white)
   document.getElementById('smRecipientName').textContent     = name;
   document.getElementById('smRecipientInitials').textContent = initials;
+  var _toHint = document.getElementById('smToHint');
+  if (_toHint) _toHint.textContent = (name || '').split(' ')[0] + ' receives';
   document.getElementById('smRecipientAvatar').style.background = 'rgba(255,255,255,0.4)';
   document.getElementById('smRecipientSub').textContent      = account;
   // Copy the blob's photo to both amount + review avatars
@@ -8191,43 +8426,85 @@ function smUpdateAmount() {
   let usdInt, usdDec, inrInt, inrDec, hasAmount;
 
   if (smCurrencyFlipped) {
-    // INR is the input currency
-    const inrRupees  = smInrPaise / 100;
-    const dollars    = inrRupees / SM_EXRATE;
-    const inrFrac    = smInrPaise % 100;
-    inrInt  = Math.floor(inrRupees).toLocaleString('en-IN');
-    inrDec  = '.' + String(inrFrac).padStart(2,'0');
-    usdInt  = Math.floor(dollars).toLocaleString('en-US');
-    usdDec  = '.' + String(Math.round((dollars % 1) * 100)).padStart(2,'0');
+    // INR is the input currency → derive USD from it, keep both in sync
+    smCents = Math.round((smInrPaise / 100) / SM_EXRATE * 100);
     hasAmount = smInrPaise > 0;
-    // Keep smCents in sync for downstream (review screen etc.)
-    smCents = Math.round(dollars * 100);
   } else {
-    // USD is the input currency
-    const dollars  = smCents / 100;
-    const inr      = dollars * SM_EXRATE;
-    const fracPart = smCents % 100;
-    usdInt  = Math.floor(dollars).toLocaleString('en-US');
-    usdDec  = '.' + String(fracPart).padStart(2,'0');
-    inrInt  = Math.round(inr).toLocaleString('en-IN');
-    inrDec  = '.00';
+    // USD is the input currency → derive INR from it, keep both in sync
+    smInrPaise = Math.round((smCents / 100) * SM_EXRATE * 100);
     hasAmount = smCents > 0;
-    // Keep smInrPaise in sync
-    smInrPaise = Math.round(inr * 100);
   }
+  // Format both from the synced integer minor-unit amounts (no dropped paise)
+  usdInt = Math.floor(smCents / 100).toLocaleString('en-US');
+  usdDec = '.' + String(((smCents % 100) + 100) % 100).padStart(2, '0');
+  inrInt = Math.floor(smInrPaise / 100).toLocaleString('en-IN');
+  inrDec = '.' + String(((smInrPaise % 100) + 100) % 100).padStart(2, '0');
 
-  document.getElementById('smAmountInt').textContent    = usdInt;
+  // The active input currency shows the editable digits + caret; the other is computed.
+  if (smCurrencyFlipped) {
+    document.getElementById('smAmountInt').textContent = usdInt;
+    document.getElementById('smAmountInrInt').innerHTML = _smaRenderInt(smInrStr, smInrCaretIdx, 'en-IN');
+  } else {
+    document.getElementById('smAmountInt').innerHTML = _smaRenderInt(smIntStr, smCaretIdx, 'en-US');
+    document.getElementById('smAmountInrInt').textContent = inrInt;
+  }
   document.getElementById('smAmountDec').textContent    = usdDec;
-  document.getElementById('smAmountInrInt').textContent = inrInt;
   document.getElementById('smAmountInrDec').textContent = inrDec;
 
   const btn = document.getElementById('smSendBtn');
   btn.disabled = !hasAmount;
-  if (hasAmount) {
-    btn.innerHTML = 'Review payment <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
-  } else {
-    btn.textContent = 'Enter an amount';
+  // Label stays constant — only the disabled state changes
+  if (btn.dataset.labelSet !== '1') {
+    btn.innerHTML = 'Review payment <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+    btn.dataset.labelSet = '1';
   }
+}
+
+/* Render the USD integer as individual digit spans with commas, placing the
+   blinking caret at caretIdx. Empty → a "0" placeholder with the caret after it. */
+function _smaRenderInt(str, caretIdx, locale) {
+  var caret = '<span class="sma2-caret" aria-hidden="true"></span>';
+  if (!str) return '<span class="sma2-amt-d" data-i="0">0</span>' + caret;
+  var n = str.length, out = '';
+  for (var i = 0; i < n; i++) {
+    if (i === caretIdx) out += caret;
+    var r = n - i; // digits to the right
+    var comma = i > 0 && (locale === 'en-IN' ? (r >= 3 && (r - 3) % 2 === 0) : (r % 3 === 0));
+    if (comma) out += '<span class="sma2-amt-comma">,</span>';
+    out += '<span class="sma2-amt-d" data-i="' + i + '">' + str[i] + '</span>';
+  }
+  if (caretIdx >= n) out += caret;
+  return out;
+}
+/* Place the caret where the user taps — activating that currency as the input.
+   Tapping the other currency seeds it from the current converted value. */
+function smaAmountClick(e, cur) {
+  e.stopPropagation();
+  cur = cur || 'usd';
+  var flip = (cur === 'inr');
+  if (smCurrencyFlipped !== flip) {
+    if (flip) {
+      var rup = Math.floor(smInrPaise / 100);
+      smInrStr = rup > 0 ? String(rup) : '';
+      smInrCaretIdx = smInrStr.length; smInrPaisaStr = ''; smInrInCents = false;
+    } else {
+      var dol = Math.floor(smCents / 100);
+      smIntStr = dol > 0 ? String(dol) : '';
+      smCaretIdx = smIntStr.length; smCentStr = ''; smInCents = false;
+    }
+    smCurrencyFlipped = flip;
+    smUpdateAmount();
+  }
+  var str = flip ? smInrStr : smIntStr;
+  if (str === '') { return; }
+  var digits = document.querySelectorAll((flip ? '#smAmountInrInt' : '#smAmountInt') + ' .sma2-amt-d');
+  var x = e.clientX, idx = digits.length;
+  for (var i = 0; i < digits.length; i++) {
+    var dr = digits[i].getBoundingClientRect();
+    if (x < dr.left + dr.width / 2) { idx = i; break; }
+  }
+  if (flip) smInrCaretIdx = idx; else smCaretIdx = idx;
+  smUpdateAmount();
 }
 
 function smKey(k) {
@@ -8237,18 +8514,25 @@ function smKey(k) {
         smInrPaisaStr = smInrPaisaStr.slice(0, -1);
       } else if (smInrInCents) {
         smInrInCents = false;
-      } else {
-        smInrRupeeInt = Math.floor(smInrRupeeInt / 10);
+      } else if (smInrCaretIdx > 0) {
+        smInrStr = smInrStr.slice(0, smInrCaretIdx - 1) + smInrStr.slice(smInrCaretIdx);
+        smInrCaretIdx--;
       }
     } else if (k === '.') {
       if (!smInrInCents) smInrInCents = true;
     } else {
       if (smInrInCents) {
         if (smInrPaisaStr.length < 2) smInrPaisaStr += k;
-      } else {
-        if (smInrRupeeInt < 10000000) smInrRupeeInt = smInrRupeeInt * 10 + parseInt(k);
+      } else if (smInrStr.length < 8) {
+        smInrStr = smInrStr.slice(0, smInrCaretIdx) + k + smInrStr.slice(smInrCaretIdx);
+        smInrCaretIdx++;
       }
     }
+    var _bi = smInrStr.length;
+    smInrStr = smInrStr.replace(/^0+(?=\d)/, '');
+    smInrCaretIdx = Math.max(0, smInrCaretIdx - (_bi - smInrStr.length));
+    if (smInrCaretIdx > smInrStr.length) smInrCaretIdx = smInrStr.length;
+    smInrRupeeInt = parseInt(smInrStr || '0', 10);
     const paisa = parseInt((smInrPaisaStr + '00').slice(0, 2));
     smInrPaise = smInrRupeeInt * 100 + paisa;
     smCents = Math.round((smInrPaise / 100) / SM_EXRATE * 100);
@@ -8258,18 +8542,26 @@ function smKey(k) {
         smCentStr = smCentStr.slice(0, -1);
       } else if (smInCents) {
         smInCents = false;
-      } else {
-        smDollarInt = Math.floor(smDollarInt / 10);
+      } else if (smCaretIdx > 0) {
+        smIntStr = smIntStr.slice(0, smCaretIdx - 1) + smIntStr.slice(smCaretIdx);
+        smCaretIdx--;
       }
     } else if (k === '.') {
       if (!smInCents) smInCents = true;
     } else {
       if (smInCents) {
         if (smCentStr.length < 2) smCentStr += k;
-      } else {
-        if (smDollarInt < 100000) smDollarInt = smDollarInt * 10 + parseInt(k);
+      } else if (smIntStr.length < 6) {
+        smIntStr = smIntStr.slice(0, smCaretIdx) + k + smIntStr.slice(smCaretIdx);
+        smCaretIdx++;
       }
     }
+    // strip leading zeros (keep caret aligned)
+    var _b = smIntStr.length;
+    smIntStr = smIntStr.replace(/^0+(?=\d)/, '');
+    smCaretIdx = Math.max(0, smCaretIdx - (_b - smIntStr.length));
+    if (smCaretIdx > smIntStr.length) smCaretIdx = smIntStr.length;
+    smDollarInt = parseInt(smIntStr || '0', 10);
     const cents = parseInt((smCentStr + '00').slice(0, 2));
     smCents = smDollarInt * 100 + cents;
     smInrPaise = Math.round((smCents / 100) * SM_EXRATE * 100);
@@ -8356,105 +8648,55 @@ function smSwitchCurrency() {
 
 function smGoToReview() {
   if (smCents === 0) return;
-  const dollars = smCents / 100;
-  const inr     = Math.round(dollars * SM_EXRATE);
-  const fmtD    = dollars.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
-  const fmtINR  = inr.toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const fmtD   = (smCents / 100).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+  const fmtINR = (smInrPaise / 100).toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
 
   const firstName = smRecipient.name.split(' ')[0];
   document.getElementById('smReviewSending').textContent       = '$' + fmtD;
   document.getElementById('smReviewReceives').textContent      = '₹' + fmtINR;
   document.getElementById('smReviewRecipientName').textContent = smRecipient.name;
   document.getElementById('smReviewRecipName2').textContent    = firstName;
-  document.getElementById('smReviewRecipInitials').textContent = smRecipient.initials || firstName.slice(0,2).toUpperCase();
-  const acctParts = (smRecipient.account || '').split('·');
-  document.getElementById('smReviewRecipAcct').textContent  = (acctParts[0] || '').trim();
-  document.getElementById('smReviewRecipBank').textContent  = (acctParts[1] || '').trim();
-  // Hide dot when there is no bank detail to show
-  var dot = document.querySelector('.smr-recip-dot');
-  if (dot) dot.style.display = (acctParts[1] || '').trim() ? '' : 'none';
-  document.getElementById('smReviewAvatar').style.background = 'rgba(255,255,255,0.4)';
+  // Recipient account (single line — strip any leading dot/separator noise)
+  var acct = (smRecipient.account || '').replace(/^[•·\s]+/, '').trim();
+  document.getElementById('smReviewRecipAcct').textContent = acct;
+  // From account mirrors the selected funding account on the amount screen
+  var fromName = document.getElementById('smaFromName');
+  if (fromName) document.getElementById('smReviewFrom').textContent = fromName.textContent;
+  // Reset any note from a previous review
+  var _nr = document.getElementById('smrNoteRow'); if (_nr) _nr.style.display = 'none';
+  var _nv = document.getElementById('smrNoteVal'); if (_nv) _nv.textContent = '';
 
   var amountEl = document.getElementById('sm-amount');
   var reviewEl = document.getElementById('sm-review');
-  var amtCard  = document.querySelector('.sm2-card');
-  var revCard  = document.querySelector('.smr-card');
+  var card     = reviewEl.querySelector('.smr-card-wrap');
+  var purpose  = reviewEl.querySelector('.smr-purpose-wrap');
+  var bottom   = reviewEl.querySelector('.smr-bottom');
+  var spring   = 'cubic-bezier(0.16,1,0.3,1)';
 
-  // Amount screen elements to animate OUT
-  var keypad     = amountEl.querySelector('.sm2-keypad');
-  var sendBtn    = amountEl.querySelector('.sm2-send-btn');
-  var accountRow = amountEl.querySelector('.sm2-account-row');
-  var amtSection = amountEl.querySelector('.sm2-amount-section');
-  var tagArea    = amountEl.querySelector('.smw-tag-area');
-
-  // Review screen elements to animate IN
-  var revCard    = reviewEl.querySelector('.smr-card');
-  var revAmounts = reviewEl.querySelector('.smr-amounts');
-  var revPurpose = reviewEl.querySelector('.smr-purpose');
-  var revBottom  = reviewEl.querySelector('.smr-bottom');
-
-  var spring = 'cubic-bezier(0.16,1,0.3,1)';
-
-  // ── Initial state: snap review on top, hide its content ──
+  // Show review on top of the amount screen
   reviewEl.style.cssText = 'transition:none;opacity:1;z-index:3';
   reviewEl.className = 'screen on';
 
-  // Instantly hide amount card (no transition) so only smr-card frame is visible — no double-stack flash
-  amtCard.style.cssText = 'transition:none;opacity:0';
-  // Review card frame: immediately visible, same appearance as sm2-card
-  revCard.style.cssText = 'transition:none;opacity:1';
-  // Review amounts wrapper: visible immediately so bg gradient stays constant
-  // Only the children start hidden/offset
-  if (revAmounts) {
-    revAmounts.style.cssText = 'transition:none;opacity:1';
-    Array.from(revAmounts.children).forEach(function(c) {
-      c.style.cssText = 'transition:none;opacity:0;transform:translateY(50px)';
-    });
-  }
-  if (revPurpose) revPurpose.style.cssText = 'transition:none;opacity:0;transform:translateY(50px)';
-  if (revBottom)  revBottom.style.cssText  = 'transition:none;opacity:0;transform:translateY(70px)';
-
-  // OUT exits fire IMMEDIATELY on tap — no RAF delay so keypad is already gone
-  keypad.style.cssText     = 'transition:opacity 0.10s ease,transform 0.13s cubic-bezier(0.4,0,1,1);opacity:0;transform:translateY(260px)';
-  sendBtn.style.cssText    = 'transition:opacity 0.08s ease,transform 0.10s cubic-bezier(0.4,0,1,1);opacity:0;transform:translateY(60px)';
-  accountRow.style.cssText = 'transition:opacity 0.08s ease;opacity:0';
-  Array.from(amtSection.children).forEach(function(c) {
-    c.style.cssText = 'transition:opacity 0.08s ease;opacity:0';
+  // Stage content offset, then slide up in sequence
+  [card, purpose].forEach(function(el, i) {
+    if (el) el.style.cssText = 'transition:none;opacity:0;transform:translateY(40px)';
   });
-  tagArea.style.cssText    = 'transition:opacity 0.08s ease;opacity:0';
+  if (bottom) bottom.style.cssText = 'transition:none;opacity:0;transform:translateY(60px)';
 
-  // ── Animate IN (deferred one RAF for layout settle) ──────
   requestAnimationFrame(function() { requestAnimationFrame(function() {
-
-    // IN: amounts children slide up — delayed past keypad exit (0.16s)
-    if (revAmounts) {
-      Array.from(revAmounts.children).forEach(function(c, i) {
-        var d = (0.16 + i * 0.04).toFixed(2) + 's';
-        c.style.cssText = 'transition:opacity 0.3s ease ' + d + ',transform 0.4s ' + spring + ' ' + d + ';opacity:1;transform:translateY(0)';
-      });
-    }
-    // IN: purpose slides up slightly after
-    if (revPurpose) revPurpose.style.cssText = 'transition:opacity 0.3s ease 0.24s,transform 0.4s '  + spring + ' 0.24s;opacity:1;transform:translateY(0)';
-    // IN: bottom buttons slide up from below screen
-    if (revBottom)  revBottom.style.cssText  = 'transition:opacity 0.3s ease 0.26s,transform 0.42s ' + spring + ' 0.26s;opacity:1;transform:translateY(0)';
-
+    [card, purpose].forEach(function(el, i) {
+      if (!el) return;
+      var d = (0.04 + i * 0.06).toFixed(2) + 's';
+      el.style.cssText = 'transition:opacity 0.32s ease ' + d + ',transform 0.42s ' + spring + ' ' + d + ';opacity:1;transform:translateY(0)';
+    });
+    if (bottom) bottom.style.cssText = 'transition:opacity 0.32s ease 0.16s,transform 0.44s ' + spring + ' 0.16s;opacity:1;transform:translateY(0)';
   }); });
 
-  // ── Cleanup after animation completes ────────────────────
   setTimeout(function() {
-    reviewEl.style.cssText    = '';
-    reviewEl.style.zIndex     = '';
-    amountEl.style.transition = 'none';
-    amountEl.className        = 'screen hl';
-    [keypad, sendBtn, accountRow, tagArea, amtCard,
-     revCard, revAmounts, revPurpose, revBottom].forEach(function(el) {
-      if (el) el.style.cssText = '';
-    });
-    // Clean up child-level styles
-    if (amtSection) Array.from(amtSection.children).forEach(function(c) { c.style.cssText = ''; });
-    if (revAmounts) Array.from(revAmounts.children).forEach(function(c) { c.style.cssText = ''; });
-    requestAnimationFrame(function() { amountEl.style.transition = ''; });
-  }, 650);
+    reviewEl.style.cssText = '';
+    amountEl.className      = 'screen hl';
+    [card, purpose, bottom].forEach(function(el) { if (el) el.style.cssText = ''; });
+  }, 640);
 }
 
 /* ── Within US send money ─────────────────────────────── */
@@ -8771,6 +9013,353 @@ function smpSimulateFailure() {
   setTimeout(function() { showHome(); }, 1800);
 }
 
+/* Progress-driven blur reveal for the transfer-screen image (ported from the
+   ai-chat-image-generation component). A backdrop-blur overlay sweeps top→bottom
+   with a soft masked edge as the image "loads", then fades out when complete. */
+function smpLoadReveal(id, duration, onComplete) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    el.style.opacity = '0';
+    if (onComplete) setTimeout(onComplete, 300);
+    return;
+  }
+  duration = duration || 2200;
+  el.style.transition = 'none';
+  el.style.opacity = '1';
+  var start = null;
+  function frame(ts) {
+    if (start === null) start = ts;
+    var p = Math.min(100, (ts - start) / duration * 100);
+    var q = 100 - p; // clearing line rises from the bottom → blur retreats upward
+    el.style.clipPath = 'polygon(0 0, 100% 0, 100% ' + q + '%, 0 ' + q + '%)';
+    var mask = p === 0
+      ? 'linear-gradient(to bottom, black 0%, black 105%)'
+      : 'linear-gradient(to bottom, black ' + (q - 5) + '%, black ' + q + '%, transparent ' + (q + 5) + '%)';
+    el.style.webkitMaskImage = mask;
+    el.style.maskImage = mask;
+    if (p < 100) { requestAnimationFrame(frame); }
+    else { el.style.transition = 'opacity 400ms ease'; el.style.opacity = '0'; if (onComplete) onComplete(); }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* Remove the tile-construction overlay and restore the base building image */
+function _smpClearTiles(scr) {
+  scr = scr || document.getElementById('sm-progress');
+  if (!scr) return;
+  if (scr._smpTileRAF) { cancelAnimationFrame(scr._smpTileRAF); scr._smpTileRAF = null; }
+  var host = scr.querySelector('.smp2-tiles');
+  if (host) host.remove();
+  var base = scr.querySelector('.smp2-building-img');
+  if (base) base.style.opacity = '';
+}
+
+/* Duration (seconds) of the tile-construction reveal — adjustable via the speed slider */
+var smpTileDuration = 9;
+function smpSetTileSpeed(v) {
+  smpTileDuration = parseFloat(v) || 9;
+  var lbl = document.getElementById('smpSpeedVal');
+  if (lbl) lbl.textContent = smpTileDuration.toFixed(1) + 's';
+  // If a reveal is mid-flight, restart it at the new speed
+  var scr = document.getElementById('sm-progress');
+  if (scr && scr._smpTileRAF && !scr._smpSucceeded) {
+    smpTileReveal(smpTileDuration, function() {
+      if (document.getElementById('sm-progress').classList.contains('on')) smpMorphToSuccess();
+    });
+  }
+}
+
+/* Tile-construction reveal: the Victoria Memorial is rebuilt tile-by-tile from the
+   bottom up, with a soft per-tile pixel flicker. Nothing shows at the start. */
+function smpTileReveal(durationSec, onComplete) {
+  var scr = document.getElementById('sm-progress');
+  var bld = scr && scr.querySelector('.smp2-building');
+  var base = bld && bld.querySelector('.smp2-building-img');
+  if (!bld || !base) { if (onComplete) onComplete(); return; }
+  _smpClearTiles(scr);
+
+  // Reduced motion: skip the animation, just show the image
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    base.style.opacity = '';
+    if (onComplete) setTimeout(onComplete, 300);
+    return;
+  }
+
+  var W = bld.clientWidth, H = bld.clientHeight;
+  var cols = 16, rows = 11;
+  var url = getComputedStyle(base).backgroundImage; // url("…loading.webp")
+  base.style.opacity = '0'; // hide the memorial completely at the start
+
+  var host = document.createElement('div');
+  host.className = 'smp2-tiles';
+  var tiles = [];
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      var t = document.createElement('div');
+      t.className = 'smp2-tile';
+      t.style.left = (c / cols * 100) + '%';
+      t.style.top = (r / rows * 100) + '%';
+      t.style.width = (100 / cols) + '%';
+      t.style.height = (100 / rows) + '%';
+      t.style.backgroundImage = url;
+      t.style.backgroundSize = W + 'px ' + H + 'px';
+      t.style.backgroundPosition = (-c * W / cols) + 'px ' + (-r * H / rows) + 'px';
+      t.style.opacity = '0';
+      host.appendChild(t);
+      tiles.push({ el: t, r: r, c: c });
+    }
+  }
+  bld.appendChild(host);
+
+  var dur = (durationSec || 5) * 1000;
+  var start = null;
+  function frame(ts) {
+    if (start === null) start = ts;
+    var elapsed = ts - start;
+    var p = Math.min(1, elapsed / dur);      // overall progress 0→1
+    var secs = elapsed / 1000;
+    for (var i = 0; i < tiles.length; i++) {
+      var o = tiles[i];
+      var rowFromBottom = (rows - 1 - o.r) / (rows - 1);  // 0 bottom → 1 top
+      var localStart = rowFromBottom * 0.8;               // bottom rows begin first
+      var localDur = 0.16 + ((o.c * 7 + o.r * 3) % 5) * 0.02;
+      var tp = (p - localStart) / localDur;
+      var op = tp <= 0 ? 0 : (tp >= 1 ? 1 : tp);
+      if (op > 0 && op < 1) {
+        // pixel flicker while the tile is materialising
+        op *= 0.7 + 0.3 * Math.abs(Math.sin(secs * 9 + (o.r * 1.7 + o.c * 0.9)));
+      }
+      o.el.style.opacity = String(op);
+    }
+    if (p < 1) { scr._smpTileRAF = requestAnimationFrame(frame); }
+    else {
+      for (var j = 0; j < tiles.length; j++) tiles[j].el.style.opacity = '1';
+      scr._smpTileRAF = null;
+      if (onComplete) onComplete();
+    }
+  }
+  scr._smpTileRAF = requestAnimationFrame(frame);
+}
+
+/* Morph the in-progress screen into the success state in place — no page swap.
+   The image switches instantly, the label + colour change, the check fades in
+   from the top, and the button row becomes Done + Share. */
+/* Build the expanded transaction-details card for the success screen (Figma 6555-40802) */
+function smpBuildDetailsHTML() {
+  var esc = (typeof _agEscape === 'function') ? _agEscape : function(s){ return String(s); };
+  var name = (smRecipient && smRecipient.name) || 'Rohan Rathod';
+  var first = name.split(' ')[0];
+  var acct = ((smRecipient && smRecipient.account) || 'HDFC 8978').replace(/^[•·\s]+/, '').trim();
+  var fromName = (document.getElementById('smaFromName') || {}).textContent || 'USD Checking';
+  var usd = '$' + (smCents / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  var inr = '₹' + (smInrPaise / 100).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  // Note carried from the review "Add a note" flow
+  var noteRow = document.getElementById('smrNoteRow');
+  var noteTxt = (noteRow && noteRow.style.display !== 'none') ? (document.getElementById('smrNoteVal') || {}).textContent : '';
+  var noteHtml = noteTxt
+    ? '<div class="smpd-row"><span class="smpd-lbl">Notes</span><span class="smpd-val smpd-note">' + esc(noteTxt) + '</span></div>'
+    : '';
+  var chev = '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6l3-3 3 3M5 10l3 3 3-3"/></svg>';
+  var chk = '<svg viewBox="0 0 12 12"><polyline points="2,6 5,9 10,3"/></svg>';
+  return '' +
+  '<div class="smpd-wrap">' +
+    '<div class="smpd-card">' +
+      '<div class="smpd-row"><span class="smpd-lbl">From</span><span class="smpd-val">' + esc(fromName) + '</span></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">To</span><div class="smpd-valstack"><span class="smpd-val">' + esc(name) + '</span><span class="smpd-sub">' + esc(acct) + '</span></div></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Sending</span><span class="smpd-val">' + usd + '</span></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Banyan’s fees</span><span class="smpd-fee"><span class="smpd-free">Free</span><span class="smpd-strike">$2.00</span></span></div>' +
+      noteHtml +
+      '<div class="smpd-divider"></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Exchange rate</span><span class="smpd-inline"><img class="smpd-g" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt=""><span class="smpd-val">$1 = ₹91.78</span></span></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Payment method</span><span class="smpd-inline"><span class="ico" style="--ico:url(\'Icons/GlobeHemisphereWest.svg\');--sz:16px;color:#322d0f"></span><span class="smpd-val">International</span></span></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">' + esc(first) + ' receives</span><span class="smpd-val">' + inr + '</span></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Category</span><span class="smpd-cat">Family' + chev + '</span></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Payment purpose</span><span class="smpd-val">Family</span></div>' +
+      '<div class="smpd-divider"></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Created on</span><span class="smpd-val">Today, 9:44 AM IST</span></div>' +
+      '<div class="smpd-row"><span class="smpd-lbl">Transaction ID</span><span class="smpd-val">#0976543456787</span></div>' +
+    '</div>' +
+    '<div class="smpd-status">' +
+      '<button class="smpd-status-toggle" type="button" onclick="this.parentElement.classList.toggle(\'open\')">' +
+        '<span class="smpd-status-swap">' + chev + '</span>' +
+        '<span class="smpd-status-lbl">Show 3 done statuses</span>' +
+        '<span class="smpd-status-time">2 MINS AGO</span>' +
+      '</button>' +
+      '<div class="smpd-status-extra">' +
+        '<div class="smpd-status-item"><span class="smpd-status-dot done">' + chk + '</span><span class="smpd-status-name">Payment initiated</span><span class="smpd-status-time">2 MINS AGO</span></div>' +
+        '<div class="smpd-status-item"><span class="smpd-status-dot done">' + chk + '</span><span class="smpd-status-name">Transfer processed</span><span class="smpd-status-time">1 MIN AGO</span></div>' +
+        '<div class="smpd-status-item"><span class="smpd-status-dot done">' + chk + '</span><span class="smpd-status-name">Sent to ' + esc(first) + '’s bank</span><span class="smpd-status-time">1 MIN AGO</span></div>' +
+      '</div>' +
+      '<div class="smpd-status-item smpd-status-last"><span class="smpd-status-dot done">' + chk + '</span><span class="smpd-status-name">Funds in ' + esc(first) + '’s account</span><span class="smpd-status-time">IN 1 MIN</span></div>' +
+    '</div>' +
+  '</div>';
+}
+
+function smpMorphToSuccess() {
+  var scr = document.getElementById('sm-progress');
+  if (!scr || scr._smpSucceeded) return;
+  scr._smpSucceeded = true;
+  setSbLight(false); // keep the dark status bar over the light success background
+
+  // Clear the tile-construction overlay and restore the base image (now success)
+  _smpClearTiles(scr);
+  scr.classList.add('smp-done-state'); // hide the dev speed control
+  // Background stays put (image + bg swap instantly, no motion)
+  var img = scr.querySelector('.smp2-building-img');
+  if (img) { img.classList.remove('smp2-building-img--loading'); img.classList.add('smp2-building-img--success'); }
+  var bg = scr.querySelector('.smp2-bg');
+  if (bg) { bg.classList.remove('smp2-bg-gold'); bg.classList.add('smp2-bg-green'); }
+
+  // Swap the "more details" body to the expanded transaction card (Figma 6555-40802)
+  var moreP = document.getElementById('smpMoreP');
+  if (moreP) moreP.innerHTML = smpBuildDetailsHTML();
+
+  // Content (label / amount / eta / check) — mutate the in-progress copy to success
+  var inner = scr.querySelector('.smp2-scroll-inner');
+  function applyContent() {
+    var lbl = scr.querySelector('.smp2-lbl');
+    if (lbl) { lbl.textContent = 'Successfully transferred'; lbl.classList.remove('smp2-lbl-gold'); lbl.classList.add('smp2-lbl-green'); }
+    var eta = scr.querySelector('.smp2-eta');
+    if (eta) {
+      var ico = eta.querySelector('.ico'); if (ico) ico.style.display = 'none';
+      var t = eta.querySelector('.smp2-eta-txt'); if (t) t.textContent = 'Completed in 3 minutes';
+    }
+    var hero = scr.querySelector('.smp2-hero');
+    if (hero && !hero.querySelector('.smp2-morph-check')) {
+      hero.style.position = 'relative';
+      var chk = document.createElement('div');
+      chk.className = 'sms2-check smp2-morph-check in'; // settled in-place; carried by the content fade
+      chk.innerHTML = '<img decoding="async" src="assets/smp-check.webp" alt="">';
+      hero.insertBefore(chk, hero.firstChild);
+    }
+  }
+
+  if (!inner || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    applyContent();
+  } else {
+    // Old content drops down and fades out…
+    inner.style.transition = 'transform 0.26s cubic-bezier(0.4,0,1,1), opacity 0.22s ease';
+    inner.style.transform = 'translateY(28px)';
+    inner.style.opacity = '0';
+    setTimeout(function() {
+      applyContent();
+      // …then the new content fades in from below
+      inner.style.transition = 'none';
+      inner.style.transform = 'translateY(28px)';
+      inner.style.opacity = '0';
+      requestAnimationFrame(function() { requestAnimationFrame(function() {
+        inner.style.transition = 'transform 0.46s cubic-bezier(0.16,1,0.3,1), opacity 0.36s ease';
+        inner.style.transform = 'translateY(0)';
+        inner.style.opacity = '1';
+        setTimeout(function() { inner.style.transition = ''; inner.style.transform = ''; inner.style.opacity = ''; }, 500);
+      }); });
+    }, 280);
+  }
+
+  // Button row → Done + Share, animated: slide the old button down and out,
+  // swap contents, then slide the new pair back up from the bottom.
+  var bottom = document.getElementById('smpBottom');
+  if (bottom) {
+    var newHTML =
+      '<button class="smp2-btn smp2-btn-secondary" onclick="smDone()">Done</button>' +
+      '<button class="smp2-btn smp2-btn-primary smp2-btn-share">' +
+      '<svg viewBox="0 0 20 20" aria-hidden="true"><circle cx="15" cy="4" r="2"/><circle cx="5" cy="10" r="2"/><circle cx="15" cy="16" r="2"/><line x1="7" y1="11" x2="13" y2="15"/><line x1="7" y1="9" x2="13" y2="5"/></svg>Share</button>';
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      bottom.classList.add('smp2-bottom-2'); bottom.innerHTML = newHTML;
+    } else {
+      bottom.style.transition = 'transform 0.26s cubic-bezier(0.4,0,1,1), opacity 0.2s ease';
+      bottom.style.transform = 'translateY(160%)';
+      bottom.style.opacity = '0';
+      setTimeout(function() {
+        bottom.classList.add('smp2-bottom-2');
+        bottom.innerHTML = newHTML;
+        bottom.style.transition = 'none';
+        bottom.style.transform = 'translateY(160%)';
+        bottom.style.opacity = '1';
+        requestAnimationFrame(function() { requestAnimationFrame(function() {
+          bottom.style.transition = 'transform 0.44s cubic-bezier(0.16,1,0.3,1)';
+          bottom.style.transform = 'translateY(0)';
+          setTimeout(function() { bottom.style.transition = ''; bottom.style.transform = ''; }, 480);
+        }); });
+      }, 280);
+    }
+  }
+}
+
+/* Restore the in-progress screen to its loading state (before each new transfer) */
+function smpResetProgressVisual() {
+  var scr = document.getElementById('sm-progress');
+  if (!scr) return;
+  _smpClearTiles(scr);
+  scr.classList.remove('smp-done-state');
+  scr._smpSucceeded = false;
+  var _inner = scr.querySelector('.smp2-scroll-inner');
+  if (_inner) { _inner.style.transition = ''; _inner.style.transform = ''; _inner.style.opacity = ''; }
+  var img = scr.querySelector('.smp2-building-img');
+  if (img) { img.classList.remove('smp2-building-img--success'); img.classList.add('smp2-building-img--loading'); }
+  var bg = scr.querySelector('.smp2-bg');
+  if (bg) { bg.classList.remove('smp2-bg-green'); bg.classList.add('smp2-bg-gold'); }
+  var lbl = scr.querySelector('.smp2-lbl');
+  if (lbl) { lbl.textContent = 'Transfer in progress'; lbl.classList.remove('smp2-lbl-green'); lbl.classList.add('smp2-lbl-gold'); }
+  var eta = scr.querySelector('.smp2-eta');
+  if (eta) {
+    var ico = eta.querySelector('.ico'); if (ico) ico.style.display = '';
+    var t = eta.querySelector('.smp2-eta-txt'); if (t) t.textContent = 'Estimated arrival: 9:44 AM IST';
+  }
+  var chk = scr.querySelector('.smp2-morph-check'); if (chk) chk.remove();
+  var bottom = document.getElementById('smpBottom');
+  if (bottom) { bottom.classList.remove('smp2-bottom-2'); bottom.innerHTML = '<button class="smp2-btn smp2-btn-primary" onclick="smpMorphToSuccess()">Done</button>'; }
+}
+
+/* FROM account picker (amount screen) — bottom sheet to change the source space */
+function smaOpenFromSheet() {
+  var list = document.getElementById('smaFromList');
+  if (!list) return;
+  var curName = (document.getElementById('smaFromName') || {}).textContent;
+  var spaces = (typeof _AG_SPACES !== 'undefined') ? _AG_SPACES : [];
+  list.innerHTML = spaces.map(function(s, i) {
+    var sel = s.name === curName ? ' is-sel' : '';
+    return '<button class="sma-from-row' + sel + '" type="button" onclick="smaPickFrom(' + i + ')">' +
+      '<span class="sma-from-av"><img loading="lazy" decoding="async" src="' + s.av + '" alt=""></span>' +
+      '<span class="sma-from-info"><span class="sma-from-name">' + _agEscape(s.name) + '</span>' +
+      '<span class="sma-from-sub">•• ' + s.last4 + ' · ' + s.bal + '</span></span>' +
+      '<span class="sma-from-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>' +
+      '</button>';
+  }).join('');
+  var scr = document.getElementById('sm-amount');
+  if (scr) scr.classList.add('sma-fromsheet-open');
+}
+function smaCloseFromSheet() {
+  var scr = document.getElementById('sm-amount');
+  if (scr) scr.classList.remove('sma-fromsheet-open');
+}
+function smaPickFrom(i) {
+  var spaces = (typeof _AG_SPACES !== 'undefined') ? _AG_SPACES : [];
+  var s = spaces[i];
+  if (!s) return;
+  var n = document.getElementById('smaFromName'); if (n) n.textContent = s.name;
+  var b = document.getElementById('smaFromBal'); if (b) b.textContent = s.bal;
+  haptic(6);
+  smaCloseFromSheet();
+}
+
+/* Home transactions Recent/Upcoming segmented toggle */
+function homeTxTab(btn, tab) {
+  var seg = btn.parentElement;
+  seg.querySelectorAll('.home-txc-seg-btn').forEach(function(b) { b.classList.toggle('on', b === btn); });
+}
+
+/* Show/hide the "more details" block on the redesigned progress/success screens */
+function smpToggleMore(btn) {
+  var body = btn.nextElementSibling;
+  if (!body) return;
+  var open = body.classList.toggle('open');
+  btn.classList.toggle('open', open);
+  var lbl = btn.querySelector('span');
+  if (lbl) lbl.textContent = open ? 'Hide details' : 'Show more details';
+}
+
 /* Toggle accordion section, closing the other */
 function smpToggle(openId, closeId) {
   var openEl  = document.getElementById(openId);
@@ -8782,6 +9371,7 @@ function smpToggle(openId, closeId) {
 }
 
 function smGoToProgress() {
+  setSbLight(false); // dark iOS status bar over the light progress background
   const dollars = smCents / 100;
   const intPart = Math.floor(dollars).toLocaleString('en-US');
   const decPart = '.' + String(Math.round((dollars % 1) * 100)).padStart(2,'0');
@@ -8848,6 +9438,15 @@ function smGoToProgress() {
   // Snap progress on top; the shared botanical bg keeps the scene continuous
   progressEl.style.cssText = 'transition:none;opacity:1;z-index:3';
   progressEl.className = 'screen on';
+  smpResetProgressVisual();
+  var _lb = document.getElementById('smpLoadBlurP'); if (_lb) _lb.style.display = 'none';
+  setTimeout(function() {
+    // Slow tile-by-tile construction of the memorial from the bottom up
+    smpTileReveal(smpTileDuration, function() {
+      // Loader finished → morph this screen into success in place (no page swap)
+      if (document.getElementById('sm-progress').classList.contains('on')) smpMorphToSuccess();
+    });
+  }, 80);
   var dy = revRect.top - prgCard.getBoundingClientRect().top;
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) dy = 0;
   revCard.style.cssText = 'transition:none;opacity:0';
@@ -8960,7 +9559,8 @@ function smGoToSuccess() {
   if (sucScroll) sucScroll.scrollTop = 0;
   void sucScreen.offsetWidth; // force reflow so the animation replays
   requestAnimationFrame(function() { sucScreen.classList.add('sms-unfurl'); });
-
+  // Image loads again on the success screen — now in a green shade
+  setTimeout(function() { smpLoadReveal('smpLoadBlurS', 1600); }, 120);
 }
 
 // TEMP: replay the unfurl on whichever success screen is currently on (remove before commit)
@@ -8968,7 +9568,12 @@ function smDone() {
   document.querySelector('.phone').scrollTop = 0;
   SM_SCREENS.forEach(id => document.getElementById(id).className = 'screen hr');
   smCents = 100000;
-  document.getElementById('explore').className = 'screen on';
+  // Return to the screen the send-money flow was started from
+  var origin = (typeof smOrigin !== 'undefined' && smOrigin) || _smOrigin || 'home';
+  var dest = document.getElementById(origin) || document.getElementById('home');
+  dest.className = 'screen on';
+  if (origin === 'home' || dest.id === 'home') { setSbLight(false); showNav(true); }
+  else { showNav(true); }
 }
 
 /* ── Purpose of payment ─────────────────────────────── */
@@ -9007,10 +9612,11 @@ function smBuildProfRows(filter) {
   var checkSvg = '<svg class="purpose-row-check" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="var(--brand-primary)" stroke-width="1.5"/><polyline points="6,10 9,13 14,7" stroke="var(--brand-primary)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   items.forEach(function(item) {
     var btn = document.createElement('button');
-    btn.className = 'purpose-row' + (_purposeCode === item.code ? ' sel' : '');
+    btn.className = 'purpose-row purpose-row--code' + (_purposeCode === item.code ? ' sel' : '');
     btn.dataset.code = item.code;
-    btn.innerHTML = '<span class="purpose-row-icon">💼</span>' +
-      '<div class="purpose-row-info"><span class="purpose-row-lbl">' + item.label + '</span><span class="purpose-row-sub">' + item.sub + '</span></div>' + checkSvg;
+    // Professional services: no icon/subtext — show the bank purpose code instead
+    btn.innerHTML = '<div class="purpose-row-info"><span class="purpose-row-lbl">' + item.label + '</span></div>' +
+      '<span class="purpose-row-code">' + item.code + '</span>' + checkSvg;
     btn.onclick = function() { smPickProf(item.label, item.code); };
     wrap.appendChild(btn);
   });
@@ -9037,24 +9643,193 @@ function smFilterPurpose(q) {
   smBuildProfRows(q);
 }
 
+/* ── Rate comparison sheet ── */
+var RATE_BANYAN = 91.78, RATE_BANK = 91.25, RATE_BANK_FEE = 15, RATE_MAX = 2500, RATE_MIN = 50;
+var _rateUsd = 1000, _rateInit = false;
+function _rateFmtINR(n) { return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function _rateFmtUSD(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+/* Core: apply a USD amount → totals + footer, optionally the fill bar and the input field text */
+function _rateApply(usd, updateField, updateFill) {
+  _rateUsd = Math.max(0, usd);
+  if (updateFill) {
+    var fill = document.querySelector('.rate-slider-fill');
+    if (fill) fill.style.width = Math.max(6, Math.min(1, _rateUsd / RATE_MAX) * 100) + '%';
+  }
+  if (updateField) {
+    var fld = document.getElementById('rateInputField');
+    if (fld) fld.value = _rateFmtUSD(_rateUsd);
+  }
+  var banyan = _rateUsd * RATE_BANYAN;
+  var bank   = Math.max(0, _rateUsd - RATE_BANK_FEE) * RATE_BANK;
+  var totals = document.querySelectorAll('.rate-cmp-total');
+  if (totals[0]) totals[0].textContent = _rateFmtINR(banyan);
+  if (totals[1]) totals[1].textContent = _rateFmtINR(bank);
+  var foot = document.querySelector('.rate-cmp-foot');
+  if (foot) foot.textContent = 'Send ₹' + Math.round(Math.max(0, banyan - bank)).toLocaleString('en-IN') + ' more with Banyan';
+}
+/* Slider drag → snap to $50 steps, drive field + fill */
+function _rateSetFrac(frac) {
+  frac = Math.max(0, Math.min(1, frac));
+  _rateApply(Math.max(RATE_MIN, Math.round(frac * RATE_MAX / 50) * 50), true, true);
+}
+/* Typing in the field → recompute, move the fill, but leave the field text (caret) alone */
+function rateInputChange(el) {
+  var usd = parseFloat((el.value || '').replace(/[^0-9.]/g, '')) || 0;
+  _rateApply(usd, false, true);
+}
+function rateInputBlur(el) { el.value = _rateFmtUSD(_rateUsd); }
+function _rateBindSlider() {
+  if (_rateInit) return; _rateInit = true;
+  var track = document.querySelector('.rate-slider');
+  if (!track) return;
+  var dragging = false;
+  function pos(e) {
+    var r = track.getBoundingClientRect();
+    var x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    _rateSetFrac(x / r.width);
+  }
+  function down(e) { dragging = true; pos(e); e.preventDefault(); }
+  function move(e) { if (dragging) pos(e); }
+  function up() { dragging = false; }
+  track.addEventListener('mousedown', down);
+  track.addEventListener('touchstart', down, { passive: false });
+  window.addEventListener('mousemove', move);
+  window.addEventListener('touchmove', move, { passive: false });
+  window.addEventListener('mouseup', up);
+  window.addEventListener('touchend', up);
+}
+/* ── Review "Add a note" sheet ── */
+function openReviewNote(ev) {
+  if (ev) ev.stopPropagation();
+  var inp = document.getElementById('rnoteInput');
+  var cur = document.getElementById('smrNoteVal');
+  if (inp) inp.value = (cur && document.getElementById('smrNoteRow').style.display !== 'none') ? cur.textContent : '';
+  document.getElementById('rnoteScrim').classList.add('open');
+  document.getElementById('rnoteSheet').classList.add('open');
+  setTimeout(function() { if (inp) inp.focus(); }, 320);
+}
+function closeReviewNote() {
+  document.getElementById('rnoteScrim').classList.remove('open');
+  document.getElementById('rnoteSheet').classList.remove('open');
+}
+function saveReviewNote() {
+  var inp = document.getElementById('rnoteInput');
+  var txt = (inp ? inp.value : '').trim();
+  var row = document.getElementById('smrNoteRow');
+  var val = document.getElementById('smrNoteVal');
+  if (txt) { if (val) val.textContent = txt; if (row) row.style.display = ''; }
+  else { if (row) row.style.display = 'none'; }
+  closeReviewNote();
+}
+
+function openRateSheet(ev) {
+  if (ev) ev.stopPropagation();
+  _rateBindSlider();
+  _rateApply(_rateUsd, true, true);
+  document.getElementById('rateScrim').classList.add('open');
+  document.getElementById('rateSheet').classList.add('open');
+}
+function closeRateSheet() {
+  document.getElementById('rateScrim').classList.remove('open');
+  document.getElementById('rateSheet').classList.remove('open');
+}
+
+/* ── Redesigned purpose sheet (Figma 6726-156347 / 6779-28005) ── */
+var PURPOSES2 = [
+  { key:'family',    code:'P1301', ico:'🏠',  title:'Family and health',      desc:'Send money to family, your account, or for treatment.', kw:['family','health','treatment','medical','hospital','personal','parent','home','account','wife','husband','son','daughter'] },
+  { key:'utility',   code:'P1109', ico:'🧾',  title:'Utility bills and taxes', desc:'Utility bills and tax payments in India.',              kw:['utility','bill','tax','electric','water','gas','recurring','rent'] },
+  { key:'education', code:'P1107', ico:'📚',  title:'Education',               desc:'Tuitions, fees or payments to schools or colleges',     kw:['school','college','tuition','education','fees','university','course','student','exam'] },
+  { key:'insurance', code:'P0601', ico:'🛡️', title:'Insurance and travel',    desc:'Insurance premiums, hotel stays or travel bookings',    kw:['insurance','travel','flight','flights','hotel','trip','premium','booking','visa','vacation','holiday'] },
+  { key:'others',    code:'P9999', ico:'🗂️', title:'Others',                  desc:'Legal, accounting, software, or other services.',       kw:['legal','accounting','software','consulting','business','service','audit'] }
+];
+var _p2Sel = 'family', _p2Matched = false;
+var _P2_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+var _P2_PENCIL = '<svg viewBox="0 0 256 256" fill="rgba(0,0,0,0.6)"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/></svg>';
+function _p2Get(key) { return PURPOSES2.filter(function(p){ return p.key === key; })[0] || PURPOSES2[0]; }
+function renderPurpose2() {
+  var list = document.getElementById('purpose2List');
+  var matchWrap = document.getElementById('purpose2Match');
+  var divlbl = document.getElementById('purpose2DivLbl');
+  var contTxt = document.getElementById('purpose2ContinueTxt');
+  if (!list) return;
+  if (_p2Matched) {
+    var m = _p2Get(_p2Sel);
+    matchWrap.style.display = '';
+    matchWrap.innerHTML = '<span class="p2-ico">' + m.ico + '</span>' +
+      '<div class="p2-info"><span class="p2-tag">Best match</span>' +
+      '<span class="p2-title">' + m.title + '</span><span class="p2-desc">' + m.desc + '</span></div>';
+    divlbl.textContent = 'OR CUSTOM PICK ONE';
+  } else {
+    matchWrap.style.display = 'none';
+    divlbl.textContent = 'OR PICK ONE';
+  }
+  list.innerHTML = PURPOSES2.filter(function(p){ return !(_p2Matched && p.key === _p2Sel); }).map(function(p) {
+    var sel = (!_p2Matched && p.key === _p2Sel);
+    var tag = sel ? ' <span class="p2-tag">Preselected</span>' : '';
+    return '<button class="p2-row' + (sel ? ' sel' : '') + '" type="button" onclick="smPurposePick2(\'' + p.key + '\')">' +
+      '<span class="p2-ico">' + p.ico + '</span>' +
+      '<div class="p2-info"><span class="p2-title">' + p.title + tag + '</span><span class="p2-desc">' + p.desc + '</span></div>' +
+      '</button>';
+  }).join('');
+  if (contTxt) contTxt.textContent = 'Continue with ' + _p2Get(_p2Sel).title;
+}
+function smPurposeTextInput() { /* placeholder for future validation */ }
+function smPurposeMatch() {
+  var t = (document.getElementById('purpose2Text').value || '').toLowerCase().trim();
+  if (!t) return;
+  var best = 'others', score = 0;
+  PURPOSES2.forEach(function(p) {
+    var s = 0; p.kw.forEach(function(k){ if (t.indexOf(k) > -1) s++; });
+    if (s > score) { score = s; best = p.key; }
+  });
+  _p2Sel = best; _p2Matched = true;
+  var inp = document.getElementById('purpose2Input'); if (inp) inp.classList.add('matched');
+  var go = document.getElementById('purpose2Go'); if (go) { go.setAttribute('onclick', 'smPurposeEditText()'); go.innerHTML = _P2_PENCIL; }
+  renderPurpose2();
+}
+function smPurposeEditText() {
+  _p2Matched = false;
+  var inp = document.getElementById('purpose2Input'); if (inp) inp.classList.remove('matched');
+  var go = document.getElementById('purpose2Go'); if (go) { go.setAttribute('onclick', 'smPurposeMatch()'); go.innerHTML = _P2_ARROW; }
+  renderPurpose2();
+  var ta = document.getElementById('purpose2Text'); if (ta) ta.focus();
+}
+function smPurposePick2(key) {
+  _p2Sel = key; _p2Matched = false;
+  var inp = document.getElementById('purpose2Input'); if (inp) inp.classList.remove('matched');
+  var go = document.getElementById('purpose2Go'); if (go) { go.setAttribute('onclick', 'smPurposeMatch()'); go.innerHTML = _P2_ARROW; }
+  renderPurpose2();
+}
+function smPurposeContinue() {
+  var p = _p2Get(_p2Sel);
+  if (typeof _agPurposeMode !== 'undefined' && _agPurposeMode) {
+    if (typeof _agPurposeConfirmTurn === 'function') _agPurposeConfirmTurn(p.title);
+    smClosePurposeSheet();
+    return;
+  }
+  _purposeCode = p.code; _purposeLabel = p.title;
+  if (typeof smSyncPurposeDisplay === 'function') smSyncPurposeDisplay(p.title, p.code);
+  var ico = document.getElementById('smPurposeIco'); if (ico) ico.textContent = p.ico;
+  var val = document.getElementById('smPurposeDisplayVal'); if (val) val.textContent = p.title;
+  smClosePurposeSheet();
+}
+
 function smOpenPurposeSheet(ev) {
   if (ev) ev.stopPropagation();
-  // Build professional rows on first open
-  var wrap = document.getElementById('purposeProfRows');
-  if (wrap && wrap.children.length === 0) smBuildProfRows('');
-  // Sync sel state to current code
-  document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) {
-    r.classList.toggle('sel', r.dataset.code === _purposeCode);
-  });
+  var cur = PURPOSES2.filter(function(p){ return p.code === _purposeCode; })[0];
+  _p2Sel = cur ? cur.key : 'family';
+  _p2Matched = false;
+  var ta = document.getElementById('purpose2Text'); if (ta) ta.value = '';
+  var inp = document.getElementById('purpose2Input'); if (inp) inp.classList.remove('matched');
+  var go = document.getElementById('purpose2Go'); if (go) { go.setAttribute('onclick', 'smPurposeMatch()'); go.innerHTML = _P2_ARROW; }
+  renderPurpose2();
   document.getElementById('purposeScrim').classList.add('open');
   document.getElementById('purposeSheet').classList.add('open');
 }
 function smClosePurposeSheet() {
   document.getElementById('purposeScrim').classList.remove('open');
   document.getElementById('purposeSheet').classList.remove('open');
-  document.getElementById('purposeSheetInvoice').classList.remove('open');
-  var si = document.getElementById('purposeSearch'); if (si) si.value = '';
-  smFilterPurpose('');
+  var pi = document.getElementById('purposeSheetInvoice'); if (pi) pi.classList.remove('open');
   _agPurposeMode = false;
   _agPendingPurpose = null;
 }
@@ -9066,7 +9841,7 @@ function smPickPurpose(el, label, code) {
   if (_agPurposeMode) {
     document.querySelectorAll('#purposeSheet .purpose-row').forEach(function(r) { r.classList.remove('sel'); });
     el.classList.add('sel');
-    _agApplyPurpose((el.querySelector('.purpose-row-lbl') || {}).textContent || label);
+    _agPurposeConfirmTurn((el.querySelector('.purpose-row-lbl') || {}).textContent || label);
     setTimeout(smClosePurposeSheet, 200);
     return;
   }
@@ -9121,7 +9896,7 @@ function smClosePurposeInvoice() {
   document.getElementById('purposeSheetInvoice').classList.remove('open');
 }
 function smConfirmPurposeInvoice() {
-  if (_agPurposeMode && _agPendingPurpose) _agApplyPurpose(_agPendingPurpose);
+  if (_agPurposeMode && _agPendingPurpose) _agPurposeConfirmTurn(_agPendingPurpose);
   smClosePurposeSheet();
 }
 function purposeSimulateUpload() {
@@ -10406,7 +11181,7 @@ function benOpenAdd() {
     var activeTab = document.querySelector('.bnav-tab.active');
     var indicator = document.getElementById('bnavIndicator');
     if (indicator && activeTab) {
-      indicator.style.transform = 'translateX(' + activeTab.offsetLeft + 'px)';
+      indicator.style.transform = 'translateX(' + _limelightX(activeTab) + 'px)';
     }
 
     // Apple liquid glass spring: high stiffness, underdamped for a single clean overshoot

@@ -1,3 +1,15 @@
+    /* ── Trial display/keypad fonts (from Figma) ───────────────────────── */
+    @font-face {
+      font-family: 'Arizona Flare';
+      src: url('fonts/ArizonaFlare-VF.ttf') format('truetype');
+      font-weight: 100 900; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Roobert';
+      src: url('fonts/Roobert-VF.ttf') format('truetype');
+      font-weight: 100 900; font-style: normal; font-display: swap;
+    }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ── Hide all scrollbars (mobile-app style) ──────────────────────── */
@@ -56,7 +68,7 @@
 
     body { font-family:'Geist',-apple-system,sans-serif; background:#111; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
 
-    .phone { width:393px; height:852px; background:#fff; border-radius:40px; overflow:hidden; position:relative; box-shadow:0 40px 100px rgba(0,0,0,0.65),inset 0 0 0 1px rgba(255,255,255,0.08); flex-shrink:0; overscroll-behavior:none; }
+    .phone { width:393px; height:852px; background:#fff; border-radius:40px; overflow:hidden; position:relative; box-shadow:0 0 60px rgba(0,0,0,0.35),inset 0 0 0 1px rgba(255,255,255,0.08); flex-shrink:0; overscroll-behavior:none; }
 
     /* ── Mobile: scale the 393×852 frame to fill any phone screen ── */
     @media (max-width: 600px) {
@@ -1674,7 +1686,7 @@
       background: rgba(255,255,255,0.60);
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border: 0.5px solid rgba(255,255,255,0.80);
-      border-radius: 9999px;
+      border-radius: 20px;
       pointer-events: all;
       overflow: hidden;
       flex-shrink: 0;
@@ -1691,17 +1703,31 @@
     @media (prefers-reduced-motion: reduce) {
       .bnav-pill.lg-squishing { animation: none; }
     }
-    /* Floating indicator — morphs between tabs */
-    /* Selection is conveyed by the active tab turning green — no white pill */
-    .bnav-indicator { display: none; }
+    /* Limelight indicator — a beam at the top of the active tab with a soft
+       light-cone spilling down behind the icons. Slides between tabs. */
+    .bnav-indicator {
+      position: absolute; top: 0; left: 0;
+      width: 44px; height: 2px; border-radius: 9999px;
+      background: var(--brand-primary);
+      box-shadow: 0 6px 16px var(--brand-primary-dim), 0 2px 6px var(--brand-primary-dim);
+      z-index: 1; pointer-events: none;
+    }
+    .bnav-indicator::after {
+      content: ''; position: absolute; left: -30%; top: 2px;
+      width: 160%; height: 44px;
+      clip-path: polygon(5% 100%, 25% 0, 75% 0, 95% 100%);
+      background: linear-gradient(to bottom, rgba(70,136,43,0.22), rgba(70,136,43,0));
+      pointer-events: none;
+    }
     .bnav-tab {
-      width: 68px; height: 56px; flex-shrink: 0;
+      width: 68px; height: 64px; flex-shrink: 0;
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       gap: 2px;
       cursor: pointer;
       border-radius: 9999px;
       position: relative;
+      z-index: 2; /* icons sit above the limelight cone */
       transition: transform 160ms var(--ease-out);
     }
     .bnav-tab:active { transform: scale(0.92); }
@@ -2966,7 +2992,7 @@
 
     /* "Here is what you can do alternatively" */
     .ag-sm2-alt {
-      display: flex; flex-direction: column; gap: 16px; margin-top: 4px;
+      display: flex; flex-direction: column; gap: 16px; margin-top: 16px;
       opacity: 0; transform: translateY(6px);
       transition: opacity 300ms var(--ease-out), transform 300ms var(--ease-out);
     }
@@ -4644,7 +4670,8 @@
     }
 
     /* ── Landing (redesign) ── */
-    #sm-landing { background: transparent; overflow: hidden; }
+    #sm-landing { background: #FDFCF2; overflow: hidden; }
+    #sm-landing .sm-botanical-bg { display: none; }
 
     /* Botanical background (hidden — using sm-botanical-bg pattern) */
     .sm-l-botanical-wrap { display: none; }
@@ -4658,14 +4685,13 @@
       z-index: 2;
     }
     .sm-l-back {
-      width: 44px; height: 44px; border-radius: 999px;
-      background: var(--surface-secondary);
-      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-      border: none; border-bottom: 1px solid var(--border-focus);
-      box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
+      width: 44px; height: 44px; border-radius: 9999px;
+      background: #f5f5ed;
+      border: 1px solid var(--neutral-white-100, #fff);
       display: flex; align-items: center; justify-content: center;
-      cursor: pointer; flex-shrink: 0;
+      cursor: pointer; flex-shrink: 0; transition: transform 160ms var(--ease-out);
     }
+    .sm-l-back:active { transform: scale(0.95); }
     .sm-l-back svg { width: 16px; height: 16px; stroke:var(--text-primary); fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
     /* Ghost "Sending now ↓" button */
@@ -4714,15 +4740,14 @@
     .sm-send-opt-check { margin-left: auto; width: 18px; height: 18px; stroke: var(--brand-primary); fill: none; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 
     .sm-l-rate {
-      height: 44px; border-radius: 999px;
-      background: var(--surface-secondary);
-      backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-      border: none; border-bottom: 1px solid var(--border-focus);
-      box-shadow: 0 8px 16px -8px rgba(0,0,0,0.12);
-      display: flex; align-items: center; gap: 8px; padding: 0 16px;
+      width: 144px; height: 44px; border-radius: 9999px;
+      background: #f5f5ed;
+      border: 1px solid var(--neutral-white-100, #fff);
+      display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 13px;
       cursor: pointer;
     }
-    .sm-l-rate-text { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: var(--text-primary); white-space: nowrap; }
+    .sm-l-rate svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sm-l-rate-text { font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; color: rgba(0,0,0,0.8); white-space: nowrap; }
 
     .sm-l-title {
       position: absolute; top: 126px; left: 20px;
@@ -4731,6 +4756,266 @@
       line-height: 34px; letter-spacing: -1.4px;
       color: var(--text-primary); margin: 0; z-index: 1;
     }
+
+    /* ══ Redesigned bene selection (Figma 6498-58790) ══ */
+    #sm-landing .sm-l-sending-now { display: none; } /* header = back + rate only */
+    .sm-l2-scroll {
+      position: absolute; top: 103px; left: 0; right: 0; bottom: 0; z-index: 1;
+      overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+      padding: 0 0 40px;
+    }
+    .sm-l2-scroll::-webkit-scrollbar { display: none; }
+    /* DS type: Roobert body throughout, Arizona Flare title */
+    .sm-l2-scroll * { font-family: 'Roobert', 'Geist', sans-serif; }
+    .sm-l2-title { position: static !important; top: auto !important; left: auto !important;
+      font-family: 'Arizona Flare', 'Geist', serif; font-weight: 500;
+      font-size: 34px; line-height: 41px; letter-spacing: -1.7px; color: #322d0f;
+      padding: 20px 16px 0; display: block; }
+    .sm-l2-searchrow { display: flex; align-items: center; gap: 12px; padding: 20px 16px 0; }
+    .sm-l2-search { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; height: 50px; padding: 0 16px; background: #fff; border: 1px solid rgba(0,0,0,0.08); border-radius: 9999px; cursor: pointer; }
+    .sm-l2-search svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .sm-l2-search-ph { font-size: 17px; color: rgba(0,0,0,0.5); letter-spacing: -0.3px; }
+    .sm-l2-add { width: 50px; height: 50px; flex-shrink: 0; border-radius: 50%; background: #1f3833; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 160ms var(--ease-out); }
+    .sm-l2-add:active { transform: scale(0.94); }
+    .sm-l2-add svg { width: 22px; height: 22px; }
+    .sm-l2-sec { margin-top: 28px; }
+    .sm-l2-seclabel { font-family: 'Arizona Flare', 'Geist', serif; font-size: 20px; font-weight: 500; line-height: 25px; letter-spacing: -1px; color: rgba(0,0,0,0.6); margin: 0 0 12px; padding: 0 16px; }
+
+    /* Recommended slide-to-pay cards */
+    .sm-l2-rec { display: flex; gap: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 8px 4px; scroll-snap-type: x mandatory; scroll-padding-left: 8px; }
+    .sm-l2-rec::-webkit-scrollbar { display: none; }
+    .sm-l2-card { position: relative; flex: 0 0 216px; scroll-snap-align: start; background: #f7f5e0; border: 0.5px solid rgba(117,76,50,0.1); border-radius: 32px; padding: 16px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 24px; }
+    .sm-l2-card-pat { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none;
+      background-repeat: no-repeat; background-position: top right; background-size: auto 100%; }
+    .sm-l2-card:nth-child(odd) .sm-l2-card-pat { background-image: url('assets/reco_bg1.webp'); }
+    .sm-l2-card:nth-child(even) .sm-l2-card-pat { background-image: url('assets/reco_bg2.webp?v=2'); }
+    .sm-l2-card-head { display: flex; flex-direction: column; gap: 2px; }
+    .sm-l2-card-head, .sm-l2-card-body, .sm-l2-slide { position: relative; z-index: 1; }
+    .sm-l2-card-name { font-size: 17px; font-weight: 600; line-height: 22px; letter-spacing: -0.4px; color: rgba(0,0,0,0.8); }
+    .sm-l2-card-bank { font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(0,0,0,0.6); }
+    .sm-l2-card-body { display: flex; flex-direction: column; gap: 16px; }
+    .sm-l2-card-payblock { display: flex; flex-direction: column; gap: 4px; }
+    .sm-l2-card-paylbl { font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(0,0,0,0.6); }
+    .sm-l2-card-payrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .sm-l2-card-amt { display: flex; align-items: baseline; color: #000; }
+    .sm-l2-card-cur { font-size: 13px; font-weight: 600; }
+    .sm-l2-card-int { font-size: 24px; font-weight: 600; line-height: 30px; letter-spacing: -1.2px; }
+    .sm-l2-card-dec { font-size: 13px; font-weight: 600; }
+    .sm-l2-card-edit { width: 28px; height: 28px; flex-shrink: 0; background: #f5f5ed; border: 1px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .sm-l2-card-edit svg { width: 13px; height: 13px; }
+    .sm-l2-slide { position: relative; display: flex; align-items: center; width: 100%; height: 44px; padding: 6px; background: #1f3833; border: none; border-radius: 9999px; cursor: pointer; overflow: hidden; box-shadow: 0 8px 16px -8px rgba(0,0,0,0.2), inset 0 -4px 1px rgba(0,0,0,0.05); }
+    .sm-l2-slide-knob { position: absolute; left: 6px; top: 50%; width: 32px; height: 32px; border-radius: 50%; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; touch-action: none; cursor: grab; z-index: 2; transform: translate(0, -50%); }
+    .sm-l2-slide-knob.dragging { cursor: grabbing; }
+    .sm-l2-slide.snap-back .sm-l2-slide-knob { transition: transform 260ms var(--ease-out); }
+    .sm-l2-slide-knob svg { width: 18px; height: 18px; }
+    .sm-l2-slide-txt { flex: 1; text-align: center; padding-left: 32px; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; color: #fff; transition: opacity 120ms ease; }
+
+    /* All beneficiaries list */
+    .sm-l2-list { background: #f6f3ea; border-radius: 20px; margin: 0 8px; padding: 6px; }
+    .sm-l2-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: transparent; border: none; border-radius: 14px; cursor: pointer; text-align: left; }
+    .sm-l2-row:active { background: rgba(0,0,0,0.03); }
+    .sm-l2-av { width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #fff; letter-spacing: -0.2px; }
+    .sm-l2-rowtxt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+    .sm-l2-rowname { font-size: 16px; font-weight: 500; letter-spacing: -0.3px; color: #000; }
+    .sm-l2-rowsub { font-size: 13px; color: rgba(0,0,0,0.5); letter-spacing: -0.2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sm-l2-rowgo { width: 34px; height: 34px; flex-shrink: 0; border-radius: 50%; background: #fff; border: 0.5px solid rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; }
+    .sm-l2-rowgo svg { width: 16px; height: 16px; }
+
+    /* ══ Rate comparison bottom sheet (Figma 6524-86698) ══ */
+    .rate-scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.35); opacity: 0; pointer-events: none; transition: opacity 0.28s var(--ease-out); z-index: 60; }
+    .rate-scrim.open { opacity: 1; pointer-events: auto; }
+    .rate-sheet { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 61;
+      background: #fdfcf2; border-radius: 40px;
+      padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+      transform: translateY(calc(100% + 8px)); transition: transform 0.34s var(--ease-drawer, cubic-bezier(0.32,0.72,0,1)); }
+    .rate-sheet.open { transform: translateY(0); box-shadow: 0 -8px 40px rgba(0,0,0,0.16); }
+    .rate-grabber { width: 36px; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.15); margin: 0 auto 16px; }
+
+    .rate-head { display: flex; flex-direction: column; gap: 4px; text-align: center; padding: 0 8px; }
+    .rate-title { font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 34px; line-height: 41px; letter-spacing: -1.7px; color: #322d0f; }
+    .rate-sub { font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 20px; letter-spacing: -0.75px; color: rgba(50,45,15,0.8); }
+
+    .rate-input-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 24px; }
+    .rate-input { width: 227px; height: 60px; display: flex; align-items: center; justify-content: center; gap: 2px;
+      background: #fdfcf2; border: 0.5px solid rgba(105,65,40,0.5); border-radius: 9999px; padding: 0 16px; cursor: text;
+      font-family: 'Roobert','Geist',sans-serif; font-size: 24px; font-weight: 500; letter-spacing: -0.5px; color: rgba(0,0,0,0.8); }
+    .rate-input:focus-within { border-color: rgba(105,65,40,0.9); }
+    .rate-input-cur { flex-shrink: 0; }
+    .rate-input-field { width: 100%; min-width: 0; border: none; background: none; outline: none; text-align: center;
+      font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; color: inherit; padding: 0; }
+    /* Slider: brown filled pill (light ticks + knob) over a row of faint unfilled ticks, no track bar */
+    .rate-slider { position: relative; width: 100%; height: 28px; cursor: pointer; touch-action: none; }
+    .rate-slider::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 10px; transform: translateY(-50%);
+      background-image: repeating-linear-gradient(90deg, rgba(105,65,40,0.4) 0 1.5px, transparent 1.5px 11px);
+      background-position: left center; }
+    .rate-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 40%; min-width: 40px; background: #6b4128; border-radius: 9999px; overflow: hidden; }
+    .rate-slider-fill::before { content: ''; position: absolute; left: 6px; right: 24px; top: 50%; height: 12px; transform: translateY(-50%);
+      background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.35) 0 1.5px, transparent 1.5px 11px); }
+    .rate-slider-knob { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); z-index: 1; }
+
+    .rate-cmp-wrap { margin-top: 24px; background: #095546; border-radius: 32px; overflow: hidden; }
+    .rate-cmp-row { display: flex; gap: 8px; align-items: stretch; background: #eceadb; border: 1px solid #095546; border-radius: 32px; padding: 16px 8px; }
+    .rate-cmp-labels { display: flex; flex-direction: column; gap: 16px; padding: 96px 8px 0;
+      font-family: 'Roobert','Geist',sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; color: rgba(0,0,0,0.4); white-space: nowrap; }
+    .rate-cmp-cols { flex: 1; min-width: 0; display: flex; align-items: stretch; }
+    .rate-cmp-col { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 24px; padding: 16px; }
+    .rate-cmp-banyan { background: #fdfcf2; border-radius: 24px; }
+    .rate-cmp-block { display: flex; flex-direction: column; gap: 16px; }
+    .rate-cmp-head { display: flex; flex-direction: column; gap: 4px; }
+    .rate-cmp-ic { width: 32px; height: 32px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .rate-cmp-ic svg { width: 18px; height: 18px; }
+    .rate-cmp-ic-banyan { background: #1f3833; }
+    .rate-cmp-ic-bank { background: #c5c0a3; }
+    .rate-cmp-name { font-family: 'Roobert','Geist',sans-serif; font-size: 20px; font-weight: 600; line-height: 25px; color: rgba(0,0,0,0.8); }
+    .rate-cmp-lines { display: flex; flex-direction: column; gap: 12px; }
+    .rate-cmp-line { display: flex; align-items: center; gap: 4px; height: 18px; }
+    .rate-cmp-g { flex-shrink: 0; }
+    .rate-cmp-repeat { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 999px; background: #fdfcf2; flex-shrink: 0; }
+    .rate-cmp-repeat svg { width: 9px; height: 9px; }
+    .rate-cmp-val { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(0,0,0,0.6); }
+    .rate-cmp-free { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: #095546; }
+    .rate-cmp-total { font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; line-height: 22px; letter-spacing: -0.85px; color: #000; }
+    .rate-cmp-foot { padding: 16px; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; line-height: 18px; color: #fff; }
+
+    /* ══ Add-a-note bottom sheet (Figma 6616-119056) ══ */
+    .rnote-scrim { position:absolute; inset:0; background:rgba(0,0,0,0.35); opacity:0; pointer-events:none; transition:opacity 0.28s var(--ease-out); z-index:62; }
+    .rnote-scrim.open { opacity:1; pointer-events:auto; }
+    .rnote-sheet { position:absolute; left:8px; right:8px; bottom:8px; z-index:63; background:#fdfcf2; border-radius:40px; padding:16px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:16px; transform:translateY(calc(100% + 8px)); transition:transform 0.34s var(--ease-drawer, cubic-bezier(0.32,0.72,0,1)); }
+    .rnote-sheet.open { transform:translateY(0); box-shadow:0 -8px 40px rgba(0,0,0,0.16); }
+    .rnote-back { width:44px; height:44px; border-radius:9999px; background:#f5f5ed; border:1px solid var(--neutral-white-100,#fff); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:transform 160ms var(--ease-out); }
+    .rnote-back:active { transform:scale(0.95); }
+    .rnote-back svg { width:18px; height:18px; }
+    .rnote-field { display:flex; flex-direction:column; gap:2px; background:rgba(255,255,255,0.8); border:0.5px solid rgba(105,65,40,0.35); border-radius:24px; padding:12px 16px; }
+    .rnote-field:focus-within { border-color:rgba(105,65,40,0.7); }
+    .rnote-field-lbl { font-family:'Roobert','Geist',sans-serif; font-size:13px; color:rgba(0,0,0,0.4); letter-spacing:-0.2px; }
+    .rnote-input { border:none; background:none; outline:none; resize:none; width:100%; font-family:'Roobert','Geist',sans-serif; font-size:17px; line-height:22px; letter-spacing:-0.3px; color:rgba(0,0,0,0.85); }
+    .rnote-input::placeholder { color:rgba(0,0,0,0.4); }
+    .rnote-save { height:60px; border-radius:9999px; background:#1f3833; border:none; color:var(--text-inverse,#fff); font-family:'Roobert','Geist',sans-serif; font-size:17px; font-weight:600; letter-spacing:-0.85px; cursor:pointer; box-shadow:0 8px 16px -8px rgba(0,0,0,0.2), inset 0 -4px 1px rgba(0,0,0,0.05); transition:transform 160ms var(--ease-out); }
+    .rnote-save:active { transform:scale(0.98); }
+
+    /* Note row inside the review card */
+    .smr-note-row { align-items:flex-start; }
+    .smr-note-lblcol { display:flex; flex-direction:column; gap:6px; align-items:flex-start; }
+    .smr-note-edit { display:flex; align-items:center; gap:4px; background:none; border:none; padding:0; cursor:pointer; font-family:'Roobert','Geist',sans-serif; font-size:13px; font-weight:500; letter-spacing:-0.2px; color:rgba(0,0,0,0.8); }
+    .smr-note-val { max-width:190px; white-space:normal; line-height:20px; }
+
+    /* ══ Success "Show more details" expanded card (Figma 6555-40802) ══ */
+    .smpd-wrap { display:flex; flex-direction:column; gap:8px; padding:0 8px; }
+    .smpd-card { background:#fff; border:0.5px solid #fff; border-radius:32px; padding:24px 20px; display:flex; flex-direction:column; gap:16px; box-shadow:0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.05); }
+    .smpd-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; font-family:'Roobert','Geist',sans-serif; font-size:15px; font-weight:400; line-height:20px; letter-spacing:-0.75px; }
+    .smpd-lbl { color:rgba(0,0,0,0.6); white-space:nowrap; flex-shrink:0; }
+    .smpd-val { color:#000; text-align:right; letter-spacing:-0.3px; }
+    .smpd-valstack { display:flex; flex-direction:column; align-items:flex-end; }
+    .smpd-sub { font-size:13px; line-height:18px; letter-spacing:-0.65px; color:rgba(0,0,0,0.6); }
+    .smpd-inline { display:flex; align-items:center; gap:4px; }
+    .smpd-g { width:14px; height:14px; flex-shrink:0; }
+    .smpd-fee { display:flex; align-items:center; gap:8px; }
+    .smpd-free { color:var(--brand-primary,#46882b); }
+    .smpd-strike { color:#000; text-decoration:line-through; }
+    .smpd-cat { display:flex; align-items:center; gap:4px; color:var(--brand-primary,#1f3833); font-weight:500; }
+    .smpd-note { max-width:190px; white-space:normal; text-align:right; }
+    .smpd-divider { height:0.5px; background:rgba(0,0,0,0.1); }
+
+    .smpd-status { background:#fff; border:0.5px solid #fff; border-radius:24px; padding:6px 16px; box-shadow:0 2px 4px rgba(0,0,0,0.05); }
+    .smpd-status-toggle { display:flex; align-items:center; gap:8px; width:100%; padding:12px 0; background:none; border:none; cursor:pointer; font-family:'Roobert','Geist',sans-serif; }
+    .smpd-status-swap { display:flex; }
+    .smpd-status-lbl { flex:1; text-align:left; font-size:15px; letter-spacing:-0.3px; color:rgba(0,0,0,0.8); }
+    .smpd-status-time { font-size:11px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:rgba(0,0,0,0.4); white-space:nowrap; }
+    .smpd-status-extra { display:none; flex-direction:column; }
+    .smpd-status.open .smpd-status-extra { display:flex; }
+    .smpd-status-item { display:flex; align-items:center; gap:8px; padding:8px 0; font-family:'Roobert','Geist',sans-serif; }
+    .smpd-status-last { border-top:0.5px solid rgba(0,0,0,0.08); }
+    .smpd-status-name { flex:1; font-size:15px; letter-spacing:-0.3px; color:rgba(0,0,0,0.8); }
+    .smpd-status-dot { width:20px; height:20px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .smpd-status-dot.done { background:var(--brand-primary,#1f8a3f); }
+    .smpd-status-dot svg { width:11px; height:11px; fill:none; stroke:#fff; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+    @media (prefers-reduced-motion: reduce) { .rate-sheet, .rate-scrim { transition: none; } }
+
+    /* ══ India amount entry (Figma 6530-164542) ══ */
+    #sm-amount { background: #FDFCF2 url('assets/bg-send-money.webp') top center / 100% auto no-repeat; }
+    #sm-amount .sm-botanical-bg { display: none; }
+    #sm-amount .sma-scroll { display: flex; flex-direction: column; padding: 53px 20px 16px; gap: 0; overflow-y: auto; box-sizing: border-box; height: 100%; }
+    .sma2-header { display: flex; align-items: center; justify-content: space-between; }
+    .sma2-back { width: 44px; height: 44px; border-radius: 9999px; background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
+    .sma2-back:active { transform: scale(0.95); }
+    .sma2-back svg { width: 16px; height: 16px; }
+    .sma2-rate { display: flex; align-items: center; justify-content: center; gap: 8px; width: 144px; height: 44px; padding: 0 13px; background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); border-radius: 9999px; font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; color: rgba(0,0,0,0.8); }
+    .sma2-rate svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sma2-title { font-family: 'Geist', sans-serif; font-size: 30px; font-weight: 600; color: #322d0f; letter-spacing: -1px; margin: 22px 0 8px 8px; }
+    /* FROM / TO connected container — white insets on a beige panel */
+    .sma2-fromto { background: #eceadb; border-radius: 40px; padding: 8px; margin: 0 -12px; box-shadow: inset 0 2px 2px rgba(0,0,0,0.1); }
+    .sma2-card { background: #fff; border: 0.5px solid #fff; border-radius: 32px; padding: 20px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.05); -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+    .sma2-amt { -webkit-tap-highlight-color: transparent; }
+    .sma2-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .sma2-card-lbl { display: flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: #754c32; }
+    .sma2-card-lbl svg { width: 12px; height: 12px; }
+    .sma2-card-hint { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: #322d0f; }
+    .sma2-card-bot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
+    .sma2-acct { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+    .sma2-acct-name { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: #322d0f; line-height: 18px; }
+    .sma2-acct-bal { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: rgba(50,45,15,0.5); line-height: 18px; }
+    .sma2-amt { display: flex; align-items: baseline; color: #754c32; font-family: 'Geist', sans-serif; }
+    .sma2-amt-sym { font-size: 20px; font-weight: 500; margin-right: 1px; }
+    .sma2-amt-int { font-size: 40px; font-weight: 500; letter-spacing: -2px; line-height: 1; }
+    .sma2-amt-dec { font-size: 20px; font-weight: 500; letter-spacing: -1px; }
+    .sma2-amt-d, .sma2-amt-comma { cursor: text; }
+    /* Zero-width caret — overlays the gap between digits without shifting them */
+    .sma2-caret { display: inline-block; position: relative; width: 0; height: 0.82em; vertical-align: -0.16em; }
+    .sma2-caret::before { content: ''; position: absolute; left: -1px; top: -4px; width: 2px; height: 100%; border-radius: 1px; background: #322d0f; animation: sma2-blink 1.06s steps(1, start) infinite; }
+    @media (prefers-reduced-motion: reduce) { .sma2-caret::before { animation: none; } }
+    @keyframes sma2-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
+    @media (prefers-reduced-motion: reduce) { .sma2-caret { animation: none; } }
+    /* Fee/speed info between the cards */
+    .sma2-info { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 16px 8px; margin: 8px 0; }
+    .sma2-info-line { position: absolute; left: 23px; top: 22px; bottom: 22px; width: 1px; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%); }
+    .sma2-info-row { position: relative; display: flex; align-items: center; gap: 8px; padding: 0 8px; }
+    .sma2-info-ic { width: 16px; height: 16px; flex-shrink: 0; display: flex; }
+    .sma2-info-ic svg { width: 16px; height: 16px; }
+    .sma2-info-txt { font-family: 'Geist', sans-serif; font-size: 15px; letter-spacing: -0.3px; color: #322d0f; }
+    .sma2-info-txt b { font-weight: 600; }
+    .sma2-actions { display: flex; align-items: center; gap: 14px; margin: auto 0 16px; }
+    .sma2-cal { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; background: var(--surface-secondary); border: 1px solid var(--neutral-white-100, #fff); box-shadow: inset 0 0 0 1px var(--border-focus), 0 8px 16px -8px var(--surface-subtle); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 160ms var(--ease-out); }
+    .sma2-cal:active { transform: scale(0.95); }
+    .sma2-cal svg { width: 24px; height: 24px; }
+    .sma2-review { flex: 1; height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; background: #1f3833; border: none; border-radius: 9999px; cursor: pointer; font-size: 17px; font-weight: 600; letter-spacing: -0.85px; color: var(--text-inverse); box-shadow: 0 8px 16px -8px rgba(0,0,0,0.2), inset 0 -4px 1px rgba(0,0,0,0.05); transition: transform 160ms var(--ease-out), background 160ms var(--ease-out); }
+    .sma2-review svg { width: 20px; height: 20px; }
+    @media (hover:hover) and (pointer:fine) { .sma2-review:hover { background: #26433d; } }
+    .sma2-review:active { transform: scale(0.98); }
+    /* Keypad (Figma 6655-121775) — filled beige keys, ghost dot + delete */
+    .sma2-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding-top: 0; padding-bottom: 24px; }
+    .sma2-key {
+      height: 50px; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); border-radius: 18px;
+      background: #eceadb; font-family: 'Geist', sans-serif; font-size: 23px; font-weight: 500;
+      color: rgba(0,0,0,0.8); cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform 120ms var(--ease-out), filter 120ms ease;
+    }
+    .sma2-key:active { transform: scale(0.95); filter: brightness(0.95); }
+    .sma2-key-ghost { background: transparent; border-bottom: none; }
+    .sma2-key-ghost:active { filter: none; }
+    .sma2-key-ghost svg { width: 24px; height: 24px; }
+    /* DS typography: body/caption → Roobert, headings → ABC Arizona Flare */
+    #sm-amount .sma-scroll * { font-family: 'Roobert', 'Geist', sans-serif; }
+    #sm-amount .sma-scroll .sma2-title { font-family: 'Arizona Flare', 'Geist', serif; font-weight: 500; }
+
+    /* FROM account picker bottom sheet */
+    .sma-fromsheet-scrim { position: absolute; inset: 0; z-index: 40; background: rgba(0,0,0,0.35); -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px); opacity: 0; pointer-events: none; transition: opacity 260ms var(--ease-out); }
+    #sm-amount.sma-fromsheet-open .sma-fromsheet-scrim { opacity: 1; pointer-events: auto; }
+    .sma-fromsheet { position: absolute; left: 0; right: 0; bottom: 0; z-index: 41; background: #fff; border-radius: 28px 28px 0 0; padding: 8px 16px calc(20px + env(safe-area-inset-bottom)); transform: translateY(100%); transition: transform 320ms var(--ease-drawer); box-shadow: 0 -8px 40px rgba(0,0,0,0.16); font-family: 'Roobert', 'Geist', sans-serif; }
+    #sm-amount.sma-fromsheet-open .sma-fromsheet { transform: translateY(0); }
+    .sma-fromsheet-grab { width: 36px; height: 5px; border-radius: 999px; background: rgba(0,0,0,0.15); margin: 0 auto 12px; }
+    .sma-fromsheet-title { font-family: 'Roobert', 'Geist', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); padding: 0 4px 8px; }
+    .sma-fromsheet-list { display: flex; flex-direction: column; }
+    .sma-from-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; background: none; border: none; width: 100%; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .sma-from-row:active { background: rgba(0,0,0,0.03); border-radius: 12px; }
+    .sma-from-av { width: 40px; height: 40px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+    .sma-from-av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .sma-from-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .sma-from-name { font-family: 'Roobert', 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); }
+    .sma-from-sub { font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; color: var(--text-tertiary); }
+    .sma-from-check { width: 22px; height: 22px; flex-shrink: 0; opacity: 0; }
+    .sma-from-row.is-sel .sma-from-check { opacity: 1; }
+    .sma-from-check svg { width: 22px; height: 22px; stroke: var(--brand-primary); fill: none; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
     .sm-l-section {
       position: absolute; top: 230px; left: 20px;
       font-family: 'Geist', sans-serif;
@@ -5187,7 +5472,7 @@
     .sm-l-search-ph { font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 500; color: var(--text-secondary); }
 
     /* ── Amount (redesign) ── */
-    #sm-amount { background:transparent; overflow:hidden; }
+    #sm-amount { background: #FDFCF2 url('assets/bg-send-money.webp') top center / 100% auto no-repeat; overflow:hidden; }
     .sma-scroll { position:absolute; inset:0; display:flex; flex-direction:column; overflow:hidden; }
 
     .sm2-header {
@@ -5410,69 +5695,94 @@
       display:block; width:433px; height:235px; flex-shrink:0;
     }
 
-    #sm-review { background:linear-gradient(180deg, #efefef 0%, #f5f5f5 65%, #efefef 100%); overflow:hidden; }
+    #sm-review { background:#FDFCF2 url('assets/bg-send-money.webp') top center / 100% auto no-repeat; overflow:hidden; }
+    #sm-review .sm-botanical-bg { display:none; }
 
-    .smr-scroll { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding-bottom:172px; display:flex; flex-direction:column; }
+    .smr-scroll { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding:53px 20px 172px; display:flex; flex-direction:column; }
     .smr-scroll::-webkit-scrollbar { display:none; }
+    /* DS type: Roobert body, Arizona Flare title */
+    .smr-scroll * { font-family:'Roobert','Geist',sans-serif; }
 
-    /* ── sm-amount → sm-review transition ──────────────────────────
-       sm-review fades in on top — BG is identical so it looks static.
-       No content-level enter/exit classes needed. */
+    /* Header — back only */
+    .smr-header { display:flex; align-items:center; padding:9px 0 0; flex-shrink:0; }
+    .smr-pill-btn { width:44px; height:44px; border-radius:999px; background:#f5f5ed; border:1px solid var(--neutral-white-100,#fff); box-shadow:0 8px 16px -8px rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:transform 160ms var(--ease-out); }
+    .smr-pill-btn:active { transform:scale(0.95); }
+    .smr-pill-btn svg { width:18px; height:18px; }
 
-    /* Header */
-    .smr-header { display:flex; align-items:center; justify-content:space-between; padding:56px 24px 12px; flex-shrink:0; }
-    .smr-pill-btn { width:44px; height:44px; border-radius:999px; background: var(--surface-secondary); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); border:none; border-bottom: 1px solid var(--border-focus); box-shadow:0 8px 16px -8px rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; }
-    .smr-pill-btn svg { width:16px; height:16px; stroke:var(--text-primary); fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+    /* Title */
+    .smr-title { font-family:'Arizona Flare','Geist',serif; font-weight:500; font-size:34px; line-height:41px; letter-spacing:-1.7px; color:#322d0f; margin:22px 0 16px 8px; }
 
-    /* Main card */
-    .smr-card-wrap { display:flex; flex-direction:column; align-items:center; padding:0 20px; margin-top:0; flex-shrink:0; }
-    .smr-card { width:100%; backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px); background:rgba(255,255,255,0.80); border-top:2px solid rgba(255,255,255,0.60); border-bottom:2px solid rgba(255,255,255,0); border-left:none; border-right:none; border-radius:32px; padding:4px; box-shadow:0 16px 40px rgba(3,20,13,0.10); }
-    .smr-card-inner { background:rgba(0,0,0,0.05); border:0.5px solid rgba(0,0,0,0.05); border-radius:28px; overflow:hidden; }
+    /* Detail card — cream container framing a white sheet */
+    .smr-card-wrap { background:#eceadb; border-radius:40px; padding:8px; box-shadow:inset 0 2px 2px rgba(0,0,0,0.1); flex-shrink:0; margin:0 -12px; }
+    .smr-card { background:#fff; border:0.5px solid #fff; border-radius:32px; padding:32px 20px; display:flex; flex-direction:column; gap:16px; box-shadow:0 2px 2px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.05); }
 
-    /* Recipient */
-    .smr-recip { background:linear-gradient(180deg,rgba(0,0,0,0.02) 0%,rgba(0,0,0,0.05) 100%); border-bottom:0.5px solid rgba(0,0,0,0); display:flex; flex-direction:column; align-items:center; gap:8px; padding:16px 16px 12px; }
-    .smr-av { width:32px; height:32px; border-radius:999px; overflow:hidden; position:relative; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-    .smr-av-glass { position:absolute; inset:0.5px; background:rgba(255,255,255,0.1); border:0.3px solid white; border-radius:999px; backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
-    .smr-av-txt { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); z-index:2; font-family:'Geist',sans-serif; font-size:10px; font-weight:600; color:#fff; letter-spacing:-0.2px; white-space:nowrap; }
-    .smr-recip-name { font-family:'Geist',sans-serif; font-size:13px; font-weight:600; color:var(--text-secondary); line-height:18px; text-align:center; white-space:nowrap; }
-    .smr-recip-sub { display:flex; align-items:center; gap:4px; }
-    .smr-recip-acct { font-family:'Geist',sans-serif; font-size:11px; font-weight:500; color:var(--text-tertiary); }
-    .smr-recip-dot { width:12px; height:12px; flex-shrink:0; display:flex; align-items:center; justify-content:center; color:rgba(0,0,0,0.4); font-size:4px; }
-
-    /* Amounts section */
-    .smr-amounts { background:linear-gradient(180deg,rgba(0,0,0,0.05) 0%,rgba(0,0,0,0) 100%); padding:32px 16px 16px; display:flex; flex-direction:column; gap:40px; }
-    .smr-amounts-inner { display:flex; flex-direction:column; gap:16px; }
-    .smr-amounts-group { display:flex; flex-direction:column; gap:16px; }
-    .smr-divider { height:0.5px; background:rgba(0,0,0,0.08); flex-shrink:0; }
-    .smr-row { display:flex; align-items:center; justify-content:space-between; font-family:'Geist',sans-serif; font-size:13px; font-weight:500; line-height:18px; }
-    .smr-lbl { color:var(--text-tertiary); white-space:nowrap; }
-    .smr-val { color:var(--text-primary); text-align:right; }
+    /* Rows */
+    .smr-divider { height:0.5px; background:rgba(0,0,0,0.1); flex-shrink:0; }
+    .smr-row { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; font-size:15px; font-weight:400; line-height:20px; letter-spacing:-0.75px; }
+    .smr-lbl { color:rgba(0,0,0,0.6); white-space:nowrap; flex-shrink:0; }
+    .smr-val { color:#000; text-align:right; letter-spacing:-0.3px; }
+    .smr-val-stack { display:flex; flex-direction:column; align-items:flex-end; }
+    .smr-val-sub { font-size:13px; line-height:18px; letter-spacing:-0.65px; color:rgba(0,0,0,0.6); text-align:right; }
+    .smr-inline { display:flex; align-items:center; gap:4px; }
     .smr-fee-group { display:flex; align-items:center; gap:8px; }
-    .smr-free { color:var(--brand-primary); }
-    .smr-strike { color:var(--text-primary); text-decoration:line-through; }
-    .smr-exchange { display:flex; align-items:center; gap:4px; }
-    .smr-g-icon { width:12px; height:12px; flex-shrink:0; }
+    .smr-free { color:var(--brand-primary,#46882b); }
+    .smr-strike { color:#000; text-decoration:line-through; }
+    .smr-g-icon { width:14px; height:14px; flex-shrink:0; }
 
-    /* Purpose — floating-label input row */
-    .smr-purpose-input { background:rgba(255,255,255,0.40); border:0.5px solid rgba(255,255,255,0.60); border-radius:12px; height:60px; display:flex; align-items:center; gap:8px; padding:10px 16px; cursor:pointer; transition:opacity 0.12s ease; width:100%; }
+    /* Purpose selector + RBI helper — separate cream container */
+    .smr-purpose-wrap { background:#eceadb; border-radius:40px; padding:8px 8px 16px; box-shadow:inset 0 2px 2px rgba(0,0,0,0.1); margin:16px -12px 0; display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+    .smr-purpose-input { background:rgba(255,255,255,0.8); border:0.5px solid rgba(255,255,255,0.8); border-radius:32px; height:60px; display:flex; align-items:center; gap:8px; padding:10px 16px; cursor:pointer; transition:opacity 0.12s ease; width:100%; box-sizing:border-box; }
     @media (hover:hover) and (pointer:fine) { .smr-purpose-input:hover { opacity:0.85; } }
     .smr-purpose-input:active { opacity:0.75; }
     .smr-purpose-ico { font-size:20px; width:20px; height:20px; line-height:1; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
-    .smr-purpose-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; overflow:hidden; height:40px; }
-    .smr-purpose-sublbl { font-family:'Geist',sans-serif; font-size:13px; font-weight:500; color:var(--text-tertiary); line-height:18px; white-space:nowrap; text-align:left; }
-    .smr-purpose-val { font-family:'Geist',sans-serif; font-size:17px; font-weight:500; color:var(--text-primary); line-height:22px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left; }
-    .smr-purpose-caret { flex-shrink:0; color:var(--text-tertiary); }
+    .smr-purpose-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; overflow:hidden; }
+    .smr-purpose-sublbl { font-size:13px; font-weight:400; color:rgba(0,0,0,0.4); line-height:18px; white-space:nowrap; text-align:left; }
+    .smr-purpose-val { font-size:17px; font-weight:400; color:rgba(0,0,0,0.8); line-height:22px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left; }
+    .smr-purpose-caret { flex-shrink:0; }
+    .smr-purpose-help { font-size:13px; font-weight:400; line-height:18px; letter-spacing:-0.65px; color:rgba(0,0,0,0.6); padding:0 16px; }
 
     /* ── Purpose bottom sheet (1246-45677) ── */
     .purpose-scrim { position:absolute; inset:0; z-index:12000; background:rgba(0,0,0,0.18); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px); opacity:0; pointer-events:none; transition:opacity 0.3s ease; }
     .purpose-scrim.open { opacity:1; pointer-events:all; }
-    .purpose-sheet { position:absolute; bottom:0; left:0; right:0; z-index:12001; background:rgba(255,255,255,0.60); backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px); border-radius:20px 20px 0 0; border-top:2px solid rgba(255,255,255,0); transform:translateY(100%); transition:transform 0.30s var(--ease-drawer); overflow:hidden; pointer-events:none; max-height:90%; display:flex; flex-direction:column; }
-    .purpose-sheet::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,rgba(255,255,255,0) 0%,white 50%,rgba(255,255,255,0) 100%); }
-    .purpose-sheet.open { transform:translateY(0); pointer-events:all; }
-    /* invoice sheet slides in horizontally */
-    .purpose-sheet-invoice { transform:translateX(100%); transition:transform 0.28s var(--ease-drawer); min-height:88%; position:relative; }
-    .purpose-sheet-invoice.open { transform:translateX(0); }
+    .purpose-sheet { position:absolute; bottom:8px; left:8px; right:8px; z-index:12001; background:#fdfcf2; border-radius:40px; transform:translateY(calc(100% + 8px)); transition:transform 0.34s var(--ease-drawer, cubic-bezier(0.32,0.72,0,1)); overflow:hidden; pointer-events:none; max-height:calc(90% - 8px); display:flex; flex-direction:column; }
+    .purpose-sheet.open { transform:translateY(0); pointer-events:all; box-shadow:0 -8px 40px rgba(0,0,0,0.16); }
+    /* Supporting-document sheet: a bottom sheet layered above the purpose sheet */
+    .purpose-sheet-invoice { transform:translateY(calc(100% + 8px)); transition:transform 0.34s var(--ease-drawer, cubic-bezier(0.32,0.72,0,1)); height:88%; max-height:calc(96% - 8px); z-index:12002; }
+    .purpose-sheet-invoice.open { transform:translateY(0); }
     .purpose-handle { width:36px; height:5px; border-radius:999px; background:var(--neutral-black-20); margin:10px auto 0; flex-shrink:0; }
+
+    /* ══ Redesigned purpose sheet (Figma 6726-156347 / 6779-28005) ══ */
+    .purpose2 { padding:16px 16px calc(16px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; }
+    .purpose2-back { width:44px; height:44px; border-radius:9999px; background:#f5f5ed; border:1px solid var(--neutral-white-100,#fff); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; margin-bottom:12px; transition:transform 160ms var(--ease-out); }
+    .purpose2-back:active { transform:scale(0.95); }
+    .purpose2-back svg { width:18px; height:18px; }
+    .purpose2-title { font-family:'Arizona Flare','Geist',serif; font-weight:500; font-size:34px; line-height:41px; letter-spacing:-1.7px; color:#322d0f; margin:0 0 16px 4px; }
+    .purpose2-scroll { overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; display:flex; flex-direction:column; gap:16px; flex:1; min-height:0; }
+    .purpose2-scroll::-webkit-scrollbar { display:none; }
+    .purpose2-input { position:relative; display:flex; flex-direction:column; gap:2px; background:#fdfcf2; border:0.5px solid rgba(105,65,40,0.35); border-radius:24px; padding:14px 16px; }
+    .purpose2-input:focus-within { border-color:rgba(105,65,40,0.6); }
+    .purpose2-input-lbl { font-family:'Roobert','Geist',sans-serif; font-size:13px; color:rgba(0,0,0,0.4); }
+    .purpose2-textarea { border:none; background:none; outline:none; resize:none; width:100%; padding-right:44px; font-family:'Roobert','Geist',sans-serif; font-size:17px; line-height:22px; letter-spacing:-0.3px; color:rgba(0,0,0,0.85); }
+    .purpose2-textarea::placeholder { color:rgba(0,0,0,0.4); }
+    .purpose2-go { position:absolute; right:12px; bottom:12px; width:36px; height:36px; border-radius:50%; background:#f5f5ed; border:1px solid var(--neutral-white-100,#fff); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 160ms var(--ease-out); }
+    .purpose2-go:active { transform:scale(0.94); }
+    .purpose2-go svg { width:18px; height:18px; }
+    .purpose2-input.matched .purpose2-go { top:12px; bottom:auto; width:28px; height:28px; }
+    .purpose2-input.matched .purpose2-go svg { width:14px; height:14px; }
+    .purpose2-divlbl { font-family:'Roobert','Geist',sans-serif; font-size:11px; font-weight:600; letter-spacing:1px; text-transform:uppercase; color:rgba(0,0,0,0.35); display:flex; align-items:center; gap:8px; }
+    .purpose2-divlbl::after { content:''; flex:1; height:1px; background:rgba(0,0,0,0.1); }
+    .purpose2-match { background:#eceadb; border-radius:20px; padding:16px; display:flex; align-items:flex-start; gap:12px; }
+    .purpose2-list { display:flex; flex-direction:column; }
+    .p2-row { display:flex; align-items:flex-start; gap:12px; padding:12px; background:none; border:none; border-radius:16px; cursor:pointer; text-align:left; width:100%; }
+    .p2-row.sel { background:#eceadb; }
+    .p2-ico { font-size:22px; width:32px; flex-shrink:0; line-height:1.3; text-align:center; }
+    .p2-info { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; }
+    .p2-title { font-family:'Roobert','Geist',sans-serif; font-size:17px; font-weight:600; letter-spacing:-0.3px; color:rgba(0,0,0,0.85); display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .p2-tag { font-family:'Roobert','Geist',sans-serif; font-size:11px; font-weight:600; letter-spacing:0.5px; text-transform:uppercase; color:var(--brand-primary,#46882b); }
+    .p2-desc { font-family:'Roobert','Geist',sans-serif; font-size:13px; line-height:18px; letter-spacing:-0.2px; color:rgba(0,0,0,0.55); }
+    .purpose2-continue { margin-top:16px; height:60px; border-radius:9999px; background:#1f3833; border:none; color:var(--text-inverse,#fff); display:flex; align-items:center; justify-content:center; gap:8px; font-family:'Roobert','Geist',sans-serif; font-size:17px; font-weight:600; letter-spacing:-0.5px; cursor:pointer; box-shadow:0 8px 16px -8px rgba(0,0,0,0.2), inset 0 -4px 1px rgba(0,0,0,0.05); flex-shrink:0; transition:transform 160ms var(--ease-out); }
+    .purpose2-continue:active { transform:scale(0.98); }
+    .purpose2-continue svg { width:20px; height:20px; flex-shrink:0; }
 
     /* Sheet header */
     .purpose-hdr { padding:16px 20px 8px; display:flex; align-items:center; gap:10px; flex-shrink:0; }
@@ -5492,7 +5802,7 @@
     .purpose-list-wrap { flex:1; overflow-y:auto; padding:0 24px 24px; display:flex; flex-direction:column; gap:24px; }
     .purpose-list-wrap::-webkit-scrollbar { display:none; }
     .purpose-grp { display:flex; flex-direction:column; gap:4px; }
-    .purpose-grp-lbl { font-family:'Geist',sans-serif; font-size:11px; font-weight:600; color:var(--text-secondary); letter-spacing:1px; text-transform:uppercase; padding:0 12px 6px; }
+    .purpose-grp-lbl { font-family:'Geist',sans-serif; font-size:11px; font-weight:600; color:var(--text-tertiary); letter-spacing:1px; text-transform:uppercase; padding:0 12px 6px; }
     .purpose-grp-rows { display:flex; flex-direction:column; }
     .purpose-row { display:flex; align-items:center; gap:10px; padding:12px; background:transparent; border:none; width:100%; text-align:left; cursor:pointer; border-radius:16px; transition:background 0.12s ease; }
     .purpose-row:active { background:rgba(0,0,0,0.04); }
@@ -5504,6 +5814,9 @@
     .purpose-row-lbl { font-family:'Geist',sans-serif; font-size:15px; font-weight:500; color:var(--text-secondary); line-height:20px; }
     .purpose-row.sel .purpose-row-lbl { color:var(--text-primary); font-weight:500; }
     .purpose-row-sub { font-family:'Geist',sans-serif; font-size:11px; font-weight:500; color:var(--text-tertiary); line-height:16px; }
+    /* Professional rows: no icon/subtext, trailing bank purpose code */
+    .purpose-row-code { font-family:'Geist Mono','SF Mono',ui-monospace,monospace; font-size:12px; font-weight:500; letter-spacing:0.02em; color:var(--text-tertiary); flex-shrink:0; font-variant-numeric:tabular-nums; }
+    .purpose-row--code.sel .purpose-row-code { display:none; }
     .purpose-row.sel .purpose-row-sub { color:var(--text-secondary); }
     .purpose-row-check { width:20px; height:20px; flex-shrink:0; display:none; color:var(--brand-primary); }
     .purpose-row.sel .purpose-row-check { display:block; }
@@ -5539,17 +5852,106 @@
     .purpose-inv-footer { position:absolute; bottom:0; left:0; right:0; padding:16px 24px 28px; }
 
     /* Bottom */
-    .smr-bottom { position:absolute; bottom:0; left:0; right:0; padding:8px 24px 24px; box-sizing:border-box; display:flex; flex-direction:column; gap:8px; background:linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,0.95) 28px); }
-    .smr-note-btn { height:50px; display:flex; align-items:center; justify-content:center; background:none; border:none; font-family:'Geist',sans-serif; font-size:15px; font-weight:600; color: var(--text-secondary); cursor:pointer; width:100%; }
-    .smr-confirm-btn { height:60px; border-radius:999px; background: var(--brand-primary); border:none; font-family:'Geist',sans-serif; font-size:17px; font-weight:600; color: var(--text-inverse); cursor:pointer; width:100%; box-shadow:0 8px 16px -8px var(--surface-subtle); transition: transform 160ms ease-out; }
-    @media (hover: hover) and (pointer: fine) { .smr-confirm-btn:hover { opacity: 0.92; } }
-    .smr-confirm-btn:active { transform: scale(0.97); }
+    .smr-bottom { position:absolute; bottom:0; left:0; right:0; padding:24px 20px 20px; box-sizing:border-box; display:flex; flex-direction:column; gap:4px; align-items:center; background:linear-gradient(to bottom, rgba(253,252,242,0) 0%, rgba(253,252,242,0.9) 72px); }
+    /* Gradual backdrop blur — 0 at the top, ramping to full toward the buttons */
+    .smr-bottom::before { content:''; position:absolute; inset:0; pointer-events:none; z-index:0; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); -webkit-mask-image:linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 64px); mask-image:linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,1) 64px); }
+    .smr-bottom > * { position:relative; z-index:1; }
+    .smr-note-btn { height:60px; display:flex; align-items:center; justify-content:center; background:none; border:none; font-family:'Roobert','Geist',sans-serif; font-size:17px; font-weight:600; letter-spacing:-0.85px; color:rgba(0,0,0,0.6); cursor:pointer; }
+    .smr-confirm-btn { height:60px; border-radius:999px; background:#1f3833; border:none; font-family:'Roobert','Geist',sans-serif; font-size:17px; font-weight:600; letter-spacing:-0.85px; color:var(--text-inverse,#fff); cursor:pointer; width:100%; display:flex; align-items:center; justify-content:center; gap:8px; box-shadow:0 8px 16px -8px rgba(0,0,0,0.2), inset 0 -4px 1px rgba(0,0,0,0.05); transition:transform 160ms ease-out, background 160ms ease-out; }
+    .smr-confirm-btn svg { width:20px; height:20px; }
+    @media (hover: hover) and (pointer: fine) { .smr-confirm-btn:hover { background:#26433d; } }
+    .smr-confirm-btn:active { transform: scale(0.98); }
     @media (prefers-reduced-motion: reduce) { .smr-confirm-btn { transition: none; } }
 
-    /* ── Progress ── */
-    #sm-progress { background: transparent; overflow: hidden; }
+    /* ══ Transfer processing / success — redesign (Figma 6140-55487 / 55510) ══ */
+    #sm-progress, #sm-success { overflow: hidden; }
+    .smp2-bg { position: absolute; inset: 0; z-index: 0; }
+    .smp2-bg-gold  { background: linear-gradient(180deg, #faf9f8 0%, #faf9f8 54%, rgba(193,124,20,0.2) 128%); }
+    .smp2-bg-green { background: linear-gradient(180deg, #f9faf8 0%, #f9faf8 54%, rgba(31,56,51,0.18) 128%); }
+    .smp2-building {
+      position: absolute; left: 0; right: 0; top: 120px; height: 303px; z-index: 0;
+      -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+              mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+      pointer-events: none;
+    }
+    /* Full-colour source images — fit full width so the whole building shows */
+    .smp2-building-img { position: absolute; inset: 0; background-position: center top; background-size: 100% auto; background-repeat: no-repeat; }
+    /* Tile-construction reveal overlay */
+    .smp2-tiles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+    .smp2-tile { position: absolute; background-repeat: no-repeat; will-change: opacity; }
+    .smp2-building-img--loading { background-image: url('assets/vic-mem-loading.webp?v=2'); }
+    .smp2-building-img--success { background-image: url('assets/vic-mem-success.webp?v=3'); }
+    /* Progress-driven blur reveal (ai-chat-image-generation) — a backdrop-blur
+       overlay that sweeps top→bottom with a soft masked edge as the image loads.
+       clip-path + mask are driven per-frame by smpLoadReveal(). */
+    .smp2-load-blur {
+      position: absolute; left: 0; right: 0; top: -25%; height: 150%; z-index: 2;
+      pointer-events: none; opacity: 1;
+      -webkit-backdrop-filter: blur(28px); backdrop-filter: blur(28px);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+    }
+    @media (prefers-reduced-motion: reduce) { .smp2-load-blur { display: none; } }
+    /* The success screen is a settled state — no loading-blur reveal overlay */
+    #sm-success .smp2-load-blur { display: none; }
 
-    .smp-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 100px; display: flex; flex-direction: column; }
+    .smp2-scroll-inner { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; padding: 384px 40px 130px; min-height: 100%; box-sizing: border-box; }
+    #sm-success .smp2-scroll-inner { padding-top: 300px; }
+
+    .sms2-check { width: 88px; height: 88px; margin-bottom: 24px; filter: drop-shadow(0 10px 20px rgba(50,180,80,0.35)); }
+    .sms2-check img { width: 100%; height: 100%; object-fit: contain; display: block; }
+    /* In-place success morph: check drops in from the top over the building */
+    .smp2-morph-check {
+      position: absolute; top: -104px; left: 50%; margin: 0;
+      transform: translate(-50%, -18px); opacity: 0;
+      transition: opacity 420ms ease, transform 500ms cubic-bezier(0.34,1.56,0.64,1);
+    }
+    .smp2-morph-check.in { opacity: 1; transform: translate(-50%, 0); }
+    @media (prefers-reduced-motion: reduce) {
+      .smp2-morph-check { transition: opacity 200ms ease; transform: translate(-50%, 0); }
+    }
+
+    .smp2-hero { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+    .smp2-lbl { font-family: 'Arizona Flare', 'Geist', serif; font-size: 24px; font-weight: 500; line-height: 30px; letter-spacing: -1.2px; }
+    .smp2-lbl-gold  { color: #c17c14; }
+    .smp2-lbl-green { color: #32b450; }
+    .smp2-amount { display: flex; align-items: baseline; }
+    .smp2-sym { font-family: 'Roobert', 'Geist', sans-serif; font-size: 24px; font-weight: 600; color: rgba(0,0,0,0.8); letter-spacing: -1.2px; }
+    .smp2-int { font-family: 'Roobert', 'Geist', sans-serif; font-size: 48px; font-weight: 700; color: rgba(0,0,0,0.8); letter-spacing: -2.4px; line-height: 1.05; }
+    .smp2-dec { font-family: 'Roobert', 'Geist', sans-serif; font-size: 24px; font-weight: 600; color: rgba(0,0,0,0.8); letter-spacing: -1.2px; }
+    .smp2-eta { display: flex; align-items: center; gap: 4px; margin-top: 10px; }
+    .smp2-eta-txt { font-family: 'Roobert', 'Geist', sans-serif; font-size: 15px; color: rgba(0,0,0,0.6); letter-spacing: -0.75px; }
+
+    .smp2-divider { width: 313px; max-width: 100%; height: 1px; background: rgba(0,0,0,0.10); margin: 24px 0; }
+
+    .smp2-more-btn { display: flex; align-items: center; justify-content: center; gap: 6px; height: 44px; padding: 0 16px; background: transparent; border: none; cursor: pointer; font-family: 'Roobert', 'Geist', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: -0.75px; color: rgba(0,0,0,0.6); }
+    .smp2-more-caret { transition: transform 0.28s var(--ease-out); }
+    .smp2-more-btn.open .smp2-more-caret { transform: rotate(180deg); }
+
+    .smp2-more-body { width: 100%; max-width: 340px; overflow: hidden; max-height: 0; opacity: 0; transition: max-height 0.42s var(--ease-drawer), opacity 0.3s ease; }
+    .smp2-more-body.open { max-height: 1600px; opacity: 1; }
+
+    /* Dev speed control above the Done button (hidden once transfer succeeds) */
+    .smp2-speed { position: absolute; bottom: 96px; left: 20px; right: 20px; z-index: 4; display: flex; flex-direction: column; gap: 6px; }
+    #sm-progress.smp-done-state .smp2-speed { display: none; }
+    .smp2-speed-row { display: flex; align-items: center; justify-content: space-between; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; letter-spacing: -0.2px; }
+    .smp2-speed-lbl { color: rgba(0,0,0,0.6); }
+    .smp2-speed-val { color: rgba(0,0,0,0.8); font-weight: 600; font-variant-numeric: tabular-nums; }
+    .smp2-speed-range { -webkit-appearance: none; appearance: none; width: 100%; height: 4px; border-radius: 999px; background: rgba(31,56,51,0.2); outline: none; }
+    .smp2-speed-range::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #1f3833; cursor: pointer; box-shadow: 0 1px 3px rgba(0,0,0,0.25); }
+    .smp2-speed-range::-moz-range-thumb { width: 18px; height: 18px; border: none; border-radius: 50%; background: #1f3833; cursor: pointer; }
+
+    .smp2-bottom { position: absolute; bottom: 0; left: 0; right: 0; z-index: 3; padding: 16px 20px 24px; display: flex; gap: 16px; }
+    .smp2-btn { flex: 1; height: 60px; border: none; border-radius: 9999px; font-family: 'Roobert', 'Geist', sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 160ms var(--ease-out); }
+    .smp2-btn:active { transform: scale(0.97); }
+    .smp2-btn-primary { background: #1f3833; color: var(--text-inverse, #fff); box-shadow: 0 8px 16px -8px rgba(0,0,0,0.2), inset 0 -4px 1px rgba(0,0,0,0.05); }
+    .smp2-btn-secondary { background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); color: rgba(0,0,0,0.8); }
+    .smp2-btn-share svg { width: 20px; height: 20px; stroke: #fff; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    @media (prefers-reduced-motion: reduce) { .smp2-more-body, .smp2-more-caret, .smp2-btn { transition: none; } }
+
+    /* ── Progress ── */
+    #sm-progress { background: #faf9f8; overflow: hidden; }
+
+    .smp-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 0; display: flex; flex-direction: column; }
     .smp-scroll::-webkit-scrollbar { display: none; }
 
     .smp-card-wrap { padding: 0 20px; display: flex; flex-direction: column; gap: 12px; }
@@ -5729,7 +6131,7 @@
     @media (prefers-reduced-motion: reduce) { .smp-done-btn { transition: none; } }
 
     /* ── Success ── */
-    #sm-success { background: transparent; overflow: hidden; }
+    #sm-success { background: #f9faf8; overflow: hidden; }
     .sms-scroll { position: absolute; inset: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding-bottom: 0; display: flex; flex-direction: column; }
     .sms-scroll::-webkit-scrollbar { display: none; }
 
@@ -6493,9 +6895,128 @@
       --ink: rgba(30,24,18,0.90);
       --ink-soft: rgba(30,24,18,0.56);
       --rule: rgba(30,24,18,0.12);
-      margin: 52px 8px 0; box-sizing: border-box;
-      display: flex; flex-direction: column; gap: 0;
+      margin: 20px 20px 0; box-sizing: border-box;
+      display: flex; flex-direction: column; gap: 28px;
     }
+
+    /* ══ Home redesign (Figma 6163-29472) ══ */
+    /* Hero: light Kolkata sketch on the sage bg */
+    .home-hero-bg--sketch { animation: none !important; }
+    .home-hero-orb {
+      width: 44px; height: 44px; border-radius: 50%; overflow: hidden;
+      margin: 0 auto 6px; cursor: pointer; position: relative; z-index: 1;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+    }
+    .home-hero-orb video { width: 180%; height: 180%; object-fit: cover; display: block;
+      position: absolute; top: -40%; left: -40%;
+      filter: saturate(0.25) sepia(0.85) hue-rotate(88deg) saturate(2.2) brightness(0.82); }
+
+    /* ── Checking Balance card ── */
+    .home-bal {
+      position: relative; overflow: hidden; cursor: pointer;
+      border-radius: 24px; padding: 20px;
+      background: linear-gradient(135deg, #e7ede0 0%, #dbe6cf 100%);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04), 0 12px 28px -14px rgba(30,50,10,0.18);
+    }
+    .home-bal-pattern {
+      position: absolute; top: 0; right: 0; bottom: 0; width: 46%;
+      background-image: radial-gradient(circle, transparent 8.5px, rgba(120,120,90,0.16) 9px, rgba(120,120,90,0.16) 10.5px, transparent 11px);
+      background-size: 27px 27px; background-position: center;
+      -webkit-mask-image: linear-gradient(to left, #000 40%, transparent 100%);
+              mask-image: linear-gradient(to left, #000 40%, transparent 100%);
+      pointer-events: none;
+    }
+    .home-bal-inner { position: relative; z-index: 1; }
+    .home-bal-hdr { display: flex; align-items: center; gap: 7px; }
+    .home-bal-leaf { width: 14px; height: 14px; border-radius: 50%;
+      background: radial-gradient(circle at 34% 30%, #86e05a, #3f7d1f 70%, #235e10); flex-shrink: 0; }
+    .home-bal-lbl { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-secondary); }
+    .home-bal-amt { display: flex; align-items: baseline; margin: 6px 0 16px; }
+    .home-bal-sym { font-family: 'Geist', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .home-bal-int { font-family: 'Geist', sans-serif; font-size: 34px; font-weight: 700; color: var(--text-primary); letter-spacing: -1.5px; line-height: 1; }
+    .home-bal-dec { font-family: 'Geist', sans-serif; font-size: 20px; font-weight: 700; color: var(--text-tertiary); }
+    .home-bal-actions { display: flex; align-items: center; gap: 8px; }
+    .home-bal-btn {
+      display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 14px;
+      background: rgba(255,255,255,0.75); border: 0.5px solid rgba(255,255,255,0.9);
+      border-radius: 9999px; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 500; color: var(--text-primary);
+      transition: transform 160ms var(--ease-out), background 160ms ease;
+    }
+    .home-bal-btn:active { transform: scale(0.97); }
+    .home-bal-more {
+      width: 40px; height: 40px; margin-left: auto; flex-shrink: 0;
+      background: rgba(255,255,255,0.75); border: 0.5px solid rgba(255,255,255,0.9);
+      border-radius: 9999px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ── Attention carousel ── */
+    .home-attn { display: flex; flex-direction: column; gap: 12px; }
+    .home-attn-title { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); text-align: center; }
+    .home-attn-card {
+      display: flex; align-items: center; gap: 12px; padding: 14px;
+      background: #fff; border-radius: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 10px 24px -16px rgba(0,0,0,0.25);
+    }
+    .home-attn-logo { width: 40px; height: 40px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+    .home-attn-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .home-attn-txt { flex: 1; min-width: 0; }
+    .home-attn-hl { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 20px; }
+    .home-attn-red { color: var(--semantic-error, #c82c2c); }
+    .home-attn-sub { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--text-tertiary); line-height: 16px; margin-top: 2px; }
+    .home-attn-review {
+      display: flex; align-items: center; gap: 5px; flex-shrink: 0; height: 40px; padding: 0 14px;
+      background: var(--brand-primary); border: none; border-radius: 9999px; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; color: #fff;
+      transition: transform 160ms var(--ease-out);
+    }
+    .home-attn-review:active { transform: scale(0.97); }
+    .home-attn-dots { display: flex; justify-content: center; gap: 6px; }
+    .home-attn-dots span { width: 6px; height: 6px; border-radius: 50%; background: rgba(0,0,0,0.15); }
+    .home-attn-dots span.on { background: rgba(0,0,0,0.45); }
+
+    /* ── Transactions card ── */
+    .home-txc { background: linear-gradient(180deg, #eef4ea 0%, #f4f7f1 100%); border-radius: 24px; padding: 18px 16px 16px; }
+    .home-txc-hdr { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+    .home-txc-title { font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); }
+    .home-txc-seg { display: flex; background: rgba(0,0,0,0.05); border-radius: 9999px; padding: 3px; }
+    .home-txc-seg-btn { border: none; background: transparent; border-radius: 9999px; padding: 5px 12px; cursor: pointer;
+      font-family: 'Geist', sans-serif; font-size: 12px; font-weight: 600; color: var(--text-tertiary); transition: background 160ms ease, color 160ms ease; }
+    .home-txc-seg-btn.on { background: #fff; color: var(--text-primary); box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+    .home-txc-list { display: flex; flex-direction: column; gap: 4px; }
+    .home-txc-day { display: flex; gap: 12px; }
+    .home-txc-daynum { flex-shrink: 0; width: 26px; padding-top: 10px; font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 700; color: var(--text-primary); line-height: 1; display: flex; flex-direction: column; gap: 2px; }
+    .home-txc-daynum span { font-size: 9px; font-weight: 600; letter-spacing: 0.5px; color: var(--text-tertiary); }
+    .home-txc-daycol { flex: 1; min-width: 0; }
+    .home-txc-row { display: flex; align-items: center; gap: 12px; padding: 8px 0; }
+    .home-txc-row--dim { opacity: 0.55; }
+    .home-txc-av { position: relative; width: 36px; height: 36px; flex-shrink: 0; }
+    .home-txc-av img { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; display: block; }
+    .home-txc-badge { position: absolute; right: -2px; bottom: -2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 1px solid #eef4ea; display: flex; align-items: center; justify-content: center; }
+    .home-txc-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+    .home-txc-name { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 500; color: var(--text-primary); }
+    .home-txc-meta { font-family: 'Geist', sans-serif; font-size: 12px; color: var(--text-tertiary); }
+    .home-txc-warn { color: var(--semantic-warning, #c17c14); font-weight: 500; }
+    .home-txc-err { color: var(--semantic-error, #c82c2c); font-weight: 500; }
+    .home-txc-amt { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
+    .home-txc-amt > span { font-family: 'Geist', sans-serif; font-size: 15px; font-weight: 500; color: var(--text-primary); white-space: nowrap; }
+    .home-txc-strike { text-decoration: line-through; color: var(--text-tertiary) !important; }
+    .home-txc-inr { font-size: 11px !important; font-weight: 400 !important; color: var(--text-tertiary) !important; }
+    .home-txc-older { text-align: center; font-family: 'Geist', sans-serif; font-size: 11px; color: var(--text-tertiary); padding: 10px 0; }
+    .home-txc-all { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; margin-top: 10px; background: rgba(255,255,255,0.7); border: 0.5px solid rgba(0,0,0,0.05); border-radius: 9999px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; color: var(--text-primary); transition: transform 160ms var(--ease-out); }
+    .home-txc-all:active { transform: scale(0.98); }
+
+    /* ── Your cards ── */
+    .home-yc { position: relative; overflow: hidden; border-radius: 24px; cursor: pointer; min-height: 260px; display: flex; }
+    .home-yc-bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .home-yc-fade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0.06) 0%, rgba(255,255,255,0.12) 60%, rgba(255,255,255,0.35) 100%); }
+    .home-yc-content { position: relative; z-index: 1; margin-top: auto; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 20px; }
+    .home-yc-lbl { font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-primary); }
+    .home-yc-spend-lbl { font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 1px; color: var(--text-tertiary); margin-top: 8px; }
+    .home-yc-amt { display: flex; align-items: baseline; }
+    .home-yc-sym { font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-secondary); }
+    .home-yc-int { font-family: 'Geist', sans-serif; font-size: 26px; font-weight: 700; color: var(--text-primary); letter-spacing: -1px; }
+    .home-yc-dec { font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 600; color: var(--text-secondary); }
+    .home-yc-showall { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 16px; margin-top: 10px; background: rgba(255,255,255,0.85); border: 0.5px solid rgba(255,255,255,0.9); border-radius: 9999px; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 14px; font-weight: 600; color: var(--text-primary); }
     /* Each story sits on the page, divided by a thin rule */
     .home-sec {
       display: flex; flex-direction: column; gap: 12px;
