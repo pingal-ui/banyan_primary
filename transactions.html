@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=434">
+  <link rel="stylesheet" href="styles.css?v=470">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -48,7 +48,7 @@
     <!-- Fixed hero photo — zooms out + progressively blurs as content scrolls over it -->
     <div class="home-hero-fixed" id="homeHeroFixed">
       <div class="home-hero-bg-wrap" id="homeHeroBgWrap">
-        <img decoding="async" fetchpriority="high" class="home-hero-bg home-hero-bg--sketch" src="assets/home-hero-kolkata.webp" alt="">
+        <img decoding="async" fetchpriority="high" class="home-hero-bg home-hero-bg--sketch" src="assets/home-bg.webp" alt="">
       </div>
       <div class="home-hero-blur home-hero-blur-1"></div>
       <div class="home-hero-blur home-hero-blur-2"></div>
@@ -105,29 +105,32 @@
       <div class="home-main">
 
         <!-- ── Checking Balance card (Figma 6163-29639) ── -->
-        <div class="home-bal" onclick="showAccounts()">
-          <div class="home-bal-pattern" aria-hidden="true"></div>
-          <div class="home-bal-inner">
-            <div class="home-bal-hdr">
-              <span class="home-bal-leaf" aria-hidden="true"></span>
-              <span class="home-bal-lbl">Checking Balance</span>
+        <div class="home-bal home-bal--dark" onclick="showAccounts()">
+          <div class="home-bal-top">
+            <div class="home-bal-pattern" aria-hidden="true"></div>
+            <div class="home-bal-inner">
+              <div class="home-bal-head">
+                <span class="home-bal-lbl">Total Balance</span>
+                <div class="home-bal-amt">
+                  <span class="home-bal-sym">$</span><span class="home-bal-int">15,600</span><span class="home-bal-dec">.00</span>
+                </div>
+              </div>
+              <div class="home-bal-actions">
+                <button class="home-bal-btn" onclick="event.stopPropagation(); showAccounts()">
+                  <span class="ico ol" style="--ico:url('Icons/ArrowDownLeft.svg');--sz:16px;color:#322d0f"></span>
+                  <span>Add funds</span>
+                </button>
+                <button class="home-bal-btn" onclick="event.stopPropagation(); showSendMoney(); setNavActive(1)">
+                  <span class="ico ol" style="--ico:url('Icons/ArrowUpRight.svg');--sz:16px;color:#322d0f"></span>
+                  <span>Send money</span>
+                </button>
+              </div>
             </div>
-            <div class="home-bal-amt">
-              <span class="home-bal-sym">$</span><span class="home-bal-int">15,600</span><span class="home-bal-dec">.00</span>
-            </div>
-            <div class="home-bal-actions">
-              <button class="home-bal-btn" onclick="event.stopPropagation(); showAccounts()">
-                <span class="ico ol" style="--ico:url('Icons/ArrowDownLeft.svg');--sz:16px;color:var(--text-primary)"></span>
-                <span>Add funds</span>
-              </button>
-              <button class="home-bal-btn" onclick="event.stopPropagation(); showSendMoney(); setNavActive(1)">
-                <span class="ico ol" style="--ico:url('Icons/ArrowUpRight.svg');--sz:16px;color:var(--text-primary)"></span>
-                <span>Send money</span>
-              </button>
-              <button class="home-bal-more" onclick="event.stopPropagation()" aria-label="More">
-                <span class="ico ol" style="--ico:url('Icons/DotsThreeVertical.svg');--sz:18px;color:var(--text-primary)"></span>
-              </button>
-            </div>
+          </div>
+          <div class="home-bal-subs">
+            <div class="home-bal-sub"><span class="home-bal-sub-av"><img src="assets/sub-usd.webp" alt="" loading="lazy" decoding="async"></span><span class="home-bal-sub-lbl">USD Checking</span><span class="home-bal-sub-amt">$12,600.00</span></div>
+            <div class="home-bal-sub"><span class="home-bal-sub-av"><img src="assets/sub-thailand.webp" alt="" loading="lazy" decoding="async"></span><span class="home-bal-sub-lbl">Thailand trip</span><span class="home-bal-sub-amt">$12,600.00</span></div>
+            <div class="home-bal-sub"><span class="home-bal-sub-av"><img src="assets/sub-mom.webp" alt="" loading="lazy" decoding="async"></span><span class="home-bal-sub-lbl">Mom's expenses</span><span class="home-bal-sub-amt">$12,600.00</span></div>
           </div>
         </div>
 
@@ -1053,8 +1056,10 @@
     <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="beneBG.webp" alt=""></div>
 
     <!-- Header: back + sending now + compare rate -->
-    <div class="sm-l-header">
-      <div style="display:flex;align-items:center;">
+    <div class="sm-l-header" id="smLHeader">
+      <div class="sm-l-blur-bg"></div>
+      <span class="sm-l-compact-title">Send money</span>
+      <div style="display:flex;align-items:center;position:relative;z-index:2;">
         <button class="sm-l-back" onclick="smBack('sm-landing')">
           <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
@@ -1086,7 +1091,7 @@
           </div>
         </button>
       </div>
-      <div class="sm-l-rate" onclick="openRateSheet()">
+      <div class="sm-l-rate" onclick="openRateSheet()" style="position:relative;z-index:2;">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/>
           <path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/>
@@ -1103,7 +1108,7 @@
 
       <!-- Search + Add -->
       <div class="sm-l2-searchrow">
-        <div class="sm-l2-search" onclick="openBeneSheet()">
+        <div class="sm-l2-search" onclick="openSmSearch()">
           <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <span class="sm-l2-search-ph">Search...</span>
         </div>
@@ -1275,6 +1280,57 @@
     </div>
 
   </div><!-- /#sm-landing -->
+
+
+  <!-- ══════════════════════════════════════
+       SEND MONEY — SEARCH (Figma 6494-57858)
+  ══════════════════════════════════════ -->
+  <div class="screen hr" id="sm-search">
+    <!-- Background image -->
+    <div class="sm-botanical-bg"><img loading="lazy" decoding="async" src="beneBG.webp" alt=""></div>
+
+    <!-- Header: back + compare rate -->
+    <div class="sm-l-header">
+      <div style="display:flex;align-items:center;position:relative;z-index:2;">
+        <button class="sm-l-back" onclick="closeSmSearch()">
+          <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="sm-l-rate" onclick="openRateSheet()" style="position:relative;z-index:2;">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/>
+          <path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/>
+          <path d="M3.52 9.52A4.83 4.83 0 013.27 8c0-.53.09-1.04.25-1.52V4.41H.86A8 8 0 000 8c0 1.29.31 2.51.86 3.59l2.66-2.07z" fill="#FBBC04"/>
+          <path d="M8 3.18c1.17 0 2.22.4 3.05 1.2l2.28-2.28A8 8 0 00.86 4.41l2.66 2.07C4.15 4.59 5.92 3.18 8 3.18z" fill="#EA4335"/>
+        </svg>
+        <span class="sm-l-rate-text">$1 = ₹91.78</span>
+      </div>
+    </div>
+
+    <div class="sm-l2-scroll">
+      <p class="sm-l-title sm-l2-title">Send money<br>to a contact or a business</p>
+
+      <!-- Active search field -->
+      <div class="sm-s-searchrow">
+        <label class="sm-s-search" for="smSearchInput">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input id="smSearchInput" type="search" inputmode="search" autocomplete="off" spellcheck="false" placeholder="Search" oninput="smSearchInputChange()">
+        </label>
+      </div>
+
+      <!-- Empty state -->
+      <div class="sm-s-empty" id="smSearchEmpty">
+        <img class="sm-s-empty-img" src="assets/pay-people.webp" alt="" width="80" height="80" decoding="async">
+        <div class="sm-s-empty-txt">
+          <p class="sm-s-empty-title">Find who you want to pay to</p>
+          <p class="sm-s-empty-sub">Search by phone number, name or account details</p>
+        </div>
+      </div>
+
+      <!-- Live results -->
+      <div class="sm-s-results" id="smSearchResults"></div>
+    </div>
+  </div><!-- /#sm-search -->
 
 
   <!-- Shared scrim behind the add-beneficiary bottom sheets -->
@@ -1542,9 +1598,14 @@
       <button class="sma2-back" onclick="smBack('sm-amount')" aria-label="Back">
         <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
+      <div class="sma2-header-right">
       <div class="sma2-rate" onclick="openRateSheet()" style="cursor:pointer">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/><path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/><path d="M3.52 9.52A4.83 4.83 0 013.27 8c0-.53.09-1.04.25-1.52V4.41H.86A8 8 0 000 8c0 1.29.31 2.51.86 3.59l2.66-2.07z" fill="#FBBC04"/><path d="M8 3.18c1.17 0 2.22.4 3.05 1.2l2.28-2.28A8 8 0 00.86 4.41l2.66 2.07C4.15 4.59 5.92 3.18 8 3.18z" fill="#EA4335"/></svg>
         <span>$1 = ₹91.78</span>
+      </div>
+      <button class="sma2-back sma2-close" onclick="smCloseSend()" aria-label="Close">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
       </div>
     </div>
 
@@ -1552,6 +1613,33 @@
 
     <!-- FROM / TO connected container (Figma 6655-121713) -->
     <div class="sma2-fromto">
+
+    <!-- US single card (USD → USD, no conversion) — Figma 6534-24162 / 6534-24515 -->
+    <div class="sma2-card smaus-card">
+      <div class="smaus-cols">
+        <div class="smaus-left">
+          <div class="sma2-acct" onclick="smaOpenFromSheet()" style="cursor:pointer">
+            <button class="sma2-card-lbl" type="button">FROM<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
+            <span class="sma2-acct-name" id="smausFromName">USD Checking</span>
+            <span class="sma2-acct-bal" id="smausFromBal">$146,000.00</span>
+          </div>
+          <div class="sma2-acct">
+            <span class="sma2-card-lbl">TO</span>
+            <span class="sma2-acct-name" id="smausToName">Rohan Rathod</span>
+            <span class="sma2-acct-bal" id="smausToSub">HDFC 8976</span>
+          </div>
+        </div>
+        <div class="smaus-right">
+          <span class="sma2-card-hint">You send exactly</span>
+          <div class="sma2-amtcol">
+            <div class="sma2-amt" onclick="smaAmountClick(event,'us')">
+              <span class="sma2-amt-sym">$</span><span class="sma2-amt-int" id="smAmountUsInt">0</span><span class="sma2-amt-dec" id="smAmountUsDec">.00</span>
+            </div>
+            <span class="sma2-amt-err" id="smAmountUsErr" hidden>Enter an amount to proceed</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <!-- FROM card — whole card opens the account sheet; amount is the caret field -->
     <div class="sma2-card" onclick="smaOpenFromSheet()" style="cursor:pointer">
@@ -1564,8 +1652,11 @@
           <span class="sma2-acct-name" id="smaFromName">USD Checking</span>
           <span class="sma2-acct-bal" id="smaFromBal">$146,000.00</span>
         </div>
-        <div class="sma2-amt" onclick="smaAmountClick(event,'usd')">
-          <span class="sma2-amt-sym">$</span><span class="sma2-amt-int" id="smAmountInt">0</span><span class="sma2-amt-dec" id="smAmountDec">.00</span>
+        <div class="sma2-amtcol">
+          <div class="sma2-amt" onclick="smaAmountClick(event,'usd')">
+            <span class="sma2-amt-sym">$</span><span class="sma2-amt-int" id="smAmountInt">0</span><span class="sma2-amt-dec" id="smAmountDec">.00</span>
+          </div>
+          <span class="sma2-amt-err" id="smAmountErr" hidden>Enter an amount to proceed</span>
         </div>
       </div>
     </div>
@@ -1586,7 +1677,7 @@
     <!-- TO card -->
     <div class="sma2-card">
       <div class="sma2-card-top">
-        <button class="sma2-card-lbl" type="button" onclick="smBack('sm-amount')">TO<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
+        <span class="sma2-card-lbl">TO</span>
         <span class="sma2-card-hint" id="smToHint">Recipient receives</span>
       </div>
       <div class="sma2-card-bot">
@@ -1604,7 +1695,7 @@
 
     <!-- Actions: schedule + review -->
     <div class="sma2-actions">
-      <button class="sma2-cal" type="button" aria-label="Schedule">
+      <button class="sma2-cal" type="button" aria-label="Schedule" onclick="openScheduleSheet()">
         <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/></svg>
       </button>
       <button class="sma2-review" id="smSendBtn" onclick="smGoToReview()">Review payment <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button>
@@ -1633,8 +1724,10 @@
     <!-- FROM account picker bottom sheet -->
     <div class="sma-fromsheet-scrim" id="smaFromScrim" onclick="smaCloseFromSheet()"></div>
     <div class="sma-fromsheet" id="smaFromSheet">
-      <div class="sma-fromsheet-grab" aria-hidden="true"></div>
-      <div class="sma-fromsheet-title">Send from</div>
+      <button class="sma-fromsheet-back" type="button" onclick="smaCloseFromSheet()" aria-label="Back">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="sma-fromsheet-title">Select account</div>
       <div class="sma-fromsheet-list" id="smaFromList"></div>
     </div>
   </div><!-- /#sm-amount -->
@@ -1650,6 +1743,9 @@
       <div class="smr-header">
         <button class="smr-pill-btn" onclick="smBack('sm-review')" aria-label="Back">
           <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <button class="smr-pill-btn" onclick="smCloseSend()" aria-label="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
       </div>
 
@@ -1679,34 +1775,51 @@
               <span class="smr-free">Free</span>
               <span class="smr-strike">$2.00</span>
             </div>
+            <div class="smr-fee-us">
+              <span class="smr-val" id="smReviewFeeUs">$5.25</span>
+              <span class="smr-fee-note">Lower than anyone else</span>
+            </div>
           </div>
 
           <div class="smr-divider"></div>
 
-          <div class="smr-row">
+          <!-- Scheduled-only: recurrence + end date -->
+          <div class="smr-row smr-sched-only">
+            <span class="smr-lbl">Scheduled for</span>
+            <div class="smr-val-stack">
+              <span class="smr-val" id="smSchedForLine1">Every Sunday</span>
+              <span class="smr-val" id="smSchedForLine2">from 10th July 2026</span>
+            </div>
+          </div>
+          <div class="smr-row smr-sched-only" id="smSchedEndsRow">
+            <span class="smr-lbl">Ends on</span>
+            <span class="smr-val" id="smSchedEndsOn">26th July 2027</span>
+          </div>
+
+          <div class="smr-row smr-india-only smr-nonsched">
             <span class="smr-lbl">Exchange rate</span>
             <div class="smr-inline">
               <img loading="lazy" decoding="async" class="smr-g-icon" src="assets/f7ac8e68-bab0-4a2e-acc1-a376656b83aa.svg" alt="">
               <span class="smr-val">$1 = ₹91.78</span>
             </div>
           </div>
-          <div class="smr-row">
+          <div class="smr-row smr-india-only">
             <span class="smr-lbl">Payment method</span>
             <div class="smr-inline">
               <span class="ico" style="--ico:url('Icons/GlobeHemisphereWest.svg');--sz:16px;color:#322d0f"></span>
               <span class="smr-val">International</span>
             </div>
           </div>
-          <div class="smr-row">
+          <div class="smr-row smr-nonsched">
             <span class="smr-lbl"><span id="smReviewRecipName2">Rohan</span> receives</span>
             <span class="smr-val" id="smReviewReceives">₹9,17,800.00</span>
           </div>
 
-          <div class="smr-divider"></div>
+          <div class="smr-divider smr-india-only"></div>
 
           <div class="smr-row">
             <span class="smr-lbl">Estimated arrival</span>
-            <span class="smr-val">Today, 9:44 AM IST</span>
+            <span class="smr-val" id="smReviewArrival">Today, 9:44 AM IST</span>
           </div>
 
           <!-- Note row — appears once a note is saved -->
@@ -1722,8 +1835,8 @@
         </div>
       </div>
 
-      <!-- Purpose selector + RBI helper -->
-      <div class="smr-purpose-wrap">
+      <!-- Purpose selector + RBI helper (India) -->
+      <div class="smr-purpose-wrap smr-india-only">
         <button class="smr-purpose-input" onclick="smOpenPurposeSheet(event)">
           <span class="smr-purpose-ico" id="smPurposeIco">🏠</span>
           <div class="smr-purpose-text">
@@ -1735,12 +1848,24 @@
         <p class="smr-purpose-help">This needs to be filled in as a part of the RBI guidelines. This sentence can go upto 2 sentences.</p>
       </div>
 
+      <!-- Payment method selector (US / Wire) -->
+      <div class="smr-purpose-wrap smr-us-only">
+        <button class="smr-purpose-input" onclick="smaOpenFromSheet()">
+          <div class="smr-purpose-text">
+            <span class="smr-purpose-sublbl">Payment method</span>
+            <span class="smr-purpose-val">Wire Transfer</span>
+          </div>
+          <svg class="smr-purpose-caret" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg>
+        </button>
+        <p class="smr-purpose-help">You will be asked to enter the address of the beneficiary on the next step. This is a mandatory step for Wire transfers.</p>
+      </div>
+
     </div><!-- /.smr-scroll -->
 
     <!-- Bottom actions — fixed to bottom of screen -->
     <div class="smr-bottom">
       <button class="smr-note-btn" onclick="openReviewNote()">Add a note (optional)</button>
-      <button class="smr-confirm-btn" onclick="smShowFaceScan()">Confirm and pay
+      <button class="smr-confirm-btn" id="smrConfirmBtn" onclick="smShowFaceScan()"><span class="smr-confirm-lbl">Confirm and pay</span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </button>
     </div>
@@ -1758,6 +1883,108 @@
       <textarea class="rnote-input" id="rnoteInput" rows="3" placeholder="Enter your text here..."></textarea>
     </label>
     <button class="rnote-save" type="button" onclick="saveReviewNote()">Save note</button>
+  </div>
+
+  <!-- ── Schedule bottom sheet (Figma 6553-39196) ── -->
+  <div class="sched-scrim" id="schedScrim" onclick="closeScheduleSheet()"></div>
+  <div class="sched-sheet" id="schedSheet">
+    <button class="sched-back" type="button" onclick="closeScheduleSheet()" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    </button>
+    <h2 class="sched-title">Select the schedule</h2>
+
+    <div class="sched-scroll">
+      <div class="sched-group">
+        <button class="sched-row" type="button" onclick="openSchedDetail('date')">
+          <div class="sched-row-txt"><span class="sched-row-lbl">Transfer date</span><span class="sched-row-val" id="schedDateVal">June 10, 2026</span></div>
+          <span class="ico" style="--ico:url('Icons/Calendar.svg');--sz:20px;color:rgba(0,0,0,0.6)"></span>
+        </button>
+        <button class="sched-row" type="button" onclick="openSchedDetail('freq')">
+          <div class="sched-row-txt"><span class="sched-row-lbl">Frequency</span><span class="sched-row-val" id="schedFreqVal">Does not repeat</span></div>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg>
+        </button>
+        <button class="sched-row sched-row--disabled" type="button" id="schedEndsRow" onclick="openSchedDetail('ends')">
+          <div class="sched-row-txt"><span class="sched-row-lbl">Ends after</span><span class="sched-row-val" id="schedEndsVal">Does not end</span></div>
+          <span class="ico sched-ends-lock" style="--ico:url('Icons/Lock.svg');--sz:18px;color:rgba(0,0,0,0.35)"></span>
+          <svg class="sched-ends-caret" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg>
+        </button>
+      </div>
+
+      <div class="sched-ask">
+        <div class="sched-ask-row">
+          <span class="sched-ask-lbl">Ask before sending <span class="ico" style="--ico:url('Icons/Info.svg');--sz:18px;color:rgba(0,0,0,0.45)"></span></span>
+          <button class="sched-toggle" type="button" onclick="this.classList.toggle('on')" aria-label="Ask before sending"><span class="sched-knob"></span></button>
+        </div>
+        <p class="sched-ask-help">Every transaction will require your approval before it is processed</p>
+      </div>
+    </div>
+
+    <div class="sched-bottom">
+      <button class="sched-note" type="button" onclick="openReviewNote()">Add a note (optional)</button>
+      <button class="sched-confirm" type="button" onclick="smConfirmSchedule()">Schedule payment
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Schedule detail sheets (date / frequency / ends) ── -->
+  <div class="schd-scrim" id="schdScrim" onclick="closeSchedDetail()"></div>
+
+  <!-- Transfer date (Figma 6553-39760) -->
+  <div class="schd-sheet" id="schdDate">
+    <div class="schd-head">
+      <button class="schd-back" type="button" onclick="closeSchedDetail()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    </div>
+    <h2 class="schd-title">Transfer date</h2>
+    <div class="schd-cal">
+      <div class="schd-cal-hdr">
+        <span class="schd-cal-month">June 2026</span>
+        <div class="schd-cal-nav"><button type="button" aria-label="Previous"><svg viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12L6 8l4-4"/></svg></button><button type="button" aria-label="Next"><svg viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12l4-4-4-4"/></svg></button></div>
+      </div>
+      <div class="schd-cal-dow"><span>SUN</span><span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span></div>
+      <div class="schd-cal-grid" id="schdCalGrid"></div>
+    </div>
+    <button class="schd-continue" type="button" onclick="closeSchedDetail(); openSchedDetail('freq')">Continue
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- Frequency (Figma 6553-39468) -->
+  <div class="schd-sheet" id="schdFreq">
+    <div class="schd-head">
+      <button class="schd-back" type="button" onclick="closeSchedDetail()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="schd-close" type="button" onclick="closeSchedDetail()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <h2 class="schd-title">Frequency</h2>
+    <div class="schd-radios" id="schdFreqList">
+      <button class="schd-radio sel" type="button" data-v="Does not repeat" onclick="smPickFreq(this)"><span class="schd-radio-dot"></span><span class="schd-radio-lbl">Does not repeat</span></button>
+      <button class="schd-radio" type="button" data-v="Daily" onclick="smPickFreq(this)"><span class="schd-radio-dot"></span><span class="schd-radio-lbl">Daily</span></button>
+      <button class="schd-radio" type="button" data-v="Weekly on Sunday" onclick="smPickFreq(this)"><span class="schd-radio-dot"></span><span class="schd-radio-lbl">Weekly on Sunday</span></button>
+      <button class="schd-radio" type="button" data-v="Monthly on 3rd" onclick="smPickFreq(this)"><span class="schd-radio-dot"></span><span class="schd-radio-lbl">Monthly on 3rd</span></button>
+      <button class="schd-radio" type="button" data-v="Annually on 3rd June" onclick="smPickFreq(this)"><span class="schd-radio-dot"></span><span class="schd-radio-lbl">Annually on 3rd June</span></button>
+    </div>
+    <button class="schd-continue" type="button" onclick="closeSchedDetail(); openSchedDetail('ends')">Continue
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- Ends after (Figma 6553-40039) -->
+  <div class="schd-sheet" id="schdEnds">
+    <div class="schd-head">
+      <button class="schd-back" type="button" onclick="closeSchedDetail()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="schd-close" type="button" onclick="closeSchedDetail()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <h2 class="schd-title">Ends after</h2>
+    <div class="schd-radios">
+      <button class="schd-radio sel" type="button" data-v="Does not end" onclick="smPickEnds(this)"><span class="schd-radio-dot"></span><span class="schd-radio-lbl">Does not end</span></button>
+      <div class="schd-radio schd-radio--ends">
+        <button class="schd-radio-main" type="button" data-v="Ends on 26/06/2027" onclick="smPickEnds(this.parentElement.querySelector('.schd-radio-main'))"><span class="schd-radio-dot"></span><span class="schd-radio-lbl">Ends on</span></button>
+        <span class="schd-ends-date" onclick="openEndsCalendar(event)" style="cursor:pointer"><span class="ico" style="--ico:url('Icons/Calendar.svg');--sz:16px;color:rgba(0,0,0,0.6)"></span>26/06/2027</span>
+      </div>
+    </div>
+    <button class="schd-continue" type="button" onclick="closeSchedDetail()">Continue
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
   </div>
 
   <!-- ── Rate comparison bottom sheet (Figma 6524-86698) ── -->
@@ -1961,7 +2188,7 @@
 
         <div class="smp2-divider"></div>
 
-        <button class="smp2-more-btn" onclick="smpToggleMore(this)">
+        <button class="smp2-more-btn" onclick="smpToggleMore(this)" disabled>
           <span>Show more details</span>
           <svg class="smp2-more-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="rgba(0,0,0,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -2179,17 +2406,6 @@
 
     </div><!-- /.smp-scroll -->
 
-    <!-- Done — pinned to screen bottom -->
-    <!-- Dev control: animation speed (just above Done) -->
-    <div class="smp2-speed" id="smpSpeed">
-      <div class="smp2-speed-row">
-        <span class="smp2-speed-lbl">Animation speed</span>
-        <span class="smp2-speed-val" id="smpSpeedVal">9.0s</span>
-      </div>
-      <input type="range" class="smp2-speed-range" id="smpSpeedRange" min="3" max="20" step="0.5" value="9"
-        oninput="smpSetTileSpeed(this.value)">
-    </div>
-
     <div class="smp2-bottom" id="smpBottom">
       <button class="smp2-btn smp2-btn-primary" onclick="smpMorphToSuccess()">Done</button>
     </div>
@@ -2224,7 +2440,7 @@
 
         <div class="smp2-divider"></div>
 
-        <button class="smp2-more-btn" onclick="smpToggleMore(this)">
+        <button class="smp2-more-btn" onclick="smpToggleMore(this)" disabled>
           <span>Show more details</span>
           <svg class="smp2-more-caret" width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="rgba(0,0,0,0.55)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </button>
@@ -4376,7 +4592,7 @@
 
 </div>
 
-  <script defer src="app.js?v=260"></script>
+  <script defer src="app.js?v=286"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

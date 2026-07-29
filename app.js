@@ -568,6 +568,12 @@ function _agShimmerWave(el, text) {
   el.appendChild(frag);
 }
 
+// Progress label: per-char shimmer wave (agent loading animation)
+function _smpShimmerLabel(el) {
+  if (!el) return;
+  _agShimmerWave(el, 'Transfer in progress');
+}
+
 // Roll the thinking label to new text: old line rolls up + out, new rolls in from below
 function _agRollLabel(labelEl, text) {
   if (!labelEl) return;
@@ -5889,6 +5895,7 @@ let smInrRupeeInt = 0;
 let smInrPaisaStr = '';
 let smInrInCents  = false;
 
+var _smUSMode = false;
 let smRecipient = {
   name:'Rohan Rathod', initials:'RR',
   bg:'linear-gradient(135deg,#46882b,#2d5a16)', account:'••7654 · HDFC Bank'
@@ -7797,6 +7804,19 @@ function toggleSendDropdown(e) {
     btn.classList.add('dropdown-open');
   }
 }
+// Whether the current transfer has been scheduled (recurring / future-dated)
+var _smScheduled = false;
+/* "Schedule payment" on the schedule sheet → scheduled review screen */
+function smConfirmSchedule() {
+  _smScheduled = true;
+  closeScheduleSheet();
+  var lbl = document.getElementById('sm-sending-now-label'); if (lbl) lbl.textContent = 'Schedule for later';
+  smGoToReview();
+}
+/* "Confirm and schedule" on the review → success flow with a 3s loader */
+function smConfirmScheduled() {
+  smGoToProgress(3);
+}
 function selectSendMode(mode) {
   const label = document.getElementById('sm-sending-now-label');
   const checkNow = document.getElementById('sm-check-now');
@@ -8111,8 +8131,20 @@ function smEditCardAmount(id) {
   if (typeof smUpdateAmount === 'function') smUpdateAmount();
 }
 
+/* Beneficiary destination country → flag blob avatar (India saffron/green, US red/blue) */
+function _benIsIndia(b) {
+  var rails = (b && b.rails) ? Object.keys(b.rails) : [];
+  return rails.some(function(r){ return r === 'India Bank' || r === 'UPI'; });
+}
+function _benBlob(b) {
+  return _benIsIndia(b) ? 'assets/blob-india.webp' : 'assets/blob-us.webp';
+}
+
 function renderSmLanding2() {
   if (typeof BENS === 'undefined') return;
+  // Reset scroll-driven header to its expanded state
+  var _land = document.getElementById('sm-landing'); if (_land) _land.classList.remove('compact');
+  var _lscr = document.querySelector('#sm-landing .sm-l2-scroll'); if (_lscr) _lscr.scrollTop = 0;
   var rec = document.getElementById('smL2Rec'), list = document.getElementById('smL2List');
   if (!rec || !list) return;
   var esc = (typeof _agEscape === 'function') ? _agEscape : function(s){ return String(s); };
@@ -8147,8 +8179,9 @@ function renderSmLanding2() {
   }).join('');
   list.innerHTML = BENS.map(function(b) {
     var sub = _smBeneSub(b);
+    var blob = _benBlob(b);
     return '<button class="sm-l2-row" type="button" data-id="' + b.id + '">' +
-      '<span class="sm-l2-av" style="background:' + b.bg + '">' + esc(b.ini) + '</span>' +
+      '<span class="sm-l2-av"><img class="sm-l2-av-blob" src="' + blob + '" alt="" loading="lazy" decoding="async"><span class="sm-l2-av-glass"></span><span class="sm-l2-av-txt">' + esc(b.ini) + '</span></span>' +
       '<span class="sm-l2-rowtxt"><span class="sm-l2-rowname">' + esc(b.name) + '</span>' +
         (sub ? '<span class="sm-l2-rowsub">' + esc(sub) + '</span>' : '') + '</span>' +
       '<span class="sm-l2-rowgo">' + arrowSvg + '</span></button>';
@@ -8178,6 +8211,64 @@ function renderSmLanding2() {
   }
   rec.querySelectorAll('.sm-l2-slide').forEach(function(track) { _bindSlideToPay(track, goPay); });
   list.querySelectorAll('.sm-l2-row').forEach(function(btn) { btn.addEventListener('click', function() { goAmount(btn.dataset.id); }); });
+}
+
+/* ── Send-money search screen (Figma 6494-57858) ── */
+function openSmSearch() {
+  var inp = document.getElementById('smSearchInput'); if (inp) inp.value = '';
+  smSearchInputChange();
+  document.getElementById('sm-landing').className = 'screen hl';
+  document.getElementById('sm-search').className = 'screen on';
+  // Focus after the slide settles so the keyboard rises with the screen in place
+  setTimeout(function() { if (inp) inp.focus(); }, 320);
+}
+function closeSmSearch() {
+  var inp = document.getElementById('smSearchInput'); if (inp) inp.blur();
+  document.getElementById('sm-search').className = 'screen hr';
+  document.getElementById('sm-landing').className = 'screen on';
+}
+function smSearchInputChange() {
+  if (typeof BENS === 'undefined') return;
+  var inp = document.getElementById('smSearchInput');
+  var empty = document.getElementById('smSearchEmpty');
+  var out = document.getElementById('smSearchResults');
+  if (!out) return;
+  var esc = (typeof _agEscape === 'function') ? _agEscape : function(s){ return String(s); };
+  var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>';
+  var q = (inp && inp.value || '').toLowerCase().trim();
+  if (!q) {
+    if (empty) empty.hidden = false;
+    out.innerHTML = '';
+    return;
+  }
+  if (empty) empty.hidden = true;
+  var matches = BENS.filter(function(b) {
+    var hay = [b.name, b.alias, (typeof _smBeneSub === 'function' ? _smBeneSub(b) : ''),
+      (typeof _smBeneAcctLine === 'function' ? _smBeneAcctLine(b) : '')].join(' ').toLowerCase();
+    return hay.indexOf(q) !== -1;
+  });
+  if (!matches.length) {
+    out.innerHTML = '<p class="sm-s-noresult">No matches for “' + esc(inp.value.trim()) + '”</p>';
+    return;
+  }
+  out.innerHTML = matches.map(function(b) {
+    var sub = (typeof _smBeneSub === 'function') ? _smBeneSub(b) : '';
+    var blob = (typeof _benBlob === 'function') ? _benBlob(b) : '';
+    return '<button class="sm-l2-row" type="button" data-id="' + b.id + '">' +
+      '<span class="sm-l2-av"><img class="sm-l2-av-blob" src="' + blob + '" alt="" loading="lazy" decoding="async"><span class="sm-l2-av-glass"></span><span class="sm-l2-av-txt">' + esc(b.ini) + '</span></span>' +
+      '<span class="sm-l2-rowtxt"><span class="sm-l2-rowname">' + esc(b.name) + '</span>' +
+        (sub ? '<span class="sm-l2-rowsub">' + esc(sub) + '</span>' : '') + '</span>' +
+      '<span class="sm-l2-rowgo">' + arrowSvg + '</span></button>';
+  }).join('');
+  out.querySelectorAll('.sm-l2-row').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var b = BENS.filter(function(x){ return x.id === btn.dataset.id; })[0];
+      if (!b) return;
+      if (inp) inp.blur();
+      document.getElementById('sm-search').className = 'screen hl';
+      smGoToAmount(b.name, b.ini, b.bg, _smBeneAcctLine(b));
+    });
+  });
 }
 
 /* Drag-to-confirm "Slide to pay" control */
@@ -8343,6 +8434,7 @@ function animateHeroBlob(blobEl, destAvatarId, doTransition, destOpts) {
 
 function smGoToAmount(name, initials, bg, account, blobEl) {
   smRecipient = { name, initials, bg: bg||'linear-gradient(135deg,#46882b,#2d5a16)', account: account||'••7654 · HDFC Bank' };
+  _smScheduled = false; // fresh transfer starts unscheduled
   smCents = 0;
   smCurrencyFlipped = false;
   smInrPaise = 0;
@@ -8361,6 +8453,15 @@ function smGoToAmount(name, initials, bg, account, blobEl) {
   if (_toHint) _toHint.textContent = (name || '').split(' ')[0] + ' receives';
   document.getElementById('smRecipientAvatar').style.background = 'rgba(255,255,255,0.4)';
   document.getElementById('smRecipientSub').textContent      = account;
+  // US flow (USD → USD, no INR conversion): single-card layout
+  var _b = (typeof BENS !== 'undefined') ? BENS.filter(function(x){ return x.name === name; })[0] : null;
+  _smUSMode = _b ? !_benIsIndia(_b) : false;
+  var _amtScr = document.getElementById('sm-amount');
+  if (_amtScr) _amtScr.classList.toggle('us-mode', _smUSMode);
+  var _uf = document.getElementById('smausFromName'); if (_uf) _uf.textContent = (document.getElementById('smaFromName') || {}).textContent || 'USD Checking';
+  var _ub = document.getElementById('smausFromBal'); if (_ub) _ub.textContent = (document.getElementById('smaFromBal') || {}).textContent || '';
+  var _ut = document.getElementById('smausToName'); if (_ut) _ut.textContent = name;
+  var _us = document.getElementById('smausToSub'); if (_us) _us.textContent = account;
   // Copy the blob's photo to both amount + review avatars
   var destPhoto = document.querySelector('#smRecipientAvatar .sm2-mini-av-photo');
   var srcPhoto  = blobEl ? blobEl.querySelector('.sm-l-av-photo') : null;
@@ -8384,6 +8485,7 @@ function smGoToAmount(name, initials, bg, account, blobEl) {
       // position 0 instead of sliding in from the right.
       amountEl.style.transition = 'none';
       amountEl.className = 'screen on sma-entering';
+      if (_smUSMode) amountEl.classList.add('us-mode');
       // Re-enable transitions on the next frame (after the snap has painted)
       requestAnimationFrame(function() { amountEl.style.transition = ''; });
 
@@ -8419,6 +8521,7 @@ function smGoToAmount(name, initials, bg, account, blobEl) {
     // ── No blob (e.g. came from the beneficiary sheet) ─────────
     landingEl.className = 'screen hl';
     amountEl.className  = 'screen on';
+    if (_smUSMode) amountEl.classList.add('us-mode');
   }
 }
 
@@ -8451,13 +8554,37 @@ function smUpdateAmount() {
   document.getElementById('smAmountDec').textContent    = usdDec;
   document.getElementById('smAmountInrDec').textContent = inrDec;
 
+  // US single-card mirror of the USD field
+  var usInt = document.getElementById('smAmountUsInt');
+  if (usInt) {
+    usInt.innerHTML = _smaRenderInt(smIntStr, smCaretIdx, 'en-US');
+    var usDec = document.getElementById('smAmountUsDec'); if (usDec) usDec.textContent = usdDec;
+  }
+
+  // Auto-shrink each amount so long values never wrap/overflow the card
+  _smaFitAmount(document.getElementById('smAmountInt'));
+  _smaFitAmount(document.getElementById('smAmountInrInt'));
+  _smaFitAmount(usInt);
+
   const btn = document.getElementById('smSendBtn');
-  btn.disabled = !hasAmount;
+  // Always tappable — validation on tap surfaces the inline error (empty / over-limit)
+  btn.disabled = false;
   // Label stays constant — only the disabled state changes
   if (btn.dataset.labelSet !== '1') {
     btn.innerHTML = 'Review payment <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
     btn.dataset.labelSet = '1';
   }
+  // Live validation: over-limit shows immediately; the empty message is gated to tap
+  smRenderAmountError(false);
+}
+
+/* Scale an amount's font down by digit count so it never wraps or overflows */
+function _smaFitAmount(intEl) {
+  if (!intEl) return;
+  var amt = intEl.closest('.sma2-amt'); if (!amt) return;
+  var n = (intEl.textContent || '').replace(/[^0-9]/g, '').length;
+  var size = n <= 6 ? 40 : n <= 8 ? 32 : n <= 10 ? 26 : 22;
+  amt.style.setProperty('--amt-size', size + 'px');
 }
 
 /* Render the USD integer as individual digit spans with commas, placing the
@@ -8481,6 +8608,17 @@ function _smaRenderInt(str, caretIdx, locale) {
 function smaAmountClick(e, cur) {
   e.stopPropagation();
   cur = cur || 'usd';
+  // US single-card field behaves like the USD field but hit-tests its own digits
+  if (cur === 'us') {
+    if (smIntStr === '') { return; }
+    var uds = document.querySelectorAll('#smAmountUsInt .sma2-amt-d');
+    var ux = e.clientX, ui = uds.length;
+    for (var k = 0; k < uds.length; k++) {
+      var ur = uds[k].getBoundingClientRect();
+      if (ux < ur.left + ur.width / 2) { ui = k; break; }
+    }
+    smCaretIdx = ui; smUpdateAmount(); return;
+  }
   var flip = (cur === 'inr');
   if (smCurrencyFlipped !== flip) {
     if (flip) {
@@ -8646,21 +8784,96 @@ function smSwitchCurrency() {
   }, 160);
 }
 
+// Max transfer limit, defined on the INR (recipient) side — ₹15,00,000.
+var SM_MAX_INR = 1500000;
+function _smAmtErrEl() {
+  return document.getElementById(_smUSMode ? 'smAmountUsErr' : 'smAmountErr');
+}
+// 'empty' | 'over' | 'ok'
+function smAmountStatus() {
+  if (smCents === 0) return 'empty';
+  if (!_smUSMode && (smInrPaise / 100) > SM_MAX_INR) return 'over';
+  return 'ok';
+}
+/* Render the inline amount error. `showEmpty` gates the "enter an amount"
+   message so it only appears after a Review attempt, not while at $0. */
+function smRenderAmountError(showEmpty) {
+  var a = document.getElementById('smAmountErr'); if (a) { a.hidden = true; }
+  var b = document.getElementById('smAmountUsErr'); if (b) { b.hidden = true; }
+  var err = _smAmtErrEl(); if (!err) return;
+  var st = smAmountStatus();
+  if (st === 'over') {
+    var maxUsd = Math.floor(SM_MAX_INR / SM_EXRATE);
+    err.textContent = 'Amount exceeds the maximum of ₹' + SM_MAX_INR.toLocaleString('en-IN') +
+      '. You can send up to $' + maxUsd.toLocaleString('en-US') + '.';
+    err.hidden = false;
+  } else if (st === 'empty' && showEmpty) {
+    err.textContent = 'Enter an amount to proceed';
+    err.hidden = false;
+  }
+}
 function smGoToReview() {
-  if (smCents === 0) return;
+  var _st = smAmountStatus();
+  if (_st !== 'ok') { smRenderAmountError(true); return; }
   const fmtD   = (smCents / 100).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
   const fmtINR = (smInrPaise / 100).toLocaleString('en-IN', { minimumFractionDigits:2, maximumFractionDigits:2 });
 
   const firstName = smRecipient.name.split(' ')[0];
   document.getElementById('smReviewSending').textContent       = '$' + fmtD;
-  document.getElementById('smReviewReceives').textContent      = '₹' + fmtINR;
   document.getElementById('smReviewRecipientName').textContent = smRecipient.name;
   document.getElementById('smReviewRecipName2').textContent    = firstName;
   // Recipient account (single line — strip any leading dot/separator noise)
   var acct = (smRecipient.account || '').replace(/^[•·\s]+/, '').trim();
   document.getElementById('smReviewRecipAcct').textContent = acct;
+
+  // US (USD→USD, wire) vs India (USD→INR) review variant
+  var reviewEl = document.getElementById('sm-review');
+  reviewEl.classList.toggle('us-mode', _smUSMode);
+  var _arr = document.getElementById('smReviewArrival');
+  if (_smUSMode) {
+    var _feeUsd = 5.25; // flat wire fee (demo)
+    var _net = Math.max(0, (smCents / 100) - _feeUsd);
+    document.getElementById('smReviewReceives').textContent = '$' + _net.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+    var _feeEl = document.getElementById('smReviewFeeUs'); if (_feeEl) _feeEl.textContent = '$' + _feeUsd.toFixed(2);
+    if (_arr) _arr.textContent = 'Today, 9:44 AM PST';
+  } else {
+    document.getElementById('smReviewReceives').textContent = '₹' + fmtINR;
+    if (_arr) _arr.textContent = 'Today, 9:44 AM IST';
+  }
+
+  // Scheduled variant: recurrence rows + "Confirm and schedule" action
+  reviewEl.classList.toggle('sched-mode', _smScheduled);
+  var _cbtn = document.getElementById('smrConfirmBtn');
+  var _clbl = _cbtn && _cbtn.querySelector('.smr-confirm-lbl');
+  if (_smScheduled) {
+    var _freq = ((document.getElementById('schedFreqVal') || {}).textContent || 'Does not repeat').trim();
+    var _date = ((document.getElementById('schedDateVal') || {}).textContent || '').trim();
+    var _l1 = document.getElementById('smSchedForLine1');
+    var _l2 = document.getElementById('smSchedForLine2');
+    if (_freq === 'Does not repeat') {
+      if (_l1) _l1.textContent = 'One-time';
+      if (_l2) _l2.textContent = _date ? 'on ' + _date : '';
+    } else {
+      if (_l1) _l1.textContent = _freq;
+      if (_l2) _l2.textContent = _date ? 'from ' + _date : '';
+    }
+    var _ends = ((document.getElementById('schedEndsVal') || {}).textContent || 'Does not end').trim();
+    var _endsRow = document.getElementById('smSchedEndsRow');
+    if (_ends === 'Does not end' || !_ends) {
+      if (_endsRow) _endsRow.style.display = 'none';
+    } else {
+      if (_endsRow) _endsRow.style.display = '';
+      var _eo = document.getElementById('smSchedEndsOn'); if (_eo) _eo.textContent = _ends.replace(/^Ends on\s*/, '');
+    }
+    if (_clbl) _clbl.textContent = 'Confirm and schedule';
+    if (_cbtn) _cbtn.onclick = smConfirmScheduled;
+  } else {
+    if (_clbl) _clbl.textContent = 'Confirm and pay';
+    if (_cbtn) _cbtn.onclick = smShowFaceScan;
+  }
+
   // From account mirrors the selected funding account on the amount screen
-  var fromName = document.getElementById('smaFromName');
+  var fromName = document.getElementById(_smUSMode ? 'smausFromName' : 'smaFromName');
   if (fromName) document.getElementById('smReviewFrom').textContent = fromName.textContent;
   // Reset any note from a previous review
   var _nr = document.getElementById('smrNoteRow'); if (_nr) _nr.style.display = 'none';
@@ -8673,9 +8886,9 @@ function smGoToReview() {
   var bottom   = reviewEl.querySelector('.smr-bottom');
   var spring   = 'cubic-bezier(0.16,1,0.3,1)';
 
-  // Show review on top of the amount screen
+  // Show review on top of the amount screen (preserve the us-mode variant flag)
   reviewEl.style.cssText = 'transition:none;opacity:1;z-index:3';
-  reviewEl.className = 'screen on';
+  reviewEl.className = 'screen on' + (_smUSMode ? ' us-mode' : '') + (_smScheduled ? ' sched-mode' : '');
 
   // Stage content offset, then slide up in sequence
   [card, purpose].forEach(function(el, i) {
@@ -9055,20 +9268,8 @@ function _smpClearTiles(scr) {
   if (base) base.style.opacity = '';
 }
 
-/* Duration (seconds) of the tile-construction reveal — adjustable via the speed slider */
-var smpTileDuration = 9;
-function smpSetTileSpeed(v) {
-  smpTileDuration = parseFloat(v) || 9;
-  var lbl = document.getElementById('smpSpeedVal');
-  if (lbl) lbl.textContent = smpTileDuration.toFixed(1) + 's';
-  // If a reveal is mid-flight, restart it at the new speed
-  var scr = document.getElementById('sm-progress');
-  if (scr && scr._smpTileRAF && !scr._smpSucceeded) {
-    smpTileReveal(smpTileDuration, function() {
-      if (document.getElementById('sm-progress').classList.contains('on')) smpMorphToSuccess();
-    });
-  }
-}
+/* Duration (seconds) of the tile-construction reveal — fixed at 15s */
+var smpTileDuration = 15;
 
 /* Tile-construction reveal: the Victoria Memorial is rebuilt tile-by-tile from the
    bottom up, with a soft per-tile pixel flicker. Nothing shows at the start. */
@@ -9301,7 +9502,7 @@ function smpResetProgressVisual() {
   var bg = scr.querySelector('.smp2-bg');
   if (bg) { bg.classList.remove('smp2-bg-green'); bg.classList.add('smp2-bg-gold'); }
   var lbl = scr.querySelector('.smp2-lbl');
-  if (lbl) { lbl.textContent = 'Transfer in progress'; lbl.classList.remove('smp2-lbl-green'); lbl.classList.add('smp2-lbl-gold'); }
+  if (lbl) { lbl.classList.remove('smp2-lbl-green'); lbl.classList.add('smp2-lbl-gold'); _smpShimmerLabel(lbl); }
   var eta = scr.querySelector('.smp2-eta');
   if (eta) {
     var ico = eta.querySelector('.ico'); if (ico) ico.style.display = '';
@@ -9323,8 +9524,8 @@ function smaOpenFromSheet() {
     return '<button class="sma-from-row' + sel + '" type="button" onclick="smaPickFrom(' + i + ')">' +
       '<span class="sma-from-av"><img loading="lazy" decoding="async" src="' + s.av + '" alt=""></span>' +
       '<span class="sma-from-info"><span class="sma-from-name">' + _agEscape(s.name) + '</span>' +
-      '<span class="sma-from-sub">•• ' + s.last4 + ' · ' + s.bal + '</span></span>' +
-      '<span class="sma-from-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></span>' +
+      '<span class="sma-from-sub">•• ' + s.last4 + '</span></span>' +
+      '<span class="sma-from-bal">' + s.bal + '</span>' +
       '</button>';
   }).join('');
   var scr = document.getElementById('sm-amount');
@@ -9370,20 +9571,25 @@ function smpToggle(openId, closeId) {
   if (!isOpen && closeEl) closeEl.classList.remove('smp-acc-open');
 }
 
-function smGoToProgress() {
+function smGoToProgress(durationSec) {
+  var _revealDur = (typeof durationSec === 'number' && durationSec > 0) ? durationSec : smpTileDuration;
   setSbLight(false); // dark iOS status bar over the light progress background
+  // US transfers use the "rush" background art on both progress and success
+  var _pEl = document.getElementById('sm-progress'); if (_pEl) _pEl.classList.toggle('us-mode', _smUSMode);
+  var _sEl = document.getElementById('sm-success');  if (_sEl) _sEl.classList.toggle('us-mode', _smUSMode);
   const dollars = smCents / 100;
   const intPart = Math.floor(dollars).toLocaleString('en-US');
   const decPart = '.' + String(Math.round((dollars % 1) * 100)).padStart(2,'0');
   const fmtD    = dollars.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
   const firstName = smRecipient.name.split(' ')[0];
 
-  document.getElementById('smProgressInt').textContent       = intPart;
-  document.getElementById('smProgressDec').textContent       = decPart;
-  document.getElementById('smProgressAccAmt').textContent    = '$' + fmtD;
-  document.getElementById('smProgressRecip').textContent     = smRecipient.name;
-  document.getElementById('smProgressAcct').textContent      = smRecipient.account || '••7654 · HDFC Bank';
-  document.getElementById('smProgressRecipStep').textContent = 'Funds in ' + firstName + "'s account";
+  var _set = function(id, t){ var e = document.getElementById(id); if (e) e.textContent = t; };
+  _set('smProgressInt', intPart);
+  _set('smProgressDec', decPart);
+  _set('smProgressAccAmt', '$' + fmtD);
+  _set('smProgressRecip', smRecipient.name);
+  _set('smProgressAcct', smRecipient.account || '••7654 · HDFC Bank');
+  _set('smProgressRecipStep', 'Funds in ' + firstName + "'s account");
   // Personalize every stepper label — the template HTML hardcodes Rohan/HDFC.
   // Tokenize each label once (data-tpl), then fill from the live recipient.
   var bankName = ((smRecipient.account || '').split('·')[1] || 'HDFC Bank').trim();
@@ -9396,7 +9602,7 @@ function smGoToProgress() {
     }
   });
   // Reset progress screen: step-1 state, collapse txn details, restore coin
-  document.getElementById('smAccTxn').classList.remove('smp-acc-open');
+  var _accTxn = document.getElementById('smAccTxn'); if (_accTxn) _accTxn.classList.remove('smp-acc-open');
   var s1 = document.querySelector('#sm-progress .smp-stepper-s1');
   var s2 = document.querySelector('#sm-progress .smp-stepper-s2');
   var s3 = document.querySelector('#sm-progress .smp-stepper-s3');
@@ -9437,50 +9643,24 @@ function smGoToProgress() {
 
   // Snap progress on top; the shared botanical bg keeps the scene continuous
   progressEl.style.cssText = 'transition:none;opacity:1;z-index:3';
-  progressEl.className = 'screen on';
+  progressEl.className = 'screen on' + (_smUSMode ? ' us-mode' : '');
   smpResetProgressVisual();
   var _lb = document.getElementById('smpLoadBlurP'); if (_lb) _lb.style.display = 'none';
   setTimeout(function() {
     // Slow tile-by-tile construction of the memorial from the bottom up
-    smpTileReveal(smpTileDuration, function() {
+    smpTileReveal(_revealDur, function() {
       // Loader finished → morph this screen into success in place (no page swap)
       if (document.getElementById('sm-progress').classList.contains('on')) smpMorphToSuccess();
     });
   }, 80);
-  var dy = revRect.top - prgCard.getBoundingClientRect().top;
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) dy = 0;
-  revCard.style.cssText = 'transition:none;opacity:0';
-
-  // Card frame starts where the review card was, contents hidden inside it
-  prgCard.style.cssText = 'transition:none;transform:translateY(' + dy + 'px)';
-  Array.from(prgCard.children).forEach(function(c) {
-    c.style.cssText = 'transition:none;opacity:0;transform:translateY(10px)';
-  });
-  var prgBottom = progressEl.querySelector('.smp-bottom');
-  if (prgBottom) prgBottom.style.cssText = 'transition:none;opacity:0;transform:translateY(32px)';
-
-  requestAnimationFrame(function() { requestAnimationFrame(function() {
-    // Frame glides up from the review position to its resting spot
-    prgCard.style.cssText = 'transition:transform 0.55s ' + spring + ';transform:translateY(0)';
-    // Contents fade up inside the moving frame, lightly staggered
-    Array.from(prgCard.children).forEach(function(c, i) {
-      var d = (0.12 + i * 0.07).toFixed(2) + 's';
-      c.style.cssText = 'transition:opacity 0.32s ease '+d+',transform 0.44s '+spring+' '+d+';opacity:1;transform:translateY(0)';
-    });
-    if (prgBottom) prgBottom.style.cssText = 'transition:opacity 0.30s ease 0.26s,transform 0.42s '+spring+' 0.26s;opacity:1;transform:translateY(0)';
-  }); });
-
-  // Clean up: park review off-screen
+  // The progress screen owns its own entrance (tile reveal); just park the
+  // review screen underneath so back-navigation stays consistent.
   setTimeout(function() {
     progressEl.style.cssText = '';
     reviewEl.style.transition = 'none';
     reviewEl.className = 'screen hl';
-    if (revCard) revCard.style.cssText = '';
-    prgCard.style.cssText = '';
-    Array.from(prgCard.children).forEach(function(c) { c.style.cssText = ''; });
-    if (prgBottom) prgBottom.style.cssText = '';
     requestAnimationFrame(function() { reviewEl.style.transition = ''; });
-  }, 750);
+  }, 120);
 }
 
 // Shared AudioContext, unlocked on the first user gesture (autoplay policy)
@@ -9551,7 +9731,7 @@ function smGoToSuccess() {
 
   document.getElementById('sm-progress').className = 'screen hl';
   var sucScreen = document.getElementById('sm-success');
-  sucScreen.className  = 'screen on';
+  sucScreen.className  = 'screen on' + (_smUSMode ? ' us-mode' : '');
 
   // Receipt-unfurl entrance: reset, then re-trigger on next frame
   sucScreen.classList.remove('sms-unfurl');
@@ -9698,6 +9878,104 @@ function _rateBindSlider() {
   window.addEventListener('mouseup', up);
   window.addEventListener('touchend', up);
 }
+/* Close/abandon the whole send-money flow → back to where it started */
+function smCloseSend() {
+  document.querySelector('.phone').scrollTop = 0;
+  closeScheduleSheet(); closeSchedDetail && closeSchedDetail();
+  if (typeof SM_SCREENS !== 'undefined') SM_SCREENS.forEach(function(id){ var e=document.getElementById(id); if (e) e.className='screen hr'; });
+  var origin = (typeof smOrigin !== 'undefined' && smOrigin) || _smOrigin || 'home';
+  var dest = document.getElementById(origin) || document.getElementById('home');
+  dest.className = 'screen on';
+  setSbLight(false); showNav(true);
+}
+
+/* ── Schedule sheet ── */
+function openScheduleSheet(ev) {
+  if (ev) ev.stopPropagation();
+  if (typeof setSbLight === 'function') setSbLight(false);
+  document.getElementById('schedSheet').classList.add('open');
+}
+function closeScheduleSheet() {
+  document.getElementById('schedSheet').classList.remove('open');
+}
+
+/* Schedule detail sheets: date / frequency / ends */
+var _schdBuilt = false;
+function _buildSchdCal() {
+  if (_schdBuilt) return; _schdBuilt = true;
+  var grid = document.getElementById('schdCalGrid'); if (!grid) return;
+  var html = '';
+  for (var d = 2; d <= 30; d++) {
+    var col = (d - 2) % 7;            // 0 = Sunday column
+    var cls = 'schd-cal-cell' + (col === 0 ? ' sun' : '') + (d === 10 ? ' sel' : '');
+    html += '<button class="' + cls + '" type="button" onclick="smPickSchdDay(this,' + d + ')">' + d + '</button>';
+  }
+  grid.innerHTML = html;
+}
+function openSchedDetail(which) {
+  _buildSchdCal();
+  if (which === 'date') _schdCalTarget = 'date';
+  var map = { date: 'schdDate', freq: 'schdFreq', ends: 'schdEnds' };
+  var el = document.getElementById(map[which]); if (!el) return;
+  document.getElementById('schdScrim').classList.add('open');
+  el.classList.add('open');
+}
+function closeSchedDetail() {
+  var cal = document.getElementById('schdDate');
+  // If the calendar is layered over the Ends sheet, back just returns to Ends
+  if (cal && cal.classList.contains('schd-ontop')) {
+    cal.classList.remove('open'); cal.classList.remove('schd-ontop');
+    _schdCalTarget = 'date';
+    return;
+  }
+  document.getElementById('schdScrim').classList.remove('open');
+  ['schdDate', 'schdFreq', 'schdEnds'].forEach(function(id) {
+    var e = document.getElementById(id); if (e) { e.classList.remove('open'); e.classList.remove('schd-ontop'); }
+  });
+}
+// Which field the calendar is currently editing: 'date' (transfer date) or 'ends'
+var _schdCalTarget = 'date';
+/* Open the calendar on top of the "Ends after" sheet to pick the end date */
+function openEndsCalendar(ev) {
+  if (ev) ev.stopPropagation();
+  _schdCalTarget = 'ends';
+  _buildSchdCal();
+  document.getElementById('schdScrim').classList.add('open');
+  var cal = document.getElementById('schdDate');
+  cal.classList.add('schd-ontop'); // sit above the Ends-after sheet
+  cal.classList.add('open');
+}
+function smPickSchdDay(el, day) {
+  el.parentElement.querySelectorAll('.schd-cal-cell').forEach(function(c){ c.classList.remove('sel'); });
+  el.classList.add('sel');
+  if (_schdCalTarget === 'ends') {
+    var dd = String(day).padStart(2, '0') + '/06/2027';
+    var de = document.querySelector('#schdEnds .schd-ends-date');
+    if (de) de.innerHTML = '<span class="ico" style="--ico:url(\'Icons/Calendar.svg\');--sz:16px;color:rgba(0,0,0,0.6)"></span>' + dd;
+    // Select the "Ends on" radio and reflect it in the schedule summary
+    var main = document.querySelector('#schdEnds .schd-radio-main');
+    if (main) { main.dataset.v = 'Ends on ' + dd; smPickEnds(main); }
+    _schdCalTarget = 'date';
+    var cal = document.getElementById('schdDate');
+    cal.classList.remove('open'); cal.classList.remove('schd-ontop'); // back to Ends sheet
+    return;
+  }
+  var v = document.getElementById('schedDateVal'); if (v) v.textContent = 'June ' + day + ', 2026';
+}
+function smPickFreq(el) {
+  el.parentElement.querySelectorAll('.schd-radio').forEach(function(r){ r.classList.remove('sel'); });
+  el.classList.add('sel');
+  var v = document.getElementById('schedFreqVal'); if (v) v.textContent = el.dataset.v;
+  // Ends-after is only meaningful for a recurring schedule
+  var ends = document.getElementById('schedEndsRow');
+  if (ends) ends.classList.toggle('sched-row--disabled', el.dataset.v === 'Does not repeat');
+}
+function smPickEnds(el) {
+  document.querySelectorAll('#schdEnds .schd-radio, #schdEnds .schd-radio-main').forEach(function(r){ r.classList.remove('sel'); });
+  el.classList.add('sel');
+  var v = document.getElementById('schedEndsVal'); if (v) v.textContent = el.dataset.v;
+}
+
 /* ── Review "Add a note" sheet ── */
 function openReviewNote(ev) {
   if (ev) ev.stopPropagation();
@@ -9742,7 +10020,7 @@ var PURPOSES2 = [
   { key:'insurance', code:'P0601', ico:'🛡️', title:'Insurance and travel',    desc:'Insurance premiums, hotel stays or travel bookings',    kw:['insurance','travel','flight','flights','hotel','trip','premium','booking','visa','vacation','holiday'] },
   { key:'others',    code:'P9999', ico:'🗂️', title:'Others',                  desc:'Legal, accounting, software, or other services.',       kw:['legal','accounting','software','consulting','business','service','audit'] }
 ];
-var _p2Sel = 'family', _p2Matched = false;
+var _p2Sel = 'family', _p2Matched = false, _p2Manual = false;
 var _P2_ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
 var _P2_PENCIL = '<svg viewBox="0 0 256 256" fill="rgba(0,0,0,0.6)"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/></svg>';
 function _p2Get(key) { return PURPOSES2.filter(function(p){ return p.key === key; })[0] || PURPOSES2[0]; }
@@ -9765,7 +10043,7 @@ function renderPurpose2() {
   }
   list.innerHTML = PURPOSES2.filter(function(p){ return !(_p2Matched && p.key === _p2Sel); }).map(function(p) {
     var sel = (!_p2Matched && p.key === _p2Sel);
-    var tag = sel ? ' <span class="p2-tag">Preselected</span>' : '';
+    var tag = (sel && !_p2Manual) ? ' <span class="p2-tag">Preselected</span>' : '';
     return '<button class="p2-row' + (sel ? ' sel' : '') + '" type="button" onclick="smPurposePick2(\'' + p.key + '\')">' +
       '<span class="p2-ico">' + p.ico + '</span>' +
       '<div class="p2-info"><span class="p2-title">' + p.title + tag + '</span><span class="p2-desc">' + p.desc + '</span></div>' +
@@ -9795,7 +10073,7 @@ function smPurposeEditText() {
   var ta = document.getElementById('purpose2Text'); if (ta) ta.focus();
 }
 function smPurposePick2(key) {
-  _p2Sel = key; _p2Matched = false;
+  _p2Sel = key; _p2Matched = false; _p2Manual = true;
   var inp = document.getElementById('purpose2Input'); if (inp) inp.classList.remove('matched');
   var go = document.getElementById('purpose2Go'); if (go) { go.setAttribute('onclick', 'smPurposeMatch()'); go.innerHTML = _P2_ARROW; }
   renderPurpose2();
@@ -9819,12 +10097,15 @@ function smOpenPurposeSheet(ev) {
   var cur = PURPOSES2.filter(function(p){ return p.code === _purposeCode; })[0];
   _p2Sel = cur ? cur.key : 'family';
   _p2Matched = false;
+  _p2Manual = false; // first open shows the auto "Preselected" tag
   var ta = document.getElementById('purpose2Text'); if (ta) ta.value = '';
   var inp = document.getElementById('purpose2Input'); if (inp) inp.classList.remove('matched');
   var go = document.getElementById('purpose2Go'); if (go) { go.setAttribute('onclick', 'smPurposeMatch()'); go.innerHTML = _P2_ARROW; }
   renderPurpose2();
   document.getElementById('purposeScrim').classList.add('open');
   document.getElementById('purposeSheet').classList.add('open');
+  // Focus the input by default once the sheet has slid in
+  setTimeout(function() { if (ta) { ta.focus(); } }, 320);
 }
 function smClosePurposeSheet() {
   document.getElementById('purposeScrim').classList.remove('open');
@@ -10716,6 +10997,30 @@ const _TW = (function() {
       ticking  = false;
     });
   });
+})();
+
+/* ── Send-money landing: scroll-driven header (mirrors Transactions) ── */
+(function() {
+  const smScr = document.querySelector('#sm-landing .sm-l2-scroll');
+  const smLand = document.getElementById('sm-landing');
+  if (!smScr || !smLand) return;
+  let lastTop = 0, ticking = false;
+  const THRESH = 48;
+  smScr.addEventListener('scroll', function() {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function() {
+      const top = smScr.scrollTop;
+      const scrollingDown = top > lastTop;
+      if (scrollingDown && top > THRESH) {
+        smLand.classList.add('compact');
+      } else if (!scrollingDown) {
+        smLand.classList.remove('compact');
+      }
+      lastTop = top;
+      ticking = false;
+    });
+  }, { passive: true });
 })();
 
 
