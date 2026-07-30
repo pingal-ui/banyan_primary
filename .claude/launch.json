@@ -4,9 +4,12 @@
     {
       "name": "premium-design",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 4000,
-      "cwd": "/Users/pingalkakati/Claude/Banyan_primary"
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
+      "cwd": "/Users/pingalkakati/Claude/Banyan_primary",
+      "autoPort": true
     }
   ]
 }

@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=492">
+  <link rel="stylesheet" href="styles.css?v=496">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -1670,7 +1670,7 @@
       <div class="sma2-info-line" aria-hidden="true"></div>
       <div class="sma2-info-row">
         <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/SealPercent.svg');--sz:16px;color:#322d0f"></span></span>
-        <span class="sma2-info-txt"><b>Free transfer.</b> No fee charged.</span>
+        <span class="sma2-info-txt" id="smInfoFeeTxt"><b>Zero fees.</b></span>
       </div>
       <div class="sma2-info-row">
         <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/Timer.svg');--sz:16px;color:#322d0f"></span></span>
@@ -1845,7 +1845,7 @@
           <span class="smr-purpose-ico" id="smPurposeIco">🏠</span>
           <div class="smr-purpose-text">
             <span class="smr-purpose-sublbl">Payment purpose - autofilled</span>
-            <span class="smr-purpose-val" id="smPurposeDisplayVal">Family</span>
+            <span class="smr-purpose-val" id="smPurposeDisplayVal">Family and health</span>
           </div>
           <svg class="smr-purpose-caret" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg>
         </button>
@@ -4624,7 +4624,7 @@
 
 </div>
 
-  <script defer src="app.js?v=290"></script>
+  <script defer src="app.js?v=293"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');
@@ -4633,17 +4633,24 @@
         // Only active on narrow viewports (mobile)
         if (window.innerWidth > 600) {
           phone.style.removeProperty('--phone-scale');
+          phone.style.removeProperty('height');
+          document.body.style.removeProperty('height');
           return;
         }
-        var scaleX = window.innerWidth  / 393;
-        var scaleY = window.innerHeight / 852;
-        var scale  = Math.min(scaleX, scaleY);
+        // Use the real (dynamic) viewport so the address bar can't hide content
+        var vw = window.innerWidth;
+        var vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+        // Scale the 393-wide layout to fill the device width exactly (no side bars)
+        var scale = vw / 393;
         phone.style.setProperty('--phone-scale', scale);
-        // Shrink the body height to match the scaled phone so it doesn't scroll
-        document.body.style.height = Math.round(852 * scale) + 'px';
+        // Give the phone a logical height that, once scaled, fills the viewport
+        // height exactly — so the bottom nav stays pinned and visible on every device.
+        phone.style.height = (vh / scale) + 'px';
+        document.body.style.height = Math.round(vh) + 'px';
       }
       applyScale();
       window.addEventListener('resize', applyScale);
+      if (window.visualViewport) window.visualViewport.addEventListener('resize', applyScale);
       // Re-run after orientation change settles
       window.addEventListener('orientationchange', function() {
         setTimeout(applyScale, 120);

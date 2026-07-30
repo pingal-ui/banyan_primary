@@ -5133,8 +5133,20 @@
     .sma2-back { width: 44px; height: 44px; border-radius: 9999px; background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
     .sma2-back:active { transform: scale(0.95); }
     .sma2-back svg { width: 16px; height: 16px; }
-    .sma2-rate { display: flex; align-items: center; justify-content: center; gap: 8px; width: 144px; height: 44px; padding: 0 13px; background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); border-radius: 9999px; font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; color: rgba(0,0,0,0.8); }
-    .sma2-rate svg { width: 16px; height: 16px; flex-shrink: 0; }
+    .sma2-rate { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; width: 144px; height: 44px; padding: 0 13px; background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); border-radius: 9999px; font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; color: rgba(0,0,0,0.8); }
+    /* Same live-rate light sweep as the landing pill */
+    .sma2-rate::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+      pointer-events: none; z-index: 3;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+      animation: sweep 5s ease-in-out infinite;
+    }
+    @media (prefers-reduced-motion: reduce) { .sma2-rate::before { animation: none; opacity: 0; } }
+    /* Same punchy 3D coin-flip on the Google icon */
+    .sma2-rate svg { width: 16px; height: 16px; flex-shrink: 0; position: relative; z-index: 1;
+      transform-style: preserve-3d; backface-visibility: visible;
+      animation: rate-spin 5s ease-in-out infinite; will-change: transform; }
+    @media (prefers-reduced-motion: reduce) { .sma2-rate svg { animation: none; } }
     .sma2-title { font-family: 'Geist', sans-serif; font-size: 30px; font-weight: 600; color: #322d0f; letter-spacing: -1px; margin: 22px 0 8px 8px; }
     /* FROM / TO connected container — white insets on a beige panel */
     .sma2-fromto { background: #eceadb; border-radius: 40px; padding: 8px; margin: 0 -12px; box-shadow: inset 0 2px 2px rgba(0,0,0,0.1); }
@@ -5152,6 +5164,8 @@
     .smaus-card { display: none; }
     #sm-amount.us-mode .smaus-card { display: block; }
     #sm-amount.us-mode > .sma-scroll .sma2-fromto > .sma2-card:not(.smaus-card) { display: none; }
+    /* Domestic (USD → USD) transfer: no currency conversion, so no rate pill */
+    #sm-amount.us-mode .sma2-rate { display: none; }
     /* Left column: FROM + TO stacked. Right column: hint + amount, vertically centred. */
     .smaus-card .smaus-cols { display: flex; align-items: stretch; justify-content: space-between; gap: 12px; }
     .smaus-card .smaus-left { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
@@ -5200,9 +5214,10 @@
       height: 50px; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); border-radius: 18px;
       background: #eceadb; font-family: 'Geist', sans-serif; font-size: 23px; font-weight: 500;
       color: rgba(0,0,0,0.8); cursor: pointer; display: flex; align-items: center; justify-content: center;
-      transition: transform 120ms var(--ease-out), filter 120ms ease;
+      transition: transform 180ms cubic-bezier(0.34,1.56,0.64,1), filter 120ms ease;
     }
-    .sma2-key:active { transform: scale(0.95); filter: brightness(0.95); }
+    .sma2-key:active { transform: scale(0.9); filter: brightness(0.92); transition: transform 40ms ease-out, filter 40ms ease; }
+    @media (prefers-reduced-motion: reduce) { .sma2-key { transition: filter 120ms ease; } }
     .sma2-key-ghost { background: transparent; border-bottom: none; }
     .sma2-key-ghost:active { filter: none; }
     .sma2-key-ghost svg { width: 24px; height: 24px; }
@@ -5952,8 +5967,7 @@
     #sm-review .smr-us-only { display:none; }
     #sm-review.us-mode .smr-india-only { display:none; }
     #sm-review.us-mode .smr-us-only { display:block; }
-    #sm-review.us-mode .smr-fee-group { display:none; }
-    #sm-review.us-mode .smr-fee-us { display:flex; }
+    /* Zero fees on every transfer: US review also shows the Free (struck) fee */
     .smr-g-icon { width:14px; height:14px; flex-shrink:0; }
 
     /* Purpose selector + RBI helper — separate cream container */

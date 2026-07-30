@@ -8152,7 +8152,7 @@ function renderSmLanding2() {
   var caretSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>';
   var recs = BENS.filter(function(b){ return b.fav; }).slice(0, 4);
-  var payAmts = ['$100,000.00', '$20,000.00', '$45,000.00', '$12,500.00'];
+  var payAmts = ['$1,500.00', '$900.00', '$2,000.00', '$650.00'];
   // Compose "$100,000.00" as small symbol · large integer · small decimals
   function amtHtml(s) {
     var m = /^(\D*)([\d,]+)(\.\d+)?$/.exec(s) || [];
@@ -8590,6 +8590,10 @@ function smUpdateAmount() {
   }
   // Live validation: over-limit shows immediately; the empty message is gated to tap
   smRenderAmountError(false);
+
+  // Zero fees on every transfer (domestic and international)
+  var _feeTxt = document.getElementById('smInfoFeeTxt');
+  if (_feeTxt) _feeTxt.innerHTML = '<b>Zero fees.</b>';
 }
 
 /* Scale an amount's font down by digit count so it never wraps or overflows */
@@ -8659,7 +8663,26 @@ function smaAmountClick(e, cur) {
   smUpdateAmount();
 }
 
+/* Crisp keypad tap: a short vibration + a soft click tone (fallback for iOS,
+   which doesn't support the Vibration API) so typing feels tactile. */
+function _smKeyFeedback(k) {
+  haptic(k === 'del' ? [16, 12, 16] : 18);
+  var ctx = (typeof _getAudioCtx === 'function') ? _getAudioCtx() : null;
+  if (!ctx) return;
+  try {
+    var t = ctx.currentTime;
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(k === 'del' ? 200 : (k === '.' ? 260 : 340), t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.05, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.055);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(t); o.stop(t + 0.06);
+  } catch (_) {}
+}
 function smKey(k) {
+  _smKeyFeedback(k);
   if (smCurrencyFlipped) {
     if (k === 'del') {
       if (smInrInCents && smInrPaisaStr.length > 0) {
@@ -8845,10 +8868,8 @@ function smGoToReview() {
   reviewEl.classList.toggle('us-mode', _smUSMode);
   var _arr = document.getElementById('smReviewArrival');
   if (_smUSMode) {
-    var _feeUsd = 5.25; // flat wire fee (demo)
-    var _net = Math.max(0, (smCents / 100) - _feeUsd);
-    document.getElementById('smReviewReceives').textContent = '$' + _net.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
-    var _feeEl = document.getElementById('smReviewFeeUs'); if (_feeEl) _feeEl.textContent = '$' + _feeUsd.toFixed(2);
+    // Zero fees — recipient gets the full amount
+    document.getElementById('smReviewReceives').textContent = '$' + fmtD;
     if (_arr) _arr.textContent = 'Today, 9:44 AM PST';
   } else {
     document.getElementById('smReviewReceives').textContent = '₹' + fmtINR;
