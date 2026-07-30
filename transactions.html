@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=496">
+  <link rel="stylesheet" href="styles.css?v=497">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -4639,7 +4639,9 @@
           lastW = 0; lastH = 0;
           return;
         }
-        var vw = window.innerWidth;
+        // clientWidth excludes any scrollbar gutter, so the phone fills the
+        // real usable width exactly (innerWidth can over-report by a few px).
+        var vw = document.documentElement.clientWidth || window.innerWidth;
         var vh = window.innerHeight;
         // Ignore keyboard-driven shrink (same width, height collapses) so the
         // phone doesn't squish when the amount/search keyboard opens.
