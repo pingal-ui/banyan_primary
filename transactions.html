@@ -4629,31 +4629,36 @@
     (function() {
       var phone = document.querySelector('.phone');
       if (!phone) return;
+      var lastW = 0, lastH = 0;
       function applyScale() {
         // Only active on narrow viewports (mobile)
         if (window.innerWidth > 600) {
           phone.style.removeProperty('--phone-scale');
           phone.style.removeProperty('height');
           document.body.style.removeProperty('height');
+          lastW = 0; lastH = 0;
           return;
         }
-        // Use the real (dynamic) viewport so the address bar can't hide content
         var vw = window.innerWidth;
-        var vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-        // Scale the 393-wide layout to fill the device width exactly (no side bars)
+        var vh = window.innerHeight;
+        // Ignore keyboard-driven shrink (same width, height collapses) so the
+        // phone doesn't squish when the amount/search keyboard opens.
+        if (vw === lastW && vh < lastH * 0.8) return;
+        lastW = vw; lastH = vh;
+        // Fill the device width exactly (no side bars) ...
         var scale = vw / 393;
         phone.style.setProperty('--phone-scale', scale);
-        // Give the phone a logical height that, once scaled, fills the viewport
-        // height exactly — so the bottom nav stays pinned and visible on every device.
+        // ... and give the phone a logical height that, scaled, fills the
+        // viewport height so the bottom nav stays pinned and visible.
         phone.style.height = (vh / scale) + 'px';
         document.body.style.height = Math.round(vh) + 'px';
       }
       applyScale();
       window.addEventListener('resize', applyScale);
-      if (window.visualViewport) window.visualViewport.addEventListener('resize', applyScale);
-      // Re-run after orientation change settles
+      // Re-run after orientation change settles (dimensions swap)
       window.addEventListener('orientationchange', function() {
-        setTimeout(applyScale, 120);
+        lastW = 0; lastH = 0;
+        setTimeout(applyScale, 150);
       });
     })();
   </script>
