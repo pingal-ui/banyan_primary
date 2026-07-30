@@ -8177,7 +8177,15 @@ function renderSmLanding2() {
       '</div>' +
     '</div>';
   }).join('');
-  list.innerHTML = BENS.map(function(b) {
+  // Order the list so the first two rows are Indian and the US beneficiary sits 3rd
+  var _listOrder = BENS.slice();
+  var _usIdx = -1;
+  for (var _i = 0; _i < _listOrder.length; _i++) { if (!_benIsIndia(_listOrder[_i])) { _usIdx = _i; break; } }
+  if (_usIdx > -1 && _usIdx !== 2) {
+    var _u = _listOrder.splice(_usIdx, 1)[0];
+    _listOrder.splice(2, 0, _u);
+  }
+  list.innerHTML = _listOrder.map(function(b) {
     var sub = _smBeneSub(b);
     var blob = _benBlob(b);
     return '<button class="sm-l2-row" type="button" data-id="' + b.id + '">' +

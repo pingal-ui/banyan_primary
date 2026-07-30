@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=480">
+  <link rel="stylesheet" href="styles.css?v=489">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -4624,7 +4624,7 @@
 
 </div>
 
-  <script defer src="app.js?v=289"></script>
+  <script defer src="app.js?v=290"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');
@@ -4635,11 +4635,10 @@
           phone.style.removeProperty('--phone-scale');
           return;
         }
-        var scaleX = window.innerWidth  / 393;
-        var scaleY = window.innerHeight / 852;
-        var scale  = Math.min(scaleX, scaleY);
+        // Always match the phone to the device width (fill width, no side bars)
+        var scale = window.innerWidth / 393;
         phone.style.setProperty('--phone-scale', scale);
-        // Shrink the body height to match the scaled phone so it doesn't scroll
+        // Match the body height to the scaled phone so the page doesn't over-scroll
         document.body.style.height = Math.round(852 * scale) + 'px';
       }
       applyScale();
