@@ -8197,6 +8197,9 @@ function renderSmLanding2() {
     var card = rec.querySelector('.sm-l2-card[data-id="' + id + '"]');
     var usd = card ? (parseFloat(card.dataset.usd) || 0) : 0;
     smRecipient = { name: b.name, initials: b.ini, bg: b.bg, account: _smBeneAcctLine(b) };
+    // Slide-to-pay bypasses the amount screen, so set the review variant here
+    _smUSMode = (typeof _benIsIndia === 'function') ? !_benIsIndia(b) : false;
+    _smScheduled = false;
     smCurrencyFlipped = false;
     smCents = Math.round(usd * 100);
     smInrPaise = Math.round(usd * SM_EXRATE * 100);
@@ -8217,10 +8220,11 @@ function renderSmLanding2() {
 function openSmSearch() {
   var inp = document.getElementById('smSearchInput'); if (inp) inp.value = '';
   smSearchInputChange();
-  document.getElementById('sm-landing').className = 'screen hl';
   document.getElementById('sm-search').className = 'screen on';
-  // Focus after the slide settles so the keyboard rises with the screen in place
-  setTimeout(function() { if (inp) inp.focus(); }, 320);
+  document.getElementById('sm-landing').className = 'screen hl';
+  // Focus synchronously inside the tap gesture so mobile raises the keyboard
+  // immediately (a deferred focus() is ignored by iOS and needs a second tap).
+  if (inp) inp.focus({ preventScroll: true });
 }
 function closeSmSearch() {
   var inp = document.getElementById('smSearchInput'); if (inp) inp.blur();
@@ -8276,44 +8280,46 @@ function _bindSlideToPay(track, onConfirm) {
   var knob = track.querySelector('.sm-l2-slide-knob');
   var txt  = track.querySelector('.sm-l2-slide-txt');
   if (!knob) return;
-  var dragging = false, startX = 0, x = 0, max = 0;
-  function maxTravel() { return track.clientWidth - knob.offsetWidth - 12; /* 6px pad each side */ }
+  var dragging = false, moved = false, startX = 0, x = 0, pid = null;
+  function cardId() { var c = track.closest('.sm-l2-card'); return c ? c.dataset.id : null; }
+  function maxTravel() { return Math.max(0, track.clientWidth - knob.offsetWidth - 12); /* 6px pad each side */ }
   function setX(v) {
-    x = Math.max(0, Math.min(maxTravel(), v));
+    var mt = maxTravel();
+    x = Math.max(0, Math.min(mt, v));
     knob.style.transform = 'translate(' + x + 'px, -50%)';
-    if (txt) txt.style.opacity = String(Math.max(0, 1 - x / (maxTravel() * 0.6)));
+    if (txt) txt.style.opacity = String(Math.max(0, 1 - x / (mt * 0.6)));
   }
-  function down(e) {
-    dragging = true; max = maxTravel();
+  // Pointer Events + pointer capture: moves route to the knob even over the
+  // horizontally-scrolling carousel, so the drag never gets hijacked.
+  knob.addEventListener('pointerdown', function(e) {
+    dragging = true; moved = false; pid = e.pointerId;
+    startX = e.clientX - x;
     track.classList.remove('snap-back'); knob.classList.add('dragging');
-    startX = (e.touches ? e.touches[0].clientX : e.clientX) - x;
+    try { knob.setPointerCapture(pid); } catch (_) {}
     e.preventDefault();
-  }
-  function move(e) {
+  });
+  knob.addEventListener('pointermove', function(e) {
     if (!dragging) return;
-    setX((e.touches ? e.touches[0].clientX : e.clientX) - startX);
-  }
-  function up() {
+    var nx = e.clientX - startX;
+    if (Math.abs(nx - x) > 2) moved = true;
+    setX(nx);
+  });
+  function end() {
     if (!dragging) return;
     dragging = false; knob.classList.remove('dragging');
-    if (x >= maxTravel() * 0.9) {
-      var id = track.closest('.sm-l2-card').dataset.id;
-      onConfirm(id);
-      // reset for when the user returns
-      track.classList.add('snap-back'); setX(0);
-    } else {
-      track.classList.add('snap-back'); setX(0);
-    }
+    try { if (pid != null) knob.releasePointerCapture(pid); } catch (_) {}
+    var mt = maxTravel();
+    var completed = mt > 0 && x >= mt * 0.9;
+    track.classList.add('snap-back'); setX(0);
+    // Only a fully-completed slide confirms here; partial drags just snap back.
+    if (completed) onConfirm(cardId());
   }
-  knob.addEventListener('mousedown', down);
-  knob.addEventListener('touchstart', down, { passive: false });
-  window.addEventListener('mousemove', move);
-  window.addEventListener('touchmove', move, { passive: false });
-  window.addEventListener('mouseup', up);
-  window.addEventListener('touchend', up);
-  // Tap (no drag) also confirms, for accessibility
-  track.addEventListener('click', function(e) {
-    if (x === 0 && !dragging) onConfirm(track.closest('.sm-l2-card').dataset.id);
+  knob.addEventListener('pointerup', end);
+  knob.addEventListener('pointercancel', end);
+  // Pure tap (no drag occurred) also confirms, for accessibility / click users.
+  track.addEventListener('click', function() {
+    if (!moved && !dragging) onConfirm(cardId());
+    moved = false;
   });
 }
 
@@ -9989,6 +9995,31 @@ function openReviewNote(ev) {
 function closeReviewNote() {
   document.getElementById('rnoteScrim').classList.remove('open');
   document.getElementById('rnoteSheet').classList.remove('open');
+}
+
+/* ── Payment method bottom sheet (US / wire) ── */
+function openPayMethodSheet() {
+  document.getElementById('pmScrim').classList.add('open');
+  document.getElementById('pmSheet').classList.add('open');
+}
+function closePayMethodSheet() {
+  document.getElementById('pmScrim').classList.remove('open');
+  document.getElementById('pmSheet').classList.remove('open');
+}
+function pmSelect(row) {
+  document.querySelectorAll('#pmList .pm-row').forEach(function(r){ r.classList.remove('sel'); });
+  row.classList.add('sel');
+}
+function pmContinue() {
+  var sel = document.querySelector('#pmList .pm-row.sel');
+  if (sel) {
+    var val = document.getElementById('smrPayMethodVal'); if (val) val.textContent = sel.dataset.m;
+    var ico = document.getElementById('smrPayMethodIco'); if (ico) ico.src = sel.dataset.ico;
+    // The address-on-next-step helper only applies to Wire transfers
+    var help = document.querySelector('.smr-us-only .smr-purpose-help');
+    if (help) help.style.display = (sel.dataset.m === 'Wire Transfer') ? '' : 'none';
+  }
+  closePayMethodSheet();
 }
 function saveReviewNote() {
   var inp = document.getElementById('rnoteInput');

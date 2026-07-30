@@ -1686,7 +1686,7 @@
       background: rgba(255,255,255,0.60);
       backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
       border: 0.5px solid rgba(255,255,255,0.80);
-      border-radius: 20px;
+      border-radius: 9999px;
       pointer-events: all;
       overflow: hidden;
       flex-shrink: 0;
@@ -1699,13 +1699,14 @@
       82%  { scale: 0.99 1.005; }
       100% { scale: 1 1; }
     }
-    .bnav-pill.lg-squishing { animation: lg-squish 0.42s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+    .bnav-pill.lg-squishing { animation: none; } /* standard bar: no squish */
     @media (prefers-reduced-motion: reduce) {
       .bnav-pill.lg-squishing { animation: none; }
     }
     /* Limelight indicator — a beam at the top of the active tab with a soft
        light-cone spilling down behind the icons. Slides between tabs. */
-    .bnav-indicator {
+    .bnav-indicator { display: none; } /* standard bar: no limelight beam */
+    .bnav-indicator--legacy {
       position: absolute; top: 0; left: 0;
       width: 44px; height: 2px; border-radius: 9999px;
       background: var(--brand-primary);
@@ -1727,20 +1728,13 @@
       cursor: pointer;
       border-radius: 9999px;
       position: relative;
-      z-index: 2; /* icons sit above the limelight cone */
+      z-index: 2;
       transition: transform 160ms var(--ease-out);
     }
     .bnav-tab:active { transform: scale(0.92); }
-    /* Icon pops when its tab becomes active */
-    .bnav-tab.active .bnav-icon-m { animation: bnav-icon-pop 0.36s cubic-bezier(0.34,1.56,0.64,1); }
-    @keyframes bnav-icon-pop {
-      0%   { transform: scale(1); }
-      45%  { transform: scale(1.18); }
-      100% { transform: scale(1); }
-    }
+    /* Selected state = clean colour/fill swap only (no beam, squish, or icon pop) */
     @media (prefers-reduced-motion: reduce) {
       .bnav-tab { transition: none; }
-      .bnav-tab.active .bnav-icon-m { animation: none; }
     }
     /* global nav hide/show */
     #globalNav {
@@ -4687,8 +4681,7 @@
     }
     /* Scroll-driven header transition (mirrors the Transactions header) */
     .sm-l-blur-bg {
-      position: absolute; top: -50px; left: 0; right: 0; height: 150px;
-      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+      position: absolute; top: -50px; left: 0; right: 0; height: 174px;
       background: linear-gradient(to bottom,
         rgba(253,252,242,0.92) 0%,
         rgba(253,252,242,0.60) 55%,
@@ -4699,6 +4692,24 @@
       transition: opacity 0.25s ease;
     }
     #sm-landing.compact .sm-l-blur-bg { opacity: 1; }
+    /* Progressive blur — strongest at the top, fading to 0 at the bottom.
+       Stacked backdrop layers, each masked to a shorter top band. */
+    .sm-l-blur { position: absolute; inset: 0; pointer-events: none; }
+    .sm-l-blur-1 {
+      -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 66%, transparent 100%);
+      mask-image:         linear-gradient(to bottom, #000 0%, #000 66%, transparent 100%);
+    }
+    .sm-l-blur-2 {
+      -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 40%, transparent 66%);
+      mask-image:         linear-gradient(to bottom, #000 0%, #000 40%, transparent 66%);
+    }
+    .sm-l-blur-3 {
+      -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+      -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 16%, transparent 40%);
+      mask-image:         linear-gradient(to bottom, #000 0%, #000 16%, transparent 40%);
+    }
     .sm-l-compact-title {
       position: absolute; left: 76px; right: auto; top: 50%; transform: translateY(-50%);
       text-align: left; pointer-events: none; z-index: 1;
@@ -4771,8 +4782,36 @@
       border: 1px solid var(--neutral-white-100, #fff);
       display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 13px;
       cursor: pointer;
+      position: relative; overflow: hidden;
     }
-    .sm-l-rate svg { width: 16px; height: 16px; flex-shrink: 0; }
+    /* Live-rate light sweep — one quick diagonal glint every 5s */
+    .sm-l-rate::before {
+      content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
+      pointer-events: none; z-index: 3;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.7), transparent);
+      animation: sweep 5s ease-in-out infinite;
+    }
+    @keyframes sweep {
+      0%        { transform: translateX(-130%) skewX(-18deg); }
+      55%, 100% { transform: translateX(240%)  skewX(-18deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sm-l-rate::before { animation: none; opacity: 0; }
+    }
+    .sm-l-rate svg { width: 16px; height: 16px; flex-shrink: 0; position: relative; z-index: 1;
+      transform-style: preserve-3d; backface-visibility: visible;
+      animation: rate-spin 5s ease-in-out infinite; will-change: transform; }
+    /* Punchy 3D coin-flip around the vertical axis every 5s, then holds.
+       Perspective lives on the pill so the flip reads as real depth. */
+    @keyframes rate-spin {
+      0%        { transform: perspective(360px) rotateY(0deg); }
+      14%       { transform: perspective(360px) rotateY(374deg); }
+      20%       { transform: perspective(360px) rotateY(353deg); }
+      26%, 100% { transform: perspective(360px) rotateY(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .sm-l-rate svg { animation: none; }
+    }
     .sm-l-rate-text { font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; color: rgba(0,0,0,0.8); white-space: nowrap; }
 
     .sm-l-title {
@@ -4883,12 +4922,12 @@
     .sm-l2-slide-txt { flex: 1; text-align: center; padding-left: 32px; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; color: #fff; transition: opacity 120ms ease; }
 
     /* All beneficiaries list */
-    .sm-l2-list { background: #f6f3ea; border-radius: 20px; margin: 0 8px; padding: 6px; }
+    .sm-l2-list { background: #f7f5e0; border: 0.5px solid rgba(117,76,50,0.1); border-radius: 20px; margin: 0 8px; padding: 6px; }
     .sm-l2-row { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: transparent; border: none; border-radius: 14px; cursor: pointer; text-align: left; }
     .sm-l2-row:active { background: rgba(0,0,0,0.03); }
-    .sm-l2-av { position: relative; width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; overflow: hidden; background: rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; }
-    .sm-l2-av-blob { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
-    .sm-l2-av-glass { position: absolute; inset: 1px; border-radius: 50%; background: rgba(255,255,255,0.1); border-bottom: 0.5px solid rgba(255,255,255,0.8); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+    .sm-l2-av { position: relative; width: 32px; height: 32px; flex-shrink: 0; border-radius: 50%; overflow: hidden; background: rgba(0,0,0,0.06); display: flex; align-items: center; justify-content: center; }
+    .sm-l2-av-blob { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; pointer-events: none; filter: saturate(1.2) brightness(0.93) contrast(1.04); }
+    .sm-l2-av-glass { position: absolute; inset: 1px; border-radius: 50%; background: rgba(0,0,0,0.06); border-bottom: 0.5px solid rgba(255,255,255,0.55); }
     .sm-l2-av-txt { position: relative; z-index: 2; font-size: 12px; font-weight: 600; color: #fff; letter-spacing: -0.2px; }
     .sm-l2-rowtxt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
     .sm-l2-rowname { font-size: 16px; font-weight: 500; letter-spacing: -0.3px; color: #000; }
@@ -5926,6 +5965,41 @@
     .smr-purpose-text { flex:1; min-width:0; display:flex; flex-direction:column; gap:2px; overflow:hidden; }
     .smr-purpose-sublbl { font-size:13px; font-weight:400; color:rgba(0,0,0,0.4); line-height:18px; white-space:nowrap; text-align:left; }
     .smr-purpose-val { font-size:17px; font-weight:400; color:rgba(0,0,0,0.8); line-height:22px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; text-align:left; }
+    .smr-pm-ico { width:32px; height:32px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
+    .smr-pm-ico img { width:100%; height:100%; object-fit:contain; }
+
+    /* ── Payment method bottom sheet (Figma 6870-124529) ── */
+    .pm-scrim { position:absolute; inset:0; background:rgba(0,0,0,0.6); opacity:0; pointer-events:none; transition:opacity 0.28s var(--ease-out); z-index:72; }
+    .pm-scrim.open { opacity:1; pointer-events:auto; }
+    .pm-sheet { position:absolute; left:8px; right:8px; bottom:8px; z-index:73;
+      background:#fdfcf2; border-radius:40px; padding:15px 8px calc(16px + env(safe-area-inset-bottom));
+      display:flex; flex-direction:column;
+      transform:translateY(calc(100% + 8px)); transition:transform 0.34s var(--ease-drawer, cubic-bezier(0.32,0.72,0,1)); }
+    .pm-sheet.open { transform:translateY(0); box-shadow:0 -8px 40px rgba(0,0,0,0.16); }
+    .pm-head { display:flex; align-items:center; justify-content:space-between; padding:0 12px; }
+    .pm-hbtn { width:44px; height:44px; border-radius:9999px; background:#f5f5ed; border:1px solid #fff;
+      display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 160ms var(--ease-out); }
+    .pm-hbtn:active { transform:scale(0.94); }
+    .pm-hbtn svg { width:16px; height:16px; }
+    .pm-title { font-family:'Arizona Flare','Geist',serif; font-weight:500; font-size:34px; line-height:41px; letter-spacing:-1px; color:#322d0f; margin:18px 0 8px; padding:0 16px; }
+    .pm-list { display:flex; flex-direction:column; }
+    .pm-row { display:flex; align-items:center; gap:12px; padding:16px; border:none; background:transparent;
+      border-radius:9999px; cursor:pointer; text-align:left; transition:background 0.16s ease; }
+    .pm-row.sel { background:rgba(31,56,51,0.07); }
+    @media (hover:hover) and (pointer:fine) { .pm-row:not(.sel):hover { background:rgba(0,0,0,0.03); } }
+    .pm-ico { width:42px; height:42px; flex-shrink:0; border-radius:24px; overflow:hidden; background:#eceadb;
+      display:flex; align-items:center; justify-content:center; }
+    .pm-ico img { width:118%; height:118%; object-fit:cover; }
+    .pm-txt { display:flex; flex-direction:column; gap:2px; min-width:0; }
+    .pm-name { font-family:'Roobert','Geist',sans-serif; font-size:15px; font-weight:400; color:#000; line-height:20px; }
+    .pm-sub { font-family:'Roobert','Geist',sans-serif; font-size:13px; font-weight:400; color:rgba(0,0,0,0.6); line-height:18px; }
+    .pm-continue { margin:12px 8px 0; height:60px; border:none; border-radius:9999px; background:#1f3833; color:#fff;
+      display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+      font-family:'Roobert','Geist',sans-serif; font-size:17px; font-weight:600; letter-spacing:-0.5px;
+      box-shadow:0 8px 16px -8px rgba(0,0,0,0.2); transition:transform 160ms var(--ease-out); }
+    .pm-continue:active { transform:scale(0.98); }
+    .pm-continue svg { width:20px; height:20px; }
+    @media (prefers-reduced-motion: reduce) { .pm-sheet { transition:none; } }
     .smr-purpose-caret { flex-shrink:0; }
     .smr-purpose-help { font-size:13px; font-weight:400; line-height:18px; letter-spacing:-0.65px; color:rgba(0,0,0,0.6); padding:0 16px; margin-top:4px; }
 
@@ -6070,9 +6144,9 @@
     .smp2-building-img--loading { background-image: url('assets/vic-mem-loading.webp?v=2'); }
     .smp2-building-img--success { background-image: url('assets/vic-mem-success.webp?v=3'); }
     /* US transfers: "rush" background art (progress morphs to success in place) */
-    #sm-progress.us-mode .smp2-building-img--loading { background-image: url('assets/BG_rush.webp?v=3'); }
+    #sm-progress.us-mode .smp2-building-img--loading { background-image: url('assets/BG_rush.webp?v=4'); }
     #sm-progress.us-mode .smp2-building-img--success,
-    #sm-success.us-mode  .smp2-building-img--success { background-image: url('assets/BG_rush_success.webp?v=3'); }
+    #sm-success.us-mode  .smp2-building-img--success { background-image: url('assets/BG_rush_success.webp?v=4'); }
     /* Progress-driven blur reveal (ai-chat-image-generation) — a backdrop-blur
        overlay that sweeps top→bottom with a soft masked edge as the image loads.
        clip-path + mask are driven per-frame by smpLoadReveal(). */

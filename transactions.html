@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=470">
+  <link rel="stylesheet" href="styles.css?v=480">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -1057,7 +1057,11 @@
 
     <!-- Header: back + sending now + compare rate -->
     <div class="sm-l-header" id="smLHeader">
-      <div class="sm-l-blur-bg"></div>
+      <div class="sm-l-blur-bg">
+        <div class="sm-l-blur sm-l-blur-1"></div>
+        <div class="sm-l-blur sm-l-blur-2"></div>
+        <div class="sm-l-blur sm-l-blur-3"></div>
+      </div>
       <span class="sm-l-compact-title">Send money</span>
       <div style="display:flex;align-items:center;position:relative;z-index:2;">
         <button class="sm-l-back" onclick="smBack('sm-landing')">
@@ -1112,7 +1116,7 @@
           <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <span class="sm-l2-search-ph">Search...</span>
         </div>
-        <button class="sm-l2-add" onclick="openBeneSheet()" aria-label="Add beneficiary">
+        <button class="sm-l2-add" disabled aria-label="Add beneficiary">
           <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>
       </div>
@@ -1850,10 +1854,11 @@
 
       <!-- Payment method selector (US / Wire) -->
       <div class="smr-purpose-wrap smr-us-only">
-        <button class="smr-purpose-input" onclick="smaOpenFromSheet()">
+        <button class="smr-purpose-input" onclick="openPayMethodSheet()">
+          <span class="smr-pm-ico"><img id="smrPayMethodIco" src="assets/pm-wire.webp" alt="" decoding="async"></span>
           <div class="smr-purpose-text">
             <span class="smr-purpose-sublbl">Payment method</span>
-            <span class="smr-purpose-val">Wire Transfer</span>
+            <span class="smr-purpose-val" id="smrPayMethodVal">Wire Transfer</span>
           </div>
           <svg class="smr-purpose-caret" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="rgba(0,0,0,0.6)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8l4 4 4-4"/></svg>
         </button>
@@ -1883,6 +1888,33 @@
       <textarea class="rnote-input" id="rnoteInput" rows="3" placeholder="Enter your text here..."></textarea>
     </label>
     <button class="rnote-save" type="button" onclick="saveReviewNote()">Save note</button>
+  </div>
+
+  <!-- ── Payment method bottom sheet (Figma 6870-124529) ── -->
+  <div class="pm-scrim" id="pmScrim" onclick="closePayMethodSheet()"></div>
+  <div class="pm-sheet" id="pmSheet">
+    <div class="pm-head">
+      <button class="pm-hbtn" type="button" onclick="closePayMethodSheet()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+      <button class="pm-hbtn" type="button" onclick="closePayMethodSheet()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <h2 class="pm-title">Payment method</h2>
+    <div class="pm-list" id="pmList">
+      <button class="pm-row" type="button" data-m="ACH" data-ico="assets/pm-ach.webp" onclick="pmSelect(this)">
+        <span class="pm-ico"><img src="assets/pm-ach.webp" alt="" loading="lazy" decoding="async"></span>
+        <span class="pm-txt"><span class="pm-name">ACH</span><span class="pm-sub">Will be transferred the same working day</span></span>
+      </button>
+      <button class="pm-row sel" type="button" data-m="Wire Transfer" data-ico="assets/pm-wire.webp" onclick="pmSelect(this)">
+        <span class="pm-ico"><img src="assets/pm-wire.webp" alt="" loading="lazy" decoding="async"></span>
+        <span class="pm-txt"><span class="pm-name">Wire transfer</span><span class="pm-sub">Transferred instantly</span></span>
+      </button>
+      <button class="pm-row" type="button" data-m="Fednow" data-ico="assets/pm-fednow.webp" onclick="pmSelect(this)">
+        <span class="pm-ico"><img src="assets/pm-fednow.webp" alt="" loading="lazy" decoding="async"></span>
+        <span class="pm-txt"><span class="pm-name">Fednow</span><span class="pm-sub">Transferred instantly</span></span>
+      </button>
+    </div>
+    <button class="pm-continue" type="button" onclick="pmContinue()">Continue
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
   </div>
 
   <!-- ── Schedule bottom sheet (Figma 6553-39196) ── -->
@@ -4592,7 +4624,7 @@
 
 </div>
 
-  <script defer src="app.js?v=286"></script>
+  <script defer src="app.js?v=289"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');
