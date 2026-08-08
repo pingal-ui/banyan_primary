@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=497">
+  <link rel="stylesheet" href="styles.css?v=502">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -1106,19 +1106,16 @@
       </div>
     </div>
 
-    <!-- ── Redesigned bene selection (Figma 6498-58790) ── -->
+    <!-- ── Redesigned bene selection (Figma 1-1738) ── -->
     <div class="sm-l2-scroll">
-      <p class="sm-l-title sm-l2-title">Send money<br>to a contact or a business</p>
+      <p class="sm-l-title sm-l2-title">Send money<br>to a person or a business</p>
 
-      <!-- Search + Add -->
+      <!-- Search (full width) -->
       <div class="sm-l2-searchrow">
         <div class="sm-l2-search" onclick="openSmSearch()">
           <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
           <span class="sm-l2-search-ph">Search...</span>
         </div>
-        <button class="sm-l2-add" disabled aria-label="Add beneficiary">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
       </div>
 
       <!-- Recommended for you -->
@@ -1130,9 +1127,17 @@
       <!-- All beneficiaries -->
       <section class="sm-l2-sec">
         <p class="sm-l2-seclabel">All beneficiaries</p>
+        <div class="sm-l2-filters" id="smL2Filters">
+          <button class="sm-l2-filter sel" type="button" data-f="all" onclick="smFilterBenes('all',this)">All</button>
+          <button class="sm-l2-filter" type="button" data-f="india" onclick="smFilterBenes('india',this)"><span class="sm-l2-flag">🇮🇳</span>India</button>
+          <button class="sm-l2-filter" type="button" data-f="us" onclick="smFilterBenes('us',this)"><span class="sm-l2-flag">🇺🇸</span>USA</button>
+        </div>
         <div class="sm-l2-list" id="smL2List"><!-- rows from BENS --></div>
       </section>
     </div>
+
+    <!-- Floating add-beneficiary button -->
+    <button class="sm-l2-addnew" type="button" onclick="openBeneSheet()">Add a new beneficiary</button>
 
     <!-- Bene search bottom sheet -->
     <div class="bene-sheet-scrim" id="bene-sheet-scrim" onclick="closeBeneSheet()"></div>
@@ -1913,6 +1918,42 @@
       </button>
     </div>
     <button class="pm-continue" type="button" onclick="pmContinue()">Continue
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+
+  <!-- ── Enter address bottom sheet (Wire transfers) — Figma 6933-150410 ── -->
+  <div class="addr-scrim" id="addrScrim" onclick="closeAddressSheet()"></div>
+  <div class="addr-sheet" id="addrSheet">
+    <div class="addr-head">
+      <button class="addr-hbtn" type="button" onclick="closeAddressSheet()" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.8)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+    </div>
+    <h2 class="addr-title">Enter address</h2>
+    <div class="addr-fields">
+      <label class="addr-field">
+        <input class="addr-input" type="text" autocomplete="address-line1" placeholder=" ">
+        <span class="addr-flabel">Address line 1 (Apartment, Suite, etc.)</span>
+      </label>
+      <label class="addr-field">
+        <input class="addr-input" type="text" autocomplete="address-line2" placeholder=" ">
+        <span class="addr-flabel">Address line 2 (Street)</span>
+      </label>
+      <label class="addr-field">
+        <input class="addr-input" id="addrZip" type="text" inputmode="numeric" autocomplete="postal-code" placeholder=" " oninput="addrZipLookup()">
+        <span class="addr-flabel">Zip code</span>
+      </label>
+      <div class="addr-row">
+        <select class="addr-select" id="addrCity" aria-label="City" required onchange="addrCityLookup()">
+          <option value="" disabled selected hidden>City</option>
+          <option>New York</option><option>Los Angeles</option><option>Chicago</option><option>Houston</option><option>Phoenix</option><option>Philadelphia</option><option>San Antonio</option><option>San Diego</option><option>Dallas</option><option>Austin</option><option>San Jose</option><option>San Francisco</option><option>Seattle</option><option>Denver</option><option>Boston</option><option>Miami</option><option>Atlanta</option><option>Washington</option><option>Portland</option><option>Las Vegas</option><option>Detroit</option><option>Minneapolis</option><option>Nashville</option><option>Charlotte</option><option>Columbus</option><option>Indianapolis</option><option>Kansas City</option><option>New Orleans</option><option>Salt Lake City</option><option>Pittsburgh</option>
+        </select>
+        <select class="addr-select" id="addrState" aria-label="State" required>
+          <option value="" disabled selected hidden>State</option>
+          <option>AL</option><option>AK</option><option>AZ</option><option>AR</option><option>CA</option><option>CO</option><option>CT</option><option>DE</option><option>DC</option><option>FL</option><option>GA</option><option>HI</option><option>ID</option><option>IL</option><option>IN</option><option>IA</option><option>KS</option><option>KY</option><option>LA</option><option>ME</option><option>MD</option><option>MA</option><option>MI</option><option>MN</option><option>MS</option><option>MO</option><option>MT</option><option>NE</option><option>NV</option><option>NH</option><option>NJ</option><option>NM</option><option>NY</option><option>NC</option><option>ND</option><option>OH</option><option>OK</option><option>OR</option><option>PA</option><option>RI</option><option>SC</option><option>SD</option><option>TN</option><option>TX</option><option>UT</option><option>VT</option><option>VA</option><option>WA</option><option>WV</option><option>WI</option><option>WY</option>
+        </select>
+      </div>
+    </div>
+    <button class="addr-save" type="button" onclick="saveAddressAndPay()">Save address and pay
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
     </button>
   </div>
@@ -4624,7 +4665,7 @@
 
 </div>
 
-  <script defer src="app.js?v=293"></script>
+  <script defer src="app.js?v=297"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');
@@ -4639,20 +4680,18 @@
           lastW = 0; lastH = 0;
           return;
         }
-        // clientWidth excludes any scrollbar gutter, so the phone fills the
-        // real usable width exactly (innerWidth can over-report by a few px).
+        // clientWidth excludes any scrollbar gutter (innerWidth can over-report)
         var vw = document.documentElement.clientWidth || window.innerWidth;
         var vh = window.innerHeight;
         // Ignore keyboard-driven shrink (same width, height collapses) so the
         // phone doesn't squish when the amount/search keyboard opens.
         if (vw === lastW && vh < lastH * 0.8) return;
         lastW = vw; lastH = vh;
-        // Fill the device width exactly (no side bars) ...
-        var scale = vw / 393;
+        // Fit the whole 393×852 frame inside the viewport and NEVER enlarge past
+        // native size — scaling up made everything look oversized on big phones.
+        var scale = Math.min(vw / 393, vh / 852, 1);
         phone.style.setProperty('--phone-scale', scale);
-        // ... and give the phone a logical height that, scaled, fills the
-        // viewport height so the bottom nav stays pinned and visible.
-        phone.style.height = (vh / scale) + 'px';
+        phone.style.removeProperty('height');       // keep the CSS 852px layout
         document.body.style.height = Math.round(vh) + 'px';
       }
       applyScale();

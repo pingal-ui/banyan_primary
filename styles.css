@@ -82,18 +82,16 @@
         max-width: 100vw;
       }
       .phone {
-        /* Keep the logical 393×852 layout intact — scale it to fit */
+        /* Keep the logical 393×852 layout intact — scale it to fit, centred */
         width: 393px;
         height: 852px;
         border-radius: 0;
         box-shadow: none;
-        transform-origin: top left;
-        /* JS sets --phone-scale; fallback fills width */
-        transform: scale(var(--phone-scale, calc(100vw / 393)));
-        /* Shrink the layout footprint to match scaled size */
         margin: 0;
         position: absolute;
-        top: 0; left: 0;
+        top: 50%; left: 50%;
+        transform-origin: center center;
+        transform: translate(-50%, -50%) scale(var(--phone-scale, 1));
       }
     }
 
@@ -4830,9 +4828,17 @@
     .sm-l2-scroll {
       position: absolute; top: 103px; left: 0; right: 0; bottom: 0; z-index: 1;
       overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
-      padding: 0 0 40px;
+      padding: 0 0 112px; /* clear the floating "Add a new beneficiary" button */
     }
     .sm-l2-scroll::-webkit-scrollbar { display: none; }
+    /* Floating add-beneficiary button */
+    .sm-l2-addnew {
+      position: absolute; left: 24px; right: 24px; bottom: calc(24px + env(safe-area-inset-bottom)); z-index: 6;
+      height: 60px; border: none; border-radius: 9999px; background: #1f3833; color: #fff;
+      font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.5px;
+      cursor: pointer; box-shadow: 0 10px 30px -8px rgba(0,0,0,0.4);
+      transition: transform 160ms var(--ease-out); }
+    .sm-l2-addnew:active { transform: scale(0.98); }
     /* DS type: Roobert body throughout, Arizona Flare title */
     .sm-l2-scroll * { font-family: 'Roobert', 'Geist', sans-serif; }
     .sm-l2-title { position: static !important; top: auto !important; left: auto !important;
@@ -4898,7 +4904,9 @@
     /* Recommended slide-to-pay cards */
     .sm-l2-rec { display: flex; gap: 16px; overflow-x: auto; -webkit-overflow-scrolling: touch; padding: 0 8px 4px; scroll-snap-type: x mandatory; scroll-padding-left: 8px; }
     .sm-l2-rec::-webkit-scrollbar { display: none; }
-    .sm-l2-card { position: relative; flex: 0 0 216px; scroll-snap-align: start; background: #f7f5e0; border: 0.5px solid rgba(117,76,50,0.1); border-radius: 32px; padding: 16px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 24px; }
+    .sm-l2-card { position: relative; flex: 0 0 216px; min-height: 132px; scroll-snap-align: start; background: #f7f5e0; border: 0.5px solid rgba(117,76,50,0.1); border-radius: 32px; padding: 16px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.02); display: flex; flex-direction: column; justify-content: space-between; gap: 24px; cursor: pointer; transition: transform 160ms var(--ease-out); }
+    .sm-l2-card:active { transform: scale(0.98); }
+    .sm-l2-card-ctx { position: relative; z-index: 1; font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(0,0,0,0.6); }
     .sm-l2-card-pat { position: absolute; top: 0; right: 0; bottom: 0; left: 0; pointer-events: none;
       background-repeat: no-repeat; background-position: top right; background-size: auto 100%; }
     .sm-l2-card:nth-child(odd) .sm-l2-card-pat { background-image: url('assets/reco_bg1.webp'); }
@@ -4923,6 +4931,17 @@
     .sm-l2-slide.snap-back .sm-l2-slide-knob { transition: transform 260ms var(--ease-out); }
     .sm-l2-slide-knob svg { width: 18px; height: 18px; }
     .sm-l2-slide-txt { flex: 1; text-align: center; padding-left: 32px; font-size: 13px; font-weight: 600; letter-spacing: -0.2px; color: #fff; transition: opacity 120ms ease; }
+
+    /* All beneficiaries — country filter chips */
+    .sm-l2-filters { display: flex; gap: 8px; padding: 0 16px 12px; }
+    .sm-l2-filter { display: flex; align-items: center; gap: 6px; height: 26px; padding: 0 12px; border-radius: 9999px;
+      border: 1px solid rgba(0,0,0,0.12); background: transparent; cursor: pointer;
+      font-family: 'Roobert','Geist',sans-serif; font-size: 13px; letter-spacing: -0.2px; color: rgba(0,0,0,0.7);
+      transition: background 0.14s ease, border-color 0.14s ease, color 0.14s ease; }
+    .sm-l2-filter.sel { background: #eceadb; border-color: transparent; color: #322d0f; font-weight: 500; }
+    .sm-l2-filter:active { transform: scale(0.96); }
+    .sm-l2-flag { font-size: 14px; line-height: 1; }
+    .sm-l2-empty { padding: 20px 12px; text-align: center; font-size: 14px; color: rgba(0,0,0,0.45); }
 
     /* All beneficiaries list */
     .sm-l2-list { background: #f7f5e0; border: 0.5px solid rgba(117,76,50,0.1); border-radius: 20px; margin: 0 8px; padding: 6px; }
@@ -6017,6 +6036,59 @@
     .pm-continue:active { transform:scale(0.98); }
     .pm-continue svg { width:20px; height:20px; }
     @media (prefers-reduced-motion: reduce) { .pm-sheet { transition:none; } }
+
+    /* ── Enter address bottom sheet (Wire transfers) — Figma 6933-150410 ── */
+    .addr-scrim { position:absolute; inset:0; background:rgba(0,0,0,0.6); opacity:0; pointer-events:none; transition:opacity 0.28s var(--ease-out); z-index:74; }
+    .addr-scrim.open { opacity:1; pointer-events:auto; }
+    .addr-sheet { position:absolute; left:8px; right:8px; bottom:8px; z-index:75;
+      background:#fdfcf2; border-radius:40px; padding:15px 16px calc(16px + env(safe-area-inset-bottom));
+      display:flex; flex-direction:column;
+      transform:translateY(calc(100% + 8px)); transition:transform 0.34s var(--ease-drawer, cubic-bezier(0.32,0.72,0,1)); }
+    .addr-sheet.open { transform:translateY(0); box-shadow:0 -8px 40px rgba(0,0,0,0.16); }
+    .addr-head { display:flex; align-items:center; justify-content:space-between; padding:0 4px; }
+    .addr-hbtn { width:44px; height:44px; border-radius:9999px; background:#f5f5ed; border:1px solid #fff;
+      display:flex; align-items:center; justify-content:center; cursor:pointer; transition:transform 160ms var(--ease-out); }
+    .addr-hbtn:active { transform:scale(0.94); }
+    .addr-hbtn svg { width:16px; height:16px; }
+    .addr-title { font-family:'Arizona Flare','Geist',serif; font-weight:500; font-size:34px; line-height:41px; letter-spacing:-1px; color:#322d0f; margin:16px 0 20px; padding:0 4px; }
+    .addr-fields { display:flex; flex-direction:column; gap:12px; }
+    .addr-row { display:flex; gap:12px; }
+    /* Floating-label text field: label rests as placeholder, rises on focus/fill */
+    .addr-field { position:relative; display:block; }
+    .addr-input {
+      width:100%; height:54px; box-sizing:border-box; padding:16px 20px 0;
+      background:#fdfcf2; border:0.5px solid rgba(105,65,40,0.5); border-radius:9999px;
+      font-family:'Roobert','Geist',sans-serif; font-size:16px; letter-spacing:-0.3px; color:#322d0f;
+      outline:none; -webkit-appearance:none; appearance:none; transition:border-color 0.16s ease; }
+    .addr-input::placeholder { color:transparent; }
+    .addr-input:focus { border-color:rgba(105,65,40,0.9); }
+    .addr-flabel {
+      position:absolute; left:21px; top:50%; transform:translateY(-50%);
+      font-family:'Roobert','Geist',sans-serif; font-size:16px; letter-spacing:-0.3px;
+      color:rgba(0,0,0,0.45); pointer-events:none;
+      max-width:calc(100% - 42px); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+      transition:top 0.16s ease, font-size 0.16s ease, color 0.16s ease, transform 0.16s ease; }
+    .addr-input:focus ~ .addr-flabel,
+    .addr-input:not(:placeholder-shown) ~ .addr-flabel {
+      top:9px; transform:translateY(0); font-size:11px; color:rgba(0,0,0,0.5); }
+    /* City / State dropdowns */
+    .addr-select {
+      flex:1; min-width:0; height:54px; box-sizing:border-box; padding:0 40px 0 20px;
+      background:#fdfcf2; border:0.5px solid rgba(105,65,40,0.5); border-radius:9999px;
+      font-family:'Roobert','Geist',sans-serif; font-size:16px; letter-spacing:-0.3px; color:#322d0f;
+      outline:none; -webkit-appearance:none; appearance:none; cursor:pointer; transition:border-color 0.16s ease, opacity 0.16s ease;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20' fill='none' stroke='rgba(0,0,0,0.6)' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+      background-repeat:no-repeat; background-position:right 16px center; }
+    .addr-select:focus { border-color:rgba(105,65,40,0.9); }
+    .addr-select:required:invalid { color:rgba(0,0,0,0.45); } /* placeholder colour until chosen */
+    .addr-select:disabled { opacity:0.7; cursor:default; color:#322d0f; background-image:none; }
+    .addr-save { margin:24px 0 0; height:60px; border:none; border-radius:9999px; background:#1f3833; color:#fff;
+      display:flex; align-items:center; justify-content:center; gap:8px; cursor:pointer;
+      font-family:'Roobert','Geist',sans-serif; font-size:17px; font-weight:600; letter-spacing:-0.5px;
+      box-shadow:0 8px 16px -8px rgba(0,0,0,0.2); transition:transform 160ms var(--ease-out); }
+    .addr-save:active { transform:scale(0.98); }
+    .addr-save svg { width:20px; height:20px; }
+    @media (prefers-reduced-motion: reduce) { .addr-sheet { transition:none; } }
     .smr-purpose-caret { flex-shrink:0; }
     .smr-purpose-help { font-size:13px; font-weight:400; line-height:18px; letter-spacing:-0.65px; color:rgba(0,0,0,0.6); padding:0 16px; margin-top:4px; }
 

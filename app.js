@@ -8160,68 +8160,67 @@ function renderSmLanding2() {
       '<span class="sm-l2-card-int">' + (m[2] || s) + '</span>' +
       '<span class="sm-l2-card-dec">' + (m[3] || '') + '</span>';
   }
+  var recCtx = ['Usually paid in the first week', '11 payments in 3 months', 'Paid every month', 'Recently paid'];
   rec.innerHTML = recs.map(function(b, i) {
-    var acct = _smBeneAcctLine(b);
     var usdNum = parseFloat(payAmts[i % payAmts.length].replace(/[^0-9.]/g, '')) || 0;
-    return '<div class="sm-l2-card" data-id="' + b.id + '" data-usd="' + usdNum + '">' +
+    return '<div class="sm-l2-card" data-id="' + b.id + '" data-usd="' + usdNum + '" onclick="smEditCardAmount(\'' + b.id + '\')">' +
       '<div class="sm-l2-card-pat" aria-hidden="true"></div>' +
-      '<div class="sm-l2-card-head"><div class="sm-l2-card-name">' + esc(b.name) + '</div>' +
-        '<div class="sm-l2-card-bank">' + esc(acct) + '</div></div>' +
+      '<div class="sm-l2-card-head">' +
+        '<div class="sm-l2-card-ctx">' + esc(recCtx[i % recCtx.length]) + '</div>' +
+        '<div class="sm-l2-card-name">' + esc(b.name) + '</div></div>' +
       '<div class="sm-l2-card-body">' +
         '<div class="sm-l2-card-payblock">' +
           '<div class="sm-l2-card-paylbl">You generally pay</div>' +
           '<div class="sm-l2-card-payrow"><span class="sm-l2-card-amt">' + amtHtml(payAmts[i % payAmts.length]) + '</span>' +
             '<button class="sm-l2-card-edit" onclick="event.stopPropagation();smEditCardAmount(\'' + b.id + '\')" aria-label="Edit amount">' + editSvg + '</button></div>' +
         '</div>' +
-        '<button class="sm-l2-slide" type="button"><span class="sm-l2-slide-knob">' + caretSvg + '</span><span class="sm-l2-slide-txt">Slide to pay</span></button>' +
       '</div>' +
     '</div>';
   }).join('');
-  // Order the list so the first two rows are Indian and the US beneficiary sits 3rd
-  var _listOrder = BENS.slice();
-  var _usIdx = -1;
-  for (var _i = 0; _i < _listOrder.length; _i++) { if (!_benIsIndia(_listOrder[_i])) { _usIdx = _i; break; } }
-  if (_usIdx > -1 && _usIdx !== 2) {
-    var _u = _listOrder.splice(_usIdx, 1)[0];
-    _listOrder.splice(2, 0, _u);
+  // Reset the beneficiary filter to "All" and render the list
+  _smBeneFilter = 'all';
+  document.querySelectorAll('#smL2Filters .sm-l2-filter').forEach(function(c){ c.classList.toggle('sel', c.dataset.f === 'all'); });
+  _smRenderBeneList('all');
+}
+
+/* ── All-beneficiaries list: filterable by country (All / India / USA) ── */
+var _smBeneFilter = 'all';
+function smGoToAmountById(id) {
+  var b = BENS.filter(function(x){ return x.id === id; })[0];
+  if (b) smGoToAmount(b.name, b.ini, b.bg, _smBeneAcctLine(b));
+}
+function _smRenderBeneList(filter) {
+  var list = document.getElementById('smL2List');
+  if (!list || typeof BENS === 'undefined') return;
+  var esc = (typeof _agEscape === 'function') ? _agEscape : function(s){ return String(s); };
+  var arrowSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,0,0,0.7)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M9 7h8v8"/></svg>';
+  var items = BENS.filter(function(b) {
+    if (filter === 'india') return _benIsIndia(b);
+    if (filter === 'us') return !_benIsIndia(b);
+    return true;
+  });
+  if (filter === 'all') {
+    // India-first ordering with the US beneficiary in 3rd
+    var usIdx = -1;
+    for (var i = 0; i < items.length; i++) { if (!_benIsIndia(items[i])) { usIdx = i; break; } }
+    if (usIdx > -1 && usIdx !== 2) { var u = items.splice(usIdx, 1)[0]; items.splice(2, 0, u); }
   }
-  list.innerHTML = _listOrder.map(function(b) {
-    var sub = _smBeneSub(b);
-    var blob = _benBlob(b);
-    return '<button class="sm-l2-row" type="button" data-id="' + b.id + '">' +
+  if (!items.length) { list.innerHTML = '<p class="sm-l2-empty">No beneficiaries here yet.</p>'; return; }
+  list.innerHTML = items.map(function(b) {
+    var sub = (typeof _smBeneSub === 'function') ? _smBeneSub(b) : '';
+    var blob = (typeof _benBlob === 'function') ? _benBlob(b) : '';
+    return '<button class="sm-l2-row" type="button" data-id="' + b.id + '" onclick="smGoToAmountById(\'' + b.id + '\')">' +
       '<span class="sm-l2-av"><img class="sm-l2-av-blob" src="' + blob + '" alt="" loading="lazy" decoding="async"><span class="sm-l2-av-glass"></span><span class="sm-l2-av-txt">' + esc(b.ini) + '</span></span>' +
       '<span class="sm-l2-rowtxt"><span class="sm-l2-rowname">' + esc(b.name) + '</span>' +
         (sub ? '<span class="sm-l2-rowsub">' + esc(sub) + '</span>' : '') + '</span>' +
       '<span class="sm-l2-rowgo">' + arrowSvg + '</span></button>';
   }).join('');
-  // Tapping a beneficiary (row or card) → amount entry screen
-  function goAmount(id) {
-    var b = BENS.filter(function(x){ return x.id === id; })[0];
-    if (b) smGoToAmount(b.name, b.ini, b.bg, _smBeneAcctLine(b));
-  }
-  // Slide-to-pay confirms with the card's preset amount and jumps straight to review
-  function goPay(id) {
-    var b = BENS.filter(function(x){ return x.id === id; })[0]; if (!b) return;
-    var card = rec.querySelector('.sm-l2-card[data-id="' + id + '"]');
-    var usd = card ? (parseFloat(card.dataset.usd) || 0) : 0;
-    smRecipient = { name: b.name, initials: b.ini, bg: b.bg, account: _smBeneAcctLine(b) };
-    // Slide-to-pay bypasses the amount screen, so set the review variant here
-    _smUSMode = (typeof _benIsIndia === 'function') ? !_benIsIndia(b) : false;
-    _smScheduled = false;
-    smCurrencyFlipped = false;
-    smCents = Math.round(usd * 100);
-    smInrPaise = Math.round(usd * SM_EXRATE * 100);
-    smIntStr = String(Math.round(usd)); smCaretIdx = smIntStr.length;
-    // Keep the amount screen coherent for back-navigation
-    var rn = document.getElementById('smRecipientName'); if (rn) rn.textContent = b.name;
-    var rs = document.getElementById('smRecipientSub'); if (rs) rs.textContent = _smBeneAcctLine(b);
-    var th = document.getElementById('smToHint'); if (th) th.textContent = b.name.split(' ')[0] + ' receives';
-    if (typeof smUpdateAmount === 'function') smUpdateAmount();
-    document.getElementById('sm-landing').className = 'screen hl';
-    smGoToReview();
-  }
-  rec.querySelectorAll('.sm-l2-slide').forEach(function(track) { _bindSlideToPay(track, goPay); });
-  list.querySelectorAll('.sm-l2-row').forEach(function(btn) { btn.addEventListener('click', function() { goAmount(btn.dataset.id); }); });
+}
+function smFilterBenes(f, el) {
+  _smBeneFilter = f;
+  document.querySelectorAll('#smL2Filters .sm-l2-filter').forEach(function(c){ c.classList.remove('sel'); });
+  if (el) el.classList.add('sel');
+  _smRenderBeneList(f);
 }
 
 /* ── Send-money search screen (Figma 6494-57858) ── */
@@ -8449,6 +8448,10 @@ function animateHeroBlob(blobEl, destAvatarId, doTransition, destOpts) {
 function smGoToAmount(name, initials, bg, account, blobEl) {
   smRecipient = { name, initials, bg: bg||'linear-gradient(135deg,#46882b,#2d5a16)', account: account||'••7654 · HDFC Bank' };
   _smScheduled = false; // fresh transfer starts unscheduled
+  _smPayMethod = 'Wire Transfer'; // default US method (collects an address)
+  var _pmv = document.getElementById('smrPayMethodVal'); if (_pmv) _pmv.textContent = 'Wire Transfer';
+  var _pmi = document.getElementById('smrPayMethodIco'); if (_pmi) _pmi.src = 'assets/pm-wire.webp';
+  document.querySelectorAll('#pmList .pm-row').forEach(function(r){ r.classList.toggle('sel', r.dataset.m === 'Wire Transfer'); });
   smCents = 0;
   smCurrencyFlipped = false;
   smInrPaise = 0;
@@ -8904,7 +8907,7 @@ function smGoToReview() {
     if (_cbtn) _cbtn.onclick = smConfirmScheduled;
   } else {
     if (_clbl) _clbl.textContent = 'Confirm and pay';
-    if (_cbtn) _cbtn.onclick = smShowFaceScan;
+    if (_cbtn) _cbtn.onclick = smConfirmReview;
   }
 
   // From account mirrors the selected funding account on the amount screen
@@ -10027,6 +10030,8 @@ function closeReviewNote() {
 }
 
 /* ── Payment method bottom sheet (US / wire) ── */
+// Currently selected US payment method (Wire transfers collect an address)
+var _smPayMethod = 'Wire Transfer';
 function openPayMethodSheet() {
   document.getElementById('pmScrim').classList.add('open');
   document.getElementById('pmSheet').classList.add('open');
@@ -10042,6 +10047,7 @@ function pmSelect(row) {
 function pmContinue() {
   var sel = document.querySelector('#pmList .pm-row.sel');
   if (sel) {
+    _smPayMethod = sel.dataset.m;
     var val = document.getElementById('smrPayMethodVal'); if (val) val.textContent = sel.dataset.m;
     var ico = document.getElementById('smrPayMethodIco'); if (ico) ico.src = sel.dataset.ico;
     // The address-on-next-step helper only applies to Wire transfers
@@ -10049,6 +10055,67 @@ function pmContinue() {
     if (help) help.style.display = (sel.dataset.m === 'Wire Transfer') ? '' : 'none';
   }
   closePayMethodSheet();
+}
+
+/* Review "Confirm and pay": Wire transfers collect a beneficiary address first;
+   every other method (and India) proceeds straight to payment. */
+function smConfirmReview() {
+  if (_smUSMode && _smPayMethod === 'Wire Transfer') { openAddressSheet(); return; }
+  smShowFaceScan();
+}
+// Demo Zip → City/State so the address fields auto-fill like a real form
+var _ADDR_ZIP_MAP = {
+  '10001': { city: 'New York',      state: 'NY' },
+  '94103': { city: 'San Francisco', state: 'CA' },
+  '60601': { city: 'Chicago',       state: 'IL' },
+  '73301': { city: 'Austin',        state: 'TX' },
+  '98101': { city: 'Seattle',       state: 'WA' },
+  '02108': { city: 'Boston',        state: 'MA' },
+  '33101': { city: 'Miami',         state: 'FL' }
+};
+function addrZipLookup() {
+  var z = (document.getElementById('addrZip').value || '').trim();
+  var m = _ADDR_ZIP_MAP[z];
+  var c = document.getElementById('addrCity'), s = document.getElementById('addrState');
+  if (m) {
+    // Zip recognised → prefill City/State and lock them (derived from zip)
+    if (c) { c.value = m.city; c.disabled = true; }
+    if (s) { s.value = m.state; s.disabled = true; }
+  } else {
+    // No match → let the user choose manually
+    if (c) c.disabled = false;
+    if (s) s.disabled = false;
+  }
+}
+// City → State so picking a city fills the state
+var _ADDR_CITY_STATE = {
+  'New York':'NY','Los Angeles':'CA','Chicago':'IL','Houston':'TX','Phoenix':'AZ',
+  'Philadelphia':'PA','San Antonio':'TX','San Diego':'CA','Dallas':'TX','Austin':'TX',
+  'San Jose':'CA','San Francisco':'CA','Seattle':'WA','Denver':'CO','Boston':'MA',
+  'Miami':'FL','Atlanta':'GA','Washington':'DC','Portland':'OR','Las Vegas':'NV',
+  'Detroit':'MI','Minneapolis':'MN','Nashville':'TN','Charlotte':'NC','Columbus':'OH',
+  'Indianapolis':'IN','Kansas City':'MO','New Orleans':'LA','Salt Lake City':'UT','Pittsburgh':'PA'
+};
+function addrCityLookup() {
+  var city = (document.getElementById('addrCity').value || '').trim();
+  var st = _ADDR_CITY_STATE[city];
+  var s = document.getElementById('addrState');
+  if (st && s) s.value = st;
+}
+function openAddressSheet() {
+  // Clear text fields and reset the City/State dropdowns for a fresh entry
+  document.querySelectorAll('#addrSheet .addr-input').forEach(function(i){ i.value = ''; });
+  ['addrCity','addrState'].forEach(function(id){ var e = document.getElementById(id); if (e) { e.value = ''; e.disabled = false; } });
+  document.getElementById('addrScrim').classList.add('open');
+  document.getElementById('addrSheet').classList.add('open');
+}
+function closeAddressSheet() {
+  document.getElementById('addrScrim').classList.remove('open');
+  document.getElementById('addrSheet').classList.remove('open');
+}
+function saveAddressAndPay() {
+  closeAddressSheet();
+  smShowFaceScan();
 }
 function saveReviewNote() {
   var inp = document.getElementById('rnoteInput');
