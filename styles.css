@@ -6230,8 +6230,13 @@
     /* Tile-construction reveal overlay */
     .smp2-tiles { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
     .smp2-tile { position: absolute; background-repeat: no-repeat; will-change: opacity; }
-    .smp2-building-img--loading { background-image: url('assets/vic-mem-loading.webp?v=10'); }
-    .smp2-building-img--success { background-image: url('assets/vic-mem-success.webp?v=10'); }
+    /* India transfers: Victoria Memorial */
+    .smp2-building-img--loading { background-image: url('assets/vic-mem-loading.webp?v=11'); }
+    .smp2-building-img--success { background-image: url('assets/vic-mem-success.webp?v=11'); }
+    /* US transfers: Mount Rushmore (progress morphs to success in place) */
+    #sm-progress.us-mode .smp2-building-img--loading { background-image: url('assets/BG_rush.webp?v=5'); }
+    #sm-progress.us-mode .smp2-building-img--success,
+    #sm-success.us-mode  .smp2-building-img--success { background-image: url('assets/BG_rush_success.webp?v=5'); }
     /* Progress-driven blur reveal (ai-chat-image-generation) — a backdrop-blur
        overlay that sweeps top→bottom with a soft masked edge as the image loads.
        clip-path + mask are driven per-frame by smpLoadReveal(). */
