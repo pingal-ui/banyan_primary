@@ -5894,6 +5894,9 @@ let smInrCaretIdx = 0; // caret position within smInrStr (0..len)
 let smInrRupeeInt = 0;
 let smInrPaisaStr = '';
 let smInrInCents  = false;
+// Which digit (if any) was just typed, so only that one plays the pop-in.
+// { field: 'usdInt'|'usdDec'|'inrInt'|'inrDec', idx } or null.
+let _smAnim = null;
 
 var _smUSMode = false;
 let smRecipient = {
@@ -8446,6 +8449,7 @@ function animateHeroBlob(blobEl, destAvatarId, doTransition, destOpts) {
 }
 
 function smGoToAmount(name, initials, bg, account, blobEl) {
+  showNav(false); // amount entry is a full-screen flow — no bottom tab bar (matches Figma)
   smRecipient = { name, initials, bg: bg||'linear-gradient(135deg,#46882b,#2d5a16)', account: account||'••7654 · HDFC Bank' };
   _smScheduled = false; // fresh transfer starts unscheduled
   _smPayMethod = 'Wire Transfer'; // default US method (collects an address)
@@ -8469,16 +8473,13 @@ function smGoToAmount(name, initials, bg, account, blobEl) {
   var _toHint = document.getElementById('smToHint');
   if (_toHint) _toHint.textContent = (name || '').split(' ')[0] + ' receives';
   document.getElementById('smRecipientAvatar').style.background = 'rgba(255,255,255,0.4)';
-  document.getElementById('smRecipientSub').textContent      = account;
   // US flow (USD → USD, no INR conversion): single-card layout
   var _b = (typeof BENS !== 'undefined') ? BENS.filter(function(x){ return x.name === name; })[0] : null;
   _smUSMode = _b ? !_benIsIndia(_b) : false;
   var _amtScr = document.getElementById('sm-amount');
   if (_amtScr) _amtScr.classList.toggle('us-mode', _smUSMode);
   var _uf = document.getElementById('smausFromName'); if (_uf) _uf.textContent = (document.getElementById('smaFromName') || {}).textContent || 'USD Checking';
-  var _ub = document.getElementById('smausFromBal'); if (_ub) _ub.textContent = (document.getElementById('smaFromBal') || {}).textContent || '';
   var _ut = document.getElementById('smausToName'); if (_ut) _ut.textContent = name;
-  var _us = document.getElementById('smausToSub'); if (_us) _us.textContent = account;
   // Copy the blob's photo to both amount + review avatars
   var destPhoto = document.querySelector('#smRecipientAvatar .sm2-mini-av-photo');
   var srcPhoto  = blobEl ? blobEl.querySelector('.sm-l-av-photo') : null;
@@ -8560,28 +8561,59 @@ function smUpdateAmount() {
   inrInt = Math.floor(smInrPaise / 100).toLocaleString('en-IN');
   inrDec = '.' + String(((smInrPaise % 100) + 100) % 100).padStart(2, '0');
 
+  // Decimal display rules:
+  //  · Active input — the point is hidden while typing whole amounts and only
+  //    appears once the user presses '.', with the caret sitting after it.
+  //  · Computed side — show its decimals only when they carry value (non-zero
+  //    minor units), so an idle field reads "$0" / "₹0" rather than "$0.00".
+  var usdCompDec   = (smCents % 100 !== 0) ? usdDec : '';
+  var inrCompDec   = (smInrPaise % 100 !== 0) ? inrDec : '';
+
+  var usdIntEl = document.getElementById('smAmountInt');
+  var inrIntEl = document.getElementById('smAmountInrInt');
+  var usdDecEl = document.getElementById('smAmountDec');
+  var inrDecEl = document.getElementById('smAmountInrDec');
+
+  // Only the currency actually being edited replays a pop-in for its new digit.
+  var animAt = function(field) { return (_smAnim && _smAnim.field === field) ? _smAnim.idx : -1; };
+  var usdActiveDecH = smInCents    ? _smaRenderDec(smCentStr, animAt('usdDec'))    : '';
+  var inrActiveDecH = smInrInCents ? _smaRenderDec(smInrPaisaStr, animAt('inrDec')) : '';
+
   // The active input currency shows the editable digits + caret; the other is computed.
   if (smCurrencyFlipped) {
-    document.getElementById('smAmountInt').textContent = usdInt;
-    document.getElementById('smAmountInrInt').innerHTML = _smaRenderInt(smInrStr, smInrCaretIdx, 'en-IN');
+    usdIntEl.textContent = usdInt;
+    usdDecEl.textContent = usdCompDec;
+    // INR is the active input — caret lives in the int, or in the dec once in cents.
+    inrIntEl.innerHTML = _smaRenderInt(smInrStr, smInrCaretIdx, 'en-IN', smInrInCents, animAt('inrInt'));
+    if (inrActiveDecH) inrDecEl.innerHTML = inrActiveDecH; else inrDecEl.textContent = '';
   } else {
-    document.getElementById('smAmountInt').innerHTML = _smaRenderInt(smIntStr, smCaretIdx, 'en-US');
-    document.getElementById('smAmountInrInt').textContent = inrInt;
+    inrIntEl.textContent = inrInt;
+    inrDecEl.textContent = inrCompDec;
+    // USD is the active input — caret lives in the int, or in the dec once in cents.
+    usdIntEl.innerHTML = _smaRenderInt(smIntStr, smCaretIdx, 'en-US', smInCents, animAt('usdInt'));
+    if (usdActiveDecH) usdDecEl.innerHTML = usdActiveDecH; else usdDecEl.textContent = '';
   }
-  document.getElementById('smAmountDec').textContent    = usdDec;
-  document.getElementById('smAmountInrDec').textContent = inrDec;
 
-  // US single-card mirror of the USD field
+  // US single-card mirror of the USD field (always the active USD input)
   var usInt = document.getElementById('smAmountUsInt');
   if (usInt) {
-    usInt.innerHTML = _smaRenderInt(smIntStr, smCaretIdx, 'en-US');
-    var usDec = document.getElementById('smAmountUsDec'); if (usDec) usDec.textContent = usdDec;
+    usInt.innerHTML = _smaRenderInt(smIntStr, smCaretIdx, 'en-US', smInCents, animAt('usdInt'));
+    var usDec = document.getElementById('smAmountUsDec');
+    if (usDec) { if (usdActiveDecH) usDec.innerHTML = usdActiveDecH; else usDec.textContent = ''; }
   }
 
+  // Consume the pop-in so a later re-render (tap, conversion, switch) won't replay it.
+  _smAnim = null;
+
   // Auto-shrink each amount so long values never wrap/overflow the card
-  _smaFitAmount(document.getElementById('smAmountInt'));
-  _smaFitAmount(document.getElementById('smAmountInrInt'));
-  _smaFitAmount(usInt);
+  _smaFitAmount(document.getElementById('smAmountInt'), smCurrencyFlipped ? 40 : 64);
+  _smaFitAmount(document.getElementById('smAmountInrInt'), smCurrencyFlipped ? 64 : 40);
+  _smaFitAmount(usInt, 64);
+  // The active-input card grows tall (120px) to hold the big amount; the computed one is compact (75px).
+  var _fromCard = document.querySelector('#sm-amount .sma2-card--from');
+  var _toCard   = document.querySelector('#sm-amount .sma2-card--to');
+  if (_fromCard) _fromCard.classList.toggle('is-active', !smCurrencyFlipped);
+  if (_toCard)   _toCard.classList.toggle('is-active', smCurrencyFlipped);
 
   const btn = document.getElementById('smSendBtn');
   // Always tappable — validation on tap surfaces the inline error (empty / over-limit)
@@ -8596,33 +8628,47 @@ function smUpdateAmount() {
 
   // Zero fees on every transfer (domestic and international)
   var _feeTxt = document.getElementById('smInfoFeeTxt');
-  if (_feeTxt) _feeTxt.innerHTML = '<b>Zero fees.</b>';
+  if (_feeTxt) _feeTxt.innerHTML = '<b>Free transfer.</b> No fee charged.';
 }
 
 /* Scale an amount's font down by digit count so it never wraps or overflows */
-function _smaFitAmount(intEl) {
+function _smaFitAmount(intEl, base) {
   if (!intEl) return;
   var amt = intEl.closest('.sma2-amt'); if (!amt) return;
+  base = base || 64;
   var n = (intEl.textContent || '').replace(/[^0-9]/g, '').length;
-  var size = n <= 6 ? 40 : n <= 8 ? 32 : n <= 10 ? 26 : 22;
-  amt.style.setProperty('--amt-size', size + 'px');
+  var scale = n <= 5 ? 1 : n <= 6 ? 0.8 : n <= 7 ? 0.68 : n <= 8 ? 0.6 : n <= 10 ? 0.5 : 0.42;
+  amt.style.setProperty('--amt-size', Math.round(base * scale) + 'px');
 }
 
 /* Render the USD integer as individual digit spans with commas, placing the
    blinking caret at caretIdx. Empty → a "0" placeholder with the caret after it. */
-function _smaRenderInt(str, caretIdx, locale) {
-  var caret = '<span class="sma2-caret" aria-hidden="true"></span>';
+function _smaRenderInt(str, caretIdx, locale, noCaret, newIdx) {
+  var caret = noCaret ? '' : '<span class="sma2-caret" aria-hidden="true"></span>';
   if (!str) return '<span class="sma2-amt-d" data-i="0">0</span>' + caret;
   var n = str.length, out = '';
   for (var i = 0; i < n; i++) {
-    if (i === caretIdx) out += caret;
+    if (!noCaret && i === caretIdx) out += caret;
     var r = n - i; // digits to the right
     var comma = i > 0 && (locale === 'en-IN' ? (r >= 3 && (r - 3) % 2 === 0) : (r % 3 === 0));
     if (comma) out += '<span class="sma2-amt-comma">,</span>';
-    out += '<span class="sma2-amt-d" data-i="' + i + '">' + str[i] + '</span>';
+    var cls = 'sma2-amt-d' + (i === newIdx ? ' sma2-amt-d--in' : '');
+    out += '<span class="' + cls + '" data-i="' + i + '">' + str[i] + '</span>';
   }
-  if (caretIdx >= n) out += caret;
+  if (!noCaret && caretIdx >= n) out += caret;
   return out;
+}
+/* Decimal fragment for the ACTIVE input while in cents mode: the point, the
+   cent digits typed so far, then the caret sitting right after them. Each cent
+   digit is its own span so the just-entered one (newIdx) can pop in. */
+function _smaRenderDec(centStr, newIdx) {
+  centStr = centStr || '';
+  var out = '.';
+  for (var i = 0; i < centStr.length; i++) {
+    var cls = 'sma2-amt-dec-d' + (i === newIdx ? ' sma2-amt-d--in' : '');
+    out += '<span class="' + cls + '">' + centStr[i] + '</span>';
+  }
+  return out + '<span class="sma2-caret" aria-hidden="true"></span>';
 }
 /* Place the caret where the user taps — activating that currency as the input.
    Tapping the other currency seeds it from the current converted value. */
@@ -8686,6 +8732,12 @@ function _smKeyFeedback(k) {
 }
 function smKey(k) {
   _smKeyFeedback(k);
+  // Snapshot lengths so we can tell whether a digit was actually added (and thus
+  // should pop in) — vs. a no-op at the max-length cap, or a '.'/del press.
+  var _typed = (k !== 'del' && k !== '.');
+  var _pIntLen  = smCurrencyFlipped ? smInrStr.length : smIntStr.length;
+  var _pCentLen = smCurrencyFlipped ? smInrPaisaStr.length : smCentStr.length;
+  _smAnim = null;
   if (smCurrencyFlipped) {
     if (k === 'del') {
       if (smInrInCents && smInrPaisaStr.length > 0) {
@@ -8743,6 +8795,16 @@ function smKey(k) {
     const cents = parseInt((smCentStr + '00').slice(0, 2));
     smCents = smDollarInt * 100 + cents;
     smInrPaise = Math.round((smCents / 100) * SM_EXRATE * 100);
+  }
+  // Flag the freshly typed digit so only it plays the pop-in on this render.
+  if (_typed) {
+    if (smCurrencyFlipped) {
+      if (smInrInCents && smInrPaisaStr.length > _pCentLen) _smAnim = { field: 'inrDec', idx: smInrPaisaStr.length - 1 };
+      else if (!smInrInCents && smInrStr.length > _pIntLen) _smAnim = { field: 'inrInt', idx: smInrCaretIdx - 1 };
+    } else {
+      if (smInCents && smCentStr.length > _pCentLen) _smAnim = { field: 'usdDec', idx: smCentStr.length - 1 };
+      else if (!smInCents && smIntStr.length > _pIntLen) _smAnim = { field: 'usdInt', idx: smCaretIdx - 1 };
+    }
   }
   smUpdateAmount();
 }
@@ -8827,7 +8889,9 @@ function smSwitchCurrency() {
 // Max transfer limit, defined on the INR (recipient) side — ₹15,00,000.
 var SM_MAX_INR = 1500000;
 function _smAmtErrEl() {
-  return document.getElementById(_smUSMode ? 'smAmountUsErr' : 'smAmountErr');
+  // Error belongs to the field currently being edited (the active card).
+  if (_smUSMode) return document.getElementById('smAmountUsErr');
+  return document.getElementById(smCurrencyFlipped ? 'smAmountInrErr' : 'smAmountErr');
 }
 // 'empty' | 'over' | 'ok'
 function smAmountStatus() {
@@ -8840,12 +8904,17 @@ function smAmountStatus() {
 function smRenderAmountError(showEmpty) {
   var a = document.getElementById('smAmountErr'); if (a) { a.hidden = true; }
   var b = document.getElementById('smAmountUsErr'); if (b) { b.hidden = true; }
+  var c = document.getElementById('smAmountInrErr'); if (c) { c.hidden = true; }
   var err = _smAmtErrEl(); if (!err) return;
   var st = smAmountStatus();
   if (st === 'over') {
-    var maxUsd = Math.floor(SM_MAX_INR / SM_EXRATE);
-    err.textContent = 'Amount exceeds the maximum of ₹' + SM_MAX_INR.toLocaleString('en-IN') +
-      '. You can send up to $' + maxUsd.toLocaleString('en-US') + '.';
+    // Show the limit in the currency of the field being edited.
+    if (smCurrencyFlipped) {
+      err.textContent = 'Amount exceeds the maximum of ₹' + SM_MAX_INR.toLocaleString('en-IN') + '.';
+    } else {
+      var maxUsd = Math.floor(SM_MAX_INR / SM_EXRATE);
+      err.textContent = 'Amount exceeds the maximum of $' + maxUsd.toLocaleString('en-US') + '.';
+    }
     err.hidden = false;
   } else if (st === 'empty' && showEmpty) {
     err.textContent = 'Enter an amount to proceed';
@@ -9578,7 +9647,6 @@ function smaPickFrom(i) {
   var s = spaces[i];
   if (!s) return;
   var n = document.getElementById('smaFromName'); if (n) n.textContent = s.name;
-  var b = document.getElementById('smaFromBal'); if (b) b.textContent = s.bal;
   haptic(6);
   smaCloseFromSheet();
 }

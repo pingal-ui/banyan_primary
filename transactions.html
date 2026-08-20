@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=503">
+  <link rel="stylesheet" href="styles.css?v=520">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -1628,14 +1628,12 @@
       <div class="smaus-cols">
         <div class="smaus-left">
           <div class="sma2-acct" onclick="smaOpenFromSheet()" style="cursor:pointer">
-            <button class="sma2-card-lbl" type="button">FROM<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
+            <button class="sma2-card-lbl" type="button">From<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
             <span class="sma2-acct-name" id="smausFromName">USD Checking</span>
-            <span class="sma2-acct-bal" id="smausFromBal">$146,000.00</span>
           </div>
           <div class="sma2-acct">
-            <span class="sma2-card-lbl">TO</span>
+            <span class="sma2-card-lbl">To</span>
             <span class="sma2-acct-name" id="smausToName">Rohan Rathod</span>
-            <span class="sma2-acct-bal" id="smausToSub">HDFC 8976</span>
           </div>
         </div>
         <div class="smaus-right">
@@ -1651,53 +1649,52 @@
     </div>
 
     <!-- FROM card — whole card opens the account sheet; amount is the caret field -->
-    <div class="sma2-card" onclick="smaOpenFromSheet()" style="cursor:pointer">
-      <div class="sma2-card-top">
-        <button class="sma2-card-lbl" type="button">FROM<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
-        <span class="sma2-card-hint">You send exactly</span>
+    <div class="sma2-card sma2-card--from" onclick="smaOpenFromSheet()" style="cursor:pointer">
+      <div class="sma2-acct">
+        <button class="sma2-card-lbl" type="button">From<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6l4 4 4-4"/></svg></button>
+        <span class="sma2-acct-name" id="smaFromName">USD Checking</span>
       </div>
-      <div class="sma2-card-bot">
-        <div class="sma2-acct">
-          <span class="sma2-acct-name" id="smaFromName">USD Checking</span>
-          <span class="sma2-acct-bal" id="smaFromBal">$146,000.00</span>
-        </div>
-        <div class="sma2-amtcol">
-          <div class="sma2-amt" onclick="smaAmountClick(event,'usd')">
-            <span class="sma2-amt-sym">$</span><span class="sma2-amt-int" id="smAmountInt">0</span><span class="sma2-amt-dec" id="smAmountDec">.00</span>
-          </div>
-          <span class="sma2-amt-err" id="smAmountErr" hidden>Enter an amount to proceed</span>
+      <div class="sma2-amtcol">
+        <div class="sma2-amt" onclick="smaAmountClick(event,'usd')">
+          <span class="sma2-amt-sym">$</span><span class="sma2-amt-int" id="smAmountInt">0</span><span class="sma2-amt-dec" id="smAmountDec">.00</span>
         </div>
       </div>
+      <span class="sma2-amt-err" id="smAmountErr" hidden>Enter an amount to proceed</span>
     </div>
 
-    <!-- Fee / speed info (inside the container, with dashed connector) -->
+    <!-- Fee / speed info — auto-rotating ticker, one line at a time -->
     <div class="sma2-info">
       <div class="sma2-info-line" aria-hidden="true"></div>
-      <div class="sma2-info-row">
-        <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/SealPercent.svg');--sz:16px;color:#322d0f"></span></span>
-        <span class="sma2-info-txt" id="smInfoFeeTxt"><b>Zero fees.</b></span>
-      </div>
-      <div class="sma2-info-row">
-        <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/Timer.svg');--sz:16px;color:#322d0f"></span></span>
-        <span class="sma2-info-txt">Most transfers <b>arrive in minutes</b>.</span>
+      <div class="sma2-info-viewport">
+        <div class="sma2-info-track">
+          <div class="sma2-info-row">
+            <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/SealPercent.svg');--sz:16px;color:#322d0f"></span></span>
+            <span class="sma2-info-txt" id="smInfoFeeTxt"><b>Free transfer.</b> No fee charged.</span>
+          </div>
+          <div class="sma2-info-row">
+            <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/Timer.svg');--sz:16px;color:#322d0f"></span></span>
+            <span class="sma2-info-txt">Most transfers <b>arrive in minutes</b>.</span>
+          </div>
+          <div class="sma2-info-row" aria-hidden="true">
+            <span class="sma2-info-ic"><span class="ico" style="--ico:url('Icons/SealPercent.svg');--sz:16px;color:#322d0f"></span></span>
+            <span class="sma2-info-txt"><b>Free transfer.</b> No fee charged.</span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- TO card -->
-    <div class="sma2-card">
-      <div class="sma2-card-top">
-        <span class="sma2-card-lbl">TO</span>
-        <span class="sma2-card-hint" id="smToHint">Recipient receives</span>
+    <!-- TO card — clicking anywhere activates the INR input (makes it the tall card) -->
+    <div class="sma2-card sma2-card--to" onclick="smaAmountClick(event,'inr')" style="cursor:pointer">
+      <div class="sma2-acct">
+        <button class="sma2-card-lbl" type="button">To</button>
+        <span class="sma2-acct-name" id="smRecipientName">Rohan Rathod</span>
       </div>
-      <div class="sma2-card-bot">
-        <div class="sma2-acct">
-          <span class="sma2-acct-name" id="smRecipientName">Rohan Rathod</span>
-          <span class="sma2-acct-bal" id="smRecipientSub">HDFC 8976</span>
-        </div>
+      <div class="sma2-amtcol">
         <div class="sma2-amt" onclick="smaAmountClick(event,'inr')">
           <span class="sma2-amt-sym">₹</span><span class="sma2-amt-int" id="smAmountInrInt">0</span><span class="sma2-amt-dec" id="smAmountInrDec">.00</span>
         </div>
       </div>
+      <span class="sma2-amt-err" id="smAmountInrErr" hidden></span>
     </div>
 
     </div><!-- /.sma2-fromto -->
@@ -4665,7 +4662,7 @@
 
 </div>
 
-  <script defer src="app.js?v=297"></script>
+  <script defer src="app.js?v=305"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

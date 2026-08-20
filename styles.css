@@ -5147,15 +5147,15 @@
     @media (prefers-reduced-motion: reduce) { .rate-sheet, .rate-scrim { transition: none; } }
 
     /* ══ India amount entry (Figma 6530-164542) ══ */
-    #sm-amount { background: #FDFCF2 url('assets/bg-send-money.webp') top center / 100% auto no-repeat; }
+    #sm-amount { background: #FDFCF2 url('assets/bg-send-money-top.webp') top center / 100% auto no-repeat; }
     #sm-amount .sm-botanical-bg { display: none; }
-    #sm-amount .sma-scroll { display: flex; flex-direction: column; padding: 53px 20px 16px; gap: 0; overflow-y: auto; box-sizing: border-box; height: 100%; }
+    #sm-amount .sma-scroll { display: flex; flex-direction: column; padding: 53px 20px 8px; gap: 0; overflow-y: auto; box-sizing: border-box; height: 100%; }
     .sma2-header { display: flex; align-items: center; justify-content: space-between; }
     .sma2-header-right { display: flex; align-items: center; gap: 8px; }
-    .sma2-back { width: 44px; height: 44px; border-radius: 9999px; background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
+    .sma2-back { width: 44px; height: 44px; border-radius: 9999px; background: #fdfcf2; border: 2px solid #eceadb; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
     .sma2-back:active { transform: scale(0.95); }
     .sma2-back svg { width: 16px; height: 16px; }
-    .sma2-rate { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; width: 144px; height: 44px; padding: 0 13px; background: #f5f5ed; border: 1px solid var(--neutral-white-100, #fff); border-radius: 9999px; font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; color: rgba(0,0,0,0.8); }
+    .sma2-rate { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 8px; width: 144px; height: 44px; padding: 0 13px; background: #fdfcf2; border: 2px solid #eceadb; border-radius: 9999px; font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; color: rgba(0,0,0,0.8); }
     /* Same live-rate light sweep as the landing pill */
     .sma2-rate::before {
       content: ''; position: absolute; top: 0; left: 0; width: 40%; height: 100%;
@@ -5169,18 +5169,25 @@
       transform-style: preserve-3d; backface-visibility: visible;
       animation: rate-spin 5s ease-in-out infinite; will-change: transform; }
     @media (prefers-reduced-motion: reduce) { .sma2-rate svg { animation: none; } }
-    .sma2-title { font-family: 'Geist', sans-serif; font-size: 30px; font-weight: 600; color: #322d0f; letter-spacing: -1px; margin: 22px 0 8px 8px; }
+    .sma2-title { font-family: 'Geist', sans-serif; font-size: 34px; font-weight: 600; color: #322d0f; letter-spacing: -1px; margin: 18px 0 12px 8px; }
     /* FROM / TO connected container — white insets on a beige panel */
     .sma2-fromto { background: #eceadb; border-radius: 40px; padding: 8px; margin: 0 -12px; box-shadow: inset 0 2px 2px rgba(0,0,0,0.1); }
-    .sma2-card { background: #fff; border: 0.5px solid #fff; border-radius: 32px; padding: 20px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.05); -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+    .sma2-card { background: #fff; border: 0.5px solid #fff; border-radius: 36px; padding: 14px 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05), inset 0 -2px 1px rgba(0,0,0,0.05); -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+    /* Single-row FROM / TO card: label+account on the left, big amount on the right */
+    .sma2-card--from, .sma2-card--to { display: flex; flex-wrap: wrap; align-items: center; align-content: center; justify-content: space-between; gap: 12px; padding: 16px; min-height: 75px; transition: min-height 300ms var(--ease-drawer); }
+    /* Whichever currency is active (big amount) is the tall card; the computed one is compact. */
+    .sma2-card--from.is-active, .sma2-card--to.is-active { min-height: 120px; }
+    @media (prefers-reduced-motion: reduce) { .sma2-card--from, .sma2-card--to { transition: none; } }
+    .sma2-card--from > .sma2-acct, .sma2-card--to > .sma2-acct { flex: 0 0 auto; max-width: 42%; }
+    .sma2-card--from > .sma2-amtcol, .sma2-card--to > .sma2-amtcol { flex: 1 1 0; min-width: 0; overflow: hidden; }
     .sma2-amt { -webkit-tap-highlight-color: transparent; }
-    .sma2-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-    .sma2-card-lbl { display: flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; cursor: pointer; font-family: 'Geist', sans-serif; font-size: 11px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; color: #754c32; }
-    .sma2-card-lbl svg { width: 12px; height: 12px; }
+    .sma2-card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+    .sma2-card-lbl { display: flex; align-items: center; gap: 4px; background: none; border: none; padding: 0; cursor: pointer; font-family: 'Roobert', 'Geist', sans-serif; font-size: 15px; font-weight: 600; letter-spacing: 0; text-transform: none; color: #754c32; line-height: 20px; }
+    .sma2-card-lbl svg { width: 16px; height: 16px; }
     .sma2-card-hint { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: #322d0f; }
     .sma2-card-bot { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
-    .sma2-acct { display: flex; flex-direction: column; gap: 0; min-width: 0; }
-    .sma2-acct-name { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: #322d0f; line-height: 18px; }
+    .sma2-acct { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .sma2-acct-name { font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400; color: #322d0f; line-height: 18px; }
     .sma2-acct-bal { font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; color: rgba(50,45,15,0.5); line-height: 18px; }
     /* US mode: single card, no INR conversion */
     .smaus-card { display: none; }
@@ -5197,44 +5204,82 @@
     .smaus-card .smaus-right { display: flex; flex-direction: column; justify-content: center; align-items: flex-end; gap: 4px; }
 
     .sma2-amtcol { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; min-width: 0; }
-    .sma2-amt { display: flex; align-items: baseline; color: #754c32; font-family: 'Geist', sans-serif; --amt-size: 40px; min-width: 0; }
+    .sma2-amt { display: flex; align-items: baseline; color: #322d0f; font-family: 'Roobert', 'Geist', sans-serif; --amt-size: 64px; min-width: 0; }
     .sma2-amt-err {
+      flex: 1 0 100%; width: 100%; margin-top: 2px;
       font-family: 'Roobert', 'Geist', sans-serif; font-size: 13px; font-weight: 400;
-      line-height: 18px; letter-spacing: -0.65px; color: #c82c2c;
-      text-align: right; max-width: 260px;
+      line-height: 18px; letter-spacing: -0.4px; color: #b0402f;
+      text-align: right;
     }
     .sma2-amt-err[hidden] { display: none; }
-    .sma2-amt-sym { font-size: calc(var(--amt-size) * 0.5); font-weight: 500; margin-right: 1px; flex-shrink: 0; }
-    .sma2-amt-int { font-size: var(--amt-size); font-weight: 500; letter-spacing: -2px; line-height: 1; white-space: nowrap; }
-    .sma2-amt-dec { font-size: calc(var(--amt-size) * 0.5); font-weight: 500; letter-spacing: -1px; flex-shrink: 0; }
-    .sma2-amt-d, .sma2-amt-comma { cursor: text; }
-    /* Zero-width caret — overlays the gap between digits without shifting them */
-    .sma2-caret { display: inline-block; position: relative; width: 0; height: 0.82em; vertical-align: -0.16em; }
+    .sma2-amt-sym { font-size: calc(var(--amt-size) * 0.5); font-weight: 700; margin-right: 2px; flex-shrink: 0; }
+    .sma2-amt-int { font-size: var(--amt-size); font-weight: 700; letter-spacing: -0.05em; line-height: 1; white-space: nowrap; }
+    .sma2-amt-dec { font-size: calc(var(--amt-size) * 0.5); font-weight: 700; letter-spacing: -0.03em; flex-shrink: 0; }
+    /* Inactive (computed) card: amount is not bold — lighter weight than the active input */
+    .sma2-card--from:not(.is-active) .sma2-amt-sym,
+    .sma2-card--from:not(.is-active) .sma2-amt-int,
+    .sma2-card--from:not(.is-active) .sma2-amt-dec,
+    .sma2-card--to:not(.is-active) .sma2-amt-sym,
+    .sma2-card--to:not(.is-active) .sma2-amt-int,
+    .sma2-card--to:not(.is-active) .sma2-amt-dec { font-weight: 500; }
+    .sma2-amt-d, .sma2-amt-comma, .sma2-amt-dec-d { cursor: text; display: inline-block; }
+    /* Zero-width caret — overlays the gap between digits without shifting them.
+       Height/offset are keyed to --amt-size (not the local font) so the blinker
+       stays the integer's height even when it sits in the smaller decimals. */
+    .sma2-caret { display: inline-block; position: relative; width: 0; height: calc(var(--amt-size) * 0.82); vertical-align: calc(var(--amt-size) * -0.16); }
     .sma2-caret::before { content: ''; position: absolute; left: -1px; top: -4px; width: 2px; height: 100%; border-radius: 1px; background: #322d0f; animation: sma2-blink 1.06s steps(1, start) infinite; }
     @media (prefers-reduced-motion: reduce) { .sma2-caret::before { animation: none; } }
     @keyframes sma2-blink { 0%, 50% { opacity: 1; } 50.01%, 100% { opacity: 0; } }
     @media (prefers-reduced-motion: reduce) { .sma2-caret { animation: none; } }
-    /* Fee/speed info between the cards */
-    .sma2-info { position: relative; display: flex; flex-direction: column; gap: 8px; padding: 16px 8px; margin: 4px 0; }
-    .sma2-info-line { position: absolute; left: 23px; top: 22px; bottom: 22px; width: 1px; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%); }
-    .sma2-info-row { position: relative; display: flex; align-items: center; gap: 8px; padding: 0 8px; }
+    /* The digit just typed rises up into place with a fade — like it's being
+       typed in beside the caret, rather than popping. Fast-out easing so it
+       lands crisply. translateY is in em, so it scales with each field size. */
+    .sma2-amt-d--in { animation: sma2-digit-in 180ms var(--ease-out) both; }
+    @keyframes sma2-digit-in {
+      0%   { transform: translateY(0.5em); opacity: 0; }
+      60%  { opacity: 1; }
+      100% { transform: translateY(0); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) { .sma2-amt-d--in { animation: none; } }
+    /* Fee/speed info — one line at a time, auto-scrolling ticker (keeps the 66px height) */
+    .sma2-info { position: relative; display: flex; align-items: center; height: 66px; padding: 10px 8px; margin: 0; overflow: hidden; }
+    .sma2-info-line { display: none; } /* connector only makes sense with both rows visible */
+    .sma2-info-viewport { width: 100%; height: 46px; overflow: hidden; }
+    .sma2-info-track { display: flex; flex-direction: column; animation: sma2-info-rotate 7s var(--ease-drawer) infinite; }
+    @keyframes sma2-info-rotate {
+      0%, 30%   { transform: translateY(0); }
+      37%, 63%  { transform: translateY(-46px); }
+      70%, 100% { transform: translateY(-92px); }
+    }
+    .sma2-info-row { height: 46px; position: relative; display: flex; align-items: center; gap: 8px; padding: 0 8px; }
+    @media (prefers-reduced-motion: reduce) {
+      /* No motion: show both lines stacked with the connector, as before */
+      .sma2-info { height: auto; display: block; }
+      .sma2-info-line { display: block; position: absolute; left: 23px; top: 18px; bottom: 18px; width: 1px; background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0) 100%); }
+      .sma2-info-viewport { height: auto; }
+      .sma2-info-track { animation: none; gap: 8px; }
+      .sma2-info-row { height: auto; }
+      .sma2-info-row[aria-hidden="true"] { display: none; }
+    }
     .sma2-info-ic { width: 16px; height: 16px; flex-shrink: 0; display: flex; }
     .sma2-info-ic svg { width: 16px; height: 16px; }
     .sma2-info-txt { font-family: 'Geist', sans-serif; font-size: 15px; letter-spacing: -0.3px; color: #322d0f; }
     .sma2-info-txt b { font-weight: 600; }
-    .sma2-actions { display: flex; align-items: center; gap: 14px; margin: auto 0 16px; }
-    .sma2-cal { width: 52px; height: 52px; flex-shrink: 0; border-radius: 50%; background: var(--surface-secondary); border: 1px solid var(--neutral-white-100, #fff); box-shadow: inset 0 0 0 1px var(--border-focus), 0 8px 16px -8px var(--surface-subtle); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 160ms var(--ease-out); }
-    .sma2-cal:active { transform: scale(0.95); }
-    .sma2-cal svg { width: 24px; height: 24px; }
-    .sma2-review { flex: 1; height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; background: #1f3833; border: none; border-radius: 9999px; cursor: pointer; font-size: 17px; font-weight: 600; letter-spacing: -0.85px; color: var(--text-inverse); box-shadow: 0 8px 16px -8px rgba(0,0,0,0.2), inset 0 -4px 1px rgba(0,0,0,0.05); transition: transform 160ms var(--ease-out), background 160ms var(--ease-out); }
+    .sma2-actions { display: flex; align-items: center; gap: 16px; margin: auto 0 16px; }
+    /* DS Secondary button (icon-only): ivory fill, sage outline, brown icon */
+    .sma2-cal { width: 60px; height: 60px; flex-shrink: 0; border-radius: 50%; background: #eceadb; border: 1px solid #c5c0a3; box-shadow: 0 2px 4px 0 rgba(0,0,0,0.08); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+    .sma2-cal:active { transform: scale(0.95); box-shadow: 0 1px 2px 0 rgba(0,0,0,0.08); }
+    .sma2-cal svg { width: 24px; height: 24px; stroke: #754c32; }
+    /* DS Primary button: evergreen fill, surface/base text, Shadow/Drop elevation scale */
+    .sma2-review { flex: 1; height: 60px; display: flex; align-items: center; justify-content: center; gap: 8px; background: #1f3833; border: none; border-radius: 9999px; cursor: pointer; font-family: 'Roobert', 'Geist', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: -0.5px; color: #fdfcf2; box-shadow: 0 2px 4px 0 rgba(0,0,0,0.12); transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
     .sma2-review svg { width: 20px; height: 20px; }
-    @media (hover:hover) and (pointer:fine) { .sma2-review:hover { background: #26433d; } }
-    .sma2-review:active { transform: scale(0.98); }
+    @media (hover:hover) and (pointer:fine) { .sma2-review:hover { background: #26433d; box-shadow: 0 8px 16px -2px rgba(0,0,0,0.18); } }
+    .sma2-review:active { transform: scale(0.98); box-shadow: 0 1px 2px 0 rgba(0,0,0,0.12); }
     /* Keypad (Figma 6655-121775) — filled beige keys, ghost dot + delete */
-    .sma2-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; padding-top: 0; padding-bottom: 24px; }
+    .sma2-keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px 12px; padding: 12px 0 20px; }
     .sma2-key {
       height: 50px; border: none; border-bottom: 1px solid rgba(0,0,0,0.1); border-radius: 18px;
-      background: #eceadb; font-family: 'Geist', sans-serif; font-size: 23px; font-weight: 500;
+      background: #eceadb; font-family: 'Roobert', 'Geist', sans-serif; font-size: 26px; font-weight: 500;
       color: rgba(0,0,0,0.8); cursor: pointer; display: flex; align-items: center; justify-content: center;
       transition: transform 180ms cubic-bezier(0.34,1.56,0.64,1), filter 120ms ease;
     }
@@ -5722,7 +5767,7 @@
     .sm-l-search-ph { font-family: 'Geist', sans-serif; font-size: 17px; font-weight: 500; color: var(--text-secondary); }
 
     /* ── Amount (redesign) ── */
-    #sm-amount { background: #FDFCF2 url('assets/bg-send-money.webp') top center / 100% auto no-repeat; overflow:hidden; }
+    #sm-amount { background: #FDFCF2 url('assets/bg-send-money-top.webp') top center / 100% auto no-repeat; overflow:hidden; }
     .sma-scroll { position:absolute; inset:0; display:flex; flex-direction:column; overflow:hidden; }
 
     .sm2-header {
@@ -5945,7 +5990,7 @@
       display:block; width:433px; height:235px; flex-shrink:0;
     }
 
-    #sm-review { background:#FDFCF2 url('assets/bg-send-money.webp') top center / 100% auto no-repeat; overflow:hidden; }
+    #sm-review { background:#FDFCF2 url('assets/bg-send-money-top.webp') top center / 100% auto no-repeat; overflow:hidden; }
     #sm-review .sm-botanical-bg { display:none; }
 
     .smr-scroll { position:absolute; inset:0; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; padding:53px 20px 172px; display:flex; flex-direction:column; }
@@ -5955,7 +6000,7 @@
 
     /* Header — back only */
     .smr-header { display:flex; align-items:center; justify-content:space-between; padding:9px 0 0; flex-shrink:0; }
-    .smr-pill-btn { width:44px; height:44px; border-radius:999px; background:#f5f5ed; border:1px solid var(--neutral-white-100,#fff); box-shadow:0 8px 16px -8px rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:transform 160ms var(--ease-out); }
+    .smr-pill-btn { width:44px; height:44px; border-radius:999px; background:#fdfcf2; border:2px solid #eceadb; box-shadow:0 8px 16px -8px rgba(0,0,0,0.12); display:flex; align-items:center; justify-content:center; cursor:pointer; flex-shrink:0; transition:transform 160ms var(--ease-out); }
     .smr-pill-btn:active { transform:scale(0.95); }
     .smr-pill-btn svg { width:18px; height:18px; }
 
