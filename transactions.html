@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=520">
+  <link rel="stylesheet" href="styles.css?v=532">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -2063,34 +2063,29 @@
     <div class="rate-grabber"></div>
 
     <div class="rate-head">
-      <h2 class="rate-title">Rate comparison</h2>
-      <p class="rate-sub">With Banyan, you always get charged the mid-market rate with absolutely no markup</p>
+      <h2 class="rate-title">Make your money<br>go further</h2>
+      <p class="rate-sub">Banyan uses the mid-market exchange rate with no exchange-rate markup.</p>
     </div>
 
-    <div class="rate-input-wrap">
-      <label class="rate-input">
-        <span class="rate-input-cur">$</span>
-        <input class="rate-input-field" id="rateInputField" type="text" inputmode="decimal" value="1,000.00"
-          oninput="rateInputChange(this)" onblur="rateInputBlur(this)" onfocus="this.select()" aria-label="Amount in USD">
-      </label>
-      <div class="rate-slider" aria-hidden="true">
-        <div class="rate-slider-fill"><span class="rate-slider-knob"></span></div>
-      </div>
+    <!-- Scrolling magnifying tick ruler — drag to scrub; value stays under the centre swell -->
+    <div class="rate-ruler" id="rateRuler">
+      <div class="rate-ruler-strip" id="rateRulerStrip" aria-hidden="true"></div>
+    </div>
+
+    <div class="rate-amount-wrap">
+      <div class="rate-amount"><span class="rate-amount-cur">$</span><span id="rateInputField">1,000.00</span></div>
+      <div class="rate-amount-sub">Being sent by you</div>
     </div>
 
     <div class="rate-cmp-wrap">
       <div class="rate-cmp-row">
-        <div class="rate-cmp-labels">
-          <span>Rate</span>
-          <span>Fee</span>
-        </div>
         <div class="rate-cmp-cols">
           <!-- Banyan -->
           <div class="rate-cmp-col rate-cmp-banyan">
             <div class="rate-cmp-block">
               <div class="rate-cmp-head">
                 <span class="rate-cmp-ic rate-cmp-ic-banyan">
-                  <span class="ico" style="--ico:url('Icons/LeafFill.svg');--sz:18px;color:#fff"></span>
+                  <img src="assets/banyan-mark.svg" alt="" width="18" height="18">
                 </span>
                 <span class="rate-cmp-name">Banyan</span>
               </div>
@@ -2099,26 +2094,26 @@
                   <svg class="rate-cmp-g" width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M15.68 8.18c0-.57-.05-1.12-.14-1.64H8v3.1h4.3a3.67 3.67 0 01-1.6 2.41v2h2.58c1.51-1.39 2.4-3.43 2.4-5.87z" fill="#4285F4"/><path d="M8 16c2.16 0 3.97-.72 5.3-1.94l-2.59-2.01c-.72.48-1.63.77-2.71.77-2.08 0-3.85-1.41-4.48-3.3H.86v2.07A8 8 0 008 16z" fill="#34A853"/><path d="M3.52 9.52A4.83 4.83 0 013.27 8c0-.53.09-1.04.25-1.52V4.41H.86A8 8 0 000 8c0 1.29.31 2.51.86 3.59l2.66-2.07z" fill="#FBBC04"/><path d="M8 3.18c1.17 0 2.22.4 3.05 1.2l2.28-2.28A8 8 0 00.86 4.41l2.66 2.07C4.15 4.59 5.92 3.18 8 3.18z" fill="#EA4335"/></svg>
                   <span class="rate-cmp-val">$1 = ₹91.78</span>
                 </div>
-                <div class="rate-cmp-line"><span class="rate-cmp-free">Free</span></div>
+                <div class="rate-cmp-line"><span class="rate-cmp-free">No fees</span></div>
               </div>
             </div>
             <div class="rate-cmp-total">₹9,17,800.00</div>
           </div>
-          <!-- Banks -->
-          <div class="rate-cmp-col rate-cmp-banks">
+          <!-- Wise -->
+          <div class="rate-cmp-col rate-cmp-wise">
             <div class="rate-cmp-block">
               <div class="rate-cmp-head">
-                <span class="rate-cmp-ic rate-cmp-ic-bank">
-                  <span class="ico" style="--ico:url('Icons/BankFill.svg');--sz:18px;color:#322d0f"></span>
+                <span class="rate-cmp-ic rate-cmp-ic-wise">
+                  <img src="assets/wise-logo.svg" alt="" width="19" height="18">
                 </span>
-                <span class="rate-cmp-name">Banks</span>
+                <span class="rate-cmp-name">Wise</span>
               </div>
               <div class="rate-cmp-lines">
                 <div class="rate-cmp-line">
                   <span class="rate-cmp-repeat"><svg viewBox="0 0 16 16" fill="none" stroke="rgba(0,0,0,0.55)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h7l-2-2M12 11H5l2 2"/></svg></span>
                   <span class="rate-cmp-val">$1 = ₹91.25</span>
                 </div>
-                <div class="rate-cmp-line"><span class="rate-cmp-val">$15.00</span></div>
+                <div class="rate-cmp-line"><span class="rate-cmp-val">$15.00 fee</span></div>
               </div>
             </div>
             <div class="rate-cmp-total">₹9,12,400.00</div>
@@ -4662,7 +4657,7 @@
 
 </div>
 
-  <script defer src="app.js?v=305"></script>
+  <script defer src="app.js?v=314"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

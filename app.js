@@ -9930,21 +9930,29 @@ function smFilterPurpose(q) {
 }
 
 /* ── Rate comparison sheet ── */
-var RATE_BANYAN = 91.78, RATE_BANK = 91.25, RATE_BANK_FEE = 15, RATE_MAX = 2500, RATE_MIN = 50;
+var RATE_BANYAN = 91.78, RATE_BANK = 91.25, RATE_BANK_FEE = 15, RATE_MAX = 3000, RATE_MIN = 100;
 var _rateUsd = 1000, _rateInit = false;
+// Scrolling magnifying ruler (horizontal port of the ChapterScrubber wave)
+var V_MIN = 100, V_MAX = 3000, V_STEP = 50, V_SCALE = 0.20;   // px per $ (tick every ~10px)
+var RATE_REST = 8, RATE_PEAK = 40, RATE_RADIUS = 3;  // radius in $50 steps
+var RATE_LABELS = [100, 500, 2000, 3000];
+var _rateDispVal = _rateUsd, _rateTargetVal = _rateUsd, _rateVel = 0, _rateLastT = 0;
+var _rateRAF = null, _rateTickEls = [], _rateLabelEls = [];
+// Near-critically-damped spring (framer-motion POINTER_SPRING): the wave feels attached, never overshoots.
+var RATE_K = 700, RATE_C = 52, RATE_M = 1;
+var _rateReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 function _rateFmtINR(n) { return '₹' + n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 function _rateFmtUSD(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
-/* Core: apply a USD amount → totals + footer, optionally the fill bar and the input field text */
-function _rateApply(usd, updateField, updateFill) {
-  _rateUsd = Math.max(0, usd);
-  if (updateFill) {
-    var fill = document.querySelector('.rate-slider-fill');
-    if (fill) fill.style.width = Math.max(6, Math.min(1, _rateUsd / RATE_MAX) * 100) + '%';
-  }
-  if (updateField) {
-    var fld = document.getElementById('rateInputField');
-    if (fld) fld.value = _rateFmtUSD(_rateUsd);
-  }
+// Raised-cosine bump: 1 at the crest, 0 beyond the radius, zero slope at both ends (seamless falloff)
+function _rateBump(d, r) { return d >= r ? 0 : 0.5 * (1 + Math.cos(Math.PI * (d / r))); }
+function _rateX(v) { return (v - V_MIN) * V_SCALE; }   // x of a value within the strip
+
+/* Apply a USD amount → readout + totals + footer. updateScroll re-eases the strip to it. */
+function _rateApply(usd, updateScroll) {
+  _rateUsd = Math.min(V_MAX, Math.max(V_MIN, usd));
+  var fld = document.getElementById('rateInputField');
+  if (fld) fld.textContent = _rateFmtUSD(_rateUsd);
+  if (updateScroll) { _rateTargetVal = _rateUsd; _rateStartRAF(); }
   var banyan = _rateUsd * RATE_BANYAN;
   var bank   = Math.max(0, _rateUsd - RATE_BANK_FEE) * RATE_BANK;
   var totals = document.querySelectorAll('.rate-cmp-total');
@@ -9953,37 +9961,101 @@ function _rateApply(usd, updateField, updateFill) {
   var foot = document.querySelector('.rate-cmp-foot');
   if (foot) foot.textContent = 'Send ₹' + Math.round(Math.max(0, banyan - bank)).toLocaleString('en-IN') + ' more with Banyan';
 }
-/* Slider drag → snap to $50 steps, drive field + fill */
-function _rateSetFrac(frac) {
-  frac = Math.max(0, Math.min(1, frac));
-  _rateApply(Math.max(RATE_MIN, Math.round(frac * RATE_MAX / 50) * 50), true, true);
-}
-/* Typing in the field → recompute, move the fill, but leave the field text (caret) alone */
-function rateInputChange(el) {
-  var usd = parseFloat((el.value || '').replace(/[^0-9.]/g, '')) || 0;
-  _rateApply(usd, false, true);
-}
-function rateInputBlur(el) { el.value = _rateFmtUSD(_rateUsd); }
-function _rateBindSlider() {
-  if (_rateInit) return; _rateInit = true;
-  var track = document.querySelector('.rate-slider');
-  if (!track) return;
-  var dragging = false;
-  function pos(e) {
-    var r = track.getBoundingClientRect();
-    var x = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-    _rateSetFrac(x / r.width);
+/* Build the strip once: a tick every $50, major every $500, plus the scale labels */
+function _rateBuildRuler() {
+  var strip = document.getElementById('rateRulerStrip');
+  if (!strip || _rateTickEls.length) return;
+  var frag = document.createDocumentFragment();
+  var n = Math.round((V_MAX - V_MIN) / V_STEP);
+  for (var i = 0; i <= n; i++) {
+    var v = V_MIN + i * V_STEP;
+    var t = document.createElement('span'); t.className = 'rate-tick';
+    t.style.left = _rateX(v) + 'px'; t._v = v; t._major = (v % 500 === 0);
+    frag.appendChild(t); _rateTickEls.push(t);
   }
-  function down(e) { dragging = true; pos(e); e.preventDefault(); }
-  function move(e) { if (dragging) pos(e); }
-  function up() { dragging = false; }
-  track.addEventListener('mousedown', down);
-  track.addEventListener('touchstart', down, { passive: false });
+  RATE_LABELS.forEach(function(v) {
+    var l = document.createElement('span'); l.className = 'rate-ruler-lbl';
+    l.textContent = '$' + v; l.style.left = _rateX(v) + 'px'; l._v = v;
+    frag.appendChild(l); _rateLabelEls.push(l);
+  });
+  strip.appendChild(frag);
+  strip.style.width = (_rateX(V_MAX) + 2) + 'px';
+}
+/* Scroll the strip so the displayed value sits under the centre; swell the ticks nearest it */
+function _rateRenderRuler() {
+  if (!_rateTickEls.length) return;
+  var ruler = document.getElementById('rateRuler'); if (!ruler) return;
+  var centerX = ruler.getBoundingClientRect().width / 2;
+  var strip = document.getElementById('rateRulerStrip');
+  if (strip) strip.style.transform = 'translateX(' + (centerX - _rateX(_rateDispVal)).toFixed(1) + 'px)';
+  for (var i = 0; i < _rateTickEls.length; i++) {
+    var el = _rateTickEls[i];
+    var rise = _rateBump(Math.abs(el._v - _rateDispVal) / V_STEP, RATE_RADIUS);
+    // Uniform small ticks; each grows (and darkens) only as it nears the centre.
+    el.style.height = (RATE_REST + rise * (RATE_PEAK - RATE_REST)).toFixed(1) + 'px';
+    el.style.opacity = (0.26 + rise * 0.74).toFixed(3);
+    // Quiet secondary cue: a slight thickening at the crest, like the reference wave.
+    el.style.transform = 'translateX(-50%) scaleX(' + (1 + rise * 0.4).toFixed(3) + ')';
+  }
+  // Fade a scale label out as it reaches the centre — the big readout already shows that value.
+  for (var j = 0; j < _rateLabelEls.length; j++) {
+    var lbl = _rateLabelEls[j];
+    var dd = Math.abs(lbl._v - _rateDispVal);
+    lbl.style.opacity = Math.max(0, Math.min(1, (dd - 130) / 250)).toFixed(3);
+  }
+}
+/* Spring the displayed value toward the target (damped-spring integration) so the
+   wave accelerates and settles organically instead of ramping mechanically. */
+function _rateStartRAF() {
+  if (_rateReduced) { _rateDispVal = _rateTargetVal; _rateVel = 0; _rateRenderRuler(); return; }
+  if (_rateRAF) return;
+  _rateLastT = performance.now();
+  var step = function(now) {
+    var frameDt = Math.min(0.064, (now - _rateLastT) / 1000);
+    _rateLastT = now;
+    // Integrate in small fixed sub-steps so the stiff spring stays numerically stable.
+    var remaining = frameDt, h = 1 / 240;
+    while (remaining > 0) {
+      var sdt = remaining > h ? h : remaining; remaining -= sdt;
+      var accel = (-RATE_K * (_rateDispVal - _rateTargetVal) - RATE_C * _rateVel) / RATE_M;
+      _rateVel += accel * sdt;
+      _rateDispVal += _rateVel * sdt;
+    }
+    _rateRenderRuler();
+    if (Math.abs(_rateDispVal - _rateTargetVal) < 0.4 && Math.abs(_rateVel) < 0.6) {
+      _rateDispVal = _rateTargetVal; _rateVel = 0; _rateRenderRuler(); _rateRAF = null; return;
+    }
+    _rateRAF = requestAnimationFrame(step);
+  };
+  _rateRAF = requestAnimationFrame(step);
+}
+/* Drag to scrub: the strip tracks the finger 1:1; the amount snaps to $50 */
+function _rateBindSlider() {
+  _rateBuildRuler();
+  if (_rateInit) { _rateRenderRuler(); return; } _rateInit = true;
+  var ruler = document.getElementById('rateRuler');
+  if (!ruler) return;
+  var dragging = false, startX = 0, startVal = 0;
+  function cx(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+  function down(e) { dragging = true; startX = cx(e); startVal = _rateUsd; e.preventDefault(); }
+  function move(e) {
+    if (!dragging) return;
+    var raw = Math.min(V_MAX, Math.max(V_MIN, startVal - (cx(e) - startX) / V_SCALE));
+    _rateTargetVal = raw;                                 // the wave springs toward the finger
+    _rateApply(Math.round(raw / V_STEP) * V_STEP, false); // readout snaps to $50
+    _rateStartRAF();
+    e.preventDefault();
+  }
+  function up() { if (!dragging) return; dragging = false; _rateUsd = Math.round(_rateUsd / V_STEP) * V_STEP; _rateTargetVal = _rateUsd; _rateStartRAF(); }
+  ruler.addEventListener('mousedown', down);
+  ruler.addEventListener('touchstart', down, { passive: false });
   window.addEventListener('mousemove', move);
   window.addEventListener('touchmove', move, { passive: false });
   window.addEventListener('mouseup', up);
   window.addEventListener('touchend', up);
 }
+function rateInputChange() {}
+function rateInputBlur() {}
 /* Close/abandon the whole send-money flow → back to where it started */
 function smCloseSend() {
   document.querySelector('.phone').scrollTop = 0;
@@ -10198,7 +10270,8 @@ function saveReviewNote() {
 function openRateSheet(ev) {
   if (ev) ev.stopPropagation();
   _rateBindSlider();
-  _rateApply(_rateUsd, true, true);
+  _rateApply(_rateUsd, true);
+  _rateRenderRuler();
   document.getElementById('rateScrim').classList.add('open');
   document.getElementById('rateSheet').classList.add('open');
 }

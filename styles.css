@@ -4724,8 +4724,8 @@
     }
     .sm-l-back {
       width: 44px; height: 44px; border-radius: 9999px;
-      background: #f5f5ed;
-      border: 1px solid var(--neutral-white-100, #fff);
+      background: #fdfcf2;
+      border: 2px solid #eceadb;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; flex-shrink: 0; transition: transform 160ms var(--ease-out);
     }
@@ -4779,8 +4779,8 @@
 
     .sm-l-rate {
       width: 144px; height: 44px; border-radius: 9999px;
-      background: #f5f5ed;
-      border: 1px solid var(--neutral-white-100, #fff);
+      background: #fdfcf2;
+      border: 2px solid #eceadb;
       display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 13px;
       cursor: pointer;
       position: relative; overflow: hidden;
@@ -4965,29 +4965,32 @@
       padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
       transform: translateY(calc(100% + 8px)); transition: transform 0.34s var(--ease-drawer, cubic-bezier(0.32,0.72,0,1)); }
     .rate-sheet.open { transform: translateY(0); box-shadow: 0 -8px 40px rgba(0,0,0,0.16); }
-    .rate-grabber { width: 36px; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.15); margin: 0 auto 16px; }
+    .rate-grabber { width: 36px; height: 4px; border-radius: 999px; background: rgba(0,0,0,0.15); margin: 0 auto 40px; }
 
     .rate-head { display: flex; flex-direction: column; gap: 4px; text-align: center; padding: 0 8px; }
     .rate-title { font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 34px; line-height: 41px; letter-spacing: -1.7px; color: #322d0f; }
-    .rate-sub { font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 20px; letter-spacing: -0.75px; color: rgba(50,45,15,0.8); }
+    /* DS Body/Medium/Regular — Roobert 15/20, tracking 0, text/2 */
+    .rate-sub { font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 20px; letter-spacing: 0; color: #575338; }
 
-    .rate-input-wrap { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 24px; }
-    .rate-input { width: 227px; height: 60px; display: flex; align-items: center; justify-content: center; gap: 2px;
-      background: #fdfcf2; border: 0.5px solid rgba(105,65,40,0.5); border-radius: 9999px; padding: 0 16px; cursor: text;
-      font-family: 'Roobert','Geist',sans-serif; font-size: 24px; font-weight: 500; letter-spacing: -0.5px; color: rgba(0,0,0,0.8); }
-    .rate-input:focus-within { border-color: rgba(105,65,40,0.9); }
-    .rate-input-cur { flex-shrink: 0; }
-    .rate-input-field { width: 100%; min-width: 0; border: none; background: none; outline: none; text-align: center;
-      font-family: inherit; font-size: inherit; font-weight: inherit; letter-spacing: inherit; color: inherit; padding: 0; }
-    /* Slider: brown filled pill (light ticks + knob) over a row of faint unfilled ticks, no track bar */
-    .rate-slider { position: relative; width: 100%; height: 28px; cursor: pointer; touch-action: none; }
-    .rate-slider::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 10px; transform: translateY(-50%);
-      background-image: repeating-linear-gradient(90deg, rgba(105,65,40,0.4) 0 1.5px, transparent 1.5px 11px);
-      background-position: left center; }
-    .rate-slider-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 40%; min-width: 40px; background: #6b4128; border-radius: 9999px; overflow: hidden; }
-    .rate-slider-fill::before { content: ''; position: absolute; left: 6px; right: 24px; top: 50%; height: 12px; transform: translateY(-50%);
-      background-image: repeating-linear-gradient(90deg, rgba(255,255,255,0.35) 0 1.5px, transparent 1.5px 11px); }
-    .rate-slider-knob { position: absolute; right: 4px; top: 50%; transform: translateY(-50%); width: 20px; height: 20px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.25); z-index: 1; }
+    /* Scrolling magnifying ruler — the strip scrolls; the swell stays at the centre (no knob) */
+    .rate-ruler { position: relative; height: 74px; margin-top: 28px; overflow: hidden; cursor: grab; touch-action: none; }
+    .rate-ruler:active { cursor: grabbing; }
+    .rate-ruler-strip { position: absolute; top: 0; left: 0; height: 74px; will-change: transform; }
+    /* Top-anchored: every tick shares a flat top; the centre ones grow downward only */
+    .rate-tick { position: absolute; top: 8px; width: 2px; height: 8px; border-radius: 0; background: #6b4128; opacity: 0.3; transform: translateX(-50%); transform-origin: top center; will-change: height, opacity; }
+    /* DS Body/XS/Regular — Roobert 11/16, text/3 */
+    .rate-ruler-lbl { position: absolute; top: 54px; transform: translateX(-50%); font-family: 'Roobert','Geist',sans-serif; font-size: 11px; font-weight: 400; line-height: 16px; letter-spacing: 0; color: #7c7961; white-space: nowrap; }
+    /* Faded edges so the ruler dissolves into the sheet */
+    .rate-ruler::before, .rate-ruler::after { content: ''; position: absolute; top: 0; height: 74px; width: 64px; pointer-events: none; z-index: 2; }
+    .rate-ruler::before { left: 0; background: linear-gradient(to right, #fdfcf2, rgba(253,252,242,0)); }
+    .rate-ruler::after { right: 0; background: linear-gradient(to left, #fdfcf2, rgba(253,252,242,0)); }
+    /* Amount readout under the ruler */
+    .rate-amount-wrap { display: flex; flex-direction: column; align-items: center; gap: 2px; margin-top: 4px; }
+    /* DS Title 2/Emphasized — ABC Arizona Flare Medium 24/30, text/1 */
+    .rate-amount { display: flex; align-items: baseline; font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 24px; line-height: 30px; letter-spacing: 0; color: #322d0f; }
+    .rate-amount-cur { font-family: inherit; font-size: inherit; font-weight: inherit; margin-right: 1px; }
+    /* DS Body/Small/Regular — Roobert 13/18, text/2 */
+    .rate-amount-sub { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: #575338; }
 
     .rate-cmp-wrap { margin-top: 24px; background: #095546; border-radius: 32px; overflow: hidden; }
     .rate-cmp-row { display: flex; gap: 8px; align-items: stretch; background: #eceadb; border: 1px solid #095546; border-radius: 32px; padding: 16px 8px; }
@@ -5000,18 +5003,25 @@
     .rate-cmp-head { display: flex; flex-direction: column; gap: 4px; }
     .rate-cmp-ic { width: 32px; height: 32px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
     .rate-cmp-ic svg { width: 18px; height: 18px; }
-    .rate-cmp-ic-banyan { background: #1f3833; }
+    .rate-cmp-ic-banyan { background: #095546; }
     .rate-cmp-ic-bank { background: #c5c0a3; }
-    .rate-cmp-name { font-family: 'Roobert','Geist',sans-serif; font-size: 20px; font-weight: 600; line-height: 25px; color: rgba(0,0,0,0.8); }
+    .rate-cmp-ic-wise { background: #fdfcf2; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05); }
+    .rate-cmp-ic img { display: block; }
+    /* DS Body/Large/Emphasized — Roobert SemiBold 17/22, text/1 */
+    .rate-cmp-name { font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; line-height: 22px; color: #322d0f; }
     .rate-cmp-lines { display: flex; flex-direction: column; gap: 12px; }
     .rate-cmp-line { display: flex; align-items: center; gap: 4px; height: 18px; }
     .rate-cmp-g { flex-shrink: 0; }
     .rate-cmp-repeat { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 999px; background: #fdfcf2; flex-shrink: 0; }
     .rate-cmp-repeat svg { width: 9px; height: 9px; }
-    .rate-cmp-val { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: rgba(0,0,0,0.6); }
+    /* DS Body/Small/Regular — Roobert 13/18, text/3 */
+    .rate-cmp-val { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: #7c7961; }
+    /* DS Body/Small/Regular — Roobert 13/18, brand/pine */
     .rate-cmp-free { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; color: #095546; }
-    .rate-cmp-total { font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; line-height: 22px; letter-spacing: -0.85px; color: #000; }
-    .rate-cmp-foot { padding: 16px; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; letter-spacing: -0.65px; line-height: 18px; color: #fff; }
+    /* DS Body/Large/Emphasized — Roobert SemiBold 17/22, text/1 */
+    .rate-cmp-total { font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; line-height: 22px; letter-spacing: 0; color: #322d0f; }
+    /* DS Body/Small/Regular — Roobert 13/18, surface/base on the green footer */
+    .rate-cmp-foot { padding: 16px; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 400; letter-spacing: 0; line-height: 18px; color: #fdfcf2; }
 
     /* ══ Schedule bottom sheet (Figma 6553-39196) ══ */
     .sched-scrim { display:none; }
