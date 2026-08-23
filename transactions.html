@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=532">
+  <link rel="stylesheet" href="styles.css?v=556">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -36,6 +36,249 @@
       <svg viewBox="0 0 24 24" fill="currentColor" style="width:16px;height:16px"><rect x="2" y="10" width="3" height="7" rx="1"/><rect x="7" y="7" width="3" height="10" rx="1"/><rect x="12" y="4" width="3" height="13" rx="1"/><rect x="17" y="1" width="3" height="16" rx="1"/></svg>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><path d="M1 6c3.6-4 9.4-4 13 0M5 10c1.8-2 4.2-2 6 0M9 14l.01.01"/></svg>
       <svg viewBox="0 0 28 14" fill="currentColor" style="width:22px;height:12px"><rect x="0" y="1" width="23" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="2.5" width="18" height="9" rx="1.5"/><path d="M24.5 4.5v5a2 2 0 000-5z" opacity=".5"/></svg>
+    </div>
+  </div>
+
+  <!-- ══ Prototype entry chooser: new onboarding vs already onboarded ══ -->
+  <div class="ob-chooser" id="obChooser">
+    <div class="ob-chooser-inner">
+      <div class="ob-chooser-logo"><span class="obc-leaf"></span><span>Banyan</span></div>
+      <h1 class="ob-chooser-title">Where do you want to start?</h1>
+      <p class="ob-chooser-sub">Pick a path to explore the prototype.</p>
+      <div class="obc-list">
+        <button class="obc-choice obc-choice--primary" type="button" onclick="obStartNew()">
+          <span class="obc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3"/><path d="M12 7.5l1.6 2.9 2.9 1.6-2.9 1.6L12 16.5l-1.6-2.9L7.5 12l2.9-1.6z"/></svg></span>
+          <span class="obc-text"><span class="obc-t">New onboarding</span><span class="obc-s">See the full welcome flow</span></span>
+          <span class="obc-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+        </button>
+        <button class="obc-choice" type="button" onclick="obAlreadyOnboarded()">
+          <span class="obc-ico"><svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><path d="M13 2 4 14h6l-1 8 9-12h-6z"/></svg></span>
+          <span class="obc-text"><span class="obc-t">Already onboarded</span><span class="obc-s">Go straight to the app</span></span>
+          <span class="obc-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+        </button>
+      </div>
+      <p class="ob-chooser-note">Prototype entry · not part of the product</p>
+    </div>
+  </div>
+
+  <!-- ══ Splash (Figma 7576-18138) ══ -->
+  <div class="ob-splash" id="obSplash" hidden onclick="obSplashGo()">
+    <div class="ob-splash-logo" id="obSplashLogo">
+      <div class="ob-splash-leaf" id="obSplashLeaf"></div>
+      <div class="ob-splash-word" id="obSplashWord">Banyan</div>
+    </div>
+  </div>
+
+  <!-- ══ Onboarding carousel (Figma 7576-18223) ══ -->
+  <div class="ob-flow" id="obFlow" hidden>
+    <div class="ob-bg" id="obBg"><!-- subject card-stack layers generated per slide --></div>
+    <div class="ob-scrim-top"></div>
+    <div class="ob-scrim-bot"></div>
+    <div class="ob-progress" id="obProgress"><span><b></b></span><span><b></b></span><span><b></b></span></div>
+    <button class="ob-tap ob-tap-prev" type="button" aria-label="Previous" onclick="obPrev()"></button>
+    <button class="ob-tap ob-tap-next" type="button" aria-label="Next" onclick="obNext()"></button>
+    <div class="ob-head">
+      <h2 class="ob-title" id="obTitle"></h2>
+      <p class="ob-sub" id="obSub"></p>
+    </div>
+    <div class="ob-foot">
+      <button class="ob-login" type="button" onclick="obFinish()">Already have an account? <u>Login</u></button>
+      <button class="ob-btn ob-btn-primary" type="button" onclick="obOpenAccount()">Open account</button>
+    </div>
+  </div>
+
+  <!-- ══ Open account — email capture (Figma 7419-194953) ══ -->
+  <div class="ob-email" id="obEmail" hidden>
+    <div class="ob-email-card">
+      <button class="ob-email-back" type="button" aria-label="Back" onclick="obEmailBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="ob-email-head">
+        <h2 class="ob-email-title">What's your email?</h2>
+        <p class="ob-email-sub">We'll use it to secure your account and confirm every transfer.</p>
+      </div>
+      <div class="ob-email-input">
+        <input class="ob-email-field" id="obEmailField" type="email" inputmode="email" autocomplete="email" placeholder="Email address" aria-label="Email address" oninput="obEmailInputH()">
+        <span class="ob-email-hint" id="obEmailHint">No marketing email. Ever.</span>
+      </div>
+      <button class="ob-email-continue" id="obEmailBtn" type="button" onclick="obEmailContinue()" disabled>Continue</button>
+    </div>
+  </div>
+
+  <!-- ══ Verify email OTP (Figma 7421-195880) ══ -->
+  <div class="oba" id="obOtp" hidden>
+    <div class="oba-card">
+      <button class="oba-back" type="button" aria-label="Back" onclick="obOtpBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="oba-head">
+        <h2 class="oba-title">Enter the code</h2>
+        <p class="oba-sub" id="obOtpSub">We sent a 6-digit code to your email.</p>
+      </div>
+      <div class="oba-otp" id="obOtpBox" onclick="obOtpFocus()">
+        <input class="oba-otp-input" id="obOtpInput" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Verification code" oninput="obOtpInputH()">
+        <div class="oba-otp-cells" id="obOtpCells">
+          <span></span><span></span><span></span><i class="oba-otp-dash"></i><span></span><span></span><span></span>
+        </div>
+      </div>
+      <p class="oba-otp-msg" id="obOtpMsg"></p>
+      <button class="oba-otp-resend" id="obOtpResend" type="button" onclick="obOtpResend()">Resend code</button>
+    </div>
+  </div>
+
+  <!-- ══ Set password (Figma 7452-85512) ══ -->
+  <div class="oba" id="obPass" hidden>
+    <div class="oba-card">
+      <button class="oba-back" type="button" aria-label="Back" onclick="obPassBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div class="oba-head">
+        <h2 class="oba-title">Create a password</h2>
+        <p class="oba-sub">Choose something unique to keep your account secure.</p>
+      </div>
+      <div class="oba-pass-wrap">
+        <input class="oba-input" id="obPassInput" type="password" autocomplete="new-password" placeholder="Password" aria-label="Password" oninput="obPassInputH()">
+        <button class="oba-pass-eye" id="obPassEye" type="button" aria-label="Show password" onclick="obPassToggle()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <p class="oba-req" id="obPassReq">12-character minimum</p>
+      <button class="oba-continue" id="obPassBtn" type="button" onclick="obPassContinue()" disabled>Continue</button>
+    </div>
+  </div>
+
+  <!-- ══ Next steps — identity verification intro ══ -->
+  <div class="obv" id="obNext" hidden>
+    <div class="obv-logo"><span class="obv-leaf"></span><span class="obv-word">Banyan</span></div>
+    <div class="obv-body top">
+      <h2 class="obv-title" style="text-align:left;align-self:stretch">Let’s verify your identity</h2>
+      <p class="obv-sub" style="text-align:left;align-self:stretch;max-width:none">A few quick steps to open your account securely. Takes about 3 minutes.</p>
+      <div class="obv-next">
+        <div class="obv-step"><span class="obv-step-n">1</span><span><span class="obv-step-t">Scan a US-issued photo ID</span><span class="obv-step-s">Driver’s license or passport, plus your SSN</span></span></div>
+        <div class="obv-step"><span class="obv-step-n">2</span><span><span class="obv-step-t">Take a quick selfie</span><span class="obv-step-s">To match your face to your ID</span></span></div>
+        <div class="obv-step"><span class="obv-step-n">3</span><span><span class="obv-step-t">We run a few background checks</span><span class="obv-step-s">Usually done in under a minute</span></span></div>
+      </div>
+    </div>
+    <div class="obv-foot"><button class="obv-btn" type="button" onclick="obStartVerify()">Get started</button></div>
+  </div>
+
+  <!-- ══ Reviewing your information (no CTA) ══ -->
+  <div class="obv" id="obReview" hidden>
+    <div class="obv-logo"><span class="obv-leaf"></span><span class="obv-word">Banyan</span></div>
+    <div class="obv-body">
+      <h2 class="obv-title">Reviewing your<br>information</h2>
+      <p class="obv-sub">This usually takes a few seconds</p>
+    </div>
+  </div>
+
+  <!-- ══ KYC success ══ -->
+  <div class="obv obv--success" id="obSuccess" hidden>
+    <div class="obv-logo"><span class="obv-leaf"></span><span class="obv-word">Banyan</span></div>
+    <div class="obv-body">
+      <img class="obv-hero" src="assets/onb-success-hand.webp" alt="">
+      <h2 class="obv-title">Welcome to Banyan</h2>
+      <p class="obv-sub">Your account has been successfully created</p>
+    </div>
+  </div>
+
+  <!-- ══ KYC rejected ══ -->
+  <div class="obv obv--reject" id="obReject" hidden>
+    <div class="obv-logo"><span class="obv-leaf"></span><span class="obv-word">Banyan</span></div>
+    <div class="obv-body">
+      <img class="obv-hero" src="assets/onb-reject-lock.webp" alt="">
+      <h2 class="obv-title">We could not verify<br>your identity</h2>
+      <p class="obv-sub">We are unable to open your Banyan account with the information provided</p>
+    </div>
+    <div class="obv-foot">
+      <button class="obv-link" type="button" onclick="obRejectSupport()">Contact support</button>
+      <button class="obv-btn" type="button" onclick="obRejectDone()">Log out</button>
+    </div>
+  </div>
+
+  <!-- ══ Account under review (24h) ══ -->
+  <div class="obv" id="obUnderReview" hidden>
+    <div class="obv-logo"><span class="obv-leaf"></span><span class="obv-word">Banyan</span></div>
+    <div class="obv-body top">
+      <h2 class="obv-title">Account under review</h2>
+      <p class="obv-sub">We will email you an update by 4:30 PM tomorrow</p>
+    </div>
+    <div class="obv-card">
+      <div class="obv-tl">
+        <div class="obv-tl-conn"></div>
+        <div class="obv-tl-step"><span class="obv-tl-dot obv-tl-dot--done"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="obv-tl-t">Identity details</span><span class="obv-tl-s">Submitted</span></div>
+        <div class="obv-tl-step"><span class="obv-tl-dot obv-tl-dot--prog"><i></i></span><span class="obv-tl-t">Account review</span><span class="obv-tl-s">In progress</span></div>
+      </div>
+      <div class="obv-card-sep"></div>
+      <button class="obv-card-link" type="button" onclick="obReviewSupport()">Talk to the Banyan team</button>
+    </div>
+  </div>
+
+  <!-- ══ Taking longer than expected (>24h) ══ -->
+  <div class="obv" id="obSlow" hidden>
+    <div class="obv-logo"><span class="obv-leaf"></span><span class="obv-word">Banyan</span></div>
+    <div class="obv-body top">
+      <h2 class="obv-title">Taking longer than<br>expected</h2>
+      <p class="obv-sub">We are still reviewing your application. We’ll email you as soon as we have an update.</p>
+    </div>
+    <div class="obv-card">
+      <div class="obv-tl">
+        <div class="obv-tl-conn"></div>
+        <div class="obv-tl-step"><span class="obv-tl-dot obv-tl-dot--done"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span class="obv-tl-t">Identity details</span><span class="obv-tl-s">Submitted</span></div>
+        <div class="obv-tl-step"><span class="obv-tl-dot obv-tl-dot--prog"><i></i></span><span class="obv-tl-t">Account review</span><span class="obv-tl-s">In progress</span></div>
+      </div>
+      <button class="obv-card-btn" type="button" onclick="obReviewSupport()">Talk to the Banyan team</button>
+    </div>
+  </div>
+
+  <!-- ══ Login (Figma 7462-93331) ══ -->
+  <div class="obl" id="obLogin" hidden>
+    <div class="obl-logo"><span class="obl-leaf"></span><span class="obl-word">Banyan</span></div>
+    <div class="obl-art"></div>
+    <div class="obl-card">
+      <h2 class="obl-title">Welcome back</h2>
+      <input class="oba-input obl-input" id="obLoginEmail" type="email" inputmode="email" autocomplete="email" placeholder="Email address" aria-label="Email address" oninput="obLoginInputH()">
+      <div class="obl-pass">
+        <input class="oba-input obl-input" id="obLoginPass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" oninput="obLoginInputH()">
+        <button class="obl-forgot" type="button" onclick="obShowReset()">Forgot password?</button>
+      </div>
+      <p class="obl-err" id="obLoginErr"></p>
+      <p class="obl-alt">Don’t have an account? <button type="button" class="obl-altlink" onclick="obLoginToSignup()">Create account</button></p>
+      <button class="obl-btn" id="obLoginBtn" type="button" onclick="obLoginContinue()">Continue</button>
+    </div>
+  </div>
+
+  <!-- ══ Reset password — request (Figma 7464-*) ══ -->
+  <div class="obl" id="obReset" hidden>
+    <div class="obl-logo"><span class="obl-leaf"></span><span class="obl-word">Banyan</span></div>
+    <div class="obl-art"></div>
+    <div class="obl-card">
+      <button class="oba-back obl-back" type="button" aria-label="Back" onclick="obResetBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2 class="obl-title">Reset your password</h2>
+      <p class="obl-sub">We will send a verification code to your email</p>
+      <input class="oba-input obl-input" id="obResetEmail" type="email" inputmode="email" autocomplete="email" placeholder="Email address" aria-label="Email address" oninput="obResetInputH()">
+      <p class="obl-alt">Remembered your password? <button type="button" class="obl-altlink" onclick="obResetToLogin()">Sign in</button></p>
+      <button class="obl-btn" id="obResetBtn" type="button" onclick="obResetSend()" disabled>Send code</button>
+    </div>
+  </div>
+
+  <!-- ══ Reset password — OTP (Figma 7464-*) ══ -->
+  <div class="obl" id="obResetOtp" hidden>
+    <div class="obl-logo"><span class="obl-leaf"></span><span class="obl-word">Banyan</span></div>
+    <div class="obl-art"></div>
+    <div class="obl-card">
+      <button class="oba-back obl-back" type="button" aria-label="Back" onclick="obResetOtpBack()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <h2 class="obl-title">Check your email</h2>
+      <p class="obl-sub" id="obResetOtpSub">If a Banyan account exists for this email, we sent a 6-digit code.</p>
+      <div class="oba-otp obl-otp" id="obRotpBox" onclick="obRotpFocus()">
+        <input class="oba-otp-input" id="obRotpInput" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" aria-label="Verification code" oninput="obRotpInputH()">
+        <div class="oba-otp-cells oba-otp-cells--6" id="obRotpCells"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      </div>
+      <p class="oba-otp-msg" id="obRotpMsg"></p>
+      <button class="oba-otp-resend" id="obRotpResend" type="button" onclick="obRotpResend()">Resend code</button>
     </div>
   </div>
 
@@ -4657,7 +4900,7 @@
 
 </div>
 
-  <script defer src="app.js?v=314"></script>
+  <script defer src="app.js?v=339"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

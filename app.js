@@ -12919,3 +12919,555 @@ function _agRenderSupportEscalate(aiDiv, msgs) {
     });
   });
 }
+
+/* ═══════════════ Onboarding: entry chooser + welcome carousel ═══════════════ */
+var OB_SLIDES = [
+  { bg: 'assets/onb-couple.webp', title: 'Best rates.<br>Zero fees.',                    sub: 'Send money to India in minutes.' },
+  { bg: 'assets/onb-woman.webp',  title: 'Open a USD checking<br>account in minutes.',   sub: 'Earn 2.0% APY on every dollar.' },
+  { bg: 'assets/onb-man.webp',    title: 'Spend directly from<br>your USD account',      sub: 'Pay via UPI or your Banyan Debit Card — with no FX fees.' }
+];
+var OB_DUR = 4200, _obIdx = 0, _obTimer = null, _obLayer = 1, _obSplashT = null;
+var _obReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* New onboarding → plaster splash (leaf drops in, wordmark rises), then the lockup
+   lifts away and the first photo animates in. */
+function obStartNew() {
+  document.getElementById('obChooser').hidden = true;
+  var sp = document.getElementById('obSplash');
+  sp.hidden = false; sp.classList.remove('is-out');
+  var logo = document.getElementById('obSplashLogo');
+  logo.classList.remove('is-exit');
+  // replay the leaf/wordmark entrance animations from the stylesheet
+  ['obSplashLeaf', 'obSplashWord'].forEach(function (id) {
+    var el = document.getElementById(id);
+    el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
+  });
+  setSbLight(false); // dark status-bar icons on the light plaster ground
+  clearTimeout(_obSplashT);
+  _obSplashT = setTimeout(obSplashGo, 1900);
+}
+function obSplashGo() {
+  var sp = document.getElementById('obSplash');
+  if (sp.hidden) return;
+  clearTimeout(_obSplashT);
+  if (_obReduced) { obEnterCarousel(); sp.hidden = true; return; }
+  // 1) the lockup lifts up and fades out
+  document.getElementById('obSplashLogo').classList.add('is-exit');
+  // 2) once it has cleared, mount the carousel (first photo animates in) and cross-fade the plaster away
+  setTimeout(function () {
+    obEnterCarousel();
+    sp.classList.add('is-out');
+    setTimeout(function () { sp.hidden = true; }, 540);
+  }, 380);
+}
+function obBuildLayers() {
+  var bg = document.getElementById('obBg'); if (!bg) return;
+  bg.innerHTML = '';
+  OB_SLIDES.forEach(function (s, i) {
+    var d = document.createElement('div');
+    d.className = 'ob-bg-layer';
+    d.setAttribute('data-i', i);
+    d.style.backgroundImage = "url('" + s.bg + "')";
+    bg.appendChild(d);
+  });
+}
+function obLayers() { return document.querySelectorAll('#obBg .ob-bg-layer'); }
+/* Card-stack status relative to the active slide (ported from the feature-carousel:
+   active centre, prev/next peeking either side, everything else hidden). */
+function obLayerStatus(i) {
+  var len = OB_SLIDES.length, diff = i - _obIdx;
+  if (diff > len / 2) diff -= len;
+  if (diff < -len / 2) diff += len;
+  if (diff === 0) return 'active';
+  if (diff === -1) return 'prev';
+  if (diff === 1) return 'next';
+  return 'hidden';
+}
+/* smooth settle, no overshoot — keeps the stack feel but reads clean */
+var OB_SPRING = 'transform 640ms cubic-bezier(0.22,1,0.36,1), opacity 500ms ease, filter 500ms ease';
+function obPlaceLayer(el, status, instant) {
+  var t, o, f, z;
+  if (status === 'active') { t = 'translateX(0) scale(1)'; o = '1'; f = 'grayscale(0) blur(0) brightness(1)'; z = '20'; }
+  // neighbours are fully invisible — just a clean slide-and-settle of the active photo
+  else if (status === 'prev') { t = 'translateX(-150px) scale(0.94)'; o = '0'; f = 'none'; z = '10'; }
+  else if (status === 'next') { t = 'translateX(150px) scale(0.94)'; o = '0'; f = 'none'; z = '10'; }
+  else { t = 'translateX(0) scale(0.85)'; o = '0'; f = 'none'; z = '0'; }
+  el.style.transition = (instant || _obReduced) ? 'none' : OB_SPRING;
+  el.style.transform = t; el.style.opacity = o; el.style.filter = f; el.style.zIndex = z;
+}
+function obEnterCarousel() {
+  document.getElementById('obFlow').hidden = false;
+  _obCur = 'obFlow';
+  setSbLight(false); // dark icons over the light plaster ground
+  _obIdx = 0;
+  obBuildLayers();
+  obRender(1, true); // lays out the card-stack + copy + progress, no motion
+  if (_obReduced) return;
+  [['obTitle', 220], ['obSub', 320]].forEach(function (p) {
+    var el = document.getElementById(p[0]);
+    el.style.animation = 'none'; void el.offsetWidth;
+    el.style.animation = 'obCopyIn 620ms cubic-bezier(0.16,1,0.3,1) ' + p[1] + 'ms both';
+  });
+}
+function obAlreadyOnboarded() {
+  document.getElementById('obChooser').hidden = true;
+  setSbLight(false); // reveal the app (home is already the active screen)
+}
+function obNext() { obGoto(_obIdx + 1, 1); }
+function obPrev() { obGoto(_obIdx - 1, -1); }
+function obGoto(i, dir) {
+  var n = OB_SLIDES.length;
+  // The carousel loops forever; only a button press (obFinish) enters the app.
+  if (i > n - 1) i = 0;
+  if (i < 0) i = n - 1;
+  _obIdx = i;
+  obRender(dir || 1);
+}
+/* Spring card-stack (ported from the feature-carousel): the active subject sits centre
+   over the constant plaster ground; prev/next peek at the sides, scaled, tilted and
+   desaturated. Advancing springs the whole stack across. dir kept for call compatibility. */
+function obRender(dir, instant) {
+  var s = OB_SLIDES[_obIdx];
+  var layers = obLayers();
+  if (!layers.length) { obBuildLayers(); layers = obLayers(); instant = true; }
+  layers.forEach(function (el) { obPlaceLayer(el, obLayerStatus(+el.getAttribute('data-i')), instant); });
+  var titleEl = document.getElementById('obTitle'), subEl = document.getElementById('obSub');
+  titleEl.innerHTML = s.title;
+  subEl.textContent = s.sub;
+  // Animate the copy in with the image swap (skip on the first, instant render / reduced motion).
+  if (!instant && !_obReduced) {
+    [[titleEl, 80], [subEl, 170]].forEach(function (p) {
+      p[0].style.animation = 'none'; void p[0].offsetWidth;
+      p[0].style.animation = 'obCopyIn 560ms cubic-bezier(0.16,1,0.3,1) ' + p[1] + 'ms both';
+    });
+  }
+  // Story-style progress: past = full, current animates, future = empty.
+  var fills = document.querySelectorAll('#obProgress b');
+  clearTimeout(_obTimer);
+  for (var j = 0; j < fills.length; j++) {
+    fills[j].style.transition = 'none';
+    fills[j].style.width = j < _obIdx ? '100%' : '0%';
+  }
+  var cur = fills[_obIdx];
+  void document.getElementById('obProgress').offsetWidth; // reflow so the fill animates from 0
+  if (cur) {
+    if (_obReduced) { cur.style.width = '100%'; }
+    else { cur.style.transition = 'width ' + OB_DUR + 'ms linear'; cur.style.width = '100%'; }
+  }
+  _obTimer = setTimeout(obNext, OB_DUR);
+}
+function obFinish() {
+  clearTimeout(_obTimer);
+  obShowLogin(1); // "Already have an account? Login" → sign-in screen (carousel slides out)
+}
+/* ═══════════════ Signup journey: email → OTP → password (Figma 7497-110695) ═══════════════ */
+/* Keyboard-aware cards: visualViewport shrinks when the keyboard opens; --obkb (on :root)
+   lifts every bottom-anchored auth card to sit 8px above it. */
+function obKbSync() {
+  var vv = window.visualViewport; if (!vv) return;
+  var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+  document.documentElement.style.setProperty('--obkb', kb + 'px');
+}
+function obKbBind() {
+  if (!window.visualViewport) return;
+  window.visualViewport.addEventListener('resize', obKbSync);
+  window.visualViewport.addEventListener('scroll', obKbSync);
+  obKbSync();
+}
+function obKbUnbind() {
+  if (window.visualViewport) {
+    window.visualViewport.removeEventListener('resize', obKbSync);
+    window.visualViewport.removeEventListener('scroll', obKbSync);
+  }
+  document.documentElement.style.setProperty('--obkb', '0px');
+}
+function obFocus(sel) {
+  var f = document.querySelector(sel);
+  if (f) { try { f.focus({ preventScroll: true }); } catch (e) { f.focus(); } }
+}
+function obValidEmail(v) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((v || '').trim()); }
+var _obEmail = '';
+
+/* ── Screen-to-screen motion ──
+   The background is one continuous surface: when two screens share the same ground
+   (all the dark-olive auth/verify screens), the background stays perfectly still and
+   only the CARD slides — new card pushes in from the right, old card recedes left + dims.
+   When the ground actually changes (→ green success, brown reject, cream login) the whole
+   screen crossfades instead. dir: 1 = forward, -1 = back. */
+var OB_ANIM = ['obFlow', 'obEmail', 'obOtp', 'obPass', 'obNext', 'obReview', 'obSuccess', 'obReject', 'obUnderReview', 'obSlow', 'obLogin', 'obReset', 'obResetOtp'];
+var OB_BG = { obFlow: 'photo', obEmail: 'olive', obOtp: 'olive', obPass: 'olive', obNext: 'olive', obReview: 'olive', obUnderReview: 'olive', obSlow: 'olive', obSuccess: 'green', obReject: 'brown', obLogin: 'cream', obReset: 'cream', obResetOtp: 'cream' };
+var OB_TX = ['ob-tx-bgoff', 'ob-tx-cin-f', 'ob-tx-cout-f', 'ob-tx-cin-b', 'ob-tx-cout-b', 'ob-tx-sin-f', 'ob-tx-sout-f', 'ob-tx-sin-b', 'ob-tx-sout-b'];
+var _obTxT = null, _obCur = null; // _obCur = id of the screen currently showing
+function obClearTx(el) { if (el) el.classList.remove.apply(el.classList, OB_TX); }
+function obReveal(id, dir) {
+  dir = dir || 1;
+  var to = document.getElementById(id); if (!to) return;
+  var from = (_obCur && _obCur !== id) ? document.getElementById(_obCur) : null;
+  // hide any stray visible journey screens that aren't the from/to pair
+  OB_ANIM.forEach(function (x) {
+    if (x === id || (from && x === from.id)) return;
+    var e = document.getElementById(x); if (e && !e.hidden) { obClearTx(e); e.hidden = true; }
+  });
+  obClearTx(to);
+  _obCur = id;
+  if (_obReduced || !from || from.hidden) { to.hidden = false; if (from) { obClearTx(from); from.hidden = true; } return; }
+  obClearTx(from);
+  to.hidden = false; void to.offsetWidth;
+  if (OB_BG[from.id] === OB_BG[to.id]) {           // same ground → move only the card
+    to.classList.add('ob-tx-bgoff', dir < 0 ? 'ob-tx-cin-b' : 'ob-tx-cin-f');
+    from.classList.add(dir < 0 ? 'ob-tx-cout-b' : 'ob-tx-cout-f');
+  } else {                                          // ground changes → crossfade the screen
+    to.classList.add(dir < 0 ? 'ob-tx-sin-b' : 'ob-tx-sin-f');
+    from.classList.add(dir < 0 ? 'ob-tx-sout-b' : 'ob-tx-sout-f');
+  }
+  clearTimeout(_obTxT);
+  var f = from;
+  _obTxT = setTimeout(function () { obClearTx(to); obClearTx(f); f.hidden = true; }, 580);
+}
+/* Whole-screen in/out — used when entering/leaving the journey (carousel, app, logout). */
+function obAnimIn(el, dir) {
+  if (!el) return; el.hidden = false;
+  if (_obReduced) { obClearTx(el); return; }
+  obClearTx(el); void el.offsetWidth;
+  var cls = dir < 0 ? 'ob-tx-sin-b' : 'ob-tx-sin-f';
+  el.classList.add(cls);
+  var done = function () { obClearTx(el); el.removeEventListener('animationend', done); };
+  el.addEventListener('animationend', done);
+}
+function obAnimOut(el, dir) {
+  if (!el || el.hidden) return;
+  if (_obReduced) { el.hidden = true; return; }
+  obClearTx(el); void el.offsetWidth;
+  var cls = dir < 0 ? 'ob-tx-sout-b' : 'ob-tx-sout-f';
+  el.classList.add(cls);
+  var done = function () { obClearTx(el); el.hidden = true; el.removeEventListener('animationend', done); };
+  el.addEventListener('animationend', done);
+}
+
+/* ── Email ── */
+function obOpenAccount() {
+  clearTimeout(_obTimer);
+  obReveal('obEmail', 1);
+  setSbLight(true); // light status-bar icons over the dark olive ground
+  var f = document.getElementById('obEmailField'), hint = document.getElementById('obEmailHint');
+  f.classList.remove('err'); hint.classList.remove('err'); hint.textContent = 'No marketing email. Ever.';
+  document.getElementById('obEmailBtn').disabled = !obValidEmail(f.value);
+  obKbBind();
+  obFocus('#obEmailField'); // within the click gesture so mobile opens the keyboard
+}
+function obEmailInputH() {
+  var f = document.getElementById('obEmailField'), hint = document.getElementById('obEmailHint');
+  document.getElementById('obEmailBtn').disabled = !obValidEmail(f.value);
+  if (f.classList.contains('err')) { f.classList.remove('err'); hint.classList.remove('err'); hint.textContent = 'No marketing email. Ever.'; }
+}
+function obEmailContinue() {
+  var f = document.getElementById('obEmailField'), hint = document.getElementById('obEmailHint');
+  if (!obValidEmail(f.value)) {
+    f.classList.add('err'); hint.classList.add('err'); hint.textContent = 'Enter a valid email address.';
+    obFocus('#obEmailField'); return;
+  }
+  _obEmail = f.value.trim();
+  obShowOtp();
+}
+function obEmailBack() {
+  document.getElementById('obEmailField').blur();
+  obKbUnbind();
+  obReveal('obFlow', -1); // email crossfades out, carousel back in (different ground)
+  obEnterCarousel();      // (re)render the carousel content
+}
+
+/* ── OTP ── auto-verifies on the 6th digit; resend has progressive cooldowns. */
+var _obResendCount = 0, _obResendTimer = null, _obResendLeft = 0, _obOtpBusy = false;
+function obShowOtp() {
+  obReveal('obOtp', 1);
+  setSbLight(true);
+  document.getElementById('obOtpSub').textContent = 'We sent a 6-digit code to ' + _obEmail + '.';
+  var inp = document.getElementById('obOtpInput'); inp.value = ''; inp.disabled = false;
+  _obOtpBusy = false;
+  document.getElementById('obOtpBox').classList.remove('err');
+  var msg = document.getElementById('obOtpMsg'); msg.textContent = ''; msg.className = 'oba-otp-msg';
+  obOtpRender();
+  _obResendCount = 0;
+  obResendCooldown(30); // first code sent automatically on entry
+  obKbBind();
+  obFocus('#obOtpInput');
+}
+function obOtpFocus() { if (!_obOtpBusy) obFocus('#obOtpInput'); }
+function obOtpRender() {
+  var v = document.getElementById('obOtpInput').value;
+  var cells = document.querySelectorAll('#obOtpCells span');
+  for (var i = 0; i < cells.length; i++) {
+    var d = v[i] || '';
+    cells[i].textContent = d;
+    cells[i].classList.toggle('filled', !!d);
+    cells[i].classList.toggle('empty', !d);
+    cells[i].classList.toggle('active', i === v.length && !_obOtpBusy);
+  }
+}
+function obOtpInputH() {
+  var inp = document.getElementById('obOtpInput');
+  inp.value = inp.value.replace(/\D/g, '').slice(0, 6);
+  document.getElementById('obOtpBox').classList.remove('err');
+  var msg = document.getElementById('obOtpMsg'); if (!_obOtpBusy) { msg.textContent = ''; msg.className = 'oba-otp-msg'; }
+  obOtpRender();
+  if (inp.value.length === 6) obOtpVerify();
+}
+function obOtpVerify() {
+  _obOtpBusy = true;
+  var inp = document.getElementById('obOtpInput'); inp.disabled = true;
+  var msg = document.getElementById('obOtpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = 'Verifying…';
+  obOtpRender();
+  setTimeout(function () {
+    if (inp.value === '000000') { // demo failure path
+      document.getElementById('obOtpBox').classList.add('err');
+      msg.className = 'oba-otp-msg err'; msg.textContent = 'That code isn’t correct. Try again.';
+      inp.value = ''; inp.disabled = false; _obOtpBusy = false; obOtpRender(); obFocus('#obOtpInput');
+    } else {
+      _obOtpBusy = false;
+      _obResetMode = false; // signup path → password → identity verification
+      obShowPass();
+    }
+  }, 850);
+}
+function obResendCooldown(sec) {
+  var btn = document.getElementById('obOtpResend');
+  _obResendLeft = sec; btn.disabled = true;
+  clearInterval(_obResendTimer);
+  function tick() {
+    if (_obResendLeft <= 0) {
+      clearInterval(_obResendTimer);
+      if (_obResendCount >= 3) { btn.textContent = 'Resend code'; btn.disabled = true; }
+      else { btn.textContent = 'Resend code'; btn.disabled = false; }
+      return;
+    }
+    var m = Math.floor(_obResendLeft / 60), s = _obResendLeft % 60;
+    btn.textContent = 'Resend code in ' + m + ':' + (s < 10 ? '0' : '') + s;
+    _obResendLeft--;
+  }
+  tick(); _obResendTimer = setInterval(tick, 1000);
+}
+function obOtpResend() {
+  var btn = document.getElementById('obOtpResend');
+  if (btn.disabled || _obResendCount >= 3) return;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  var msg = document.getElementById('obOtpMsg');
+  setTimeout(function () {
+    _obResendCount++;
+    msg.className = 'oba-otp-msg';
+    if (_obResendCount >= 3) { msg.textContent = 'Too many code requests. Try again later.'; btn.textContent = 'Resend code'; btn.disabled = true; return; }
+    msg.textContent = _obResendCount >= 2 ? 'Still waiting? Check your spam folder.' : 'Code sent.';
+    obResendCooldown(_obResendCount === 1 ? 60 : 120);
+  }, 600);
+}
+function obOtpBack() {
+  document.getElementById('obOtpInput').blur();
+  clearInterval(_obResendTimer);
+  obReveal('obEmail', -1);
+  obFocus('#obEmailField');
+}
+
+/* ── Password ── single field, 12-char minimum (PRD), show/hide, no confirmation. */
+function obShowPass() {
+  var s = document.getElementById('obPass');
+  obReveal('obPass', 1);
+  setSbLight(true);
+  var t = s.querySelector('.oba-title'); if (t) t.textContent = _obResetMode ? 'Set a new password' : 'Create a password';
+  var inp = document.getElementById('obPassInput'); inp.value = ''; inp.type = 'password';
+  document.getElementById('obPassBtn').disabled = true;
+  var req = document.getElementById('obPassReq'); req.textContent = '12-character minimum'; req.classList.remove('met');
+  obKbBind();
+  obFocus('#obPassInput');
+}
+function obPassInputH() {
+  var v = document.getElementById('obPassInput').value;
+  var ok = v.length >= 12;
+  document.getElementById('obPassBtn').disabled = !ok;
+  var req = document.getElementById('obPassReq');
+  req.textContent = ok ? '✓ Minimum met' : '12-character minimum';
+  req.classList.toggle('met', ok);
+}
+function obPassToggle() {
+  var inp = document.getElementById('obPassInput'), eye = document.getElementById('obPassEye');
+  var show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  obFocus('#obPassInput');
+}
+function obPassContinue() {
+  if (document.getElementById('obPassInput').value.length < 12) return;
+  document.getElementById('obPassInput').blur();
+  obKbUnbind();
+  if (_obResetMode) { obAnimOut(document.getElementById('obPass'), 1); obEnterApp(); }  // reset complete → signed in
+  else obShowNext();                                                                    // new signup → identity verification
+}
+function obPassBack() {
+  document.getElementById('obPassInput').blur();
+  obReveal(_obResetMode ? 'obResetOtp' : 'obOtp', -1);
+  obFocus(_obResetMode ? '#obRotpInput' : '#obOtpInput');
+}
+
+/* ═══════════ Identity verification + KYC result (Figma 7461-*) ═══════════ */
+var OB_VERIFY_IDS = ['obNext', 'obReview', 'obSuccess', 'obReject', 'obUnderReview', 'obSlow'];
+function obHideVerify() { OB_VERIFY_IDS.forEach(function (id) { var e = document.getElementById(id); if (e && !e.hidden) obAnimOut(e, 1); }); }
+function obShowNext() { obReveal('obNext', 1); setSbLight(true); }
+/* "Get started" → Persona (simulated) → reviewing → outcome routed by email keyword (demo). */
+function obStartVerify() {
+  obReveal('obReview', 1);
+  setSbLight(true);
+  var e = (_obEmail || '').toLowerCase();
+  var outcome = e.indexOf('reject') >= 0 ? obShowReject
+    : e.indexOf('slow') >= 0 ? obShowSlow
+      : e.indexOf('review') >= 0 ? obShowUnderReview
+        : obShowSuccess;
+  setTimeout(outcome, 2600);
+}
+function obShowUnderReview() { obReveal('obUnderReview', 1); setSbLight(true); }
+function obShowSlow() { obReveal('obSlow', 1); setSbLight(true); }
+function obShowReject() { obReveal('obReject', 1); setSbLight(true); }
+function obShowSuccess() {
+  obReveal('obSuccess', 1);
+  var s = document.getElementById('obSuccess'); setSbLight(true);
+  // Hold ~2s, then fade into the app Home (no CTA per PRD).
+  setTimeout(function () {
+    if (_obReduced) { s.hidden = true; obEnterApp(); return; }
+    s.classList.add('is-out');
+    setTimeout(function () { s.hidden = true; s.classList.remove('is-out'); obEnterApp(); }, 420);
+  }, 2000);
+}
+function obEnterApp() { _obCur = null; setSbLight(false); if (typeof showHome === 'function') showHome(); }
+function obRejectDone() { obResetToChooser(); }      // Log out → back to start
+function obRejectSupport() { if (typeof openSupport === 'function') openSupport(); }
+function obReviewSupport() { if (typeof openSupport === 'function') openSupport(); }
+function obResetToChooser() {
+  _obCur = null;
+  ['obEmail', 'obOtp', 'obPass', 'obNext', 'obReview', 'obSuccess', 'obReject', 'obUnderReview', 'obSlow', 'obFlow', 'obSplash', 'obLogin', 'obReset', 'obResetOtp'].forEach(function (id) { var e = document.getElementById(id); if (e) { obClearTx(e); e.hidden = true; } });
+  var c = document.getElementById('obChooser'); if (c) c.hidden = false;
+  setSbLight(true);
+}
+var _obResetMode = false, _obLoginEmail = '';
+
+/* ═══════════ Login & password reset (Figma 7462/7464-*) ═══════════ */
+function obShowLogin(dir) {
+  obReveal('obLogin', dir || 1);
+  setSbLight(false); // dark icons on the cream ground
+  document.getElementById('obLoginErr').textContent = '';
+  obKbBind();
+}
+function obLoginInputH() { document.getElementById('obLoginErr').textContent = ''; }
+function obLoginContinue() {
+  var email = document.getElementById('obLoginEmail').value.trim();
+  var pass = document.getElementById('obLoginPass').value;
+  var err = document.getElementById('obLoginErr');
+  if (!obValidEmail(email)) { err.textContent = 'Enter a valid email address.'; obFocus('#obLoginEmail'); return; }
+  if (!pass || pass === 'wrong') { err.textContent = 'That email or password is incorrect.'; obFocus('#obLoginPass'); return; }
+  document.getElementById('obLoginEmail').blur(); document.getElementById('obLoginPass').blur();
+  obKbUnbind();
+  obAnimOut(document.getElementById('obLogin'), 1);
+  obEnterApp();
+}
+function obLoginToSignup() {
+  obKbUnbind();
+  obOpenAccount(); // Create account → start signup at email
+}
+
+/* Forgot password → request code */
+function obShowReset() {
+  _obLoginEmail = document.getElementById('obLoginEmail').value.trim();
+  obReveal('obReset', 1);
+  setSbLight(false);
+  var f = document.getElementById('obResetEmail'); f.value = _obLoginEmail;
+  document.getElementById('obResetBtn').disabled = !obValidEmail(f.value);
+  obKbBind(); obFocus('#obResetEmail');
+}
+function obResetInputH() { document.getElementById('obResetBtn').disabled = !obValidEmail(document.getElementById('obResetEmail').value); }
+function obResetSend() {
+  var email = document.getElementById('obResetEmail').value.trim();
+  if (!obValidEmail(email)) return;
+  _obLoginEmail = email;
+  document.getElementById('obResetEmail').blur();
+  obShowResetOtp();
+}
+function obResetBack() { document.getElementById('obResetEmail').blur(); obShowLogin(-1); }
+function obResetToLogin() { obResetBack(); }
+
+/* Reset OTP — 6 slots, auto-verify (no Continue per PRD), generic messaging */
+var _obRResendCount = 0, _obRResendTimer = null, _obRResendLeft = 0, _obRotpBusy = false;
+function obShowResetOtp() {
+  obReveal('obResetOtp', 1);
+  setSbLight(false);
+  document.getElementById('obResetOtpSub').textContent = 'If a Banyan account exists for ' + _obLoginEmail + ', we sent a 6-digit code.';
+  var inp = document.getElementById('obRotpInput'); inp.value = ''; inp.disabled = false; _obRotpBusy = false;
+  document.getElementById('obRotpBox').classList.remove('err');
+  var msg = document.getElementById('obRotpMsg'); msg.textContent = ''; msg.className = 'oba-otp-msg';
+  obRotpRender();
+  _obRResendCount = 0; obRResendCooldown(30);
+  obKbBind(); obFocus('#obRotpInput');
+}
+function obRotpFocus() { if (!_obRotpBusy) obFocus('#obRotpInput'); }
+function obRotpRender() {
+  var v = document.getElementById('obRotpInput').value;
+  var cells = document.querySelectorAll('#obRotpCells span');
+  for (var i = 0; i < cells.length; i++) {
+    var d = v[i] || '';
+    cells[i].textContent = d;
+    cells[i].classList.toggle('filled', !!d);
+    cells[i].classList.toggle('empty', !d);
+    cells[i].classList.toggle('active', i === v.length && !_obRotpBusy);
+  }
+}
+function obRotpInputH() {
+  var inp = document.getElementById('obRotpInput');
+  inp.value = inp.value.replace(/\D/g, '').slice(0, 6);
+  document.getElementById('obRotpBox').classList.remove('err');
+  var msg = document.getElementById('obRotpMsg'); if (!_obRotpBusy) { msg.textContent = ''; msg.className = 'oba-otp-msg'; }
+  obRotpRender();
+  if (inp.value.length === 6) obRotpVerify();
+}
+function obRotpVerify() {
+  _obRotpBusy = true;
+  var inp = document.getElementById('obRotpInput'); inp.disabled = true;
+  var msg = document.getElementById('obRotpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = 'Verifying…';
+  obRotpRender();
+  setTimeout(function () {
+    if (inp.value === '000000') { // generic failure per PRD
+      document.getElementById('obRotpBox').classList.add('err');
+      msg.className = 'oba-otp-msg err'; msg.textContent = 'That code is incorrect or has expired. Request a new code.';
+      inp.value = ''; inp.disabled = false; _obRotpBusy = false; obRotpRender(); obFocus('#obRotpInput');
+    } else {
+      _obRotpBusy = false;
+      _obResetMode = true; // → set a new password → signed in
+      obShowPass();
+    }
+  }, 850);
+}
+function obRResendCooldown(sec) {
+  var btn = document.getElementById('obRotpResend');
+  _obRResendLeft = sec; btn.disabled = true;
+  clearInterval(_obRResendTimer);
+  function tick() {
+    if (_obRResendLeft <= 0) { clearInterval(_obRResendTimer); btn.textContent = 'Resend code'; btn.disabled = _obRResendCount >= 3; return; }
+    var m = Math.floor(_obRResendLeft / 60), s = _obRResendLeft % 60;
+    btn.textContent = 'Resend code in ' + m + ':' + (s < 10 ? '0' : '') + s;
+    _obRResendLeft--;
+  }
+  tick(); _obRResendTimer = setInterval(tick, 1000);
+}
+function obRotpResend() {
+  var btn = document.getElementById('obRotpResend');
+  if (btn.disabled || _obRResendCount >= 3) return;
+  btn.disabled = true; btn.textContent = 'Sending…';
+  var msg = document.getElementById('obRotpMsg');
+  setTimeout(function () {
+    _obRResendCount++;
+    msg.className = 'oba-otp-msg';
+    if (_obRResendCount >= 2) msg.textContent = 'Still not seeing the code? Check the email address or open a Banyan account.';
+    else msg.textContent = 'Code sent.';
+    obRResendCooldown(_obRResendCount === 1 ? 60 : 120);
+  }, 600);
+}
+function obResetOtpBack() { document.getElementById('obRotpInput').blur(); clearInterval(_obRResendTimer); obReveal('obReset', -1); obFocus('#obResetEmail'); }
+// Light status bar for the dark chooser on first paint
+document.addEventListener('DOMContentLoaded', function () {
+  var c = document.getElementById('obChooser');
+  if (c && !c.hidden && typeof setSbLight === 'function') setSbLight(true);
+});

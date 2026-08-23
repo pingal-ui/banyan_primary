@@ -12801,3 +12801,233 @@
     .sup-success-id { font-family: 'Geist',sans-serif; font-size: 13px; font-weight: 600; color: var(--text-tertiary); margin: 10px 0 18px; letter-spacing: 0.04em; }
     .sup-success-btn { width: 100%; }
     @media (prefers-reduced-motion: reduce) { .sup-create, .sup-create-scrim { transition: opacity 0.2s ease; } }
+
+    /* ═══════════════ Onboarding: entry chooser + welcome carousel ═══════════════ */
+    .ob-chooser { position: absolute; inset: 0; z-index: 130; background: #1f3833; display: flex; align-items: center; justify-content: center; padding: 24px; }
+    .ob-chooser[hidden] { display: none; }
+    .ob-chooser-inner { position: relative; z-index: 1; width: 100%; display: flex; flex-direction: column; }
+    .ob-chooser-logo { display: flex; align-items: center; gap: 8px; justify-content: center; margin-bottom: 26px; }
+    .obc-leaf { width: 26px; height: 28px; background: #f4eeda; -webkit-mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; }
+    .ob-chooser-logo span { font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 20px; line-height: 1; letter-spacing: 1.5px; text-transform: uppercase; color: #f4eeda; }
+    .ob-chooser-title { font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 30px; line-height: 36px; letter-spacing: -1.2px; color: #f4eeda; text-align: center; margin: 0; }
+    .ob-chooser-sub { margin: 10px 0 28px; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 21px; color: rgba(244,238,218,0.6); }
+    .obc-list { display: flex; flex-direction: column; gap: 12px; }
+    .obc-choice { display: flex; align-items: center; gap: 14px; text-align: left; padding: 16px; border-radius: 24px; background: rgba(244,238,218,0.07); border: 1px solid rgba(244,238,218,0.16); cursor: pointer; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), border-color 160ms var(--ease-out); }
+    .obc-choice:active { transform: scale(0.98); }
+    @media (hover:hover) and (pointer:fine) { .obc-choice:hover { background: rgba(244,238,218,0.12); border-color: rgba(244,238,218,0.28); } }
+    .obc-choice--primary { background: #fdfcf2; border-color: #fdfcf2; }
+    @media (hover:hover) and (pointer:fine) { .obc-choice--primary:hover { background: #ffffff; border-color: #ffffff; } }
+    .obc-ico { flex: 0 0 auto; width: 44px; height: 44px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; background: rgba(244,238,218,0.12); color: #f4eeda; }
+    .obc-ico svg { width: 22px; height: 22px; }
+    .obc-choice--primary .obc-ico { background: #dfe9de; color: #1f3833; }
+    .obc-text { flex: 1 1 auto; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .obc-t { font-family: 'Roobert','Geist',sans-serif; font-size: 16px; font-weight: 600; color: #f4eeda; }
+    .obc-s { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: rgba(244,238,218,0.58); }
+    .obc-choice--primary .obc-t { color: #1f3833; }
+    .obc-choice--primary .obc-s { color: #575338; }
+    .obc-chev { flex: 0 0 auto; display: flex; color: rgba(244,238,218,0.45); }
+    .obc-chev svg { width: 20px; height: 20px; }
+    .obc-choice--primary .obc-chev { color: #7c7961; }
+    .ob-chooser-note { margin: 24px 0 0; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 12px; line-height: 16px; color: rgba(244,238,218,0.4); }
+
+    /* Splash — leaf + wordmark on the plaster-cream ground (Figma 7576-18138) */
+    .ob-splash { position: absolute; inset: 0; z-index: 125; background: #ece2cd url('assets/onb-cream.webp') center/cover no-repeat; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+    .ob-splash[hidden] { display: none; }
+    .ob-splash-logo { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .ob-splash-logo.is-exit { animation: obLogoUp 460ms var(--ease-out) both; }
+    /* leaf drops in from the top, wordmark rises from below (staggered) */
+    .ob-splash-leaf { width: 62px; height: 66px; background: #1f3833; -webkit-mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; animation: obLeafIn 660ms var(--ease-out) 120ms both; }
+    .ob-splash-word { font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 30px; line-height: 1; letter-spacing: 2px; text-transform: uppercase; color: #1f3833; animation: obWordIn 660ms cubic-bezier(0.16,1,0.3,1) 340ms both; }
+    .ob-splash.is-out { opacity: 0; transition: opacity 520ms var(--ease-out); }
+    @keyframes obLeafIn { from { opacity: 0; transform: translateY(-26px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes obWordIn { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes obLogoUp { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-42px); } }
+    @media (prefers-reduced-motion: reduce) { .ob-splash-leaf, .ob-splash-word { animation: none !important; } .ob-splash-logo.is-exit { animation: none !important; opacity: 0; } }
+
+    /* Carousel — full-bleed portrait, headline on the light top, cream CTA at the bottom */
+    .ob-flow { position: absolute; inset: 0; z-index: 120; background: #ece2cd url('assets/onb-cream.webp') center / cover no-repeat; overflow: hidden; border-radius: 40px; }
+    .ob-flow[hidden] { display: none; }
+    /* border-radius + contain here so the transformed layers clip to the phone's rounded corners */
+    .ob-bg { position: absolute; inset: 0; overflow: hidden; border-radius: 40px; contain: paint; perspective: 1200px; background: transparent; }
+    /* subject cut-outs anchored to the bottom; the plaster ground behind stays constant across slides.
+       Card-stack: active centre, prev/next peek at the sides (positions set inline by obPlaceLayer). */
+    .ob-bg-layer { position: absolute; inset: 0; background-position: bottom center; background-size: cover; opacity: 0; transform-origin: bottom center; backface-visibility: hidden; will-change: transform, opacity, filter; }
+    /* light wash so the dark headline always reads on the photo's top; dark wash so the CTA reads on the bottom */
+    .ob-scrim-top { position: absolute; top: 0; left: 0; right: 0; height: 300px; pointer-events: none; z-index: 2; background: linear-gradient(to bottom, rgba(244,238,224,0.70) 0%, rgba(244,238,224,0) 100%); }
+    .ob-scrim-bot { position: absolute; bottom: 0; left: 0; right: 0; height: 380px; pointer-events: none; z-index: 2; background: linear-gradient(to top, rgba(20,16,5,0.90) 0%, rgba(20,16,5,0.72) 26%, rgba(20,16,5,0.34) 60%, rgba(20,16,5,0) 100%); }
+    .ob-progress { position: absolute; top: 60px; left: 24px; right: 24px; display: flex; gap: 8px; z-index: 5; }
+    .ob-progress span { flex: 1; height: 3px; border-radius: 2px; background: rgba(50,45,15,0.22); overflow: hidden; }
+    .ob-progress b { display: block; height: 100%; width: 0; background: #322d0f; border-radius: 2px; }
+    .ob-tap { position: absolute; top: 120px; bottom: 200px; width: 40%; background: none; border: none; padding: 0; z-index: 4; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .ob-tap-prev { left: 0; } .ob-tap-next { right: 0; }
+    /* Headline block, top-left (DS Large Title — ABC Arizona Flare, brand/olive) */
+    .ob-head { position: absolute; top: 88px; left: 24px; right: 24px; z-index: 5; }
+    .ob-title { margin: 0; font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 32px; line-height: 38px; letter-spacing: -1.2px; color: #322d0f; }
+    .ob-sub { margin: 10px 0 0; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 400; line-height: 21px; color: #575338; max-width: 300px; }
+    /* Footer: login link over the shade + cream Open-account pill */
+    .ob-foot { position: absolute; left: 24px; right: 24px; bottom: 26px; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    .ob-login { background: none; border: none; padding: 4px 8px; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; color: #fdfcf2; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .ob-login u { text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
+    .ob-btn { width: 100%; height: 58px; border-radius: 9999px; border: none; cursor: pointer; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out); }
+    .ob-btn:active { transform: scale(0.98); }
+    .ob-btn-primary { background: #fdfcf2; color: #1f3833; box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+    @media (hover:hover) and (pointer:fine) { .ob-btn-primary:hover { background: #ffffff; } }
+    /* Copy fades + rises in as the image swaps */
+    @keyframes obCopyIn { from { opacity: 0; transform: translateY(18px) scale(0.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+    @media (prefers-reduced-motion: reduce) { .ob-bg-layer { transition: none !important; } .ob-title, .ob-sub { animation: none !important; } .ob-splash.is-out { transition: none; } }
+
+    /* Open-account email capture */
+    .ob-email { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
+    .ob-email[hidden] { display: none; }
+    .ob-email-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); height: 404px; box-sizing: border-box; background: #fdfcf2; border-radius: 40px; overflow: hidden; transition: bottom 220ms var(--ease-out); }
+    .ob-email-back { position: absolute; left: 16px; top: 16px; width: 44px; height: 44px; border-radius: 9999px; background: #eceadb; border: 1px solid #c5c0a3; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
+    .ob-email-back:active { transform: scale(0.95); }
+    .ob-email-back svg { width: 16px; height: 16px; }
+    .ob-email-head { position: absolute; left: 24px; top: 68px; width: 329px; text-align: center; display: flex; flex-direction: column; gap: 8px; }
+    /* DS Large Title — Arizona Flare 34/41, brand/olive */
+    .ob-email-title { font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 34px; line-height: 41px; letter-spacing: -1.7px; color: #322d0f; }
+    /* DS Body/Large/Regular — Roobert 17/22, brand/olive */
+    .ob-email-sub { font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 400; line-height: 22px; color: #322d0f; }
+    .ob-email-input { position: absolute; left: 24px; top: 193px; width: 329px; display: flex; flex-direction: column; gap: 4px; }
+    .ob-email-field { height: 60px; box-sizing: border-box; border: 1px solid #754c32; border-radius: 9999px; padding: 0 16px; background: transparent; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; line-height: 22px; color: #322d0f; outline: none; -webkit-tap-highlight-color: transparent; }
+    .ob-email-field::placeholder { color: #575338; }
+    .ob-email-field:focus { border-width: 1.5px; padding: 0 15.5px; }
+    .ob-email-hint { padding-left: 16px; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #575338; }
+    .ob-email-continue { position: absolute; left: 24px; right: 24px; bottom: 24px; height: 60px; border: none; border-radius: 9999px; background: #1f3833; color: #fdfcf2; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out); }
+    .ob-email-continue:active { transform: scale(0.98); }
+    .ob-email-continue:disabled { opacity: 0.4; cursor: default; }
+    @media (hover:hover) and (pointer:fine) { .ob-email-continue:hover { background: #26433d; } }
+    /* invalid email */
+    .ob-email-field.err { border-color: #b0402f; }
+    .ob-email-hint.err { color: #b0402f; }
+
+    /* ── Shared auth screens (OTP, password) — dark olive ground, bottom-anchored card ── */
+    .oba { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
+    .oba[hidden] { display: none; }
+    .oba-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); box-sizing: border-box; background: #fdfcf2; border-radius: 40px; padding: 76px 24px 24px; transition: bottom 220ms var(--ease-out); }
+    .oba-back { position: absolute; left: 16px; top: 16px; width: 44px; height: 44px; border-radius: 9999px; background: #eceadb; border: 1px solid #c5c0a3; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
+    .oba-back:active { transform: scale(0.95); }
+    .oba-back svg { width: 16px; height: 16px; }
+    .oba-head { text-align: center; }
+    .oba-title { margin: 0; font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 32px; line-height: 38px; letter-spacing: -1.4px; color: #322d0f; }
+    .oba-sub { margin: 8px 0 0; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 21px; color: #575338; }
+    .oba-continue { margin-top: 24px; width: 100%; height: 60px; border: none; border-radius: 9999px; background: #1f3833; color: #fdfcf2; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+    .oba-continue:active { transform: scale(0.98); }
+    .oba-continue:disabled { opacity: 0.4; cursor: default; }
+    @media (hover:hover) and (pointer:fine) { .oba-continue:hover:not(:disabled) { background: #26433d; } }
+    /* OTP — one hidden input styled as six circular slots + dash */
+    .oba-otp { position: relative; margin-top: 30px; }
+    .oba-otp-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: none; background: transparent; caret-color: transparent; font-size: 16px; z-index: 2; cursor: text; }
+    .oba-otp-cells { display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .oba-otp-cells span { width: 42px; height: 42px; border-radius: 9999px; border: 1.5px solid #cbbfa6; display: flex; align-items: center; justify-content: center; font-family: 'Roobert','Geist',sans-serif; font-size: 20px; font-weight: 600; color: #322d0f; transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+    .oba-otp-cells span.filled { border-color: #754c32; }
+    .oba-otp-cells span.active { border-color: #754c32; box-shadow: inset 0 0 0 1px #754c32; }
+    .oba-otp-cells span.active.empty::after { content: ''; width: 2px; height: 20px; background: #754c32; animation: obCaret 1s steps(1) infinite; }
+    .oba-otp.err .oba-otp-cells span { border-color: #b0402f; }
+    .oba-otp-dash { width: 12px; height: 1.5px; background: #cbbfa6; border-radius: 2px; }
+    @keyframes obCaret { 50% { opacity: 0; } }
+    .oba-otp-msg { min-height: 18px; margin: 18px 0 0; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #575338; }
+    .oba-otp-msg.err { color: #b0402f; }
+    .oba-otp-resend { display: block; margin: 14px auto 4px; background: none; border: none; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; color: #754c32; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .oba-otp-resend:disabled { color: #a7a08a; cursor: default; }
+    /* Password */
+    .oba-pass-wrap { position: relative; margin-top: 28px; }
+    .oba-input { width: 100%; height: 60px; box-sizing: border-box; border: 1px solid #754c32; border-radius: 9999px; padding: 0 52px 0 20px; background: transparent; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; color: #322d0f; outline: none; -webkit-tap-highlight-color: transparent; }
+    .oba-input::placeholder { color: #8f8a72; }
+    .oba-input:focus { border-width: 1.5px; }
+    .oba-pass-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .oba-pass-eye svg { width: 22px; height: 22px; }
+    .oba-req { margin: 10px 0 0 6px; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #575338; transition: color 160ms var(--ease-out); }
+    .oba-req.met { color: #095546; }
+
+    /* ── Verification / KYC result screens (Figma 7461-*) ── */
+    .obv { position: absolute; inset: 0; z-index: 121; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding: 0 32px; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
+    .obv[hidden] { display: none; }
+    .obv--success { background-color: #125649; }
+    .obv--reject { background-color: #6f4a31; }
+    .obv-logo { margin-top: 62px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .obv-leaf { width: 24px; height: 26px; background: #ddcfa6; -webkit-mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; }
+    .obv-word { font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 19px; line-height: 1; letter-spacing: 1.6px; text-transform: uppercase; color: #ddcfa6; }
+    .obv-body { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; }
+    .obv-body.top { justify-content: flex-start; padding-top: 120px; }
+    .obv-hero { width: 132px; height: 132px; object-fit: contain; margin-bottom: 26px; }
+    .obv-title { margin: 0; font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 34px; line-height: 40px; letter-spacing: -1.5px; color: #f4eeda; }
+    .obv-sub { margin: 12px 0 0; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 22px; color: rgba(244,238,218,0.66); max-width: 290px; }
+    .obv-foot { flex: 0 0 auto; width: 100%; padding-bottom: 28px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .obv-btn { width: 100%; height: 58px; border-radius: 9999px; border: none; background: #f4eeda; color: #1f3833; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out), opacity 160ms; }
+    .obv-btn:active { transform: scale(0.98); }
+    .obv-link { background: none; border: none; padding: 6px; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; color: #f4eeda; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .obv.is-out { opacity: 0; transition: opacity 420ms var(--ease-out); }
+    /* Next-steps checklist */
+    .obv-next { align-self: stretch; margin-top: 22px; background: #fdfcf2; border-radius: 28px; padding: 8px 20px; }
+    .obv-step { display: flex; align-items: center; gap: 14px; padding: 16px 0; }
+    .obv-step + .obv-step { border-top: 1px solid #eceadb; }
+    .obv-step-n { flex: 0 0 auto; width: 34px; height: 34px; border-radius: 9999px; background: #eceadb; color: #754c32; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+    .obv-step > span:last-child { display: flex; flex-direction: column; }
+    .obv-step-t { font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 500; line-height: 20px; color: #322d0f; }
+    .obv-step-s { font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #7c7961; margin-top: 2px; }
+    /* Review timeline card (under-review / taking-longer) */
+    .obv-card { position: absolute; left: 8px; right: 8px; bottom: 8px; background: #fdfcf2; border-radius: 32px; padding: 28px 24px 22px; box-sizing: border-box; }
+    .obv-tl { display: flex; align-items: flex-start; justify-content: space-between; position: relative; }
+    .obv-tl-conn { position: absolute; top: 18px; left: 33%; right: 33%; height: 0; border-top: 2px dotted #cbbfa6; }
+    .obv-tl-step { display: flex; flex-direction: column; align-items: center; gap: 8px; width: 130px; text-align: center; z-index: 1; }
+    .obv-tl-dot { width: 36px; height: 36px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; }
+    .obv-tl-dot--done { background: #1f5a3a; }
+    .obv-tl-dot--done svg { width: 18px; height: 18px; }
+    .obv-tl-dot--prog { background: #eceadb; }
+    .obv-tl-dot--prog i { width: 14px; height: 14px; border-radius: 9999px; border: 2px solid #c5b8a0; border-top-color: #754c32; animation: obSpin 0.9s linear infinite; }
+    @keyframes obSpin { to { transform: rotate(360deg); } }
+    .obv-tl-t { font-family: 'Roobert','Geist',sans-serif; font-size: 14px; font-weight: 600; color: #322d0f; }
+    .obv-tl-s { font-family: 'Roobert','Geist',sans-serif; font-size: 12px; line-height: 16px; color: #7c7961; }
+    .obv-card-sep { height: 1px; background: #eceadb; margin: 20px 0 0; }
+    .obv-card-link { display: block; width: 100%; margin-top: 16px; background: none; border: none; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; color: #754c32; cursor: pointer; }
+    .obv-card-btn { width: 100%; height: 56px; margin-top: 18px; border: none; border-radius: 9999px; background: #1f3833; color: #fdfcf2; font-family: 'Roobert','Geist',sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out); }
+    .obv-card-btn:active { transform: scale(0.98); }
+    @media (prefers-reduced-motion: reduce) { .obv-tl-dot--prog i { animation: none; } .obv.is-out { transition: none; } }
+
+    /* ── Login / password reset (Figma 7462/7464-*) ── cream ground, line-art hero, bottom card ── */
+    .obl { position: absolute; inset: 0; z-index: 122; overflow: hidden; background: #ece2cd; }
+    .obl[hidden] { display: none; }
+    .obl-art { position: absolute; top: 96px; left: 0; right: 0; height: 240px; background: url('assets/onb-login-art.webp') top center / 100% auto no-repeat; mix-blend-mode: multiply; opacity: 0.92; pointer-events: none; }
+    .obl-logo { position: absolute; top: 60px; left: 0; right: 0; z-index: 2; display: flex; align-items: center; justify-content: center; gap: 8px; }
+    .obl-leaf { width: 22px; height: 24px; background: #1f3833; -webkit-mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; }
+    .obl-word { font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 19px; line-height: 1; letter-spacing: 1.4px; text-transform: uppercase; color: #1f3833; }
+    .obl-card { position: absolute; left: 8px; right: 8px; bottom: calc(8px + var(--obkb, 0px)); z-index: 3; box-sizing: border-box; background: #fdfcf2; border-radius: 36px; padding: 32px 24px 24px; transition: bottom 220ms var(--ease-out); }
+    .obl-back { position: absolute; left: 16px; top: 16px; }
+    #obReset .obl-title, #obResetOtp .obl-title { margin-top: 40px; }
+    .obl-title { margin: 0 0 20px; text-align: center; font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 30px; line-height: 36px; letter-spacing: -1.2px; color: #322d0f; }
+    .obl-sub { margin: -10px 0 20px; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 21px; color: #575338; }
+    .obl-input { margin-bottom: 14px; }
+    .obl-pass { position: relative; margin-bottom: 2px; }
+    .obl-pass .obl-input { margin-bottom: 0; }
+    .obl-forgot { display: block; margin: 8px 4px 0 auto; background: none; border: none; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; font-weight: 600; color: #754c32; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+    .obl-err { margin: 8px 4px 0; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #b0402f; }
+    .obl-err:empty { display: none; }
+    .obl-alt { margin: 16px 0 0; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 14px; color: #575338; }
+    .obl-altlink { background: none; border: none; font-family: 'Roobert','Geist',sans-serif; font-size: 14px; font-weight: 600; color: #322d0f; text-decoration: underline; text-underline-offset: 2px; cursor: pointer; }
+    .obl-btn { width: 100%; height: 60px; margin-top: 16px; border: none; border-radius: 9999px; background: #1f3833; color: #fdfcf2; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+    .obl-btn:active { transform: scale(0.98); }
+    .obl-btn:disabled { opacity: 0.4; cursor: default; }
+    @media (hover:hover) and (pointer:fine) { .obl-btn:hover:not(:disabled) { background: #26433d; } }
+    .obl-otp { margin-top: 4px; }
+
+    /* ── Journey transitions ──
+       Same ground: background stays fixed, only the card/panel moves (push + parallax).
+       Different ground: the whole screen crossfades. */
+    @keyframes obCardInF  { from { opacity: .4; transform: translateX(102%) scale(.97); } to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes obCardOutF { from { opacity: 1;  transform: translateX(0) scale(1); }      to { opacity: 0; transform: translateX(-28%) scale(.9); } }
+    @keyframes obCardInB  { from { opacity: .4; transform: translateX(-28%) scale(.9); }   to { opacity: 1; transform: translateX(0) scale(1); } }
+    @keyframes obCardOutB { from { opacity: 1;  transform: translateX(0) scale(1); }      to { opacity: 0; transform: translateX(102%) scale(.97); } }
+    /* the moving panels (everything except the constant background, logo and hero art) */
+    .ob-tx-bgoff { background: transparent !important; }
+    .ob-tx-cin-f, .ob-tx-cout-b { z-index: 130; }
+    .ob-tx-cout-f, .ob-tx-cin-b { z-index: 129; }
+    .ob-tx-cin-f  .oba-card, .ob-tx-cin-f  .obl-card, .ob-tx-cin-f  .obv-body, .ob-tx-cin-f  .obv-card, .ob-tx-cin-f  .obv-foot { animation: obCardInF  500ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-cout-f .oba-card, .ob-tx-cout-f .obl-card, .ob-tx-cout-f .obv-body, .ob-tx-cout-f .obv-card, .ob-tx-cout-f .obv-foot { animation: obCardOutF 500ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-cin-b  .oba-card, .ob-tx-cin-b  .obl-card, .ob-tx-cin-b  .obv-body, .ob-tx-cin-b  .obv-card, .ob-tx-cin-b  .obv-foot { animation: obCardInB  500ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-cout-b .oba-card, .ob-tx-cout-b .obl-card, .ob-tx-cout-b .obv-body, .ob-tx-cout-b .obv-card, .ob-tx-cout-b .obv-foot { animation: obCardOutB 500ms cubic-bezier(0.16,1,0.3,1) both; }
+    /* whole-screen crossfade when the ground changes */
+    @keyframes obScreenIn  { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: scale(1); } }
+    @keyframes obScreenOut { from { opacity: 1; transform: scale(1); }    to { opacity: 0; transform: scale(.99); } }
+    .ob-tx-sin-f, .ob-tx-sin-b   { z-index: 130; animation: obScreenIn 460ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-sout-f, .ob-tx-sout-b { z-index: 129; animation: obScreenOut 400ms var(--ease-out) both; }
