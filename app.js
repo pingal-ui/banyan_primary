@@ -13062,11 +13062,18 @@ function obFinish() {
 }
 /* ═══════════════ Signup journey: email → OTP → password (Figma 7497-110695) ═══════════════ */
 /* Keyboard-aware cards: visualViewport shrinks when the keyboard opens; --obkb (on :root)
-   lifts every bottom-anchored auth card to sit 8px above it. */
+   lifts every bottom-anchored auth card to sit 8px above it.
+   Moving between steps refocuses a different input, which briefly dismisses+reopens the
+   keyboard. We apply "open" immediately but DEBOUNCE "closed" so that transient dip
+   doesn't drop-then-raise the card (no bouncing between steps). */
+var _obKbHideT = null;
+function obKbApply(px) { document.documentElement.style.setProperty('--obkb', px + 'px'); }
 function obKbSync() {
   var vv = window.visualViewport; if (!vv) return;
   var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-  document.documentElement.style.setProperty('--obkb', kb + 'px');
+  clearTimeout(_obKbHideT);
+  if (kb > 40) { obKbApply(kb + 30); }                         // keyboard up → follow, with clearance so the CTA never sits under it
+  else { _obKbHideT = setTimeout(function () { obKbApply(0); }, 380); } // closing → wait; cancelled if it reopens (step change)
 }
 function obKbBind() {
   if (!window.visualViewport) return;
@@ -13079,6 +13086,7 @@ function obKbUnbind() {
     window.visualViewport.removeEventListener('resize', obKbSync);
     window.visualViewport.removeEventListener('scroll', obKbSync);
   }
+  clearTimeout(_obKbHideT);
   document.documentElement.style.setProperty('--obkb', '0px');
 }
 function obFocus(sel) {
