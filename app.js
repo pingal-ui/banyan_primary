@@ -13096,7 +13096,9 @@ var _obEmail = '';
    screen crossfades instead. dir: 1 = forward, -1 = back. */
 var OB_ANIM = ['obFlow', 'obEmail', 'obOtp', 'obPass', 'obNext', 'obReview', 'obSuccess', 'obReject', 'obUnderReview', 'obSlow', 'obLogin', 'obReset', 'obResetOtp'];
 var OB_BG = { obFlow: 'photo', obEmail: 'olive', obOtp: 'olive', obPass: 'olive', obNext: 'olive', obReview: 'olive', obUnderReview: 'olive', obSlow: 'olive', obSuccess: 'green', obReject: 'brown', obLogin: 'cream', obReset: 'cream', obResetOtp: 'cream' };
-var OB_TX = ['ob-tx-bgoff', 'ob-tx-cin-f', 'ob-tx-cout-f', 'ob-tx-cin-b', 'ob-tx-cout-b', 'ob-tx-sin-f', 'ob-tx-sout-f', 'ob-tx-sin-b', 'ob-tx-sout-b'];
+var OB_TX = ['ob-tx-bgoff', 'ob-tx-cin-f', 'ob-tx-cout-f', 'ob-tx-cin-b', 'ob-tx-cout-b', 'ob-tx-sin-f', 'ob-tx-sout-f', 'ob-tx-sin-b', 'ob-tx-sout-b', 'ob-tx-pin-f', 'ob-tx-pout-f', 'ob-tx-pin-b', 'ob-tx-pout-b', 'ob-tx-cnt-f', 'ob-tx-cnt-b', 'ob-tx-shin', 'ob-tx-shout'];
+var OB_ARRIVAL = { obSuccess: 1, obReject: 1 }; // these dissolve in; everything else cross-ground pushes
+var OB_CARD = { obEmail: 1, obOtp: 1, obPass: 1 };  // one fixed olive card; steps transition their content only
 var _obTxT = null, _obCur = null; // _obCur = id of the screen currently showing
 function obClearTx(el) { if (el) el.classList.remove.apply(el.classList, OB_TX); }
 function obReveal(id, dir) {
@@ -13113,12 +13115,23 @@ function obReveal(id, dir) {
   if (_obReduced || !from || from.hidden) { to.hidden = false; if (from) { obClearTx(from); from.hidden = true; } return; }
   obClearTx(from);
   to.hidden = false; void to.offsetWidth;
-  if (OB_BG[from.id] === OB_BG[to.id]) {           // same ground → move only the card
+  var enterSignup = OB_CARD[to.id] && !OB_CARD[from.id];   // Open account / Create account → raise the sheet
+  var leaveSignup = OB_CARD[from.id] && !OB_CARD[to.id] && dir < 0; // back out of the flow → drop the sheet
+  if (enterSignup) {                                // olive signup screen rises like a sheet over what's behind
+    to.classList.add('ob-tx-shin');
+  } else if (leaveSignup) {                          // dismiss: the signup screen slides back down
+    from.classList.add('ob-tx-shout');
+  } else if (OB_CARD[from.id] && OB_CARD[to.id]) {  // within the flow → fixed card, content transitions
+    to.classList.add(dir < 0 ? 'ob-tx-cnt-b' : 'ob-tx-cnt-f');
+  } else if (OB_BG[from.id] === OB_BG[to.id]) {      // same ground → move only the card
     to.classList.add('ob-tx-bgoff', dir < 0 ? 'ob-tx-cin-b' : 'ob-tx-cin-f');
     from.classList.add(dir < 0 ? 'ob-tx-cout-b' : 'ob-tx-cout-f');
-  } else {                                          // ground changes → crossfade the screen
+  } else if (OB_ARRIVAL[to.id]) {                   // arrival (success/reject) → gentle dissolve
     to.classList.add(dir < 0 ? 'ob-tx-sin-b' : 'ob-tx-sin-f');
     from.classList.add(dir < 0 ? 'ob-tx-sout-b' : 'ob-tx-sout-f');
+  } else {                                          // cross-ground navigation → forward push
+    to.classList.add(dir < 0 ? 'ob-tx-pin-b' : 'ob-tx-pin-f');
+    from.classList.add(dir < 0 ? 'ob-tx-pout-b' : 'ob-tx-pout-f');
   }
   clearTimeout(_obTxT);
   var f = from;
@@ -13214,20 +13227,28 @@ function obOtpInputH() {
 }
 function obOtpVerify() {
   _obOtpBusy = true;
+  var box = document.getElementById('obOtpBox');
   var inp = document.getElementById('obOtpInput'); inp.disabled = true;
-  var msg = document.getElementById('obOtpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = 'Verifying…';
+  var msg = document.getElementById('obOtpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = '';
+  box.classList.add('verifying'); // the slots become the loader — no text
   obOtpRender();
   setTimeout(function () {
+    box.classList.remove('verifying');
     if (inp.value === '000000') { // demo failure path
-      document.getElementById('obOtpBox').classList.add('err');
+      box.classList.add('err', 'shake');
+      setTimeout(function () { box.classList.remove('shake'); }, 520);
       msg.className = 'oba-otp-msg err'; msg.textContent = 'That code isn’t correct. Try again.';
       inp.value = ''; inp.disabled = false; _obOtpBusy = false; obOtpRender(); obFocus('#obOtpInput');
     } else {
-      _obOtpBusy = false;
-      _obResetMode = false; // signup path → password → identity verification
-      obShowPass();
+      box.classList.add('verified'); // slots ripple green, then advance
+      setTimeout(function () {
+        box.classList.remove('verified');
+        _obOtpBusy = false;
+        _obResetMode = false; // signup path → password → identity verification
+        obShowPass();
+      }, 560);
     }
-  }, 850);
+  }, 900);
 }
 function obResendCooldown(sec) {
   var btn = document.getElementById('obOtpResend');
@@ -13425,20 +13446,28 @@ function obRotpInputH() {
 }
 function obRotpVerify() {
   _obRotpBusy = true;
+  var box = document.getElementById('obRotpBox');
   var inp = document.getElementById('obRotpInput'); inp.disabled = true;
-  var msg = document.getElementById('obRotpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = 'Verifying…';
+  var msg = document.getElementById('obRotpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = '';
+  box.classList.add('verifying');
   obRotpRender();
   setTimeout(function () {
+    box.classList.remove('verifying');
     if (inp.value === '000000') { // generic failure per PRD
-      document.getElementById('obRotpBox').classList.add('err');
+      box.classList.add('err', 'shake');
+      setTimeout(function () { box.classList.remove('shake'); }, 520);
       msg.className = 'oba-otp-msg err'; msg.textContent = 'That code is incorrect or has expired. Request a new code.';
       inp.value = ''; inp.disabled = false; _obRotpBusy = false; obRotpRender(); obFocus('#obRotpInput');
     } else {
-      _obRotpBusy = false;
-      _obResetMode = true; // → set a new password → signed in
-      obShowPass();
+      box.classList.add('verified'); // slots ripple green, then advance
+      setTimeout(function () {
+        box.classList.remove('verified');
+        _obRotpBusy = false;
+        _obResetMode = true; // → set a new password → signed in
+        obShowPass();
+      }, 560);
     }
-  }, 850);
+  }, 900);
 }
 function obRResendCooldown(sec) {
   var btn = document.getElementById('obRotpResend');

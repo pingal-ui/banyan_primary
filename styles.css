@@ -12845,10 +12845,10 @@
     @media (prefers-reduced-motion: reduce) { .ob-splash-leaf, .ob-splash-word { animation: none !important; } .ob-splash-logo.is-exit { animation: none !important; opacity: 0; } }
 
     /* Carousel — full-bleed portrait, headline on the light top, cream CTA at the bottom */
-    .ob-flow { position: absolute; inset: 0; z-index: 120; background: #ece2cd url('assets/onb-cream.webp') center / cover no-repeat; overflow: hidden; border-radius: 40px; }
+    .ob-flow { position: absolute; inset: 0; z-index: 120; background: #ece2cd url('assets/onb-cream.webp') center / cover no-repeat; overflow: hidden; }
     .ob-flow[hidden] { display: none; }
-    /* border-radius + contain here so the transformed layers clip to the phone's rounded corners */
-    .ob-bg { position: absolute; inset: 0; overflow: hidden; border-radius: 40px; contain: paint; perspective: 1200px; background: transparent; }
+    /* clip the sliding layers to the screen box; the phone frame handles corner rounding (no forced radius here) */
+    .ob-bg { position: absolute; inset: 0; overflow: hidden; contain: paint; background: transparent; }
     /* subject cut-outs anchored to the bottom; the plaster ground behind stays constant across slides.
        Card-stack: active centre, prev/next peek at the sides (positions set inline by obPlaceLayer). */
     .ob-bg-layer { position: absolute; inset: 0; background-position: bottom center; background-size: cover; opacity: 0; transform-origin: bottom center; backface-visibility: hidden; will-change: transform, opacity, filter; }
@@ -12879,7 +12879,7 @@
     /* Open-account email capture */
     .ob-email { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
     .ob-email[hidden] { display: none; }
-    .ob-email-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); height: 404px; box-sizing: border-box; background: #fdfcf2; border-radius: 40px; overflow: hidden; transition: bottom 220ms var(--ease-out); }
+    .ob-email-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); height: 430px; box-sizing: border-box; background: #fdfcf2; border-radius: 40px; overflow: hidden; transition: bottom 220ms var(--ease-out); }
     .ob-email-back { position: absolute; left: 16px; top: 16px; width: 44px; height: 44px; border-radius: 9999px; background: #eceadb; border: 1px solid #c5c0a3; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
     .ob-email-back:active { transform: scale(0.95); }
     .ob-email-back svg { width: 16px; height: 16px; }
@@ -12904,14 +12904,15 @@
     /* ── Shared auth screens (OTP, password) — dark olive ground, bottom-anchored card ── */
     .oba { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
     .oba[hidden] { display: none; }
-    .oba-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); box-sizing: border-box; background: #fdfcf2; border-radius: 40px; padding: 76px 24px 24px; transition: bottom 220ms var(--ease-out); }
+    /* same fixed height as the email card so the frame never resizes between steps */
+    .oba-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); height: 430px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; background: #fdfcf2; border-radius: 40px; padding: 76px 24px 24px; transition: bottom 220ms var(--ease-out); }
     .oba-back { position: absolute; left: 16px; top: 16px; width: 44px; height: 44px; border-radius: 9999px; background: #eceadb; border: 1px solid #c5c0a3; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
     .oba-back:active { transform: scale(0.95); }
     .oba-back svg { width: 16px; height: 16px; }
     .oba-head { text-align: center; }
     .oba-title { margin: 0; font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 32px; line-height: 38px; letter-spacing: -1.4px; color: #322d0f; }
     .oba-sub { margin: 8px 0 0; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 21px; color: #575338; }
-    .oba-continue { margin-top: 24px; width: 100%; height: 60px; border: none; border-radius: 9999px; background: #1f3833; color: #fdfcf2; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), opacity 160ms var(--ease-out); }
+    .oba-continue { margin-top: auto; width: 100%; height: 60px; border: none; border-radius: 9999px; background: #1f3833; color: #fdfcf2; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), opacity 160ms var(--ease-out); }
     .oba-continue:active { transform: scale(0.98); }
     .oba-continue:disabled { opacity: 0.4; cursor: default; }
     @media (hover:hover) and (pointer:fine) { .oba-continue:hover:not(:disabled) { background: #26433d; } }
@@ -12919,17 +12920,38 @@
     .oba-otp { position: relative; margin-top: 30px; }
     .oba-otp-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; border: none; background: transparent; caret-color: transparent; font-size: 16px; z-index: 2; cursor: text; }
     .oba-otp-cells { display: flex; align-items: center; justify-content: center; gap: 8px; }
-    .oba-otp-cells span { width: 42px; height: 42px; border-radius: 9999px; border: 1.5px solid #cbbfa6; display: flex; align-items: center; justify-content: center; font-family: 'Roobert','Geist',sans-serif; font-size: 20px; font-weight: 600; color: #322d0f; transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
+    .oba-otp-cells span { width: 42px; height: 42px; border-radius: 9999px; border: 0.5px solid #ddd4bf; display: flex; align-items: center; justify-content: center; font-family: 'Roobert','Geist',sans-serif; font-size: 20px; font-weight: 400; color: #322d0f; transition: border-color 160ms var(--ease-out), box-shadow 160ms var(--ease-out); }
     .oba-otp-cells span.filled { border-color: #754c32; }
     .oba-otp-cells span.active { border-color: #754c32; box-shadow: inset 0 0 0 1px #754c32; }
     .oba-otp-cells span.active.empty::after { content: ''; width: 2px; height: 20px; background: #754c32; animation: obCaret 1s steps(1) infinite; }
     .oba-otp.err .oba-otp-cells span { border-color: #b0402f; }
-    .oba-otp-dash { width: 12px; height: 1.5px; background: #cbbfa6; border-radius: 2px; }
+    .oba-otp-dash { width: 12px; height: 1px; background: #ddd4bf; border-radius: 2px; }
     @keyframes obCaret { 50% { opacity: 0; } }
     .oba-otp-msg { min-height: 18px; margin: 18px 0 0; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #575338; }
     .oba-otp-msg.err { color: #b0402f; }
-    .oba-otp-resend { display: block; margin: 14px auto 4px; background: none; border: none; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; color: #754c32; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .oba-otp-resend { display: block; margin: auto auto 4px; background: none; border: none; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; color: #754c32; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .oba-otp-resend:disabled { color: #a7a08a; cursor: default; }
+    /* verifying: the slots themselves are the loader — a left-to-right pulse wave (no "Verifying…" text) */
+    .oba-otp.verifying .oba-otp-cells span { border-color: #754c32; animation: obOtpPulse 780ms ease-in-out infinite; }
+    .oba-otp.verifying .oba-otp-cells span:nth-of-type(1) { animation-delay: 0ms; }
+    .oba-otp.verifying .oba-otp-cells span:nth-of-type(2) { animation-delay: 90ms; }
+    .oba-otp.verifying .oba-otp-cells span:nth-of-type(3) { animation-delay: 180ms; }
+    .oba-otp.verifying .oba-otp-cells span:nth-of-type(4) { animation-delay: 270ms; }
+    .oba-otp.verifying .oba-otp-cells span:nth-of-type(5) { animation-delay: 360ms; }
+    .oba-otp.verifying .oba-otp-cells span:nth-of-type(6) { animation-delay: 450ms; }
+    @keyframes obOtpPulse { 0%, 100% { transform: scale(1); box-shadow: inset 0 0 0 0 rgba(117,76,50,0); } 45% { transform: scale(1.12); box-shadow: inset 0 0 0 1px #754c32; } }
+    @keyframes obShake { 10%, 90% { transform: translateX(-2px); } 20%, 80% { transform: translateX(4px); } 30%, 50%, 70% { transform: translateX(-7px); } 40%, 60% { transform: translateX(7px); } }
+    .oba-otp.shake { animation: obShake 500ms ease both; }
+    /* verified: slots ripple green before advancing */
+    .oba-otp.verified .oba-otp-cells span { border-color: #178a52; color: #178a52; box-shadow: inset 0 0 0 1.5px #178a52; transition: border-color 180ms ease, color 180ms ease, box-shadow 180ms ease; animation: obOtpPop 380ms cubic-bezier(0.34,1.3,0.64,1) both; }
+    .oba-otp.verified .oba-otp-cells span:nth-of-type(1) { animation-delay: 0ms; }
+    .oba-otp.verified .oba-otp-cells span:nth-of-type(2) { animation-delay: 55ms; }
+    .oba-otp.verified .oba-otp-cells span:nth-of-type(3) { animation-delay: 110ms; }
+    .oba-otp.verified .oba-otp-cells span:nth-of-type(4) { animation-delay: 165ms; }
+    .oba-otp.verified .oba-otp-cells span:nth-of-type(5) { animation-delay: 220ms; }
+    .oba-otp.verified .oba-otp-cells span:nth-of-type(6) { animation-delay: 275ms; }
+    @keyframes obOtpPop { 0% { transform: scale(1); } 45% { transform: scale(1.14); } 100% { transform: scale(1); } }
+    @media (prefers-reduced-motion: reduce) { .oba-otp.verifying .oba-otp-cells span, .oba-otp.verified .oba-otp-cells span { animation: none; } .oba-otp.shake { animation: none; } }
     /* Password */
     .oba-pass-wrap { position: relative; margin-top: 28px; }
     .oba-input { width: 100%; height: 60px; box-sizing: border-box; border: 1px solid #754c32; border-radius: 9999px; padding: 0 52px 0 20px; background: transparent; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; color: #322d0f; outline: none; -webkit-tap-highlight-color: transparent; }
@@ -13031,3 +13053,25 @@
     @keyframes obScreenOut { from { opacity: 1; transform: scale(1); }    to { opacity: 0; transform: scale(.99); } }
     .ob-tx-sin-f, .ob-tx-sin-b   { z-index: 130; animation: obScreenIn 460ms cubic-bezier(0.16,1,0.3,1) both; }
     .ob-tx-sout-f, .ob-tx-sout-b { z-index: 129; animation: obScreenOut 400ms var(--ease-out) both; }
+    /* cross-ground navigation → clean forward/back push (new screen slides in, old recedes) */
+    @keyframes obPushInF  { from { transform: translateX(100%); } to { transform: translateX(0); } }
+    @keyframes obPushOutF { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-22%); opacity: .55; } }
+    @keyframes obPushInB  { from { transform: translateX(-22%); opacity: .55; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes obPushOutB { from { transform: translateX(0); } to { transform: translateX(100%); } }
+    .ob-tx-pin-f, .ob-tx-pout-b { z-index: 130; }
+    .ob-tx-pout-f, .ob-tx-pin-b { z-index: 129; }
+    .ob-tx-pin-f  { animation: obPushInF 500ms cubic-bezier(0.22,1,0.36,1) both; }
+    .ob-tx-pout-f { animation: obPushOutF 500ms cubic-bezier(0.22,1,0.36,1) both; }
+    .ob-tx-pin-b  { animation: obPushInB 500ms cubic-bezier(0.22,1,0.36,1) both; }
+    .ob-tx-pout-b { animation: obPushOutB 500ms cubic-bezier(0.22,1,0.36,1) both; }
+    /* within the auth flow (email↔otp↔password): the card frame stays fixed, only the content transitions */
+    @keyframes obContentInF { from { opacity: 0; transform: translateX(28px); } to { opacity: 1; transform: translateX(0); } }
+    @keyframes obContentInB { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: translateX(0); } }
+    .ob-tx-cnt-f, .ob-tx-cnt-b { z-index: 130; }
+    .ob-tx-cnt-f .ob-email-card > *, .ob-tx-cnt-f .oba-card > * { animation: obContentInF 460ms cubic-bezier(0.22,1,0.36,1) both; }
+    .ob-tx-cnt-b .ob-email-card > *, .ob-tx-cnt-b .oba-card > * { animation: obContentInB 460ms cubic-bezier(0.22,1,0.36,1) both; }
+    /* entering/leaving the signup flow: the olive screen rises like a sheet (down to dismiss) */
+    @keyframes obSheetIn  { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    @keyframes obSheetOut { from { transform: translateY(0); } to { transform: translateY(100%); } }
+    .ob-tx-shin  { z-index: 131; animation: obSheetIn 540ms cubic-bezier(0.22,1,0.36,1) both; }
+    .ob-tx-shout { z-index: 131; animation: obSheetOut 460ms cubic-bezier(0.4,0,1,1) both; }
