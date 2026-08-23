@@ -13007,6 +13007,24 @@
     .obv-card-btn:active { transform: scale(0.98); }
     @media (prefers-reduced-motion: reduce) { .obv-tl-dot--prog i { animation: none; } .obv.is-out { transition: none; } }
 
+    /* ── Verify-identity intro (Figma 7365-109392): centered head + bottom card of 3 steps ── */
+    .obn-back { position: absolute; left: 24px; top: 16px; z-index: 3; }
+    .obn-head { text-align: center; margin-top: 70px; padding: 0 12px; flex: 0 0 auto; }
+    .obn-title { margin: 0; font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 32px; line-height: 39px; letter-spacing: -1.3px; color: #f4eeda; }
+    .obn-sub { margin: 12px 0 0; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 21px; color: rgba(244,238,218,0.62); }
+    .obn-card { position: absolute; left: 8px; right: 8px; bottom: 8px; box-sizing: border-box; background: #fdfcf2; border-radius: 36px; padding: 28px 20px 24px; }
+    .obn-steps { display: flex; align-items: flex-start; gap: 8px; }
+    .obn-step { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
+    .obn-ico { width: 30px; height: 30px; color: #322d0f; display: flex; align-items: center; justify-content: center; }
+    .obn-ico svg { width: 27px; height: 27px; }
+    .obn-t { font-family: 'Roobert','Geist',sans-serif; font-size: 14px; font-weight: 600; line-height: 18px; color: #322d0f; }
+    .obn-s { font-family: 'Roobert','Geist',sans-serif; font-size: 12px; line-height: 16px; color: #7c7961; }
+    .obn-sep { height: 1px; background: #eceadb; margin: 24px 0 16px; }
+    .obn-note { margin: 0 0 20px; text-align: center; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #575338; padding: 0 6px; }
+    .obn-btn { width: 100%; height: 60px; border: none; border-radius: 9999px; background: #1f3833; color: #fdfcf2; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; cursor: pointer; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out); }
+    .obn-btn:active { transform: scale(0.98); }
+    @media (hover:hover) and (pointer:fine) { .obn-btn:hover { background: #26433d; } }
+
     /* ── Login / password reset (Figma 7462/7464-*) ── cream ground, line-art hero, bottom card ── */
     .obl { position: absolute; inset: 0; z-index: 122; overflow: hidden; background: #ece2cd; }
     .obl[hidden] { display: none; }
@@ -13044,10 +13062,10 @@
     .ob-tx-bgoff { background: transparent !important; }
     .ob-tx-cin-f, .ob-tx-cout-b { z-index: 130; }
     .ob-tx-cout-f, .ob-tx-cin-b { z-index: 129; }
-    .ob-tx-cin-f  .oba-card, .ob-tx-cin-f  .obl-card, .ob-tx-cin-f  .obv-body, .ob-tx-cin-f  .obv-card, .ob-tx-cin-f  .obv-foot { animation: obCardInF  500ms cubic-bezier(0.16,1,0.3,1) both; }
-    .ob-tx-cout-f .oba-card, .ob-tx-cout-f .obl-card, .ob-tx-cout-f .obv-body, .ob-tx-cout-f .obv-card, .ob-tx-cout-f .obv-foot { animation: obCardOutF 500ms cubic-bezier(0.16,1,0.3,1) both; }
-    .ob-tx-cin-b  .oba-card, .ob-tx-cin-b  .obl-card, .ob-tx-cin-b  .obv-body, .ob-tx-cin-b  .obv-card, .ob-tx-cin-b  .obv-foot { animation: obCardInB  500ms cubic-bezier(0.16,1,0.3,1) both; }
-    .ob-tx-cout-b .oba-card, .ob-tx-cout-b .obl-card, .ob-tx-cout-b .obv-body, .ob-tx-cout-b .obv-card, .ob-tx-cout-b .obv-foot { animation: obCardOutB 500ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-cin-f  .oba-card, .ob-tx-cin-f  .obl-card, .ob-tx-cin-f  .obv-body, .ob-tx-cin-f  .obv-card, .ob-tx-cin-f  .obv-foot, .ob-tx-cin-f  .obn-head, .ob-tx-cin-f  .obn-card { animation: obCardInF  500ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-cout-f .oba-card, .ob-tx-cout-f .obl-card, .ob-tx-cout-f .obv-body, .ob-tx-cout-f .obv-card, .ob-tx-cout-f .obv-foot, .ob-tx-cout-f .obn-head, .ob-tx-cout-f .obn-card { animation: obCardOutF 500ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-cin-b  .oba-card, .ob-tx-cin-b  .obl-card, .ob-tx-cin-b  .obv-body, .ob-tx-cin-b  .obv-card, .ob-tx-cin-b  .obv-foot, .ob-tx-cin-b  .obn-head, .ob-tx-cin-b  .obn-card { animation: obCardInB  500ms cubic-bezier(0.16,1,0.3,1) both; }
+    .ob-tx-cout-b .oba-card, .ob-tx-cout-b .obl-card, .ob-tx-cout-b .obv-body, .ob-tx-cout-b .obv-card, .ob-tx-cout-b .obv-foot, .ob-tx-cout-b .obn-head, .ob-tx-cout-b .obn-card { animation: obCardOutB 500ms cubic-bezier(0.16,1,0.3,1) both; }
     /* whole-screen crossfade when the ground changes */
     @keyframes obScreenIn  { from { opacity: 0; transform: scale(1.03); } to { opacity: 1; transform: scale(1); } }
     @keyframes obScreenOut { from { opacity: 1; transform: scale(1); }    to { opacity: 0; transform: scale(.99); } }

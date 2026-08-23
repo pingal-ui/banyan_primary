@@ -13066,27 +13066,39 @@ function obFinish() {
    Moving between steps refocuses a different input, which briefly dismisses+reopens the
    keyboard. We apply "open" immediately but DEBOUNCE "closed" so that transient dip
    doesn't drop-then-raise the card (no bouncing between steps). */
-var _obKbHideT = null;
+var _obKbHideT = null, _obKbFocused = false;
+var _obTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0); // only estimate a keyboard on touch devices
 function obKbApply(px) { document.documentElement.style.setProperty('--obkb', px + 'px'); }
-function obKbSync() {
-  var vv = window.visualViewport; if (!vv) return;
-  var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-  clearTimeout(_obKbHideT);
-  if (kb > 40) { obKbApply(kb + 30); }                         // keyboard up → follow, with clearance so the CTA never sits under it
-  else { _obKbHideT = setTimeout(function () { obKbApply(0); }, 380); } // closing → wait; cancelled if it reopens (step change)
+function obIsAuthInput(el) {
+  return !!(el && el.matches && el.matches('#obEmailField, #obOtpInput, #obPassInput, #obLoginEmail, #obLoginPass, #obResetEmail, #obRotpInput'));
 }
+function obKbSync() {
+  var vv = window.visualViewport;
+  var kb = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+  clearTimeout(_obKbHideT);
+  if (kb > 40) { obKbApply(kb + 30); }                         // viewport reported the keyboard → follow it, with clearance
+  else if (_obKbFocused && _obTouch) { obKbApply(Math.round(window.innerHeight * 0.40)); } // viewport didn't report → estimate on touch devices while focused
+  else { _obKbHideT = setTimeout(function () { obKbApply(0); }, 380); }        // closing → wait; cancelled if it reopens (step change)
+}
+function obKbFocusIn(e) { if (obIsAuthInput(e.target)) { _obKbFocused = true; obKbSync(); } }
+function obKbFocusOut() { setTimeout(function () { _obKbFocused = obIsAuthInput(document.activeElement); obKbSync(); }, 0); }
 function obKbBind() {
-  if (!window.visualViewport) return;
-  window.visualViewport.addEventListener('resize', obKbSync);
-  window.visualViewport.addEventListener('scroll', obKbSync);
+  document.addEventListener('focusin', obKbFocusIn);
+  document.addEventListener('focusout', obKbFocusOut);
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', obKbSync);
+    window.visualViewport.addEventListener('scroll', obKbSync);
+  }
   obKbSync();
 }
 function obKbUnbind() {
+  document.removeEventListener('focusin', obKbFocusIn);
+  document.removeEventListener('focusout', obKbFocusOut);
   if (window.visualViewport) {
     window.visualViewport.removeEventListener('resize', obKbSync);
     window.visualViewport.removeEventListener('scroll', obKbSync);
   }
-  clearTimeout(_obKbHideT);
+  clearTimeout(_obKbHideT); _obKbFocused = false;
   document.documentElement.style.setProperty('--obkb', '0px');
 }
 function obFocus(sel) {
@@ -13339,6 +13351,11 @@ function obPassBack() {
 var OB_VERIFY_IDS = ['obNext', 'obReview', 'obSuccess', 'obReject', 'obUnderReview', 'obSlow'];
 function obHideVerify() { OB_VERIFY_IDS.forEach(function (id) { var e = document.getElementById(id); if (e && !e.hidden) obAnimOut(e, 1); }); }
 function obShowNext() { obReveal('obNext', 1); setSbLight(true); }
+function obNextBack() {
+  obReveal('obPass', -1);
+  var t = document.querySelector('#obPass .oba-title'); if (t) t.textContent = _obResetMode ? 'Set a new password' : 'Create a password';
+  obKbBind(); obFocus('#obPassInput');
+}
 /* "Get started" → Persona (simulated) → reviewing → outcome routed by email keyword (demo). */
 function obStartVerify() {
   obReveal('obReview', 1);
