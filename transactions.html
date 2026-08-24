@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=563">
+  <link rel="stylesheet" href="styles.css?v=564">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -134,15 +134,25 @@
       </button>
       <div class="oba-head">
         <h2 class="oba-title">Create a password</h2>
-        <p class="oba-sub">Choose something unique to keep your account secure.</p>
+        <p class="oba-sub">Choose something unique to keep your account secure</p>
       </div>
-      <div class="oba-pass-wrap">
-        <input class="oba-input" id="obPassInput" type="password" autocomplete="new-password" placeholder="Password" aria-label="Password" oninput="obPassInputH()">
-        <button class="oba-pass-eye" id="obPassEye" type="button" aria-label="Show password" onclick="obPassToggle()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <div class="obp-field">
+        <label class="obp-label" for="obPassInput">Password</label>
+        <input class="obp-input" id="obPassInput" type="password" autocomplete="new-password" aria-label="Password" oninput="obPassInputH()">
+        <button class="obp-eye" id="obPassEye" type="button" aria-label="Show password" onclick="obPassToggle()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l20 20"/><path d="M6.7 6.7C3.9 8.3 2 12 2 12s3.5 7 10 7c2 0 3.7-.5 5.1-1.3"/><path d="M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.4 3.3"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>
         </button>
       </div>
-      <p class="oba-req" id="obPassReq">12-character minimum</p>
+      <div class="obp-reqs">
+        <div class="obp-req" id="obPassReq1">
+          <span class="obp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.2l2.6 2.6L16 9.4"/></svg></span>
+          <span>Use 8 to 20 characters</span>
+        </div>
+        <div class="obp-req" id="obPassReq2">
+          <span class="obp-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.2l2.6 2.6L16 9.4"/></svg></span>
+          <span>Include a number, letter, and special character.</span>
+        </div>
+      </div>
       <button class="oba-continue" id="obPassBtn" type="button" onclick="obPassContinue()" disabled>Continue</button>
     </div>
   </div>
@@ -4919,7 +4929,7 @@
 
 </div>
 
-  <script defer src="app.js?v=347"></script>
+  <script defer src="app.js?v=348"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

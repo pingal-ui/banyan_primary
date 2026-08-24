@@ -13307,7 +13307,16 @@ function obOtpBack() {
   obFocus('#obEmailField');
 }
 
-/* ── Password ── single field, 12-char minimum (PRD), show/hide, no confirmation. */
+/* ── Password ── (Figma 7452-85688) checklist: 8–20 chars + number/letter/special. */
+var OB_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 2l20 20"/><path d="M6.7 6.7C3.9 8.3 2 12 2 12s3.5 7 10 7c2 0 3.7-.5 5.1-1.3"/><path d="M9.9 5.2A9.6 9.6 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-2.4 3.3"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+var OB_EYE_ON = '<svg viewBox="0 0 24 24" fill="none" stroke="#754c32" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>';
+function obSetEye(showing) { var eye = document.getElementById('obPassEye'); if (!eye) return; eye.innerHTML = showing ? OB_EYE_ON : OB_EYE_OFF; eye.setAttribute('aria-label', showing ? 'Hide password' : 'Show password'); }
+function obPassValid() {
+  var v = document.getElementById('obPassInput').value;
+  var ok1 = v.length >= 8 && v.length <= 20;
+  var ok2 = /[0-9]/.test(v) && /[A-Za-z]/.test(v) && /[^A-Za-z0-9]/.test(v);
+  return { ok1: ok1, ok2: ok2, ok: ok1 && ok2 };
+}
 function obShowPass() {
   var s = document.getElementById('obPass');
   obReveal('obPass', 1);
@@ -13315,27 +13324,27 @@ function obShowPass() {
   var t = s.querySelector('.oba-title'); if (t) t.textContent = _obResetMode ? 'Set a new password' : 'Create a password';
   var inp = document.getElementById('obPassInput'); inp.value = ''; inp.type = 'password';
   document.getElementById('obPassBtn').disabled = true;
-  var req = document.getElementById('obPassReq'); req.textContent = '12-character minimum'; req.classList.remove('met');
+  document.getElementById('obPassReq1').classList.remove('met');
+  document.getElementById('obPassReq2').classList.remove('met');
+  obSetEye(false);
   obKbBind();
   obFocus('#obPassInput');
 }
 function obPassInputH() {
-  var v = document.getElementById('obPassInput').value;
-  var ok = v.length >= 12;
-  document.getElementById('obPassBtn').disabled = !ok;
-  var req = document.getElementById('obPassReq');
-  req.textContent = ok ? '✓ Minimum met' : '12-character minimum';
-  req.classList.toggle('met', ok);
+  var r = obPassValid();
+  document.getElementById('obPassReq1').classList.toggle('met', r.ok1);
+  document.getElementById('obPassReq2').classList.toggle('met', r.ok2);
+  document.getElementById('obPassBtn').disabled = !r.ok;
 }
 function obPassToggle() {
-  var inp = document.getElementById('obPassInput'), eye = document.getElementById('obPassEye');
+  var inp = document.getElementById('obPassInput');
   var show = inp.type === 'password';
   inp.type = show ? 'text' : 'password';
-  eye.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+  obSetEye(show);
   obFocus('#obPassInput');
 }
 function obPassContinue() {
-  if (document.getElementById('obPassInput').value.length < 12) return;
+  if (!obPassValid().ok) return;
   document.getElementById('obPassInput').blur();
   obKbUnbind();
   if (_obResetMode) { obAnimOut(document.getElementById('obPass'), 1); obEnterApp(); }  // reset complete → signed in

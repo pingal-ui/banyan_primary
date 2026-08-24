@@ -12961,6 +12961,19 @@
     .oba-pass-eye svg { width: 22px; height: 22px; }
     .oba-req { margin: 10px 0 0 6px; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #575338; transition: color 160ms var(--ease-out); }
     .oba-req.met { color: #095546; }
+    /* Create-a-password (Figma 7452-85688): floating-label field + checklist requirements */
+    .obp-field { position: relative; margin-top: 26px; border: 1px solid #754c32; border-radius: 22px; padding: 9px 52px 9px 20px; box-sizing: border-box; }
+    .obp-field:focus-within { border-width: 1.5px; padding: 9px 51.5px 9px 19.5px; }
+    .obp-label { display: block; font-family: 'Roobert','Geist',sans-serif; font-size: 12px; line-height: 16px; color: #8f8a72; }
+    .obp-input { width: 100%; border: none; background: transparent; outline: none; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; line-height: 24px; color: #322d0f; padding: 0; -webkit-tap-highlight-color: transparent; }
+    .obp-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; background: none; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .obp-eye svg { width: 22px; height: 22px; }
+    .obp-reqs { margin-top: 14px; display: flex; flex-direction: column; gap: 9px; }
+    .obp-req { display: flex; align-items: center; gap: 9px; font-family: 'Roobert','Geist',sans-serif; font-size: 13px; line-height: 18px; color: #a9a48c; transition: color 160ms var(--ease-out); }
+    .obp-check { flex: 0 0 auto; width: 17px; height: 17px; color: #cbc4ac; display: flex; transition: color 160ms var(--ease-out); }
+    .obp-check svg { width: 17px; height: 17px; }
+    .obp-req.met { color: #575338; }
+    .obp-req.met .obp-check { color: #178a52; }
 
     /* ── Verification / KYC result screens (Figma 7461-*) ── */
     .obv { position: absolute; inset: 0; z-index: 121; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding: 0 32px; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
