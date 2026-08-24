@@ -12880,7 +12880,7 @@
     @media (prefers-reduced-motion: reduce) { .ob-bg-layer { transition: none !important; } .ob-title, .ob-sub { animation: none !important; } .ob-splash.is-out { transition: none; } }
 
     /* Open-account email capture */
-    .ob-email { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
+    .ob-email { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-olive-pattern.webp') top center / 393px auto no-repeat; }
     .ob-email[hidden] { display: none; }
     .ob-email-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); height: 430px; box-sizing: border-box; background: #fdfcf2; border-radius: 40px; overflow: hidden; transition: bottom 220ms var(--ease-out); }
     .ob-email-back { position: absolute; left: 16px; top: 16px; width: 44px; height: 44px; border-radius: 9999px; background: #eceadb; border: 1px solid #c5c0a3; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 160ms var(--ease-out); }
@@ -12905,7 +12905,7 @@
     .ob-email-hint.err { color: #b0402f; }
 
     /* ── Shared auth screens (OTP, password) — dark olive ground, bottom-anchored card ── */
-    .oba { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
+    .oba { position: absolute; inset: 0; z-index: 120; overflow: hidden; background: #322d0f url('assets/onb-olive-pattern.webp') top center / 393px auto no-repeat; }
     .oba[hidden] { display: none; }
     /* same fixed height as the email card so the frame never resizes between steps */
     .oba-card { position: absolute; left: 8px; right: 8px; top: auto; bottom: calc(8px + var(--obkb, 0px)); height: 430px; box-sizing: border-box; overflow: hidden; display: flex; flex-direction: column; background: #fdfcf2; border-radius: 40px; padding: 76px 24px 24px; transition: bottom 220ms var(--ease-out); }
@@ -12979,11 +12979,11 @@
     .obp-req.met .obp-check { color: #178a52; }
 
     /* ── Verification / KYC result screens (Figma 7461-*) ── */
-    .obv { position: absolute; inset: 0; z-index: 121; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding: 0 32px; background: #322d0f url('assets/onb-email-pattern.svg') top center / 393px auto no-repeat; }
+    .obv { position: absolute; inset: 0; z-index: 121; overflow: hidden; display: flex; flex-direction: column; align-items: center; box-sizing: border-box; padding: 0 32px; background: #322d0f url('assets/onb-olive-pattern.webp') top center / 393px auto no-repeat; }
     .obv[hidden] { display: none; }
-    .obv--success { background-color: #125649; }
+    .obv--success { background: #125649 url('assets/onb-pine-pattern.webp') top center / 393px auto no-repeat; }
     .obv--reject { background-color: #6f4a31; }
-    .obv-logo { margin-top: 62px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+    .obv-logo { margin-top: 201px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; } /* 24px below the top pattern (~177px), consistent across verification pages */
     .obv-leaf { width: 24px; height: 26px; background: #ddcfa6; -webkit-mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; mask: url('assets/banyan-logo-leaf.svg') center/contain no-repeat; }
     .obv-word { font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 19px; line-height: 1; letter-spacing: 1.6px; text-transform: uppercase; color: #ddcfa6; }
     .obv-body { flex: 1 1 auto; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; width: 100%; }
@@ -13024,11 +13024,13 @@
     @media (prefers-reduced-motion: reduce) { .obv-tl-dot--prog i { animation: none; } .obv.is-out { transition: none; } }
 
     /* ── Verify-identity intro (Figma 7365-109392): centered head + bottom card of 3 steps ── */
-    .obn-back { position: absolute; left: 24px; top: 16px; z-index: 3; }
-    .obn-head { text-align: center; margin-top: 70px; padding: 0 12px; flex: 0 0 auto; }
+    .obn-back { position: absolute; left: 24px; top: 66px; z-index: 3; } /* 22px below the 44px status bar */
+    /* headline + card anchored to the bottom, headline 40px above the card */
+    .obn-lower { position: absolute; left: 8px; right: 8px; bottom: 8px; z-index: 2; }
+    .obn-head { text-align: center; margin: 0 0 40px; padding: 0 16px; }
     .obn-title { margin: 0; font-family: 'Arizona Flare','Geist',serif; font-weight: 400; font-size: 32px; line-height: 39px; letter-spacing: -1.3px; color: #f4eeda; }
     .obn-sub { margin: 12px 0 0; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; line-height: 21px; color: rgba(244,238,218,0.62); }
-    .obn-card { position: absolute; left: 8px; right: 8px; bottom: 8px; box-sizing: border-box; background: #fdfcf2; border-radius: 36px; padding: 28px 20px 24px; }
+    .obn-card { box-sizing: border-box; background: #fdfcf2; border-radius: 36px; padding: 28px 20px 24px; }
     .obn-steps { display: flex; align-items: flex-start; gap: 8px; }
     .obn-step { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; }
     .obn-ico { width: 30px; height: 30px; color: #322d0f; display: flex; align-items: center; justify-content: center; }
