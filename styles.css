@@ -12864,8 +12864,11 @@
     .ob-head { position: absolute; top: 88px; left: 24px; right: 24px; z-index: 5; }
     .ob-title { margin: 0; font-family: 'Arizona Flare','Geist',serif; font-weight: 500; font-size: 32px; line-height: 38px; letter-spacing: -1.2px; color: #322d0f; }
     .ob-sub { margin: 10px 0 0; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 400; line-height: 21px; color: #575338; max-width: 300px; }
-    /* Footer: login link over the shade + cream Open-account pill */
-    .ob-foot { position: absolute; left: 24px; right: 24px; bottom: 26px; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+    /* Footer: login link over the shade + cream Open-account pill.
+       Hidden until midway through the last slide, then fades up. */
+    .ob-foot { position: absolute; left: 24px; right: 24px; bottom: 26px; z-index: 5; display: flex; flex-direction: column; align-items: center; gap: 16px; opacity: 0; transform: translateY(18px); pointer-events: none; transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out); }
+    .ob-foot.is-in { opacity: 1; transform: translateY(0); pointer-events: auto; }
+    @media (prefers-reduced-motion: reduce) { .ob-foot { transition: opacity 200ms linear; transform: none; } }
     .ob-login { background: none; border: none; padding: 4px 8px; font-family: 'Roobert','Geist',sans-serif; font-size: 15px; font-weight: 600; color: #fdfcf2; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .ob-login u { text-decoration-thickness: 1.5px; text-underline-offset: 2px; }
     .ob-btn { width: 100%; height: 58px; border-radius: 9999px; border: none; cursor: pointer; font-family: 'Roobert','Geist',sans-serif; font-size: 17px; font-weight: 600; display: flex; align-items: center; justify-content: center; transition: transform 160ms var(--ease-out), background 160ms var(--ease-out); }

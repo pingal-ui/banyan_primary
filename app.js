@@ -12926,7 +12926,7 @@ var OB_SLIDES = [
   { bg: 'assets/onb-woman.webp',  title: 'Open a USD checking<br>account in minutes.',   sub: 'Earn 2.0% APY on every dollar.' },
   { bg: 'assets/onb-man.webp',    title: 'Spend directly from<br>your USD account',      sub: 'Pay via UPI or your Banyan Debit Card — with no FX fees.' }
 ];
-var OB_DUR = 4200, _obIdx = 0, _obTimer = null, _obLayer = 1, _obSplashT = null;
+var OB_DUR = 2600, _obIdx = 0, _obTimer = null, _obLayer = 1, _obSplashT = null, _obFootT = null, _obFootShown = false;
 var _obReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* New onboarding → plaster splash (leaf drops in, wordmark rises), then the lockup
@@ -13000,6 +13000,8 @@ function obEnterCarousel() {
   _obCur = 'obFlow';
   setSbLight(false); // dark icons over the light plaster ground
   _obIdx = 0;
+  clearTimeout(_obFootT); _obFootShown = false;   // CTAs hidden until midway through the last slide
+  var foot = document.querySelector('#obFlow .ob-foot'); if (foot) foot.classList.remove('is-in');
   obBuildLayers();
   obRender(1, true); // lays out the card-stack + copy + progress, no motion
   if (_obReduced) return;
@@ -13055,6 +13057,15 @@ function obRender(dir, instant) {
     else { cur.style.transition = 'width ' + OB_DUR + 'ms linear'; cur.style.width = '100%'; }
   }
   _obTimer = setTimeout(obNext, OB_DUR);
+  // CTAs (login + Open account) fade up only once the last slide is ~halfway through, then stay.
+  var foot = document.querySelector('#obFlow .ob-foot');
+  clearTimeout(_obFootT);
+  if (foot) {
+    if (_obFootShown) { foot.classList.add('is-in'); }
+    else if (_obIdx === OB_SLIDES.length - 1) {
+      _obFootT = setTimeout(function () { foot.classList.add('is-in'); _obFootShown = true; }, Math.round(OB_DUR / 2));
+    } else { foot.classList.remove('is-in'); }
+  }
 }
 function obFinish() {
   clearTimeout(_obTimer);
