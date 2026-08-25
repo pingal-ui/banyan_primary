@@ -13226,7 +13226,7 @@ function obShowOtp() {
   obReveal('obOtp', 1);
   setSbLight(true);
   document.getElementById('obOtpSub').textContent = 'We sent a 6-digit code to ' + _obEmail + '.';
-  var inp = document.getElementById('obOtpInput'); inp.value = ''; inp.disabled = false;
+  var inp = document.getElementById('obOtpInput'); inp.value = ''; inp.readOnly = false;
   _obOtpBusy = false;
   document.getElementById('obOtpBox').classList.remove('err');
   var msg = document.getElementById('obOtpMsg'); msg.textContent = ''; msg.className = 'oba-otp-msg';
@@ -13259,7 +13259,7 @@ function obOtpInputH() {
 function obOtpVerify() {
   _obOtpBusy = true;
   var box = document.getElementById('obOtpBox');
-  var inp = document.getElementById('obOtpInput'); inp.disabled = true;
+  var inp = document.getElementById('obOtpInput'); inp.readOnly = true;
   var msg = document.getElementById('obOtpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = '';
   box.classList.add('verifying'); // the slots become the loader — no text
   obOtpRender();
@@ -13269,7 +13269,7 @@ function obOtpVerify() {
       box.classList.add('err', 'shake');
       setTimeout(function () { box.classList.remove('shake'); }, 520);
       msg.className = 'oba-otp-msg err'; msg.textContent = 'That code isn’t correct. Try again.';
-      inp.value = ''; inp.disabled = false; _obOtpBusy = false; obOtpRender(); obFocus('#obOtpInput');
+      inp.value = ''; inp.readOnly = false; _obOtpBusy = false; obOtpRender(); obFocus('#obOtpInput');
     } else {
       box.classList.add('verified'); // slots ripple green, then advance
       setTimeout(function () {
@@ -13393,12 +13393,13 @@ function obShowReject() { obReveal('obReject', 1); setSbLight(true); }
 function obShowSuccess() {
   obReveal('obSuccess', 1);
   var s = document.getElementById('obSuccess'); setSbLight(true);
-  // Hold ~2s, then fade into the app Home (no CTA per PRD).
+  // Hold, then lift away into the app Home (no CTA per PRD).
   setTimeout(function () {
     if (_obReduced) { s.hidden = true; obEnterApp(); return; }
-    s.classList.add('is-out');
-    setTimeout(function () { s.hidden = true; s.classList.remove('is-out'); obEnterApp(); }, 420);
-  }, 2000);
+    obEnterApp();               // bring Home up underneath first
+    s.classList.add('is-out');  // then the welcome screen lifts + fades away to reveal it
+    setTimeout(function () { s.hidden = true; s.classList.remove('is-out'); }, 560);
+  }, 2300);
 }
 function obEnterApp() { _obCur = null; setSbLight(false); if (typeof showHome === 'function') showHome(); }
 function obRejectDone() { obResetToChooser(); }      // Log out → back to start
@@ -13462,7 +13463,7 @@ function obShowResetOtp() {
   obReveal('obResetOtp', 1);
   setSbLight(false);
   document.getElementById('obResetOtpSub').textContent = 'If a Banyan account exists for ' + _obLoginEmail + ', we sent a 6-digit code.';
-  var inp = document.getElementById('obRotpInput'); inp.value = ''; inp.disabled = false; _obRotpBusy = false;
+  var inp = document.getElementById('obRotpInput'); inp.value = ''; inp.readOnly = false; _obRotpBusy = false;
   document.getElementById('obRotpBox').classList.remove('err');
   var msg = document.getElementById('obRotpMsg'); msg.textContent = ''; msg.className = 'oba-otp-msg';
   obRotpRender();
@@ -13492,7 +13493,7 @@ function obRotpInputH() {
 function obRotpVerify() {
   _obRotpBusy = true;
   var box = document.getElementById('obRotpBox');
-  var inp = document.getElementById('obRotpInput'); inp.disabled = true;
+  var inp = document.getElementById('obRotpInput'); inp.readOnly = true;
   var msg = document.getElementById('obRotpMsg'); msg.className = 'oba-otp-msg'; msg.textContent = '';
   box.classList.add('verifying');
   obRotpRender();
@@ -13502,7 +13503,7 @@ function obRotpVerify() {
       box.classList.add('err', 'shake');
       setTimeout(function () { box.classList.remove('shake'); }, 520);
       msg.className = 'oba-otp-msg err'; msg.textContent = 'That code is incorrect or has expired. Request a new code.';
-      inp.value = ''; inp.disabled = false; _obRotpBusy = false; obRotpRender(); obFocus('#obRotpInput');
+      inp.value = ''; inp.readOnly = false; _obRotpBusy = false; obRotpRender(); obFocus('#obRotpInput');
     } else {
       box.classList.add('verified'); // slots ripple green, then advance
       setTimeout(function () {
