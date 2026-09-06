@@ -3289,7 +3289,7 @@ function openHomeAgent() {
   var home     = document.getElementById('home');
   var screen   = document.getElementById('agent-screen');
   var inputCard= document.getElementById('agentInputCard');
-  var homeAiEl = document.querySelector('#home .home-ai');
+  var homeAiEl = document.querySelector('#home .hz-ask') || document.querySelector('#homeZero .hz-ask');  // FLIP origin: the ask pill
   var nav      = document.getElementById('globalNav');
   var reduced  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -5824,18 +5824,45 @@ const _HOME_GREETINGS = [
 let _greetingIdx = parseInt(localStorage.getItem('_greetingIdx') || '0', 10);
 let _greetingSet = false;
 
-function showHome() {
+/* Fresh-account home (Figma 663-17827) is reached only by completing onboarding.
+   Once there, the nav's Home tab keeps returning to it rather than the populated
+   demo home — the two are different account states, not different screens. */
+var _homeZero = false;
+function showHomeZero() {
   haptic(8);
   document.getElementById('explore').className  = 'screen hb';
   document.getElementById('accounts').className = 'screen hb';
   document.getElementById('list').className     = 'screen hr';
+  document.getElementById('home').className     = 'screen hb';
+  document.getElementById('homeZero').className = 'screen on';
+  var sc = document.querySelector('#homeZero .hz-scroll');
+  if (sc) { sc.scrollTop = 0; resetNavAiReveal(sc); }
+  setSbLight(false);
+  showNav(true);
+  showNavAi(false, true);            // orb hidden at the top; scroll reveals it
+  playScreenEnter('homeZero');
+  if (typeof setNavActive === 'function') setNavActive(0);
+}
+function nhSeg(btn) {
+  var wrap = btn.parentNode;
+  wrap.querySelectorAll('.nh-seg-btn').forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+}
+function hzSeg(btn) {
+  var wrap = btn.parentNode;
+  wrap.querySelectorAll('.hz-seg-btn').forEach(function (b) { b.classList.toggle('is-on', b === btn); });
+}
+
+function showHome() {
+  if (_homeZero) { showHomeZero(); return; }
+  haptic(8);
+  document.getElementById('homeZero').className = 'screen hb';  // fresh-account home sits above #home in the DOM
+  document.getElementById('explore').className  = 'screen hb';
+  document.getElementById('accounts').className = 'screen hb';
+  document.getElementById('list').className     = 'screen hr';
   document.getElementById('home').className     = 'screen on';
-  document.querySelector('#home .home-scroll').scrollTop = 0;
-  var _hhw = document.getElementById('homeHeroBgWrap'); if (_hhw) _hhw.style.transform = 'translateY(0) scale(1.35)';
-  var _hhx = document.getElementById('homeHeroFixed'); if (_hhx) { _hhx.style.transform = 'translateY(0)'; _hhx.style.height = '583px'; _hhx.style.setProperty('--bp', '0'); }
-  var _hbs = document.getElementById('homeHeroBlurScroll'); if (_hbs) _hbs.style.opacity = '0';
-  var _hai = document.querySelector('#home .home-ai'); if (_hai) _hai.style.setProperty('--ai-bg-op', '0.60');
-  var _hgh = document.getElementById('homeGreetingHalo'); if (_hgh) _hgh.style.opacity = '1';
+  var _hs = document.querySelector('#home .nh-scroll');
+  if (_hs) { _hs.scrollTop = 0; resetNavAiReveal(_hs); }
+  playScreenEnter('home');
   var _hnt = document.getElementById('homeNotif');
   if (_hnt) {
     _hnt.classList.remove('expanded');
@@ -5843,8 +5870,7 @@ function showHome() {
     if (_hntb) { _hntb.setAttribute('aria-expanded', 'false'); var _l = _hntb.querySelector('.home-notif-toggle-label'); if (_l) _l.textContent = 'Show all 3'; }
     if (typeof layoutHomeNotifDeck === 'function') setTimeout(layoutHomeNotifDeck, 0);
   }
-  document.querySelector('#home .home-scroll').classList.remove('home-fade-top');
-  setSbLight(true); // white status-bar text over the hero photo
+  setSbLight(false); // dark status-bar icons over the cream cityscape
   showNav(true);
   showNavAi(false, true); // orb hidden at home top; scroll reveals it
   setNavActive(0);
@@ -10786,56 +10812,77 @@ renderEmbeddedTxSection('homeTxList');
 // ── Hero background organic drift ──────────────────────────────
 // Two overlapping sine waves per axis at irrational frequency ratios →
 // path never repeats, velocity is always continuous, zero keyframe stops
-/* ── Home: status-bar blur + hero zoom-out & progressive blur on scroll ── */
-(function() {
-  var scroll = document.querySelector('.home-scroll');
-  if (!scroll) return;
-  var heroWrap = document.getElementById('homeHeroBgWrap');
-  var heroFixed = document.getElementById('homeHeroFixed');
-  var heroBlurScroll = document.getElementById('homeHeroBlurScroll');
-  var homeAi = document.querySelector('#home .home-ai');
-  var homeHero = document.querySelector('#home .home-hero');
-  var homeGreetingHalo = document.getElementById('homeGreetingHalo');
-  var bnavAiSlot = document.getElementById('bnavAiSlot');
+/* ── Nav AI orb: revealed once Home's ask pill has scrolled off the top ──
+   Replaces the old scroll handler, which also drove a fixed hero (homeHeroFixed,
+   homeGreetingHalo, .home-ai, .home-fade-top). None of those elements survive the
+   home redesign, so only the orb behaviour is kept here.
+
+   Both home states scroll their own container (#home .nh-scroll, #homeZero
+   .hz-scroll) and both use the .hz-ask pill, so the cue is measured off the pill
+   rather than hard-coded — it survives layout changes. A hysteresis band keeps
+   the orb from flickering when you rest right on the threshold. */
+var NAV_AI_HYST = 44;
+
+/* Replay a screen's arrival sequence. Called when Home is actually revealed —
+   which is not the same moment as page load, since the prototype chooser sits
+   over an already-active #home. */
+function playScreenEnter(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove('is-enter');
+  void el.offsetWidth;                 // reflow, or re-adding in the same tick is a no-op
+  el.classList.add('is-enter');
+}
+
+/* Offset of an element within a scroll container, walking the offsetParent chain.
+   Deliberately layout-based: getBoundingClientRect() would fold in the screen's
+   entrance transform, making the cue drift by however far the pill had travelled
+   at the moment it was measured. */
+function _offsetWithin(el, container) {
+  var y = 0;
+  while (el && el !== container) { y += el.offsetTop; el = el.offsetParent; }
+  return y;
+}
+function _navAiCue(scrollEl) {
+  var ask = scrollEl.querySelector('.hz-ask');
+  if (!ask) return 220;                                  // fallback: the old fixed cue
+  // Scroll offset at which the pill's bottom edge reaches the top of the viewport.
+  return Math.round(_offsetWithin(ask, scrollEl) + ask.offsetHeight);
+}
+
+function bindNavAiReveal(scrollEl) {
+  if (!scrollEl || scrollEl._navAiBound) return;
+  scrollEl._navAiBound = true;
   var ticking = false;
-  scroll.addEventListener('scroll', function() {
-    var st = scroll.scrollTop;
-    var scrolled = st > 8;
-    // Hard-cut the scroll area into a rounded box 16px below the header buttons
-    scroll.classList.toggle('home-fade-top', scrolled);
-    // White text over the hero photo at the top; dark once content scrolls under
-    if (document.getElementById('home').classList.contains('on')) setSbLight(!scrolled);
+  scrollEl.addEventListener('scroll', function () {
     if (ticking) return;
     ticking = true;
-    requestAnimationFrame(function() {
-      var s = Math.max(scroll.scrollTop, 0);
-      var p = Math.min(s / 320, 1); // 0 at top → 1 by 320px
-      // Photo fills the hero at rest, then shrinks to fit the device width (scale 1.0) on scroll
-      if (heroWrap) heroWrap.style.transform = 'translateY(' + (-40 * p).toFixed(1) + 'px) scale(' + (1.35 - p * 0.35).toFixed(4) + ')';
-      // Move the whole header space up by 40px and shrink its height to 212px as scrolling happens
-      if (heroFixed) {
-        heroFixed.style.transform = 'translateY(' + (-40 * p).toFixed(1) + 'px)';
-        heroFixed.style.height = (583 - 371 * p).toFixed(0) + 'px';
-        heroFixed.style.setProperty('--bp', p.toFixed(3));
-      }
-      // Deepen the image blur as you scroll up
-      if (heroBlurScroll) heroBlurScroll.style.opacity = (p * 0.35).toFixed(3);
-      // Jump input field opacity to 0.80 the moment scrolling starts
-      if (homeAi) homeAi.style.setProperty('--ai-bg-op', s > 0 ? '0.80' : '0.60');
-      // Fade greeting halo — starts at 60px scroll, gone by 240px
-      if (homeGreetingHalo) homeGreetingHalo.style.opacity = Math.max(0, 1 - Math.max(0, s - 60) / 180).toFixed(3);
-      // Show AI orb in nav once greeting/AI input area has scrolled away
-      if (bnavAiSlot) {
-        var _slotNow = s >= 220;
-        if (bnavAiSlot.classList.contains('visible') !== _slotNow) {
-          bnavAiSlot.classList.toggle('visible', _slotNow);
-          _syncIndicatorForSlot(); // keep active-tab indicator aligned
-        }
-      }
+    requestAnimationFrame(function () {
       ticking = false;
+      var slot = document.getElementById('bnavAiSlot');
+      var screen = scrollEl.closest('.screen');
+      if (!slot || !screen || !screen.classList.contains('on')) return;
+      if (scrollEl._navAiCue == null) scrollEl._navAiCue = _navAiCue(scrollEl);
+      var cue = scrollEl._navAiCue, s = scrollEl.scrollTop;
+      var on = slot.classList.contains('visible');
+      // Asymmetric edges: reveal at the cue, hide only after backing off.
+      var next = on ? s > cue - NAV_AI_HYST : s >= cue;
+      if (next !== on) showNavAi(next);   // animated path — re-aligns the tab indicator
     });
   }, { passive: true });
-})();
+}
+
+/* Called when either home is shown: re-measure and start hidden at the top. */
+function resetNavAiReveal(scrollEl) {
+  if (!scrollEl) return;
+  scrollEl._navAiCue = null;
+  bindNavAiReveal(scrollEl);
+}
+
+/* app.js is deferred, so the DOM is parsed by now. Bind both homes immediately:
+   a page load lands on #home already active, without passing through showHome(). */
+bindNavAiReveal(document.querySelector('#home .nh-scroll'));
+bindNavAiReveal(document.querySelector('#homeZero .hz-scroll'));
 
 /* ── Attention cards: stacked deck that expands into a list via Show all ── */
 var PEEK = 14; // px of each tucked card visible below the front card (collapsed)
@@ -12926,7 +12973,7 @@ var OB_SLIDES = [
   { bg: 'assets/onb-woman.webp',  title: 'Open a USD checking<br>account in minutes.',   sub: 'Earn 2.0% APY on every dollar.' },
   { bg: 'assets/onb-man.webp',    title: 'Spend directly from<br>your USD account',      sub: 'Pay via UPI or your Banyan Debit Card — with no FX fees.' }
 ];
-var OB_DUR = 2600, _obIdx = 0, _obTimer = null, _obLayer = 1, _obSplashT = null, _obFootT = null, _obFootShown = false;
+var OB_DUR = 4800, _obIdx = 0, _obTimer = null, _obLayer = 1, _obSplashT = null, _obFootT = null, _obFootShown = false;
 var _obReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /* New onboarding → plaster splash (leaf drops in, wordmark rises), then the lockup
@@ -13005,7 +13052,7 @@ function obEnterCarousel() {
   obBuildLayers();
   obRender(1, true); // lays out the card-stack + copy + progress, no motion
   if (_obReduced) return;
-  [['obTitle', 220], ['obSub', 320]].forEach(function (p) {
+  [['obTitle', 520], ['obSub', 640]].forEach(function (p) {
     var el = document.getElementById(p[0]);
     el.style.animation = 'none'; void el.offsetWidth;
     el.style.animation = 'obCopyIn 620ms cubic-bezier(0.16,1,0.3,1) ' + p[1] + 'ms both';
@@ -13014,6 +13061,7 @@ function obEnterCarousel() {
 function obAlreadyOnboarded() {
   document.getElementById('obChooser').hidden = true;
   setSbLight(false); // reveal the app (home is already the active screen)
+  playScreenEnter('home');
 }
 function obNext() { obGoto(_obIdx + 1, 1); }
 function obPrev() { obGoto(_obIdx - 1, -1); }
@@ -13036,9 +13084,10 @@ function obRender(dir, instant) {
   var titleEl = document.getElementById('obTitle'), subEl = document.getElementById('obSub');
   titleEl.innerHTML = s.title;
   subEl.textContent = s.sub;
-  // Animate the copy in with the image swap (skip on the first, instant render / reduced motion).
+  // The photo settles first (OB_SPRING), then the copy rides in behind it — never together.
+  // (skip on the first, instant render / reduced motion).
   if (!instant && !_obReduced) {
-    [[titleEl, 80], [subEl, 170]].forEach(function (p) {
+    [[titleEl, 440], [subEl, 560]].forEach(function (p) {
       p[0].style.animation = 'none'; void p[0].offsetWidth;
       p[0].style.animation = 'obCopyIn 560ms cubic-bezier(0.16,1,0.3,1) ' + p[1] + 'ms both';
     });
@@ -13071,6 +13120,107 @@ function obFinish() {
   clearTimeout(_obTimer);
   obShowLogin(1); // "Already have an account? Login" → sign-in screen (carousel slides out)
 }
+/* ═══════════════ Welcome screens — 3-slide carousel (Figma 8268-224004) ═══════════════
+   Auto-advances on the same dwell as the live onboarding carousel, and loops. Tap
+   zones and the progress bars both step it; either interaction restarts the dwell so
+   the slide you just chose gets a full read. */
+var WS_DUR = 5000, _wsIdx = 0, _wsTimer = null, _wsFocusT = null;
+/* Slide 1 plays out in two beats. The transfer lands first and reads on its own;
+   only at WS_RATE_IN does the quoted rate drop in from above. WS_RATE_HIT is the
+   moment it presses into the card's top edge (the overshoot trough of wsChipFall),
+   and that impact hands focus from the amount being sent to the amount being
+   received — the card the rate actually acts on. Keep WS_RATE_IN in step with the
+   animation-delay on .ws-xfer-rate. */
+var WS_RATE_IN = 2000, WS_RATE_HIT = 2290;
+
+/* Focus lives on one card at a time; the CSS transitions height, padding and the
+   figure size off this class. */
+function wsSetFocus(onTo) {
+  var f = document.querySelector('#welcome .ws-xfer-card--from');
+  var t = document.querySelector('#welcome .ws-xfer-card--to');
+  if (!f || !t) return;
+  f.classList.toggle('is-focus', !onTo);
+  t.classList.toggle('is-focus', onTo);
+}
+
+/* dir: +1 the deck moves forward (incoming from the right), -1 backward, 0 no travel. */
+function wsRender(dir) {
+  var scr = document.getElementById('welcome');
+  /* Reset focus while the slide is still off stage, so re-entering it snaps back to
+     the resting composition instead of transitioning into it. */
+  clearTimeout(_wsFocusT);
+  wsSetFocus(false);
+  var slides = scr.querySelectorAll('.ws-slide');
+  slides.forEach(function (el, i) {
+    el.classList.remove('is-anim');
+    el.setAttribute('aria-hidden', String(i !== _wsIdx));
+    if (i === _wsIdx) return;                     // the arriving one is handled below
+    if (el.classList.contains('is-on')) {         // the one leaving: send it the other way
+      el.classList.remove('is-on');
+      el.classList.toggle('is-left', dir > 0);
+      return;
+    }
+    el.classList.add('no-tx');                    // uninvolved: park it, don't animate
+    el.classList.remove('is-left');
+    void el.offsetWidth;
+    el.classList.remove('no-tx');
+  });
+  var cur = slides[_wsIdx];
+  if (dir) {                                      // stand it off stage on the side it comes from
+    cur.classList.add('no-tx');
+    cur.classList.remove('is-on');
+    cur.classList.toggle('is-left', dir < 0);
+    void cur.offsetWidth;
+    cur.classList.remove('no-tx');
+  }
+  cur.classList.remove('is-left');
+  cur.classList.add('is-on');
+  void cur.offsetWidth;                           // drop, reflow, re-add so the
+  cur.classList.add('is-anim');                   // entrance replays on every visit
+  scr.querySelectorAll('.ws-prog [role="tab"]').forEach(function (b, i) {
+    b.setAttribute('aria-selected', String(i === _wsIdx));
+  });
+  if (_wsIdx === 0 && !_wsReduced()) {
+    _wsFocusT = setTimeout(function () { wsSetFocus(true); }, WS_RATE_HIT);
+  }
+}
+function wsSchedule() {
+  clearTimeout(_wsTimer);
+  if (_wsReduced()) return;                       // no auto-advance under reduced motion
+  _wsTimer = setTimeout(function () { wsGo(_wsIdx + 1); }, WS_DUR);
+}
+function _wsReduced() {
+  return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+}
+function wsGo(i) {
+  var n = document.querySelectorAll('#welcome .ws-slide').length;
+  var prev = _wsIdx;
+  _wsIdx = ((i % n) + n) % n;                     // loops both ways
+  var dir = 0;
+  if (_wsIdx !== prev) {
+    var fwd = (_wsIdx - prev + n) % n;            // travel the short way round, so the
+    dir = fwd <= n - fwd ? 1 : -1;                // wrap from the last slide still reads forward
+  }
+  wsRender(dir);
+  wsSchedule();
+}
+function wsOpen() {
+  document.getElementById('obChooser').hidden = true;
+  document.getElementById('welcome').className = 'screen on';
+  setSbLight(false);                              // dark status-bar icons over the cream ground
+  if (typeof showNav === 'function') showNav(false);
+  _wsIdx = 0; wsRender(); wsSchedule();
+}
+function wsClose() {
+  clearTimeout(_wsTimer);
+  clearTimeout(_wsFocusT);
+  document.getElementById('welcome').className = 'screen hb';
+  document.getElementById('obChooser').hidden = false;
+  setSbLight(true);
+}
+/* The chooser's entry point kept its old name. */
+function wcOpen() { wsOpen(); }
+
 /* ═══════════════ Signup journey: email → OTP → password (Figma 7497-110695) ═══════════════ */
 /* Keyboard-aware cards: visualViewport shrinks when the keyboard opens; --obkb (on :root)
    lifts every bottom-anchored auth card to sit 8px above it.
@@ -13401,11 +13551,13 @@ function obShowSuccess() {
     setTimeout(function () { s.hidden = true; s.classList.remove('is-out'); }, 560);
   }, 2300);
 }
-function obEnterApp() { _obCur = null; setSbLight(false); if (typeof showHome === 'function') showHome(); }
+function obEnterApp() { _obCur = null; setSbLight(false); _homeZero = true; if (typeof showHomeZero === 'function') showHomeZero(); }
 function obRejectDone() { obResetToChooser(); }      // Log out → back to start
 function obRejectSupport() { if (typeof openSupport === 'function') openSupport(); }
 function obReviewSupport() { if (typeof openSupport === 'function') openSupport(); }
 function obResetToChooser() {
+  _homeZero = false;
+  var _hz = document.getElementById('homeZero'); if (_hz) _hz.className = 'screen hb';
   _obCur = null;
   ['obEmail', 'obOtp', 'obPass', 'obNext', 'obReview', 'obSuccess', 'obReject', 'obUnderReview', 'obSlow', 'obFlow', 'obSplash', 'obLogin', 'obReset', 'obResetOtp'].forEach(function (id) { var e = document.getElementById(id); if (e) { obClearTx(e); e.hidden = true; } });
   var c = document.getElementById('obChooser'); if (c) c.hidden = false;

@@ -10,7 +10,7 @@
   <!-- One combined font request (unused Edu SA Beginner dropped) -->
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=DM+Serif+Display&display=swap" rel="stylesheet">
   <script defer src="https://cdn.jsdelivr.net/npm/motion@10.16.4/dist/motion.umd.js"></script>
-  <link rel="stylesheet" href="styles.css?v=574">
+  <link rel="stylesheet" href="styles.css?v=614">
 </head>
 <body>
 <!-- Shared SVG defs — clip path for the subtract wallet wave shape (377×144) -->
@@ -56,6 +56,18 @@
           <span class="obc-text"><span class="obc-t">Already onboarded</span><span class="obc-s">Go straight to the app</span></span>
           <span class="obc-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
         </button>
+      </div>
+
+      <!-- Separate section: design work being reviewed, not a path through the app -->
+      <div class="obc-sec">
+        <span class="obc-sec-lbl">Design exploration</span>
+        <div class="obc-list">
+        <button class="obc-choice" type="button" onclick="wcOpen()">
+          <span class="obc-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="3"/><path d="M8 14h8M8 17.5h5"/></svg></span>
+          <span class="obc-text"><span class="obc-t">Welcome screens</span><span class="obc-s">Three-slide carousel</span></span>
+          <span class="obc-chev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></span>
+        </button>
+        </div>
       </div>
       <p class="ob-chooser-note">Prototype entry · not part of the product</p>
     </div>
@@ -317,210 +329,435 @@
        HOME SCREEN  (Figma 512-10881)
   ══════════════════════════════════════ -->
   <div class="screen on" id="home">
-    <div class="home-statusbar-blur"></div>
 
-    <!-- Fixed hero photo — zooms out + progressively blurs as content scrolls over it -->
-    <div class="home-hero-fixed" id="homeHeroFixed">
-      <div class="home-hero-bg-wrap" id="homeHeroBgWrap">
-        <img decoding="async" fetchpriority="high" class="home-hero-bg home-hero-bg--sketch" src="assets/home-bg.webp" alt="">
+    <!-- ═══ Home — active account (Figma 663-14661) ═══
+         Same three grounds as the fresh-account home (cream → evergreen → ivory);
+         `hz-` is the shared vocabulary for both home states in this design system. -->
+    <div class="nh-scroll">
+
+      <div class="hz-top nh-top">
+        <!-- Header rides the cityscape rather than pinning — this home has no fixed hero. -->
+        <div class="home-hero-bar nh-bar">
+          <div class="home-hero-av"><div class="home-hero-av-inner"><span>SR</span></div></div>
+          <button class="home-hero-bell" aria-label="Open your inbox" onclick="openSupport()">
+            <span class="ico ol" style="--ico:url('Icons/Tray.svg');--sz:18px;color:rgba(0,0,0,0.70)"></span>
+          </button>
+        </div>
+        <div class="hz-hero nh-hero">
+          <img class="hz-hero-sketch nh-sketch" src="assets/home-zero-sketch.webp" alt="" decoding="async">
+          <div class="hz-orb nh-orb" onclick="openHomeAgent()">
+            <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
+          </div>
+          <div class="hz-greeting nh-greeting">
+            <span class="hz-greeting-hi home-greeting-hi">Hello, Satya</span>
+            <span class="hz-greeting-ttl home-greeting-ask">What brings you<br>to Banyan today?</span>
+          </div>
+        </div>
       </div>
-      <div class="home-hero-blur home-hero-blur-1"></div>
-      <div class="home-hero-blur home-hero-blur-2"></div>
-      <div class="home-hero-blur home-hero-blur-3"></div>
-      <div class="home-hero-blur home-hero-blur-scroll" id="homeHeroBlurScroll"></div>
-      <div class="home-greeting-halo" id="homeGreetingHalo"></div>
-      <div class="home-hero-fade"></div>
+
+      <div class="hz-mid nh-mid">
+        <div class="hz-ask" onclick="openHomeAgent()">
+          <span class="hz-ask-ph">Ask Banyan...</span>
+          <div class="hz-ask-btns">
+            <button class="hz-ask-btn" aria-label="Add an attachment" onclick="event.stopPropagation(); openHomeAgent()">
+              <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:15px;color:#575338"></span>
+            </button>
+            <button class="hz-ask-btn" aria-label="Speak to Banyan" onclick="event.stopPropagation(); openHomeAgent()">
+              <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:15px;color:#575338"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Balance: pine panel over a row of sub-accounts -->
+        <div class="nh-bal" onclick="showAccounts()">
+          <div class="nh-bal-top">
+            <div class="nh-bal-pattern" aria-hidden="true"></div>
+            <div class="nh-bal-inner">
+              <div class="nh-bal-col">
+                <span class="nh-bal-lbl">Total Balance</span>
+                <span class="nh-bal-amt">$15,600.00</span>
+              </div>
+              <button class="nh-bal-btn" onclick="event.stopPropagation(); showSendMoney(); setNavActive(1)">
+                <span>Send money</span>
+                <span class="ico ol" style="--ico:url('Icons/ArrowUpRight.svg');--sz:16px;color:#1f3833"></span>
+              </button>
+            </div>
+          </div>
+          <div class="nh-subs">
+            <button class="nh-sub" onclick="event.stopPropagation(); showAccounts()">
+              <span class="nh-sub-ic nh-sub-ic--pine"><span class="nh-sub-mark"></span></span>
+              <span class="nh-sub-lbl">USD Checking</span>
+              <span class="nh-sub-amt">$12,600.00</span>
+            </button>
+            <button class="nh-sub" onclick="event.stopPropagation(); showAccounts()">
+              <span class="nh-sub-ic"><span class="ico ol" style="--ico:url('Icons/AirplaneTakeoff.svg');--sz:22px;color:#e6e4d8"></span></span>
+              <span class="nh-sub-lbl">Tokyo Holiday</span>
+              <span class="nh-sub-amt">$12,600.00</span>
+            </button>
+            <button class="nh-sub" onclick="event.stopPropagation(); showAccounts()">
+              <span class="nh-sub-ic"><span class="ico ol" style="--ico:url('Icons/Baby.svg');--sz:22px;color:#e6e4d8"></span></span>
+              <span class="nh-sub-lbl">Family expenses</span>
+              <span class="nh-sub-amt">$12,600.00</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hz-sheet nh-sheet">
+
+        <section class="nh-attn">
+          <div class="nh-attn-hdr">
+            <h2 class="nh-attn-ttl">Items needing your attention</h2>
+            <div class="nh-dots" aria-hidden="true"><span class="on"></span><span></span><span></span></div>
+          </div>
+          <div class="nh-attn-card">
+            <span class="nh-attn-logo"><img src="assets/netflix-n.webp" alt="Netflix" loading="lazy" decoding="async"></span>
+            <div class="nh-attn-txt">
+              <p class="nh-attn-hl">Netflix up by $2.00</p>
+              <p class="nh-attn-sub">Your charge is now $17.99 for April, up from $15.99.</p>
+            </div>
+            <button class="nh-attn-btn" onclick="openHomeAgent()">
+              <span class="ico ol" style="--ico:url('Icons/Leaf.svg');--sz:15px;color:#f4eeda"></span>
+              <span>Review</span>
+            </button>
+          </div>
+        </section>
+
+        <section class="nh-txc">
+          <div class="nh-txc-hdr">
+            <h3 class="nh-txc-ttl">Transactions</h3>
+            <div class="nh-seg">
+              <button class="nh-seg-btn is-on" onclick="nhSeg(this)">Recent</button>
+              <button class="nh-seg-btn" onclick="nhSeg(this)">Upcoming</button>
+            </div>
+          </div>
+
+          <div class="nh-txc-recent">
+            <div class="nh-row">
+              <div class="nh-row-date"><b>27</b><span>JUL</span></div>
+              <span class="nh-row-av"><img src="assets/tx-maya.webp" alt="" loading="lazy" decoding="async"></span>
+              <div class="nh-row-info">
+                <span class="nh-row-name">Maya Sarini
+                  <span class="ico ol nh-row-tag" style="--ico:url('Icons/ArrowsClockwise.svg');--sz:13px;color:#a29e89"></span>
+                </span>
+                <span class="nh-row-meta">11:49 PM · International</span>
+              </div>
+              <div class="nh-row-amt"><span>- $1,600.00</span><span class="nh-row-inr">- &#8377;53,878.21</span></div>
+            </div>
+          </div>
+
+          <div class="nh-older"><span>Older transactions</span></div>
+
+          <div class="nh-txc-older">
+            <div class="nh-row">
+              <div class="nh-row-date"><b>26</b><span>JUL</span></div>
+              <span class="nh-row-av"><img src="assets/tx-maya.webp" alt="" loading="lazy" decoding="async"></span>
+              <div class="nh-row-info">
+                <span class="nh-row-name">Maya Sarini
+                  <span class="ico ol nh-row-tag" style="--ico:url('Icons/ArrowsClockwise.svg');--sz:13px;color:#a29e89"></span>
+                </span>
+                <span class="nh-row-meta">12:12 PM · International</span>
+              </div>
+              <div class="nh-row-amt"><span>- $1,600.00</span><span class="nh-row-inr">- &#8377;53,878.21</span></div>
+            </div>
+            <div class="nh-row">
+              <div class="nh-row-date"></div>
+              <span class="nh-row-av"><img src="assets/tx-dining.webp" alt="" loading="lazy" decoding="async"></span>
+              <div class="nh-row-info">
+                <span class="nh-row-name">Starbucks</span>
+                <span class="nh-row-meta">10:08 AM · Card</span>
+              </div>
+              <div class="nh-row-amt"><span>- $1,200.00</span></div>
+            </div>
+          </div>
+
+          <button class="nh-seeall" onclick="showList()">
+            <span>See all transactions</span>
+            <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:15px;color:#322d0f"></span>
+          </button>
+        </section>
+
+        <!-- Card spends — same wallet pocket as the fresh-account home, two cards in it -->
+        <section class="hz-dc nh-dc" onclick="showCards('USD Checking')">
+          <div class="hz-dc-back" aria-hidden="true"></div>
+          <div class="hz-dc-plate nh-plate-back" aria-hidden="true"></div>
+          <div class="nh-plate-front" aria-hidden="true"><span class="nh-plate-brand">BANYAN</span></div>
+          <svg class="hz-dc-front" viewBox="0 0 335 156" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <pattern id="nhChk" width="6" height="6" patternUnits="userSpaceOnUse">
+                <rect width="6" height="6" fill="#5f3d26"/>
+                <rect width="3" height="3" fill="#66412a"/>
+                <rect x="3" y="3" width="3" height="3" fill="#66412a"/>
+              </pattern>
+            </defs>
+            <path d="M0 0 C 60 0 80 12 167.5 12 C 255 12 275 0 335 0 L335 124 Q335 156 303 156 L32 156 Q0 156 0 124 Z" fill="url(#nhChk)"/>
+            <path d="M7 7 C 62 7.5 82 19 167.5 19 C 253 19 273 7.5 328 7 L328 122 Q328 149 301 149 L34 149 Q7 149 7 122 Z"
+                  fill="none" stroke="#7d5133" stroke-width="1.2" stroke-dasharray="2.5 3.5" stroke-linecap="round"/>
+          </svg>
+          <div class="nh-dc-body">
+            <span class="nh-dc-lbl">Card spends in May</span>
+            <span class="nh-dc-amt">$12,600.00</span>
+            <button class="nh-dc-btn" onclick="event.stopPropagation(); showCards('USD Checking')">Show all</button>
+          </div>
+        </section>
+      </div>
     </div>
+  </div>
 
-    <!-- Pinned header — stays put while content scrolls (like Spaces detail) -->
-    <div class="home-hero-bar" id="homeHeaderBar">
-      <div class="home-hero-av">
-        <div class="home-hero-av-inner"><span>SR</span></div>
+  <!-- ═══ Welcome screens — 3-slide carousel (Figma Newer-UI 8268-224004) ═══
+       Cream ground (ivory → sage gradient) with a product illustration per slide.
+       Slides 1 and 3 are built from the DS card vocabulary; slide 2 uses the
+       exported wallet and QR illustrations. -->
+  <div class="screen hb" id="welcome">
+    <div class="ws">
+      <div class="ws-prog" role="tablist" aria-label="Welcome slide">
+        <button role="tab" aria-selected="true"  aria-label="Slide 1" onclick="wsGo(0)"><i></i></button>
+        <button role="tab" aria-selected="false" aria-label="Slide 2" onclick="wsGo(1)"><i></i></button>
+        <button role="tab" aria-selected="false" aria-label="Slide 3" onclick="wsGo(2)"><i></i></button>
       </div>
-      <button class="home-hero-bell">
+
+      <div class="ws-stage">
+        <!-- 1 · a transfer, priced -->
+        <div class="ws-slide is-on" data-ws="0">
+          <div class="ws-art">
+            <!-- The exposed ends of the ruler marks the card sits on: only the two
+                 outermost pairs clear the card, one pair per gutter. -->
+            <div class="ws-ticks" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <div class="ws-xfer">
+              <!-- Rate source, quoted. Arrives late (see .ws-xfer-rate timing) so the
+                   transfer reads first and the price lands as the punchline. -->
+              <div class="ws-xfer-rate">
+                <svg class="ws-xfer-g" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+                  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5Z"/>
+                  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65Z"/>
+                  <path fill="#FBBC05" d="M10.53 28.59A14.6 14.6 0 0 1 9.77 24c0-1.6.28-3.14.76-4.59l-7.97-6.19A23.9 23.9 0 0 0 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19Z"/>
+                  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.9l-7.97 6.19C6.51 42.62 14.62 48 24 48Z"/>
+                </svg>
+                <span>$1 = &#8377;96.56</span>
+              </div>
+              <div class="ws-xfer-body">
+                <div class="ws-xfer-card ws-xfer-card--from is-focus">
+                  <div class="ws-xfer-col">
+                    <span class="ws-xfer-dir">From</span>
+                    <span class="ws-xfer-acct">Banyan a/c</span>
+                  </div>
+                  <span class="ws-xfer-amt"><i>$</i>15,000</span>
+                </div>
+                <div class="ws-xfer-mid">
+                  <span class="ico ol" style="--ico:url('Icons/SealPercent.svg');--sz:17px;color:#e6e4d8"></span>
+                  <span><b>Free transfer.</b> No fee charged.</span>
+                </div>
+                <div class="ws-xfer-card ws-xfer-card--to">
+                  <div class="ws-xfer-col">
+                    <span class="ws-xfer-lbl">To</span>
+                    <span class="ws-xfer-acct">Rohan Rathod</span>
+                  </div>
+                  <span class="ws-xfer-amt"><i>&#8377;</i>14,48,325</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h1 class="ws-h">Best rates.<br>Zero fees.</h1>
+          <p class="ws-sub">Send money to India in minutes.</p>
+        </div>
+
+        <!-- 2 · the card, in a wallet -->
+        <div class="ws-slide" data-ws="1">
+          <div class="ws-art">
+            <!-- The illustration is cut along the pocket mouth so the cards can
+                 actually rise out from behind the front panel, and the cards are cut
+                 apart from each other so they can arrive one at a time. The wallet
+                 stands empty for the first beat, so it needs its own back wall behind
+                 the front panel. -->
+            <div class="ws-wallet-set">
+              <img class="ws-wall" src="assets/wc-wall.webp" alt="" decoding="async">
+              <img class="ws-card ws-card--back" src="assets/wc-card-back.webp" alt="" decoding="async">
+              <img class="ws-card ws-card--front" src="assets/wc-card-front.webp" alt="" decoding="async">
+              <img class="ws-wallet" src="assets/wc-pocket.webp" alt="" decoding="async">
+              <img class="ws-qr" src="assets/wc-qr.webp" alt="" decoding="async">
+            </div>
+          </div>
+          <h1 class="ws-h">Spend directly from<br>your USD account</h1>
+          <p class="ws-sub">Pay via UPI or your Banyan Debit Card &#8212; with no FX fees.</p>
+        </div>
+
+        <!-- 3 · everything in one view -->
+        <div class="ws-slide" data-ws="2">
+          <div class="ws-art">
+            <div class="ws-bal">
+              <div class="ws-bal-stack" aria-hidden="true"><i></i><i></i></div>
+              <div class="ws-bal-body">
+                <div class="ws-bal-top">
+                  <div class="ws-bal-pattern" aria-hidden="true"></div>
+                  <div class="ws-bal-row">
+                    <div class="ws-xfer-col">
+                      <span class="ws-bal-lbl">Total Balance</span>
+                      <span class="ws-bal-amt">$15,600.00</span>
+                    </div>
+                    <span class="ws-bal-btn">Send money
+                      <span class="ico ol" style="--ico:url('Icons/ArrowUpRight.svg');--sz:14px;color:#1f3833"></span>
+                    </span>
+                  </div>
+                </div>
+                <div class="ws-bal-subs">
+                  <div class="ws-bal-sub">
+                    <span class="ws-bal-ic ws-bal-ic--pine"><span class="ws-bal-mark"></span></span>
+                    <span class="ws-bal-sublbl">USD Checking</span>
+                    <span class="ws-bal-subamt">$12,600.00</span>
+                  </div>
+                  <div class="ws-bal-sub">
+                    <span class="ws-bal-ic"><span class="ico ol" style="--ico:url('Icons/AirplaneTakeoff.svg');--sz:19px;color:#e6e4d8"></span></span>
+                    <span class="ws-bal-sublbl">Tokyo Holiday</span>
+                    <span class="ws-bal-subamt">$12,600.00</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <h1 class="ws-h">See your whole<br>financial picture</h1>
+          <p class="ws-sub">Bring your accounts, balances, and transactions together in one clear view.</p>
+        </div>
+
+        <button class="ws-tap ws-tap--prev" type="button" aria-label="Previous slide" onclick="wsGo(_wsIdx-1)"></button>
+        <button class="ws-tap ws-tap--next" type="button" aria-label="Next slide" onclick="wsGo(_wsIdx+1)"></button>
+      </div>
+
+      <div class="ws-foot">
+        <button class="ws-login" onclick="obShowLogin(1)">Already have an account? Login</button>
+        <button class="ws-cta" onclick="obStartNew()">Open account</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Home — fresh account, straight out of onboarding (Figma 663-17827) ═══
+       Shown only via the onboarding journey; the populated #home stays for the
+       "Already onboarded" path. Three stacked grounds (cream → evergreen → ivory)
+       so the page reads as one continuous surface, not a stack of cards. -->
+  <div class="screen hb" id="homeZero">
+
+    <div class="home-hero-bar">
+      <div class="home-hero-av"><div class="home-hero-av-inner"><span>SR</span></div></div>
+      <button class="home-hero-bell" aria-label="Open your inbox">
         <span class="ico ol" style="--ico:url('Icons/Tray.svg');--sz:18px;color:rgba(0,0,0,0.70)"></span>
       </button>
     </div>
 
-    <div class="home-scroll">
+    <div class="hz-scroll">
 
-      <!-- ── Greeting (over the sketch) ── -->
-      <div class="home-hero">
-        <div class="home-hero-orb" onclick="openHomeAgent()">
-          <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
-        </div>
-        <div class="home-greeting">
-          <span class="home-greeting-hi">Hello, Satya</span>
-          <span class="home-greeting-ask">What brings you<br>to Banyan today?</span>
+      <!-- ── Cream ground: offer, cityscape, greeting ── -->
+      <div class="hz-top">
+
+        <section class="hz-promo">
+          <img class="hz-promo-globe" src="assets/home-zero-globe.webp" alt="" decoding="async">
+          <div class="hz-promo-body">
+            <div class="hz-promo-tags">
+              <span class="hz-tag">Promotional offer</span>
+              <span class="hz-tag">Ends 11 Sep</span>
+            </div>
+            <h2 class="hz-promo-ttl">Experience the speed of Banyan</h2>
+            <p class="hz-promo-sub">Easily send your first &#8377;500 to any UPI ID or Indian phone number for free. We&#8217;ve got you covered.</p>
+            <button class="hz-promo-btn" onclick="showSendMoney(); setNavActive(1)">Send money</button>
+          </div>
+        </section>
+
+        <div class="hz-hero">
+          <img class="hz-hero-sketch" src="assets/home-zero-sketch.webp" alt="" decoding="async">
+          <div class="hz-orb" onclick="openHomeAgent()">
+            <video src="ai-orb.mp4" autoplay loop muted playsinline></video>
+          </div>
+          <div class="hz-greeting">
+            <span class="hz-greeting-hi">Hello, Satya</span>
+            <span class="hz-greeting-ttl">Your account is<br>up and running</span>
+          </div>
         </div>
       </div>
 
-      <!-- ── Ask Banyan input ── -->
-      <div class="home-ai" onclick="focusHomeAi()" style="cursor:pointer;">
-        <div class="home-ai-ph">
-          <span class="home-ai-ph-static">Ask Banyan&nbsp;</span><span class="home-ai-ph-suffix"></span><span class="home-ai-ph-cursor"></span>
+      <!-- ── Evergreen band: ask + balance ── -->
+      <div class="hz-mid">
+        <div class="hz-ask" onclick="openHomeAgent()">
+          <span class="hz-ask-ph">Ask Banyan...</span>
+          <div class="hz-ask-btns">
+            <button class="hz-ask-btn" aria-label="Add an attachment" onclick="event.stopPropagation(); openHomeAgent()">
+              <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:15px;color:#575338"></span>
+            </button>
+            <button class="hz-ask-btn" aria-label="Speak to Banyan" onclick="event.stopPropagation(); openHomeAgent()">
+              <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:15px;color:#575338"></span>
+            </button>
+          </div>
         </div>
-        <div class="home-ai-row">
-          <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
-            <span class="ico ol" style="--ico:url('Icons/Plus.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
+
+        <div class="hz-bal">
+          <div class="hz-bal-pattern" aria-hidden="true"></div>
+          <div class="hz-bal-inner">
+            <div class="hz-bal-col">
+              <span class="hz-bal-lbl">Total Balance</span>
+              <span class="hz-bal-amt">$0.00</span>
+            </div>
+            <button class="hz-bal-btn" onclick="showAccounts()">
+              <span class="ico ol" style="--ico:url('Icons/ArrowDownLeft.svg');--sz:16px;color:#1f3833"></span>
+              <span>Add funds</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Ivory sheet: transactions, cards ── -->
+      <div class="hz-sheet">
+
+        <section class="hz-txc">
+          <div class="hz-txc-hdr">
+            <h3 class="hz-txc-ttl">Transactions</h3>
+            <div class="hz-seg">
+              <button class="hz-seg-btn is-on" onclick="hzSeg(this)">Recent</button>
+              <button class="hz-seg-btn" onclick="hzSeg(this)">Upcoming</button>
+            </div>
+          </div>
+          <div class="hz-empty">
+            <img class="hz-empty-art" src="assets/home-zero-wallet.webp" alt="" decoding="async">
+            <h4 class="hz-empty-ttl">No transactions yet</h4>
+            <p class="hz-empty-sub">Once you add money and start sending or receiving payments, they&#8217;ll appear here.</p>
+          </div>
+        </section>
+
+        <!-- Digital card, tucked into a wallet pocket. The pocket front, its curved
+             mouth and the stitching are one SVG so the dashes follow the curve. -->
+        <section class="hz-dc">
+          <div class="hz-dc-back" aria-hidden="true"></div>
+          <div class="hz-dc-plate" aria-hidden="true">
+            <span class="hz-dc-chip"></span>
+            <span class="hz-dc-strip"><span class="hz-dc-brand">BANYAN</span></span>
+          </div>
+          <svg class="hz-dc-front" viewBox="0 0 335 156" preserveAspectRatio="none" aria-hidden="true">
+            <defs>
+              <pattern id="hzChk" width="6" height="6" patternUnits="userSpaceOnUse">
+                <rect width="6" height="6" fill="#5f3d26"/>
+                <rect width="3" height="3" fill="#66412a"/>
+                <rect x="3" y="3" width="3" height="3" fill="#66412a"/>
+              </pattern>
+            </defs>
+            <path d="M0 0 C 60 0 80 12 167.5 12 C 255 12 275 0 335 0 L335 124 Q335 156 303 156 L32 156 Q0 156 0 124 Z" fill="url(#hzChk)"/>
+            <path d="M7 7 C 62 7.5 82 19 167.5 19 C 253 19 273 7.5 328 7 L328 122 Q328 149 301 149 L34 149 Q7 149 7 122 Z"
+                  fill="none" stroke="#7d5133" stroke-width="1.2" stroke-dasharray="2.5 3.5" stroke-linecap="round"/>
+          </svg>
+          <div class="hz-dc-body">
+            <h3 class="hz-dc-ttl">Your digital card is ready</h3>
+            <p class="hz-dc-sub">Add money to make your first online purchase.</p>
+            <button class="hz-dc-btn" onclick="showCards('USD Checking')">View digital card</button>
+          </div>
+        </section>
+
+        <section class="hz-pc">
+          <h3 class="hz-pc-ttl">Your physical card is on its way</h3>
+          <p class="hz-pc-sub">Expected by <strong>19 July 2026</strong>.<br>We&#8217;ll let you know when it&#8217;s ready to activate.</p>
+          <button class="hz-pc-link" onclick="showCards('USD Checking')">
+            <span>Track delivery</span>
+            <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:15px;color:#095546"></span>
           </button>
-          <div class="home-ai-row-r">
-            <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
-              <span class="ico ol" style="--ico:url('Icons/Microphone.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
-            </button>
-            <button class="home-ai-btn" onclick="event.stopPropagation(); openHomeAgent()">
-              <span class="ico ol" style="--ico:url('Icons/Waveform.svg');--sz:14px;color:rgba(0,0,0,0.40)"></span>
-            </button>
-          </div>
-        </div>
+        </section>
       </div>
-
-      <!-- ── Main content ── -->
-      <div class="home-main">
-
-        <!-- ── Checking Balance card (Figma 6163-29639) ── -->
-        <div class="home-bal home-bal--dark" onclick="showAccounts()">
-          <div class="home-bal-top">
-            <div class="home-bal-pattern" aria-hidden="true"></div>
-            <div class="home-bal-inner">
-              <div class="home-bal-head">
-                <span class="home-bal-lbl">Total Balance</span>
-                <div class="home-bal-amt">
-                  <span class="home-bal-sym">$</span><span class="home-bal-int">15,600</span><span class="home-bal-dec">.00</span>
-                </div>
-              </div>
-              <div class="home-bal-actions">
-                <button class="home-bal-btn" onclick="event.stopPropagation(); showAccounts()">
-                  <span class="ico ol" style="--ico:url('Icons/ArrowDownLeft.svg');--sz:16px;color:#322d0f"></span>
-                  <span>Add funds</span>
-                </button>
-                <button class="home-bal-btn" onclick="event.stopPropagation(); showSendMoney(); setNavActive(1)">
-                  <span class="ico ol" style="--ico:url('Icons/ArrowUpRight.svg');--sz:16px;color:#322d0f"></span>
-                  <span>Send money</span>
-                </button>
-              </div>
-            </div>
-          </div>
-          <div class="home-bal-subs">
-            <div class="home-bal-sub"><span class="home-bal-sub-av"><img src="assets/sub-usd.webp" alt="" loading="lazy" decoding="async"></span><span class="home-bal-sub-lbl">USD Checking</span><span class="home-bal-sub-amt">$12,600.00</span></div>
-            <div class="home-bal-sub"><span class="home-bal-sub-av"><img src="assets/sub-thailand.webp" alt="" loading="lazy" decoding="async"></span><span class="home-bal-sub-lbl">Thailand trip</span><span class="home-bal-sub-amt">$12,600.00</span></div>
-            <div class="home-bal-sub"><span class="home-bal-sub-av"><img src="assets/sub-mom.webp" alt="" loading="lazy" decoding="async"></span><span class="home-bal-sub-lbl">Mom's expenses</span><span class="home-bal-sub-amt">$12,600.00</span></div>
-          </div>
-        </div>
-
-        <!-- ── Items that need your attention ── -->
-        <section class="home-attn">
-          <h2 class="home-attn-title">Items that need your attention</h2>
-          <div class="home-attn-card">
-            <div class="home-attn-logo"><img loading="lazy" decoding="async" src="assets/netflix-n.webp" alt="Netflix"></div>
-            <div class="home-attn-txt">
-              <p class="home-attn-hl">Netflix up by <span class="home-attn-red">$2.00</span></p>
-              <p class="home-attn-sub">Your charge is now $17.99 for April, up from $15.99.</p>
-            </div>
-            <button class="home-attn-review" onclick="openHomeAgent()">
-              <span class="ico ol" style="--ico:url('Icons/ArrowUUpLeft.svg');--sz:14px;color:#fff"></span>
-              <span>Review</span>
-            </button>
-          </div>
-          <div class="home-attn-dots"><span class="on"></span><span></span><span></span></div>
-        </section>
-
-        <!-- ── Transactions ── -->
-        <section class="home-txc">
-          <div class="home-txc-hdr">
-            <span class="home-txc-title">Transactions</span>
-            <div class="home-txc-seg">
-              <button class="home-txc-seg-btn on" onclick="homeTxTab(this,'recent')">Recent</button>
-              <button class="home-txc-seg-btn" onclick="homeTxTab(this,'upcoming')">Upcoming</button>
-            </div>
-          </div>
-
-          <div class="home-txc-list">
-            <div class="home-txc-day">
-              <div class="home-txc-daynum">27<span>JUL</span></div>
-              <div class="home-txc-daycol">
-                <div class="home-txc-row">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Maya Sarini</span><span class="home-txc-meta">Completed · Bank transfer</span></div>
-                  <div class="home-txc-amt"><span>- $1,600.00</span><span class="home-txc-inr">- ₹53,878.21</span></div>
-                </div>
-                <div class="home-txc-row">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta">Completed · Card</span></div>
-                  <div class="home-txc-amt"><span>- $1,200.00</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="home-txc-day">
-              <div class="home-txc-daynum">26<span>JUL</span></div>
-              <div class="home-txc-daycol">
-                <div class="home-txc-row">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-shopping.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Zara</span><span class="home-txc-meta"><span class="home-txc-warn">On hold</span> · Card</span></div>
-                  <div class="home-txc-amt"><span>- $250.00</span></div>
-                </div>
-                <div class="home-txc-row">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Harry Morgan</span><span class="home-txc-meta">Completed · Bank transfer</span></div>
-                  <div class="home-txc-amt"><span>- $50.00</span></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="home-txc-older">Older transactions. Last seen on 26 Jul.</div>
-
-            <div class="home-txc-day">
-              <div class="home-txc-daynum">26<span>JUL</span></div>
-              <div class="home-txc-daycol">
-                <div class="home-txc-row">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-p2p.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/Bank.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Maya Sarini</span><span class="home-txc-meta">Completed · Bank transfer</span></div>
-                  <div class="home-txc-amt"><span>- $1,600.00</span><span class="home-txc-inr">- ₹53,878.21</span></div>
-                </div>
-                <div class="home-txc-row home-txc-row--dim">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta"><span class="home-txc-err">Failed</span> · Card</span></div>
-                  <div class="home-txc-amt"><span class="home-txc-strike">- $30.00</span></div>
-                </div>
-                <div class="home-txc-row">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta">Completed · Card</span></div>
-                  <div class="home-txc-amt"><span>- $1,200.00</span></div>
-                </div>
-                <div class="home-txc-row home-txc-row--dim">
-                  <div class="home-txc-av"><img loading="lazy" decoding="async" src="assets/tx-transport.webp" alt=""><span class="home-txc-badge"><span class="ico ol" style="--ico:url('Icons/CreditCard.svg');--sz:10px;color:rgba(0,0,0,0.6)"></span></span></div>
-                  <div class="home-txc-info"><span class="home-txc-name">Lyft</span><span class="home-txc-meta"><span class="home-txc-err">Failed</span> · Card</span></div>
-                  <div class="home-txc-amt"><span class="home-txc-strike">- $30.00</span></div>
-                </div>
-              </div>
-            </div>
-
-            <button class="home-txc-all" onclick="showList()">
-              <span>See all transactions</span>
-              <span class="ico ol" style="--ico:url('Icons/ArrowRight.svg');--sz:16px;color:var(--text-primary)"></span>
-            </button>
-          </div>
-        </section>
-
-        <!-- ── Your cards ── -->
-        <section class="home-yc" onclick="showCards('USD Checking')">
-          <img loading="lazy" decoding="async" class="home-yc-bg" src="assets/home-brief-bg.webp" alt="">
-          <div class="home-yc-fade"></div>
-          <div class="home-yc-content">
-            <span class="home-yc-lbl">Your cards</span>
-            <span class="home-yc-spend-lbl">CARD SPENDS IN MAY</span>
-            <div class="home-yc-amt"><span class="home-yc-sym">$</span><span class="home-yc-int">14,098</span><span class="home-yc-dec">.00</span></div>
-            <button class="home-yc-showall" onclick="event.stopPropagation(); showCards('USD Checking')">
-              <span>Show all</span>
-              <span class="ico ol" style="--ico:url('Icons/ArrowDown.svg');--sz:14px;color:var(--text-primary)"></span>
-            </button>
-          </div>
-        </section>
-
-      </div><!-- /.home-main -->
-    </div><!-- /.home-scroll -->
-  </div><!-- /#home -->
+    </div>
+  </div>
+<!-- /#home -->
 
 
   <!-- ══════════════════════════════════════
@@ -4237,7 +4474,7 @@
       </div>
       <div class="bnav-tab" id="bnav2" onclick="showAccounts(); closePayPicker();">
         <div class="bnav-icon-m" style="--ico:url('Icons/Stack.svg')"></div>
-        <span class="bnav-label">Spaces</span>
+        <span class="bnav-label">Accounts</span>
       </div>
       <div class="bnav-tab" id="bnav3" onclick="showExplore(); closePayPicker();">
         <div class="bnav-icon-m" style="--ico:url('Icons/DotsNine.svg')"></div>
@@ -4931,7 +5168,7 @@
 
 </div>
 
-  <script defer src="app.js?v=351"></script>
+  <script defer src="app.js?v=365"></script>
   <script>
     (function() {
       var phone = document.querySelector('.phone');

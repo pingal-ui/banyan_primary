@@ -2,14 +2,10 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "premium-design",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
-      "cwd": "/Users/pingalkakati/Claude/Banyan_primary",
-      "autoPort": true
+      "name": "banyan-proto",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": [".claude/devserver.py", "3111"],
+      "port": 3111
     }
   ]
 }
