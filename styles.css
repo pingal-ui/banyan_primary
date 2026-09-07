@@ -7710,13 +7710,13 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
 .ws-prog button { flex: 1 1 0px; height: 14px; padding: 2px 0px 8px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .ws-prog i { display: block; height: 4px; border-radius: 9999px; background: rgb(197, 192, 163); transition: background-color 200ms; }
 .ws-prog button[aria-selected="true"] i { background: rgb(124, 121, 97); }
-.ws-stage { position: relative; z-index: 2; flex: 1 1 auto; min-height: 1px; }
+.ws-stage { position: relative; z-index: 2; flex: 1 1 auto; min-height: 1px; perspective: 1100px; perspective-origin: 50% 42%; }
 /* Slides travel: the one leaving exits opposite the one arriving, so the carousel
    reads as a strip moving rather than a crossfade. Off-stage slides sit at ±100%
    and are clipped by .ws; no-tx parks one there without animating the jump. */
-.ws-slide { position: absolute; inset: 0px; display: flex; flex-direction: column; align-items: center; padding: 94px 24px 0px; transform: translateX(100%); transition: transform 300ms var(--ease-drawer); }
+.ws-slide { position: absolute; inset: 0px; display: flex; flex-direction: column; align-items: center; padding: 94px 24px 0px; transform: translateX(100%) translateZ(-140px) rotateY(32deg); transition: transform 460ms var(--ease-drawer); }
 .ws-slide.is-on { transform: none; }
-.ws-slide.is-left { transform: translateX(-100%); }
+.ws-slide.is-left { transform: translateX(-100%) translateZ(-140px) rotateY(-32deg); }
 .ws-slide.no-tx { transition: none; }
 /* Freezes a slide's whole build on its first keyframe while the slide travels, so
    nothing is seen assembling off-stage. Released once it has landed. */
@@ -7755,7 +7755,7 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
 .ws-ticks i:nth-child(2) { left: 12px; }
 .ws-ticks i:nth-child(3) { right: 12px; }
 .ws-ticks i:nth-child(4) { right: 0px; }
-.ws-xfer-rate { position: absolute; z-index: 1; top: 0px; right: 19px; height: 38px; display: flex; align-items: center; gap: 5px; padding: 0px 13px 0px 16px; border: 1.5px solid rgb(31, 56, 51); border-radius: 9999px; background: rgb(255, 255, 255); font-family: Roobert, Geist, sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; letter-spacing: -0.2px; color: rgb(31, 56, 51); white-space: nowrap; }
+.ws-xfer-rate { position: absolute; z-index: 1; top: 0px; right: 19px; height: 38px; display: flex; align-items: center; gap: 5px; padding: 0px 13px 0px 16px; border: 1.5px solid rgb(31, 56, 51); border-radius: 9999px; background: rgb(253, 252, 242); font-family: Roobert, Geist, sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; letter-spacing: -0.2px; color: rgb(31, 56, 51); white-space: nowrap; }
 .ws-xfer-g { flex-shrink: 0; display: block; width: 16px; height: 16px; }
 .ws-xfer-body { position: absolute; overflow: hidden; inset: 27px 0px 0px; background: rgb(31, 56, 51); border-radius: 36px; padding: 4px; display: flex; flex-direction: column; box-shadow: rgba(50, 45, 15, 0.22) 0px 0px 14px; }
 /* "In minutes" has to be visible, not just stated: value runs down the card from
@@ -7766,7 +7766,7 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
    against the fold, and its amount is set roughly twice the size — the same
    vocabulary as the send-money amount screen. Rows sit on a shared last-baseline
    so the account name and the figure share a line. */
-.ws-xfer-card { flex: 0 0 auto; height: 68px; background: rgb(255, 255, 255); border-radius: 32px; padding: 11px 16px 16px; display: flex; align-items: baseline; align-items: last baseline; justify-content: space-between; gap: 10px; transition: height 300ms var(--ease-drawer), padding 300ms var(--ease-drawer); }
+.ws-xfer-card { flex: 0 0 auto; height: 68px; background: rgb(253, 252, 242); border-radius: 32px; padding: 11px 16px 16px; display: flex; align-items: baseline; align-items: last baseline; justify-content: space-between; gap: 10px; transition: height 300ms var(--ease-drawer), padding 300ms var(--ease-drawer); }
 .ws-xfer-card.is-focus { height: 109px; padding: 30px 16px 10px; }
 .ws-xfer-col { display: flex; flex-direction: column; gap: 3px; min-width: 0px; }
 .ws-xfer-dir { display: flex; align-items: center; gap: 5px; font-family: Roobert, Geist, sans-serif; font-size: 13px; font-weight: 650; line-height: 18px; color: rgb(9, 85, 70); }
@@ -7910,33 +7910,33 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
   0% { transform: translateY(-6px); }
   100% { transform: none; }
 }
-.ws-slide.is-anim .ws-xfer-body { animation: wsHolderIn 660ms var(--ease-drawer) both; }
-.ws-slide.is-anim .ws-xfer-rate { animation: wsChipFall  420ms var(--hm-bounce)  440ms both,
-                                             wsChipShake 440ms linear           2290ms forwards; }
-.ws-slide.is-anim .ws-xfer-card--from { animation: wsDropT  520ms var(--ease-out)  170ms both; }
-.ws-slide.is-anim .ws-ticks i { animation: wsFade   440ms var(--ease-out)  420ms both; }
-.ws-slide.is-anim .ws-xfer-mid { animation: wsFadeT  420ms var(--ease-out)  400ms both; }
-.ws-slide.is-anim .ws-xfer-card--to { animation: wsRiseT  520ms var(--ease-out)  280ms both; }
-.ws-slide.is-anim .ws-xfer-body::after { animation: wsWire 360ms linear 2010ms both; }
-.ws-slide.is-anim .ws-xfer-card--to .ws-xfer-amt { animation: wsLanded 190ms var(--ease-out) 2290ms both; }
-.ws-slide.is-anim .ws-wall, .ws-slide.is-anim .ws-wallet { animation: wsHolderIn 660ms var(--ease-drawer) both; }
+.ws-slide.is-anim .ws-xfer-body { animation: wsHolderIn 924ms var(--ease-drawer) both; }
+.ws-slide.is-anim .ws-xfer-rate { animation: wsChipFall  588ms var(--hm-bounce)  616ms both,
+                                             wsChipShake 616ms linear           3206ms forwards; }
+.ws-slide.is-anim .ws-xfer-card--from { animation: wsDropT  728ms var(--ease-out)  238ms both; }
+.ws-slide.is-anim .ws-ticks i { animation: wsFade   616ms var(--ease-out)  588ms both; }
+.ws-slide.is-anim .ws-xfer-mid { animation: wsFadeT  588ms var(--ease-out)  560ms both; }
+.ws-slide.is-anim .ws-xfer-card--to { animation: wsRiseT  728ms var(--ease-out)  392ms both; }
+.ws-slide.is-anim .ws-xfer-body::after { animation: wsWire 504ms linear 2814ms both; }
+.ws-slide.is-anim .ws-xfer-card--to .ws-xfer-amt { animation: wsLanded 266ms var(--ease-out) 3206ms both; }
+.ws-slide.is-anim .ws-wall, .ws-slide.is-anim .ws-wallet { animation: wsHolderIn 924ms var(--ease-drawer) both; }
 /* Cards are posted in from above, one at a time, into a wallet that has stood
    empty for a beat. --ease-drawer keeps the travel readable rather than front-
    loading it out of sight. */
-.ws-slide.is-anim .ws-card--back { animation: wsDropIn 780ms var(--ease-drawer)  880ms both; }
-.ws-slide.is-anim .ws-card--front { animation: wsDropIn 740ms var(--ease-drawer) 1300ms both; }
-.ws-slide.is-anim .ws-qr { animation: wsQrPunch 640ms var(--hm-bounce) 2060ms both; }
-.ws-slide.is-anim .ws-bal-body { animation: wsHolderIn 660ms var(--ease-drawer) both,
-                                            wsBalOpen 620ms var(--ease-out)   760ms both,
-                                            wsBalKick 460ms var(--ease-out)  1400ms forwards; }
-.ws-slide.is-anim .ws-bal-row { animation: wsFadeT 440ms var(--ease-out) 200ms both; }
-.ws-slide.is-anim .ws-bal-sub:nth-child(1) { animation: wsBalSub 520ms var(--hm-bounce)  860ms both; }
-.ws-slide.is-anim .ws-bal-sub:nth-child(2) { animation: wsBalSub 520ms var(--hm-bounce)  950ms both; }
-.ws-slide.is-anim .ws-bal-stack i:nth-child(2) { animation: wsBalFan2 600ms var(--ease-out) 1400ms both; }
-.ws-slide.is-anim .ws-bal-stack i:nth-child(1) { animation: wsBalFan1 600ms var(--ease-out) 1490ms both; }
-.ws-slide.is-anim .ws-h { animation: wsFade   480ms var(--ease-out)  300ms both,
-                                       wsShine  880ms linear           3700ms both; }
-.ws-slide.is-anim .ws-sub { animation: wsFade   480ms var(--ease-out)  380ms both; }
+.ws-slide.is-anim .ws-card--back { animation: wsDropIn 1092ms var(--ease-drawer)  1232ms both; }
+.ws-slide.is-anim .ws-card--front { animation: wsDropIn 1036ms var(--ease-drawer) 1820ms both; }
+.ws-slide.is-anim .ws-qr { animation: wsQrPunch 896ms var(--hm-bounce) 2884ms both; }
+.ws-slide.is-anim .ws-bal-body { animation: wsHolderIn 924ms var(--ease-drawer) both,
+                                            wsBalOpen 868ms var(--ease-out)   1064ms both,
+                                            wsBalKick 644ms var(--ease-out)  1960ms forwards; }
+.ws-slide.is-anim .ws-bal-row { animation: wsFadeT 616ms var(--ease-out) 280ms both; }
+.ws-slide.is-anim .ws-bal-sub:nth-child(1) { animation: wsBalSub 728ms var(--hm-bounce)  1204ms both; }
+.ws-slide.is-anim .ws-bal-sub:nth-child(2) { animation: wsBalSub 728ms var(--hm-bounce)  1330ms both; }
+.ws-slide.is-anim .ws-bal-stack i:nth-child(2) { animation: wsBalFan2 840ms var(--ease-out) 1960ms both; }
+.ws-slide.is-anim .ws-bal-stack i:nth-child(1) { animation: wsBalFan1 840ms var(--ease-out) 2086ms both; }
+.ws-slide.is-anim .ws-h { animation: wsFade   672ms var(--ease-out)  420ms both,
+                                       wsShine  1232ms linear           4188ms both; }
+.ws-slide.is-anim .ws-sub { animation: wsFade   672ms var(--ease-out)  532ms both; }
 @media (prefers-reduced-motion: reduce) {
   .ws-prog i, .ws-cta, .ws-login, .ws-slide { transition: none; }
   .ws-xfer-card, .ws-xfer-amt { transition: none; }

@@ -13124,19 +13124,19 @@ function obFinish() {
    Auto-advances on the same dwell as the live onboarding carousel, and loops. Tap
    zones and the progress bars both step it; either interaction restarts the dwell so
    the slide you just chose gets a full read. */
-var WS_DUR = 5000, _wsIdx = 0, _wsTimer = null, _wsFocusT = null, _wsHoldT = null;
+var WS_DUR = 6000, _wsIdx = 0, _wsTimer = null, _wsFocusT = null, _wsHoldT = null;
 /* Must match the transform transition on .ws-slide. A slide's contents are frozen
    at their first keyframe for this long so the build happens on a slide that has
    already landed — otherwise the containers fade in while travelling and read as
    having been there all along. */
-var WS_TRAVEL = 300;
+var WS_TRAVEL = 460;
 /* Slide 1 assembles in one beat: the transfer, the copy and the quoted rate all land
    inside the first half-second (WS_RATE_IN drops the rate in from above alongside the
    rest). The second beat is WS_SWAP — by then the value has run the length of the card
    and focus hands over from the amount being sent to the amount being received, the
    panels resize, and the rate pill is shaken by them. Keep WS_RATE_IN in step with the
    animation-delay on .ws-xfer-rate, and WS_SWAP with wsWire + wsChipShake. */
-var WS_RATE_IN = 440, WS_SWAP = 2290;
+var WS_RATE_IN = 616, WS_SWAP = 3206;
 
 /* Focus lives on one card at a time; the CSS transitions height, padding and the
    figure size off this class. */
