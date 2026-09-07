@@ -7718,8 +7718,22 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
 .ws-slide.is-on { transform: none; }
 .ws-slide.is-left { transform: translateX(-100%); }
 .ws-slide.no-tx { transition: none; }
+/* Freezes a slide's whole build on its first keyframe while the slide travels, so
+   nothing is seen assembling off-stage. Released once it has landed. */
+.ws-slide.is-hold *, .ws-slide.is-hold *::before, .ws-slide.is-hold *::after { animation-play-state: paused !important; }
 .ws-art { position: relative; width: 100%; height: 274px; flex: 0 0 auto; display: flex; align-items: flex-end; justify-content: center; }
 .ws-h { margin-top: 24px; text-align: center; font-family: "Arizona Flare", Geist, serif; font-size: 34px; font-weight: 400; line-height: 42px; letter-spacing: -1.7px; color: rgb(50, 45, 15); }
+/* One sheen pass over the heading as it arrives. The gradient's flanks are the
+   heading's own colour and the highlight is parked off-frame, so at rest the text
+   is solid ink rather than gradient-filled — and it runs once, not on a loop. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .ws-h { background-image: linear-gradient(100deg, rgb(50, 45, 15) 0%, rgb(50, 45, 15) 43%, rgb(158, 142, 82) 50%, rgb(50, 45, 15) 57%, rgb(50, 45, 15) 100%); background-size: 300% 100%; background-repeat: no-repeat; background-position: 100% 0px; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+}
+@keyframes wsShine { 
+  0% { background-position: 100% 0px; }
+  100% { background-position: 0% 0px; }
+}
+
 .ws-sub { margin-top: 6px; max-width: 310px; text-align: center; font-family: Roobert, Geist, sans-serif; font-size: 17px; font-weight: 400; line-height: 22px; color: rgb(87, 83, 56); }
 .ws-tap { position: absolute; top: 0px; bottom: 0px; width: 33%; z-index: 1; background: none; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; cursor: pointer; -webkit-tap-highlight-color: transparent; }
 .ws-tap--prev { left: 0px; }
@@ -7743,7 +7757,11 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
 .ws-ticks i:nth-child(4) { right: 0px; }
 .ws-xfer-rate { position: absolute; z-index: 1; top: 0px; right: 19px; height: 38px; display: flex; align-items: center; gap: 5px; padding: 0px 13px 0px 16px; border: 1.5px solid rgb(31, 56, 51); border-radius: 9999px; background: rgb(255, 255, 255); font-family: Roobert, Geist, sans-serif; font-size: 13px; font-weight: 400; line-height: 18px; letter-spacing: -0.2px; color: rgb(31, 56, 51); white-space: nowrap; }
 .ws-xfer-g { flex-shrink: 0; display: block; width: 16px; height: 16px; }
-.ws-xfer-body { position: absolute; inset: 27px 0px 0px; background: rgb(31, 56, 51); border-radius: 36px; padding: 4px; display: flex; flex-direction: column; box-shadow: rgba(50, 45, 15, 0.22) 0px 0px 14px; }
+.ws-xfer-body { position: absolute; overflow: hidden; inset: 27px 0px 0px; background: rgb(31, 56, 51); border-radius: 36px; padding: 4px; display: flex; flex-direction: column; box-shadow: rgba(50, 45, 15, 0.22) 0px 0px 14px; }
+/* "In minutes" has to be visible, not just stated: value runs down the card from
+   the sending account to the receiving one, at constant speed, and the figure it
+   reaches snaps as it lands. */
+.ws-xfer-body::after { content: ""; position: absolute; left: 0px; right: 0px; top: 0px; height: 100%; pointer-events: none; opacity: 0; background: linear-gradient(rgba(236, 234, 219, 0) 0%, rgba(236, 234, 219, 0.09) 38%, rgba(236, 234, 219, 0.22) 50%, rgba(236, 234, 219, 0.09) 62%, rgba(236, 234, 219, 0) 100%); transform: translateY(-100%); }
 /* Focus swaps between the two cards. The focused one is taller, its row hangs low
    against the fold, and its amount is set roughly twice the size — the same
    vocabulary as the send-money amount screen. Rows sit on a shared last-baseline
@@ -7800,6 +7818,12 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
   0% { opacity: 0; transform: translateY(-20px); }
   100% { opacity: 1; transform: none; }
 }
+/* Every slide's holder — the transfer card, the wallet, the balance card — arrives
+   on this one gesture, so all three read as the same kind of object landing. */
+@keyframes wsHolderIn { 
+  0% { opacity: 0; transform: translateY(-22px) scale(0.965); }
+  100% { opacity: 1; transform: none; }
+}
 @keyframes wsSettle { 
   0% { opacity: 0; transform: scale(0.96); }
   100% { opacity: 1; transform: none; }
@@ -7807,6 +7831,28 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
 @keyframes wsFade { 
   0% { opacity: 0; transform: translateY(-6px); }
   100% { opacity: 1; transform: none; }
+}
+/* The rate is what turns one figure into the other, so when the panels resize the
+   pill is jostled by them rather than sitting inert above the change. The decay
+   lives in the amplitudes, so the interpolation stays linear. */
+@keyframes wsChipShake { 
+  0% { transform: none; }
+  12% { transform: translateX(-3.6px) rotate(-1.6deg); }
+  28% { transform: translateX(2.9px) rotate(1.25deg); }
+  44% { transform: translateX(-2px) rotate(-0.85deg); }
+  60% { transform: translateX(1.25px) rotate(0.5deg); }
+  78% { transform: translateX(-0.6px) rotate(-0.22deg); }
+  100% { transform: none; }
+}
+@keyframes wsWire { 
+  0% { opacity: 0; transform: translateY(-100%); }
+  12% { opacity: 1; }
+  88% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(100%); }
+}
+@keyframes wsLanded { 
+  0% { transform: translateY(0.22em); }
+  100% { transform: none; }
 }
 @keyframes wsChipFall { 
   0% { opacity: 0; transform: translateY(-52px) scale(0.95); }
@@ -7864,20 +7910,23 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
   0% { transform: translateY(-6px); }
   100% { transform: none; }
 }
-.ws-slide.is-anim .ws-xfer-body { animation: wsSettle 560ms var(--ease-out)   both; }
-.ws-slide.is-anim .ws-xfer-rate { animation: wsChipFall 420ms var(--hm-bounce) 2000ms both; }
+.ws-slide.is-anim .ws-xfer-body { animation: wsHolderIn 660ms var(--ease-drawer) both; }
+.ws-slide.is-anim .ws-xfer-rate { animation: wsChipFall  420ms var(--hm-bounce)  440ms both,
+                                             wsChipShake 440ms linear           2290ms forwards; }
 .ws-slide.is-anim .ws-xfer-card--from { animation: wsDropT  520ms var(--ease-out)  170ms both; }
 .ws-slide.is-anim .ws-ticks i { animation: wsFade   440ms var(--ease-out)  420ms both; }
 .ws-slide.is-anim .ws-xfer-mid { animation: wsFadeT  420ms var(--ease-out)  400ms both; }
 .ws-slide.is-anim .ws-xfer-card--to { animation: wsRiseT  520ms var(--ease-out)  280ms both; }
-.ws-slide.is-anim .ws-wall, .ws-slide.is-anim .ws-wallet { animation: wsRise   560ms var(--ease-out)   both; }
+.ws-slide.is-anim .ws-xfer-body::after { animation: wsWire 360ms linear 2010ms both; }
+.ws-slide.is-anim .ws-xfer-card--to .ws-xfer-amt { animation: wsLanded 190ms var(--ease-out) 2290ms both; }
+.ws-slide.is-anim .ws-wall, .ws-slide.is-anim .ws-wallet { animation: wsHolderIn 660ms var(--ease-drawer) both; }
 /* Cards are posted in from above, one at a time, into a wallet that has stood
    empty for a beat. --ease-drawer keeps the travel readable rather than front-
    loading it out of sight. */
 .ws-slide.is-anim .ws-card--back { animation: wsDropIn 780ms var(--ease-drawer)  880ms both; }
 .ws-slide.is-anim .ws-card--front { animation: wsDropIn 740ms var(--ease-drawer) 1300ms both; }
 .ws-slide.is-anim .ws-qr { animation: wsQrPunch 640ms var(--hm-bounce) 2060ms both; }
-.ws-slide.is-anim .ws-bal-body { animation: wsSettle 560ms var(--ease-out) both,
+.ws-slide.is-anim .ws-bal-body { animation: wsHolderIn 660ms var(--ease-drawer) both,
                                             wsBalOpen 620ms var(--ease-out)   760ms both,
                                             wsBalKick 460ms var(--ease-out)  1400ms forwards; }
 .ws-slide.is-anim .ws-bal-row { animation: wsFadeT 440ms var(--ease-out) 200ms both; }
@@ -7885,7 +7934,8 @@ input.ctpl2-input-val::placeholder { color: rgba(0, 0, 0, 0.25); }
 .ws-slide.is-anim .ws-bal-sub:nth-child(2) { animation: wsBalSub 520ms var(--hm-bounce)  950ms both; }
 .ws-slide.is-anim .ws-bal-stack i:nth-child(2) { animation: wsBalFan2 600ms var(--ease-out) 1400ms both; }
 .ws-slide.is-anim .ws-bal-stack i:nth-child(1) { animation: wsBalFan1 600ms var(--ease-out) 1490ms both; }
-.ws-slide.is-anim .ws-h { animation: wsFade   480ms var(--ease-out)  300ms both; }
+.ws-slide.is-anim .ws-h { animation: wsFade   480ms var(--ease-out)  300ms both,
+                                       wsShine  880ms linear           3700ms both; }
 .ws-slide.is-anim .ws-sub { animation: wsFade   480ms var(--ease-out)  380ms both; }
 @media (prefers-reduced-motion: reduce) {
   .ws-prog i, .ws-cta, .ws-login, .ws-slide { transition: none; }

@@ -13124,14 +13124,19 @@ function obFinish() {
    Auto-advances on the same dwell as the live onboarding carousel, and loops. Tap
    zones and the progress bars both step it; either interaction restarts the dwell so
    the slide you just chose gets a full read. */
-var WS_DUR = 5000, _wsIdx = 0, _wsTimer = null, _wsFocusT = null;
-/* Slide 1 plays out in two beats. The transfer lands first and reads on its own;
-   only at WS_RATE_IN does the quoted rate drop in from above. WS_RATE_HIT is the
-   moment it presses into the card's top edge (the overshoot trough of wsChipFall),
-   and that impact hands focus from the amount being sent to the amount being
-   received — the card the rate actually acts on. Keep WS_RATE_IN in step with the
-   animation-delay on .ws-xfer-rate. */
-var WS_RATE_IN = 2000, WS_RATE_HIT = 2290;
+var WS_DUR = 5000, _wsIdx = 0, _wsTimer = null, _wsFocusT = null, _wsHoldT = null;
+/* Must match the transform transition on .ws-slide. A slide's contents are frozen
+   at their first keyframe for this long so the build happens on a slide that has
+   already landed — otherwise the containers fade in while travelling and read as
+   having been there all along. */
+var WS_TRAVEL = 300;
+/* Slide 1 assembles in one beat: the transfer, the copy and the quoted rate all land
+   inside the first half-second (WS_RATE_IN drops the rate in from above alongside the
+   rest). The second beat is WS_SWAP — by then the value has run the length of the card
+   and focus hands over from the amount being sent to the amount being received, the
+   panels resize, and the rate pill is shaken by them. Keep WS_RATE_IN in step with the
+   animation-delay on .ws-xfer-rate, and WS_SWAP with wsWire + wsChipShake. */
+var WS_RATE_IN = 440, WS_SWAP = 2290;
 
 /* Focus lives on one card at a time; the CSS transitions height, padding and the
    figure size off this class. */
@@ -13149,10 +13154,11 @@ function wsRender(dir) {
   /* Reset focus while the slide is still off stage, so re-entering it snaps back to
      the resting composition instead of transitioning into it. */
   clearTimeout(_wsFocusT);
+  clearTimeout(_wsHoldT);
   wsSetFocus(false);
   var slides = scr.querySelectorAll('.ws-slide');
   slides.forEach(function (el, i) {
-    el.classList.remove('is-anim');
+    el.classList.remove('is-anim', 'is-hold');
     el.setAttribute('aria-hidden', String(i !== _wsIdx));
     if (i === _wsIdx) return;                     // the arriving one is handled below
     if (el.classList.contains('is-on')) {         // the one leaving: send it the other way
@@ -13177,11 +13183,17 @@ function wsRender(dir) {
   cur.classList.add('is-on');
   void cur.offsetWidth;                           // drop, reflow, re-add so the
   cur.classList.add('is-anim');                   // entrance replays on every visit
+  var hold = dir ? WS_TRAVEL : 0;
+  if (hold) {                                     // sit on the first keyframe until it lands
+    cur.classList.add('is-hold');
+    void cur.offsetWidth;
+    _wsHoldT = setTimeout(function () { cur.classList.remove('is-hold'); }, hold);
+  }
   scr.querySelectorAll('.ws-prog [role="tab"]').forEach(function (b, i) {
     b.setAttribute('aria-selected', String(i === _wsIdx));
   });
   if (_wsIdx === 0 && !_wsReduced()) {
-    _wsFocusT = setTimeout(function () { wsSetFocus(true); }, WS_RATE_HIT);
+    _wsFocusT = setTimeout(function () { wsSetFocus(true); }, hold + WS_SWAP);
   }
 }
 function wsSchedule() {
@@ -13214,6 +13226,7 @@ function wsOpen() {
 function wsClose() {
   clearTimeout(_wsTimer);
   clearTimeout(_wsFocusT);
+  clearTimeout(_wsHoldT);
   document.getElementById('welcome').className = 'screen hb';
   document.getElementById('obChooser').hidden = false;
   setSbLight(true);
